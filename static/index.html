@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PDF Translate</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%233158d4'/%3E%3Ctext x='16' y='22' font-size='15' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='bold'%3EA%E2%86%92%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="logo">A→</span>
+    <span>PDF Translate</span>
+  </div>
+  <ol class="steps" id="steps">
+    <li data-step="1"><span>1</span> Extract text</li>
+    <li data-step="2"><span>2</span> Translate</li>
+    <li data-step="3"><span>3</span> Rebuild PDF</li>
+  </ol>
+  <div class="topbar-actions">
+    <span class="doc-name" id="docName"></span>
+    <button class="btn ghost" id="btnNew" hidden title="Open another PDF">Open another PDF</button>
+  </div>
+</header>
+
+<!-- Upload screen -->
+<main id="uploadView" class="upload-view">
+  <label class="dropzone" id="dropzone">
+    <input type="file" id="fileInput" accept="application/pdf,.pdf" hidden>
+    <div class="dz-icon">
+      <svg viewBox="0 0 24 24" width="44" height="44" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 17v-6"/><path d="m9 14 3-3 3 3"/></svg>
+    </div>
+    <div class="dz-title">Drop a PDF here or <u>choose a file</u></div>
+    <div class="dz-sub">The text is extracted; pictures, drawings and layout stay as they are.</div>
+    <div class="dz-progress" id="uploadProgress" hidden><div class="spinner"></div> Extracting text…</div>
+  </label>
+  <section class="how">
+    <div class="how-item">
+      <b>1 · Extract</b>
+      <p>Each paragraph, heading, label and table cell becomes a numbered segment. Its position, font size, colour and style are saved.</p>
+    </div>
+    <div class="how-item">
+      <b>2 · Translate anywhere</b>
+      <p>Export the segments as TXT, Word, XLIFF, CSV or JSON. Translate them in DeepL, Google Translate, a chatbot, a CAT tool or with a human translator, then import the result. You can also edit translations here.</p>
+    </div>
+    <div class="how-item">
+      <b>3 · Rebuild</b>
+      <p>The original text is removed and the translation is written into the same place. Images, vector graphics and the rest of the page are not touched.</p>
+    </div>
+  </section>
+</main>
+
+<!-- Workspace -->
+<main id="workView" class="work-view" hidden>
+  <section class="viewer-pane">
+    <div class="pane-toolbar">
+      <div class="seg-toggle" role="tablist">
+        <button class="active" data-variant="original" id="viewOriginal">Original</button>
+        <button data-variant="translated" id="viewTranslated" disabled>Translated</button>
+      </div>
+      <label class="check"><input type="checkbox" id="showBoxes" checked> Show segments</label>
+      <div class="spacer"></div>
+      <button class="icon-btn" id="zoomOut" title="Zoom out">−</button>
+      <span class="zoom-label" id="zoomLabel">100%</span>
+      <button class="icon-btn" id="zoomIn" title="Zoom in">+</button>
+    </div>
+    <div class="pages" id="pages"></div>
+  </section>
+
+  <section class="editor-pane">
+    <div class="pane-toolbar wrap">
+      <button class="btn" id="btnExport" title="Download the text for an external translator">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v12m0 0-4-4m4 4 4-4M5 21h14"/></svg>
+        Export
+      </button>
+      <button class="btn" id="btnCopy" title="Copy all segments with [[n]] markers, ready to paste into a translator">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+        Copy all
+      </button>
+      <button class="btn" id="btnImport" title="Load the translated file or paste translated text">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 15V3m0 0L8 7m4-4 4 4M5 21h14"/></svg>
+        Import
+      </button>
+      <div class="spacer"></div>
+      <button class="btn primary" id="btnBuild">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="m9 14 2 2 4-4"/></svg>
+        Build PDF
+      </button>
+      <a class="btn success" id="btnDownload" hidden title="Download the translated PDF">Download</a>
+    </div>
+    <div class="progress-row">
+      <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+      <span id="progressText">0 / 0 translated</span>
+    </div>
+    <div class="filter-row">
+      <input type="search" id="search" placeholder="Search source or translation…">
+      <select id="filterStatus">
+        <option value="all">All</option>
+        <option value="todo">Untranslated</option>
+        <option value="done">Translated</option>
+      </select>
+      <select id="filterPage"><option value="all">All pages</option></select>
+    </div>
+    <div class="segments" id="segments"></div>
+  </section>
+</main>
+
+<!-- Export dialog -->
+<dialog id="exportDialog" class="modal">
+  <form method="dialog">
+    <h2>Export for an external translator</h2>
+    <p class="muted">Every segment has a <code>[[number]]</code> marker or an id. Keep the markers or ids when you translate so the text can be imported back.</p>
+    <div class="formats">
+      <label class="format"><input type="radio" name="fmt" value="txt" checked>
+        <b>Plain text (.txt)</b><span>DeepL, ChatGPT/Claude, or any text translator.</span></label>
+      <label class="format"><input type="radio" name="fmt" value="docx">
+        <b>Word (.docx)</b><span>Google Translate and DeepL document translation.</span></label>
+      <label class="format"><input type="radio" name="fmt" value="xliff">
+        <b>XLIFF 1.2 (.xlf)</b><span>CAT tools: Trados, memoQ, OmegaT, Phrase, Crowdin.</span></label>
+      <label class="format"><input type="radio" name="fmt" value="csv">
+        <b>Spreadsheet (.csv)</b><span>Excel or Google Sheets. Fill in the <i>target</i> column.</span></label>
+      <label class="format"><input type="radio" name="fmt" value="json">
+        <b>JSON (.json)</b><span>Scripts and translation APIs.</span></label>
+    </div>
+    <div class="lang-row" id="langRow">
+      <label>Source language <input id="srcLang" value="en" size="6"></label>
+      <label>Target language <input id="tgtLang" placeholder="e.g. de" size="6"></label>
+    </div>
+    <label class="check"><input type="checkbox" id="includeTranslations"> Include translations already entered</label>
+    <div class="modal-actions">
+      <button value="cancel" class="btn ghost">Cancel</button>
+      <button value="ok" class="btn primary" id="exportGo">Download</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Import dialog -->
+<dialog id="importDialog" class="modal wide">
+  <form method="dialog">
+    <h2>Import translation</h2>
+    <label class="dropzone small" id="importDrop">
+      <input type="file" id="importFile" accept=".txt,.docx,.xlf,.xliff,.csv,.tsv,.json" hidden>
+      <div class="dz-title">Drop the translated file here or <u>choose a file</u></div>
+      <div class="dz-sub">.txt · .docx · .xlf / .xliff · .csv · .json</div>
+    </label>
+    <div class="or">or paste the translated text, including its <code>[[n]]</code> markers</div>
+    <textarea id="pasteArea" rows="10" placeholder="[[1]]&#10;Translated text of segment 1&#10;&#10;[[2]]&#10;Translated text of segment 2"></textarea>
+    <label class="check"><input type="checkbox" id="importOverwrite" checked> Replace translations already entered</label>
+    <div class="modal-actions">
+      <button value="cancel" class="btn ghost">Cancel</button>
+      <button value="ok" class="btn primary" id="importGo">Import pasted text</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Build dialog -->
+<dialog id="buildDialog" class="modal">
+  <form method="dialog">
+    <h2>Rebuild the PDF</h2>
+    <p class="muted">Only segments that have a translation are replaced. All other text, images and drawings are kept.</p>
+    <label class="field">Font
+      <select id="fontMode">
+        <option value="auto">Match original (sans / serif / mono)</option>
+        <option value="sans-serif">Always sans-serif</option>
+        <option value="serif">Always serif</option>
+        <option value="monospace">Always monospace</option>
+        <option value="custom">My own font file…</option>
+      </select>
+    </label>
+    <div class="field" id="fontUploadRow" hidden>
+      <input type="file" id="fontFile" accept=".ttf,.otf,.ttc">
+      <span class="muted" id="fontStatus">Upload a .ttf/.otf font that covers the target language.</span>
+    </div>
+    <label class="check"><input type="checkbox" id="optExpand" checked> Let single-line text use free space to its side before shrinking it</label>
+    <label class="field">Smallest text size if a translation is too long
+      <select id="minScale">
+        <option value="0">No limit (always fit the box)</option>
+        <option value="0.5">50% of the original</option>
+        <option value="0.7">70% of the original</option>
+      </select>
+    </label>
+    <p class="muted small">Fonts for Latin, Cyrillic, Greek, CJK, Arabic, Hebrew, Devanagari, Thai and more are included.</p>
+    <div class="modal-actions">
+      <button value="cancel" class="btn ghost">Cancel</button>
+      <button value="ok" class="btn primary" id="buildGo">Build PDF</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="toast-stack" id="toasts"></div>
+<div class="busy" id="busy" hidden><div class="busy-box"><div class="spinner"></div><span id="busyText">Working…</span></div></div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
