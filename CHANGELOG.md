@@ -4,6 +4,30 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.04
+
+Layout fixes for textbooks, exercise sheets and other mixed layouts:
+
+- **Text flowing around a heading or picture** (a paragraph that starts to the right of a heading
+  box and then continues at full width) stays one paragraph. Its translation is laid out in the
+  same shape, so it no longer covers the heading.
+- **Narrow table columns**: cells only half an em apart (e.g. pinyin "Èr jiā èr shì jǐ?" next to
+  "zwei?") are recognised as separate columns when they line up with the cells above or below.
+  Cells on the same line are no longer joined across columns, so translations are not drawn over
+  the neighbouring cell.
+- **Headings and subtitles**: a line in another colour or typeface (a blue heading over an italic
+  subtitle) is no longer merged with the next line.
+- **Bold words and coloured symbols inside a paragraph** (bold pinyin, a small blue ■) keep their
+  style, colour and size where they appear in the translation.
+- **Lead-ins** ("Grammatik:", "Übungen; Landeskunde:"): when the translated lead-in is longer, the
+  paragraph's first line now starts after it instead of overlapping it.
+- Hanging indents (list items, a numbered question with its pinyin line underneath) are kept.
+- A sentence ending in a colon followed by a bold word ("…sind: **yi** (…)") is no longer split
+  as if it were a form label.
+- Fill-in blanks (`_____`) and dot leaders are separate from the question text.
+- Lines with slightly different right edges are no longer taken for right-aligned text.
+- Cyrillic "т" in bold-italic and italic sans text no longer has gaps around it.
+
 ## 1.03
 
 - **Layout fix for address and contact blocks** (e.g. letterheads): separate lines are no longer

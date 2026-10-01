@@ -194,7 +194,8 @@ function pageBlocks(page, bounds, seps) {
         const gap = horizontal ? Math.abs(qb[0] - lastInk[2]) : Math.abs(qb[1] - lastInk[3]);
         if (sawSpace || gap > 0.15 * size) {
           line.gaps.push(gap / size); // word gaps in em, to tell column gaps from word spaces
-          if (gap > 0.8 * size) { split = true; gapBefore = gap; }
+          // (moderate gaps only after a real space: complex scripts have gaps inside words)
+          if (gap > 0.8 * size || (sawSpace && gap > 0.4 * size)) { split = true; gapBefore = gap; }
           else if (!split) split = divided(lastInk, qb, seps, horizontal);
         }
       }
@@ -312,7 +313,34 @@ function groupBoxIsFree(group, line, pageLines) {
     const h = o.bbox[3] - o.bbox[1];
     const core = [o.bbox[0] + 1, o.bbox[1] + 0.3 * h, o.bbox[2] - 1, o.bbox[3] - 0.3 * h];
     if (core[0] >= u[2] || core[2] <= u[0] || core[1] >= u[3] || core[3] <= u[1]) continue;
-    if (sameBaseline(o, group[0]) && o.bbox[2] <= group[0].bbox[0] + 1) continue; // lead-in
+    if (sameBaseline(o, group[0]) && o.bbox[2] <= group[0].bbox[0] + 0.3 * o.size) continue; // lead-in (italics may overhang)
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Like groupBoxIsFree, but for the paragraph's real shape: each line reaches from its own start
+ * to the paragraph's right edge. Text that flows around a heading or picture ("Einen Abakus
+ * verwenden" with the paragraph starting to its right) is one paragraph, and its translation is
+ * laid out in the same shape (see `rows` in buildSegment).
+ */
+function groupShapeIsFree(group, line, pageLines) {
+  const rot = line.rotation;
+  const rows = group.concat([line]).map((l) => localBox(l.bbox, rot)).sort((a, b) => a[1] - b[1]);
+  const right = Math.max(...rows.map((r) => r[2]));
+  const rects = [];
+  rows.forEach((r, i) => {
+    rects.push([r[0], r[1], right, r[3]]);
+    const nx = rows[i + 1];
+    if (nx && nx[1] > r[3]) rects.push([Math.max(r[0], nx[0]), r[3], right, nx[1]]);
+  });
+  for (const o of pageLines) {
+    if (o === line || o.rotation !== rot || group.includes(o)) continue;
+    const ob = localBox(o.bbox, rot), h = ob[3] - ob[1];
+    const core = [ob[0] + 1, ob[1] + 0.3 * h, ob[2] - 1, ob[3] - 0.3 * h];
+    if (!rects.some((r) => core[0] < r[2] && core[2] > r[0] && core[1] < r[3] && core[3] > r[1])) continue;
+    if (sameBaseline(o, group[0]) && localBox(o.bbox, rot)[2] <= localBox(group[0].bbox, rot)[0] + 0.3 * o.size) continue; // lead-in
     return false;
   }
   return true;
@@ -325,6 +353,9 @@ function joins(prev, line, pageLines, seps, marginsByRot, blockLines) {
   if (sameBaseline(line, prev)) {
     if (line.standalone || prev.standalone) return false;
     if (isLabelBoundary(prev.spans[prev.spans.length - 1], line.spans[0])) return false;
+    // The piece on the right starts a column (a cell that lines up with cells above or below).
+    const right = localBox(line.bbox, line.rotation)[0] >= localBox(prev.bbox, prev.rotation)[0] ? line : prev;
+    if (right.column) return false;
     const a = prev.bbox, b = line.bbox;
     const gap = axis === 1 ? Math.max(b[0] - a[2], a[0] - b[2]) : Math.max(b[1] - a[3], a[1] - b[3]);
     return gap <= 2 * Math.max(line.size, prev.size) && !divided(a, b, seps, axis === 1);
@@ -336,13 +367,44 @@ function joins(prev, line, pageLines, seps, marginsByRot, blockLines) {
   if (adv <= 0.3 * size || adv > 2 * size) return false;
   if (size / Math.max(0.1, Math.min(line.size, prev.size)) > 1.25) return false;
   if (BULLET_RE.test(line.text) || divided(prev.bbox, line.bbox, seps, axis === 1)) return false;
+  if (styleBreak(prev, line)) return false;
   return continuesParagraph(prev, line, pageLines, seps, marginsByRot, blockLines);
+}
+
+/** The colour and font family that clearly dominate a line (CJK and symbols aside), or null. */
+function lineStyle(line) {
+  if (line.style !== undefined) return line.style;
+  const color = new Map(), family = new Map();
+  let total = 0, latin = 0;
+  for (const s of line.spans) {
+    const n = s.text.replace(/\s/g, "").length;
+    if (!n) continue;
+    total += n;
+    color.set(s.color, (color.get(s.color) || 0) + n);
+    const letters = (s.text.match(/\p{L}/gu) || []).filter((c) => !CJK_RE.test(c)).length;
+    if (letters) { latin += letters; family.set(s.font.family, (family.get(s.font.family) || 0) + letters); }
+  }
+  const top = (m, sum) => {
+    let best = null, bw = 0;
+    for (const [k, v] of m) if (v > bw) { best = k; bw = v; }
+    return sum && bw >= 0.75 * sum ? best : null;
+  };
+  line.style = { color: top(color, total), family: latin >= 3 ? top(family, latin) : null };
+  return line.style;
+}
+
+/** A heading in one colour or typeface followed by a line in another is not one paragraph. */
+function styleBreak(prev, line) {
+  const a = lineStyle(prev), b = lineStyle(line);
+  return (a.color && b.color && a.color !== b.color) || (a.family && b.family && a.family !== b.family);
 }
 
 /** Form labels ("Prüfer:" in bold, then the value in regular) become their own segments. */
 function isLabelBoundary(prev, cur) {
   const styleChange = prev.font.bold !== cur.font.bold || prev.font.italic !== cur.font.italic;
-  return styleChange && (/:\s*$/.test(prev.text) || /^\s*\S[^:]{0,40}:\s*$/.test(cur.text));
+  // A label is short; "…von links nach rechts, sind:" followed by a bold word is running text.
+  const isLabel = (t) => t.length <= 40 && t.split(/\s+/).length <= 5;
+  return styleChange && ((/:\s*$/.test(prev.text) && isLabel(prev.text.trim())) || /^\s*\S[^:]{0,40}:\s*$/.test(cur.text));
 }
 
 function gapOf(prev, cur, rot) {
@@ -352,24 +414,123 @@ function gapOf(prev, cur, rot) {
   return cur.bbox[1] - prev.bbox[3];
 }
 
+/** This line's ordinary word space in em (justified text has wide but uniform spaces). */
+function typicalGap(line) {
+  const normal = (line.gaps || []).filter((g) => g < 0.8).sort((a, b) => a - b);
+  return normal.length ? normal[normal.length >> 1] : 0.3;
+}
+
+const BLANK_RE = /^\s*[_…]{3,}\s*$|^\s*\.{4,}\s*$/; // fill-in blanks and dot leaders
+
 function chunksOf(line, rot, seps) {
   const spans = line.spans.filter((s) => s.text.trim());
   if (!spans.length) return [];
-  // A column gap is much wider than this line's ordinary word spaces (justified text has
-  // wide but uniform spaces, so it is compared with its own typical space).
-  const normal = (line.gaps || []).filter((g) => g < 0.8).sort((a, b) => a - b);
-  const typical = normal.length ? normal[normal.length >> 1] : 0.3;
-  const columnGap = Math.max(1.0, 3 * typical);
+  // A column gap is much wider than this line's ordinary word spaces.
+  const columnGap = Math.max(1.0, 3 * typicalGap(line));
   const out = [[spans[0]]];
   for (let i = 1; i < spans.length; i++) {
     const prev = spans[i - 1], cur = spans[i];
     const gap = gapOf(prev, cur, rot);
     const size = Math.max(prev.size, cur.size);
     if (gap > 2 * size || (cur.gapBefore && gap > columnGap * size) || isLabelBoundary(prev, cur)
+      || (gap > 0.2 * size && (BLANK_RE.test(cur.text) || BLANK_RE.test(prev.text)))
       || (gap > 0 && divided(prev.bbox, cur.bbox, seps, rot === 0 || rot === 180))) out.push([cur]);
     else out[out.length - 1].push(cur);
   }
   return out;
+}
+
+/** A list marker alone ("•", "1.", "a)"): the gap after it is not a column gap. */
+const MARKER_ONLY_RE = /^\s*(?:[•◦▪▫●○■□►▶➢➤✓✔·‣⁃–-]|\(?\d{1,3}[.)]|\(?[a-zA-Z][.)])\s*$/;
+const chunkBox = (chunk) => { let b = null; for (const s of chunk) b = union(b, s.bbox); return b; };
+const baselineOf = (origin, rot) => { const d = DIRS[rot]; return origin[0] * -d[1] + origin[1] * d[0]; };
+
+/**
+ * Pieces of text on one baseline, each with its box in the text's own frame and whether some
+ * other piece lies before it on the same baseline (then it starts a column or cell).
+ */
+function rowItems(rows) {
+  const items = [];
+  for (const row of rows) {
+    for (const chunk of row.chunks) {
+      items.push({ row, chunk, rot: row.rot, lb: localBox(chunkBox(chunk), row.rot), base: baselineOf(chunk[0].origin, row.rot),
+        size: Math.max(...chunk.map((s) => s.size)), hasLeft: false });
+    }
+  }
+  const sorted = items.slice().sort((a, b) => a.rot - b.rot || a.base - b.base);
+  for (let i = 0; i < sorted.length; i++) {
+    const it = sorted[i];
+    for (let j = i + 1; j < sorted.length; j++) {
+      const o = sorted[j];
+      if (o.rot !== it.rot || o.base - it.base >= 0.3 * Math.min(it.size, o.size)) break;
+      if (o.lb[2] <= it.lb[0] + 0.5) it.hasLeft = true;
+      if (it.lb[2] <= o.lb[0] + 0.5) o.hasLeft = true;
+    }
+  }
+  return items;
+}
+
+/** Index of points by rounded x, to find aligned column starts quickly. */
+function xIndex(points) {
+  const m = new Map();
+  for (const p of points) {
+    const k = `${p.rot}|${Math.round(p.x)}`;
+    if (!m.has(k)) m.set(k, []);
+    m.get(k).push(p);
+  }
+  return (x, base, size, rot, self) => {
+    for (let dx = -2; dx <= 2; dx++) {
+      for (const p of m.get(`${rot}|${Math.round(x) + dx}`) || []) {
+        const dy = Math.abs(p.base - base);
+        if (p.chunk !== self && Math.abs(p.x - x) <= 1.5 && dy > 0.5 * size && dy <= 3.5 * size) return true;
+      }
+    }
+    return false;
+  };
+}
+
+/**
+ * Columns of tables and exercises are sometimes only half an em apart ("Èr jiā èr shì jǐ?" and
+ * "zwei?"). Such a gap separates two cells when the text after it starts exactly where a cell
+ * starts in a row just above or below. Splits those chunks and marks the pieces of text that
+ * start a column, so that pieces on one baseline are not joined across columns.
+ */
+function splitColumns(rows) {
+  let items = rowItems(rows);
+  const anchors = items.filter((it) => it.hasLeft).map((it) => ({ x: it.lb[0], base: it.base, rot: it.rot, chunk: it.chunk }));
+  const cands = [];
+  for (const it of items) {
+    const typical = it.row.typical;
+    for (let k = 1; k < it.chunk.length; k++) {
+      const prev = it.chunk[k - 1], cur = it.chunk[k];
+      const size = Math.max(prev.size, cur.size), gap = gapOf(prev, cur, it.rot);
+      if (cur.gapBefore && gap >= 0.4 * size && gap >= 1.6 * typical * size && !MARKER_ONLY_RE.test(spansText(it.chunk.slice(0, k), it.rot))) {
+        cands.push({ x: localBox(cur.bbox, it.rot)[0], base: it.base, rot: it.rot, chunk: it.chunk, k, size, row: it.row });
+      }
+    }
+  }
+  if (cands.length) {
+    const atAnchor = xIndex(anchors), atCand = xIndex(cands);
+    const cuts = new Map();
+    for (const c of cands) {
+      if (!atAnchor(c.x, c.base, c.size, c.rot, c.chunk) && !atCand(c.x, c.base, c.size, c.rot, c.chunk)) continue;
+      if (!cuts.has(c.chunk)) cuts.set(c.chunk, { row: c.row, ks: [] });
+      cuts.get(c.chunk).ks.push(c.k);
+    }
+    for (const [chunk, { row, ks }] of cuts) {
+      const parts = [];
+      let from = 0;
+      for (const k of ks.sort((a, b) => a - b)) { parts.push(chunk.slice(from, k)); from = k; }
+      parts.push(chunk.slice(from));
+      row.chunks.splice(row.chunks.indexOf(chunk), 1, ...parts);
+    }
+    if (cuts.size) items = rowItems(rows);
+  }
+  const starts = items.filter((it) => it.hasLeft).map((it) => ({ x: it.lb[0], base: it.base, rot: it.rot, chunk: it.chunk }));
+  const atStart = xIndex(starts);
+  const column = new Set();
+  for (const it of items) if (it.hasLeft && atStart(it.lb[0], it.base, it.size, it.rot, it.chunk)) column.add(it.chunk);
+  return column;
 }
 
 function spansText(spans, rot) {
@@ -442,14 +603,17 @@ function guessAlign(lines, rotation, bounds, margins, pageLines) {
     if (Math.abs(x1 - rm) < tol && x0 - lm > 0.3 * pageWidth) return "right";
     return "left";
   }
-  const leftOk = spread(lefts) < tol, rightOk = spread(rights) < tol;
+  const leftOk = spread(lefts) < tol;
   if (leftOk && lines.length >= 3) {
     const body = rights.slice(0, -1);
     if (spread(body) < tol && rights[rights.length - 1] < Math.max(...body) - tol) return "justify";
   }
   if (leftOk) return "left";
-  if (rightOk) return "right";
-  if (spread(lefts.map((l, i) => (l + rights[i]) / 2)) < tol) return "center";
+  // Right-aligned and centred lines line up exactly; ragged lines with a hanging indent
+  // ("1) 三加六是几？" over "Sān jiā liù shì jǐ?") only come close.
+  const tight = Math.min(tol, 0.2 * size + 1);
+  if (spread(rights) < tight) return "right";
+  if (spread(lefts.map((l, i) => (l + rights[i]) / 2)) < tight) return "center";
   return "left";
 }
 
@@ -465,7 +629,7 @@ function redactRect(span, rotation) {
   return [ox + lo, y0, ox + hi, y1];
 }
 
-function buildSegment(group, pageNo, bounds, id, marginsByRot, pageLines) {
+function buildSegment(group, pageNo, bounds, id, marginsByRot, pageLines, shaped = false) {
   const lines = mergeVisualLines(group);
   const spans = lines.flatMap((l) => l.spans);
   const text = joinLines(lines.map((l) => l.text));
@@ -490,14 +654,27 @@ function buildSegment(group, pageNo, bounds, id, marginsByRot, pageLines) {
       pitch = round2(diffs.length % 2 ? diffs[m] : (diffs[m - 1] + diffs[m]) / 2);
     }
   }
+  const align = guessAlign(lines, rotation, bounds, marginsByRot[rotation], pageLines);
+  const color = dominant(spans, (s) => s.color);
+  const marks = inlineMarks(spans, info, color, size);
+  // Where each line starts, when that is not simply the paragraph's left edge (text flowing
+  // around a heading or picture, hanging indents): [start along the line, baseline], in the
+  // text's own frame. The translation is laid out in the same shape.
+  let rows;
+  if (lines.length > 1 && (shaped || align === "left" || align === "justify")) {
+    const d = DIRS[rotation], n = [-d[1], d[0]];
+    const r = lines.map((l) => [round2(localBox(l.bbox, rotation)[0]), round2(l.origin[0] * n[0] + l.origin[1] * n[1])]).sort((a, b) => a[1] - b[1]);
+    const left = Math.min(...r.map((x) => x[0]));
+    if (r.some((x, i) => i > 0 && x[0] > left + 0.5 * size)) rows = r;
+  }
   return {
-    id, page: pageNo, text, size, font, rotation, lines: lines.length, line_pitch: pitch,
+    id, page: pageNo, text, size, font, rotation, lines: lines.length, line_pitch: pitch, ...(rows ? { rows } : {}), ...(marks.length ? { marks } : {}),
     // Numbers, dates, times, amounts and codes without any letter need no translation.
     skip: !/\p{L}/u.test(text),
     bbox: bbox.map(round2),
-    color: dominant(spans, (s) => s.color),
+    color,
     bold: info.bold, italic: info.italic, family: info.family,
-    align: guessAlign(lines, rotation, bounds, marginsByRot[rotation], pageLines),
+    align,
     origin: lines[0].origin.map(round2),
     redact: spans.filter((s) => s.text.trim()).map((s) => redactRect(s, rotation).map(round2)),
   };
@@ -518,9 +695,9 @@ async function extractPages(doc, pageList, onProgress) {
     const graphics = pageGraphics(page);
     const { seps } = graphics;
     const protect = []; // text we never extract (skewed lines) must survive merged redactions
-    const blocks = [];
+    const rowBlocks = [];
     for (const block of pageBlocks(page, bounds, seps)) {
-      const lines = [];
+      const rows = [];
       for (const line of block.lines) {
         const rot = rotationOf(line.dir);
         if (rot === null) {
@@ -528,12 +705,20 @@ async function extractPages(doc, pageList, onProgress) {
           continue;
         }
         const chunks = chunksOf(line, rot, seps);
+        if (chunks.length) rows.push({ rot, typical: typicalGap(line), chunks });
+      }
+      rowBlocks.push(rows);
+    }
+    const column = splitColumns(rowBlocks.flat());
+    const blocks = [];
+    for (const rows of rowBlocks) {
+      const lines = [];
+      for (const { rot, chunks } of rows) {
         for (const chunk of chunks) {
           const text = spansText(chunk, rot);
           if (!text.trim()) continue;
-          let bbox = null;
-          for (const s of chunk) bbox = union(bbox, s.bbox);
-          lines.push({ spans: chunk, text, bbox, origin: chunk[0].origin, size: Math.max(...chunk.map((s) => s.size)), rotation: rot, standalone: chunks.length > 1 });
+          lines.push({ spans: chunk, text, bbox: chunkBox(chunk), origin: chunk[0].origin, size: Math.max(...chunk.map((s) => s.size)),
+            rotation: rot, standalone: chunks.length > 1, column: column.has(chunk) });
         }
       }
       if (lines.length) blocks.push(lines);
@@ -553,12 +738,14 @@ async function extractPages(doc, pageList, onProgress) {
         let target = null;
         for (let gi = groups.length - 1; gi >= Math.max(0, groups.length - 16) && !target; gi--) {
           const g = groups[gi];
-          if (joins(g[g.length - 1], line, pageLines, seps, marginsByRot, lines) && groupBoxIsFree(g, line, pageLines)) target = g;
+          if (!joins(g[g.length - 1], line, pageLines, seps, marginsByRot, lines)) continue;
+          if (groupBoxIsFree(g, line, pageLines)) target = g;
+          else if (groupShapeIsFree(g, line, pageLines)) { target = g; g.shaped = true; }
         }
         if (target) target.push(line); else groups.push([line]);
       }
       for (const g of groups) {
-        const seg = buildSegment(g, p, bounds, ++local, marginsByRot, pageLines);
+        const seg = buildSegment(g, p, bounds, ++local, marginsByRot, pageLines, g.shaped);
         if (seg) segments.push(seg);
       }
     }
@@ -889,6 +1076,13 @@ const GLYPH_SUBST = {
   0x200b: 0x20,   // zero-width space
 };
 
+/**
+ * The built-in oblique sans fonts draw Cyrillic "т" upright but give it the width of the wide
+ * italic form, which leaves gaps around it ("Час т ина"); the upright font's width is used, and
+ * the text after it is positioned anew (`own`), since a viewer advances by the font's width.
+ */
+const ADVANCE_FROM = { "Helvetica-Oblique": { 0x442: "Helvetica" }, "Helvetica-BoldOblique": { 0x442: "Helvetica-Bold" } };
+
 class FontKit {
   constructor(doc, opts) {
     this.doc = doc;
@@ -933,7 +1127,14 @@ class FontKit {
       const e = this.entry(name);
       let gid = e.gid.get(cp);
       if (gid === undefined) { gid = e.font.encodeCharacter(cp); e.gid.set(cp, gid); }
-      if (gid > 0) return { e, gid, adv: this.advance(e, gid) };
+      if (gid > 0) {
+        const from = ADVANCE_FROM[name] && ADVANCE_FROM[name][cp];
+        if (from) {
+          const u = this.lookup([from], cp);
+          if (u) return { e, gid, adv: u.adv, own: (this.advance(e, gid) - u.adv) / 2 }; // the glyph sits centred in its wide box
+        }
+        return { e, gid, adv: this.advance(e, gid) };
+      }
     }
     return null;
   }
@@ -948,35 +1149,90 @@ class FontKit {
   }
 }
 
-/** Split text into paragraphs of breakable tokens: {sp: space before, glyphs, w (em)}. */
-function tokenize(text, fk, chain) {
+const WORD_EDGE_RE = /^[("'„“«‚‘\[{]+|[)"'”»’\]},.;:!?]+$/gu;
+const wordCore = (w) => w.replace(WORD_EDGE_RE, "");
+
+/**
+ * Words of a segment printed in another style than the rest (bold pinyin, a blue ■, an
+ * italic term): [word, bold, italic, colour or "", count]. Only words that never appear in the
+ * main style are kept; they are styled again where they appear in the translation (names,
+ * romanisations, symbols and codes are usually kept by translators).
+ */
+function inlineMarks(spans, info, color, size) {
+  const plain = new Set(), marked = new Map();
+  for (const sp of spans) {
+    const differs = sp.font.bold !== info.bold || sp.font.italic !== info.italic || sp.color !== color;
+    for (const raw of sp.text.split(/\s+/)) {
+      const w = wordCore(raw);
+      if (!w) continue;
+      if (!differs) { plain.add(w); continue; }
+      if ([...w].length < 2 && /\p{L}/u.test(w)) continue; // single letters are too ambiguous
+      const scale = Math.abs(sp.size / size - 1) > 0.08 ? round2(sp.size / size) : 1;
+      const key = `${w}\u0000${sp.font.bold ? 1 : 0}${sp.font.italic ? 1 : 0}${sp.color}|${scale}`;
+      const m = marked.get(key);
+      if (m) m[4]++;
+      else marked.set(key, [w, sp.font.bold ? 1 : 0, sp.font.italic ? 1 : 0, sp.color === color ? "" : sp.color, 1, scale]);
+    }
+  }
+  const seen = new Set();
+  const out = [];
+  for (const m of marked.values()) {
+    if (plain.has(m[0]) || seen.has(m[0])) continue;
+    seen.add(m[0]);
+    out.push(m);
+    if (out.length >= 64) break;
+  }
+  return out;
+}
+
+/**
+ * Split text into paragraphs of breakable tokens: {sp: space before, glyphs, w (em)}.
+ * `styleOf(word)` may return {chain, color} for words to print in another style.
+ */
+function tokenize(text, fk, chain, styleOf = null) {
   const spaceAdv = fk.glyph(chain, 32).adv;
   const paras = [];
   for (const para of text.replace(/\r\n?/g, "\n").split("\n")) {
     const tokens = [];
     let cur = null, pendingSpace = false;
     for (const ch of para) {
-      const cp = ch.codePointAt(0);
       if (/\s/.test(ch)) { pendingSpace = true; cur = null; continue; }
-      const g = fk.glyph(chain, cp);
-      if (cur && !pendingSpace && NO_LINE_START.has(ch)) { cur.glyphs.push(g); cur.w += g.adv; continue; }
+      if (cur && !pendingSpace && NO_LINE_START.has(ch)) { cur.text += ch; continue; }
       if (CJK_RE.test(ch) || !cur || pendingSpace || CJK_RE.test(cur.last)) {
-        cur = { sp: pendingSpace && tokens.length > 0, glyphs: [g], w: g.adv, last: ch };
+        cur = { sp: pendingSpace && tokens.length > 0, text: ch, last: ch };
         tokens.push(cur);
       } else {
-        cur.glyphs.push(g); cur.w += g.adv; cur.last = ch;
+        cur.text += ch; cur.last = ch;
       }
       pendingSpace = false;
+    }
+    for (const t of tokens) {
+      t.glyphs = []; t.w = 0;
+      const core = styleOf ? wordCore(t.text) : "";
+      const st = core ? styleOf(core) : null;
+      const from = st ? t.text.indexOf(core) : -1, to = from + core.length;
+      let i = 0;
+      for (const ch of t.text) {
+        const inCore = st && i >= from && i < to;
+        let g = fk.glyph(inCore ? st.chain : chain, ch.codePointAt(0));
+        if (inCore && (st.color || st.scale !== 1)) g = { ...g, color: st.color, scale: st.scale };
+        t.glyphs.push(g); t.w += g.adv * (g.scale || 1);
+        i += ch.length;
+      }
     }
     paras.push(tokens);
   }
   return { paras, spaceAdv };
 }
 
-/** Greedy line breaking; widths are in em (font size 1). */
+/**
+ * Greedy line breaking; widths are in em (font size 1). `width` is a number, or a function
+ * giving the width of line i (paragraphs that flow around a heading or picture).
+ */
 function wrap(tok, width, indent = 0) {
   const lines = [];
-  const avail = () => (lines.length ? width : width - indent); // the first line may be indented
+  const widthOf = typeof width === "function" ? width : (i) => (i ? width : width - indent); // the first line may be indented
+  const avail = () => widthOf(lines.length);
   for (const tokens of tok.paras) {
     let line = { tokens: [], w: 0, last: false };
     const push = () => { lines.push(line); line = { tokens: [], w: 0, last: false }; };
@@ -1046,7 +1302,7 @@ function expandedSpan(seg, bounds, obs, gap = 0.4 * seg.size) {
 const fmt = (v) => (Math.abs(v) < 1e-6 ? "0" : String(Math.round(v * 1000) / 1000));
 
 /** Lay out one translation and return PDF content-stream operators (in page space). */
-function layoutSegment(seg, text, fk, bounds, obs, opts, used, stats) {
+function layoutSegment(seg, text, fk, bounds, obs, opts, used, stats, leadEnd = null, lineEnds = null) {
   const d = DIRS[seg.rotation], n = [-d[1], d[0]], u = [d[1], -d[0]];
   const corners = [[seg.bbox[0], seg.bbox[1]], [seg.bbox[2], seg.bbox[1]], [seg.bbox[0], seg.bbox[3]], [seg.bbox[2], seg.bbox[3]]];
   const along = corners.map(([x, y]) => x * d[0] + y * d[1]), across = corners.map(([x, y]) => x * n[0] + y * n[1]);
@@ -1056,17 +1312,52 @@ function layoutSegment(seg, text, fk, bounds, obs, opts, used, stats) {
   const ob = seg.origin[0] * n[0] + seg.origin[1] * n[1];
   // First-line indent (paragraph indent, or a lead-in such as "Hinweis:" before the text).
   const oa = seg.origin[0] * d[0] + seg.origin[1] * d[1];
-  const indent = seg.lines > 1 && (seg.align === "left" || seg.align === "justify") && oa - a0 > 0.5 ? oa - a0 : 0;
+  let rows = seg.rows && seg.rows.length > 1 ? seg.rows : null;
+  let indent = !rows && seg.lines > 1 && (seg.align === "left" || seg.align === "justify") && oa - a0 > 0.5 ? oa - a0 : 0;
+  // A translated lead-in ("Граматика:" for "Grammatik:") may be longer than the original:
+  // the first line then starts after it.
+  if (leadEnd !== null && (seg.align === "left" || seg.align === "justify")) {
+    if (rows) rows = [[Math.max(rows[0][0], leadEnd), rows[0][1]], ...rows.slice(1)];
+    else if (seg.lines === 1) a0 = Math.min(Math.max(a0, leadEnd), a1 - seg.size);
+    else indent = Math.max(indent, leadEnd - a0);
+  }
   const s0 = seg.size, L0 = lineHeight(seg);
   const top = ob - 0.85 * s0;
   const H = Math.max(b1, ob + 0.2 * s0) + 0.15 * s0 - top;
+  // Paragraph with its own shape: a line starts where the original line nearest to its
+  // baseline started.
+  const startAt = (b) => {
+    if (!rows) return null;
+    let best = rows[0];
+    for (const r of rows) if (Math.abs(r[1] - b) < Math.abs(best[1] - b)) best = r;
+    return best[0];
+  };
+  /** Width (em) of each line at scale k, for wrap(). */
+  const widths = (W, k) => {
+    if (!rows) return W / (s0 * k);
+    const base = top + 0.85 * s0 * k, L = L0 * k;
+    return (i) => (a0 + W - Math.max(a0, startAt(base + i * L))) / (s0 * k);
+  };
 
   const chain = fk.chain(seg, text);
-  const tok = tokenize(text.trim(), fk, chain);
+  // Inline styles of the original (bold pinyin, coloured symbols) where those words reappear,
+  // unless a word turns up far more often than in the original (then it is ordinary text).
+  let styleOf = null;
+  if (seg.marks && seg.marks.length) {
+    const counts = new Map();
+    for (const w of text.split(/\s+/)) { const c = wordCore(w); if (c) counts.set(c, (counts.get(c) || 0) + 1); }
+    const styles = new Map();
+    for (const [w, bold, italic, color, n, scale] of seg.marks) {
+      if (!counts.has(w) || counts.get(w) > 2 * n + 1) continue;
+      styles.set(w, { chain: fk.chain({ ...seg, bold: !!bold, italic: !!italic }, text), color: color || null, scale: scale || 1 });
+    }
+    if (styles.size) styleOf = (w) => styles.get(w) || null;
+  }
+  const tok = tokenize(text.trim(), fk, chain, styleOf);
   /** Largest scale (<= 1) at which the text fits a box of width W, and its lines. */
   const fitWidth = (W) => {
     const fits = (k) => {
-      const lines = wrap(tok, W / (s0 * k), indent / (s0 * k));
+      const lines = wrap(tok, widths(W, k), indent / (s0 * k));
       return (lines.length - 1) * L0 * k + 1.05 * s0 * k <= H + 0.01 ? lines : null;
     };
     const lines = fits(1);
@@ -1081,7 +1372,7 @@ function layoutSegment(seg, text, fk, bounds, obs, opts, used, stats) {
       }
       return { k: bestK, lines: best || fits(lo) };
     };
-    return search(Math.max(opts.minScale || 0, 0.02)) || search(0.02) || { k: 0.02, lines: wrap(tok, W / (s0 * 0.02), indent / (s0 * 0.02)) };
+    return search(Math.max(opts.minScale || 0, 0.02)) || search(0.02) || { k: 0.02, lines: wrap(tok, widths(W, 0.02), indent / (s0 * 0.02)) };
   };
   let W = (a1 - a0) * 1.01;
   let { k, lines } = fitWidth(W);
@@ -1098,15 +1389,16 @@ function layoutSegment(seg, text, fk, bounds, obs, opts, used, stats) {
   if (k < 1) stats.shrunk.push({ id: seg.id, scale: Math.round(k * 100) / 100 });
   const s = s0 * k, L = L0 * k;
   const base1 = seg.lines === 1 && lines.length === 1 ? ob - (s0 - s) * 0.3 : top + 0.85 * s;
-  const ops = [`BT ${seg.color.slice(1).match(/../g).map((h) => fmt(parseInt(h, 16) / 255)).join(" ")} rg`];
-  let curFont = null;
+  const rg = (hex) => `${hex.slice(1).match(/../g).map((h) => fmt(parseInt(h, 16) / 255)).join(" ")} rg`;
+  const ops = [`BT ${rg(seg.color)}`];
+  let curFont = null, curColor = seg.color;
   lines.forEach((line, i) => {
     const b = base1 + i * L;
-    const ind = i === 0 ? indent : 0;
+    const ind = rows ? Math.max(0, startAt(b) - a0) : i === 0 ? indent : 0;
     const lw = line.w * s, spare = W - ind - lw;
     let a = a0 + ind, extra = 0;
-    if (seg.align === "right") a = a0 + spare;
-    else if (seg.align === "center") a = a0 + spare / 2;
+    if (seg.align === "right") a = a0 + ind + spare;
+    else if (seg.align === "center") a = a0 + ind + spare / 2;
     else if (seg.align === "justify" && !line.last) {
       const gaps = line.tokens.filter((t, j) => j > 0 && t.sp).length;
       if (gaps) extra = Math.max(0, spare) / gaps;
@@ -1117,17 +1409,22 @@ function layoutSegment(seg, text, fk, bounds, obs, opts, used, stats) {
       const flush = () => {
         if (!run) return;
         if (curFont !== run.e) { ops.push(`/${run.e.res} 1 Tf`); curFont = run.e; }
-        const px = run.a * d[0] + b * n[0], py = run.a * d[1] + b * n[1];
-        ops.push(`${fmt(d[0] * s)} ${fmt(d[1] * s)} ${fmt(u[0] * s)} ${fmt(u[1] * s)} ${fmt(px)} ${fmt(py)} Tm <${run.hex}> Tj`);
+        if (curColor !== run.color) { ops.push(rg(run.color)); curColor = run.color; }
+        const px = run.a * d[0] + b * n[0], py = run.a * d[1] + b * n[1], z = s * run.scale;
+        ops.push(`${fmt(d[0] * z)} ${fmt(d[1] * z)} ${fmt(u[0] * z)} ${fmt(u[1] * z)} ${fmt(px)} ${fmt(py)} Tm <${run.hex}> Tj`);
         run = null;
       };
       for (const g of t.glyphs) {
-        if (!run || run.e !== g.e) { flush(); run = { e: g.e, a, hex: "" }; fk.ref(g.e); used.add(g.e); }
+        const color = g.color || seg.color, scale = g.scale || 1;
+        if (g.own !== undefined) flush();
+        if (!run || run.e !== g.e || run.color !== color || run.scale !== scale) { flush(); run = { e: g.e, color, scale, a: a - (g.own || 0) * s * scale, hex: "" }; fk.ref(g.e); used.add(g.e); }
         run.hex += g.gid.toString(16).padStart(4, "0");
-        a += g.adv * s;
+        a += g.adv * s * scale;
+        if (g.own !== undefined) flush();
       }
       flush();
     });
+    if (lineEnds) lineEnds.push([a, b]);
   });
   ops.push("ET");
   return ops.join("\n");
@@ -1184,6 +1481,24 @@ function redactionRects(todo, keep) {
   return rects;
 }
 
+/**
+ * The end of a translated lead-in just before `seg` on its first baseline ("Grammatik:" before
+ * "Das Adverb …"), plus the original gap, when the translation reaches past seg's first line start.
+ */
+function leadInEnd(seg, laid) {
+  const d = DIRS[seg.rotation], n = [-d[1], d[0]];
+  const start = seg.rows ? seg.rows[0][0] : seg.origin[0] * d[0] + seg.origin[1] * d[1];
+  const base = seg.origin[0] * n[0] + seg.origin[1] * n[1];
+  let end = null;
+  for (const l of laid) {
+    if (l.rot !== seg.rotation || Math.abs(l.base - base) > 0.3 * seg.size) continue;
+    if (l.right > start + 0.3 * seg.size || l.right < start - 4 * seg.size) continue;
+    const e = l.end + Math.max(0.25 * seg.size, start - l.right);
+    if (e > start + 0.01 && (end === null || e > end)) end = e;
+  }
+  return end;
+}
+
 /** Replace the translated segments of one page (`index` in `doc`; `segs` are all its segments). */
 function translatePage(doc, index, fk, segs, translations, pageInfo, opts, stats) {
   const todo = [], keep = [...((pageInfo && pageInfo.protect) || [])];
@@ -1200,7 +1515,14 @@ function translatePage(doc, index, fk, segs, translations, pageInfo, opts, stats
   for (const r of redactionRects(todo, keep)) page.createAnnotation("Redact").setRect(r);
   page.applyRedactions(false, 0, 0, 0); // keep images, keep line art, remove text
   const used = new Set();
-  const content = todo.map((seg) => layoutSegment(seg, translations[seg.id], fk, bounds, obs, opts, used, stats)).join("\n");
+  const laid = []; // where the lines of translations laid out so far end, for lead-ins
+  const content = todo.map((seg) => {
+    const ends = [];
+    const ops = layoutSegment(seg, translations[seg.id], fk, bounds, obs, opts, used, stats, leadInEnd(seg, laid), ends);
+    const right = localBox(seg.bbox, seg.rotation)[2];
+    for (const [a, b] of ends) laid.push({ rot: seg.rotation, end: a, base: b, right });
+    return ops;
+  }).join("\n");
   appendContent(doc, page, content, used);
   stats.replaced += todo.length;
   free(page);

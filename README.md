@@ -54,6 +54,8 @@ Extra features in the standalone version:
   pointer); zoomed pages scroll fully in both directions.
 * Form and table layouts: label/value columns without borders, wrapped cells and bold
   "Label:" + regular value pairs are detected as separate segments.
+* Textbook layouts: paragraphs that flow around a heading or picture keep their shape, narrow
+  table columns are kept apart, and lead-ins ("Grammatik:") never overlap the text after them.
 
 How it differs from the server version: the built-in fonts cover Latin, Greek, Cyrillic,
 Chinese, Japanese and Korean. For other alphabets you can load your own font. Right-to-left and
@@ -121,8 +123,10 @@ Built-in fonts cover Latin, Cyrillic, Greek, CJK, Arabic, Hebrew, Devanagari, Th
 ## Limitations
 
 * Scanned PDFs (text that is only an image) have no extractable text, so run OCR first.
-* Each segment gets one style: the style used for most of its characters. Mixed formatting
-  inside a paragraph (e.g. one bold word) is not kept.
+* Each segment gets one main style: the style used for most of its characters. In the
+  standalone version, words in another style (bold, italic, colour, size) keep that style where
+  the same word appears in the translation (names, romanisations, symbols, codes); other mixed
+  formatting inside a paragraph is not kept.
 * Text at an angle other than 0/90/180/270° is not changed.
 
 ## Project layout
