@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="PDF Translate 1.08">
+  <meta name="generator" content="PDF Translate 1.09">
   <title>PDF Translate</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Cdefs%3E%3ClinearGradient id=%22g%22 x1=%220%22 y1=%220%22 x2=%221%22 y2=%221%22%3E%3Cstop offset=%220%22 stop-color=%22#4a6cf7%22/%3E%3Cstop offset=%221%22 stop-color=%22#2440b3%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=%2232%22 height=%2232%22 rx=%227%22 fill=%22url%28#g%29%22/%3E%3Cpath d=%22M8 4.5h9.5l6 6V23a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V6.5a2 2 0 0 1 2-2z%22 fill=%22#fff%22/%3E%3Cpath d=%22M17.5 4.5v4.8a1.2 1.2 0 0 0 1.2 1.2h4.8z%22 fill=%22#c7d2fe%22/%3E%3Crect x=%229%22 y=%2213%22 width=%229%22 height=%221.7%22 rx=%22.85%22 fill=%22#9aabf0%22/%3E%3Crect x=%229%22 y=%2216.6%22 width=%2211%22 height=%221.7%22 rx=%22.85%22 fill=%22#9aabf0%22/%3E%3Crect x=%229%22 y=%2220.2%22 width=%226%22 height=%221.7%22 rx=%22.85%22 fill=%22#9aabf0%22/%3E%3Ccircle cx=%2224%22 cy=%2224%22 r=%227%22 fill=%22#f59e0b%22 stroke=%22#fff%22 stroke-width=%221.6%22/%3E%3Cpath d=%22M20.4 21.7h4.6M27.6 26.3H23%22 fill=%22none%22 stroke=%22#fff%22 stroke-width=%221.6%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M24.6 19.4l3.5 2.3-3.5 2.3zM23.4 24l-3.5 2.3 3.5 2.3z%22 fill=%22#fff%22/%3E%3C/svg%3E">
   <style>
@@ -368,7 +368,7 @@ kbd { font: 11.5px ui-monospace, monospace; border: 1px solid var(--border); bor
   font-family: Helvetica, Arial, sans-serif; line-height: 1.2; background: rgba(255, 255, 255, .92);
   border: 1.5px dashed var(--accent); border-radius: 3px; outline: none;
 }
-@container (max-width: 560px) { .boxes-check span { display: none; } }
+@container (max-width: 780px) { .boxes-check span { display: none; } } /* (the checkbox keeps its tooltip) */
 .viewer-pane { container-type: inline-size; }
 
 /* ---------- v1.03: full screen, wider help/AI window, AI parts, new logo ---------- */
@@ -412,6 +412,10 @@ body.box-dragging, body.box-dragging .box { cursor: grabbing !important; user-se
 .error-text { color: var(--danger, #c62828); font-weight: 600; }
 .top-fs.on { color: var(--accent, #3158d4); }
 
+/* ---- v1.09: turned pages, bilingual download ---- */
+.page-body { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); transform-origin: 50% 50%; }
+.bi-btn { padding: 0 9px; }
+
   </style>
 </head>
 <body>
@@ -419,7 +423,7 @@ body.box-dragging, body.box-dragging .box { cursor: grabbing !important; user-se
   <div class="brand">
     <span class="logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><defs><linearGradient id="logoGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4a6cf7"/><stop offset="1" stop-color="#2440b3"/></linearGradient></defs><rect width="32" height="32" rx="7" fill="url(#logoGrad)"/><path d="M8 4.5h9.5l6 6V23a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V6.5a2 2 0 0 1 2-2z" fill="#fff"/><path d="M17.5 4.5v4.8a1.2 1.2 0 0 0 1.2 1.2h4.8z" fill="#c7d2fe"/><rect x="9" y="13" width="9" height="1.7" rx=".85" fill="#9aabf0"/><rect x="9" y="16.6" width="11" height="1.7" rx=".85" fill="#9aabf0"/><rect x="9" y="20.2" width="6" height="1.7" rx=".85" fill="#9aabf0"/><circle cx="24" cy="24" r="7" fill="#f59e0b" stroke="#fff" stroke-width="1.6"/><path d="M20.4 21.7h4.6M27.6 26.3H23" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/><path d="M24.6 19.4l3.5 2.3-3.5 2.3zM23.4 24l-3.5 2.3 3.5 2.3z" fill="#fff"/></svg></span>
     <span>PDF Translate</span>
-    <span class="version" id="appVersion">v1.08</span>
+    <span class="version" id="appVersion">v1.09</span>
   </div>
   <ol class="steps" id="steps">
     <li data-step="1"><span>1</span> <i data-i18n="step.extract">Extract text</i></li>
@@ -474,6 +478,7 @@ body.box-dragging, body.box-dragging .box { cursor: grabbing !important; user-se
         <span id="pageCount" class="muted">/ 1</span>
         <button class="icon-btn" id="pageNext" data-i18n-title="nav.next">›</button>
       </div>
+      <button class="icon-btn pdf-only" id="pageRotate" data-i18n-title="nav.rotate"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg></button>
       <button class="icon-btn" id="zoomOut" data-i18n-title="zoom.out">−</button>
       <span class="zoom-label" id="zoomLabel">100%</span>
       <button class="icon-btn" id="zoomIn" data-i18n-title="zoom.in">+</button>
@@ -545,6 +550,7 @@ body.box-dragging, body.box-dragging .box { cursor: grabbing !important; user-se
         <span data-i18n="tb.build">Build PDF</span>
       </button>
       <a class="btn success" id="btnDownload" hidden href="#" data-i18n="tb.download" data-i18n-title="tb.downloadTitle">Download</a>
+      <a class="btn success bi-btn" id="btnDownloadBi" hidden href="#" data-i18n-title="tb.bilingualTitle"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="8" height="16" rx="1"/><rect x="13" y="4" width="8" height="16" rx="1"/><path d="M5.5 9h3M5.5 12h3M15.5 9h3M15.5 12h3"/></svg></a>
     </div>
     <div class="progress-row">
       <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
@@ -681,7 +687,7 @@ body.box-dragging, body.box-dragging .box { cursor: grabbing !important; user-se
     <p class="muted small" id="aiStats"></p>
     <div class="ai-parts-head"><b data-i18n="ai.parts">Copy prompt + text</b> <span class="muted small" data-i18n="ai.partsHint"></span></div>
     <div class="ai-parts" id="aiParts"></div>
-    <p class="muted small help-version">PDF Translate v1.08</p>
+    <p class="muted small help-version">PDF Translate v1.09</p>
     <div class="modal-actions">
       <button value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
       <button type="button" class="btn" id="aiCopyPrompt" data-i18n="ai.copyPrompt">Copy prompt only</button>
@@ -873,6 +879,9 @@ const I18N = {
     "msg.chooseFile": "Bitte wählen Sie eine PDF-, EPUB- oder FB2-Datei.",
     "msg.loadingEngine": "PDF-Engine wird geladen…",
     "msg.opening": "Wird geöffnet…",
+    "nav.rotate": "Diese Seite um 90° drehen (mit Umschalt: gegen den Uhrzeigersinn). Wird in die PDF übernommen.",
+    "hist.rotate": "Seite gedreht",
+    "tb.bilingualTitle": "Zweisprachig herunterladen – PDF: ungerade Seiten im Original, gerade Seiten übersetzt; E-Book: jeder Absatz im Original, gefolgt von der Übersetzung",
     "top.fullscreen": "Vollbild: ganze App (Esc beendet)",
     "zoom.page": "Ganze Seite einpassen",
     "tb.ocr": "OCR",
@@ -1143,6 +1152,9 @@ const I18N = {
     "msg.chooseFile": "Please choose a PDF, EPUB or FB2 file.",
     "msg.loadingEngine": "Loading the PDF engine…",
     "msg.opening": "Opening…",
+    "nav.rotate": "Turn this page by 90° (with Shift: counter-clockwise). Applied to the PDF.",
+    "hist.rotate": "page turned",
+    "tb.bilingualTitle": "Download both languages – PDF: odd pages original, even pages translated; e-book: each paragraph in the original, followed by its translation",
     "top.fullscreen": "Full screen: whole app (Esc to leave)",
     "zoom.page": "Fit the whole page",
     "tb.ocr": "OCR",
@@ -3406,6 +3418,76 @@ function ocrToBlocks(data, zoom, origin, colors) {
   return { blocks: lines.length ? [{ lines }] : [], seps };
 }
 
+/** Turn pages by a multiple of 90° (added to the rotation they already have): {page: degrees}. */
+function rotatePages(doc, rotations) {
+  for (const [p, deg] of Object.entries(rotations || {})) {
+    if (!deg || Number(p) >= doc.countPages()) continue;
+    const obj = doc.findPage(Number(p));
+    const old = obj.getInheritable("Rotate");
+    const cur = old.isNull() ? 0 : old.asNumber();
+    obj.put("Rotate", (((cur + deg) % 360) + 360) % 360);
+  }
+}
+
+/**
+ * The translated PDF (or the original when nothing is translated) with markups and turned
+ * pages. Those go into a copy, so the editable document never accumulates them.
+ */
+function savePdf(W, markups, rotations) {
+  const turned = Object.values(rotations).some(Boolean);
+  if (!W.edit && !markups.length && !turned) throw new Error("Nothing to save yet.");
+  let doc = W.edit, temp = null;
+  if (markups.length || turned || !W.edit) {
+    let src = W.bytes;
+    if (W.edit) { const b = W.edit.saveToBuffer(""); src = b.asUint8Array().slice(); free(b); }
+    temp = doc = M.Document.openDocument(src.slice(), "application/pdf");
+    addMarkups(doc, markups);
+    if (markups.some((m) => m.type === "text")) doc.subsetFonts();
+    rotatePages(doc, rotations);
+  }
+  const buf = doc.saveToBuffer("garbage,compress");
+  const bytes = buf.asUint8Array().slice();
+  free(buf);
+  free(temp);
+  return bytes;
+}
+
+/**
+ * A bilingual PDF: the odd pages are the original, the even pages its translation (page 1
+ * original, page 2 translated page 1, page 3 original page 2, …). Fonts and images shared by
+ * pages of one document are copied once.
+ */
+function bilingualPdf(W, markups, rotations) {
+  const translated = M.Document.openDocument(savePdf(W, markups, rotations), "application/pdf");
+  const original = M.Document.openDocument(W.bytes.slice(), "application/pdf");
+  rotatePages(original, rotations);
+  const out = new M.PDFDocument();
+  try {
+    const fromOriginal = out.newGraftMap(), fromTranslated = out.newGraftMap();
+    const n = original.countPages();
+    // Grafting copies a page without its annotations (links, markups): they are copied as well.
+    const graft = (map, src, i) => {
+      const at = out.countPages();
+      map.graftPage(at, src, i);
+      const annots = src.findPage(i).get("Annots");
+      if (!annots.isArray() || !annots.length) return;
+      const page = out.findPage(at), copy = map.graftObject(annots);
+      for (let k = 0; k < copy.length; k++) { const a = copy.get(k); if (a.isDictionary()) a.put("P", page); }
+      page.put("Annots", copy);
+    };
+    for (let i = 0; i < n; i++) {
+      graft(fromOriginal, original, i);
+      graft(fromTranslated, translated, i);
+    }
+    const buf = out.saveToBuffer("garbage,compress");
+    const bytes = buf.asUint8Array().slice();
+    free(buf);
+    return bytes;
+  } finally {
+    free(out); free(original); free(translated);
+  }
+}
+
 // ---------------------------------------------------------- worker protocol
 /**
  * Request handler shared by the Web Worker and the in-page fallback. It keeps an open copy of
@@ -3479,22 +3561,17 @@ function createHandler() {
       return { result: bytes, transfer: [bytes.buffer] };
     }
     if (cmd === "save") {
-      // The translated PDF (or the original if nothing was translated) plus markups. Markups
-      // go into a copy, so the editable document never accumulates them.
-      const markups = args.markups || [];
-      if (!W.edit && !markups.length) throw new Error("Nothing to save yet.");
-      let doc = W.edit, temp = null;
-      if (markups.length) {
-        let src = W.bytes;
-        if (W.edit) { const b = W.edit.saveToBuffer(""); src = b.asUint8Array().slice(); free(b); }
-        temp = doc = M.Document.openDocument(src.slice(), "application/pdf");
-        addMarkups(doc, markups);
-        if (markups.some((m) => m.type === "text")) doc.subsetFonts();
-      }
-      const buf = doc.saveToBuffer("garbage,compress");
-      const bytes = buf.asUint8Array().slice();
-      free(buf);
-      free(temp);
+      const bytes = savePdf(W, args.markups || [], args.rotations || {});
+      return { result: bytes, transfer: [bytes.buffer] };
+    }
+    if (cmd === "saveBilingual" && W.kind !== "pdf") {
+      // E-book: each paragraph in the original, followed by its translation.
+      if (!W.book) W.book = (await openBook(W.bytes, W.kind)).book;
+      const { bytes } = await saveBook(W.book, W.bytes, args.segments, args.translations, { ...(args.opts || {}), bilingual: true });
+      return { result: bytes, transfer: [bytes.buffer] };
+    }
+    if (cmd === "saveBilingual") {
+      const bytes = bilingualPdf(W, args.markups || [], args.rotations || {});
       return { result: bytes, transfer: [bytes.buffer] };
     }
     if (cmd === "resetOutput") {
@@ -3770,8 +3847,11 @@ function collectSegments(src, root, rules, out, tagName = "") {
   const visit = (el) => {
     if (el.name && rules.skip.has(el.name)) return;
     let run = [];
+    // An element holding only inline content (a paragraph, heading, cell …) is the segment's
+    // block: a bilingual book repeats it with the translation.
+    const whole = el.name !== "#root" && el.name !== "body" && el.kids.every((k) => isInline(k));
     const flush = () => {
-      if (run.length) makeSegment(src, run, rules, out, el.name === "#root" ? tagName : el.name);
+      if (run.length) makeSegment(src, run, rules, out, el.name === "#root" ? tagName : el.name, whole ? el : null);
       run = [];
     };
     for (const k of el.kids) {
@@ -3783,7 +3863,7 @@ function collectSegments(src, root, rules, out, tagName = "") {
   visit(root);
 }
 
-function makeSegment(src, run, rules, out, tag) {
+function makeSegment(src, run, rules, out, tag, block = null) {
   // Trim whitespace-only text and comments at both ends.
   let a = 0, b = run.length;
   const blank = (k) => k.other || (k.text && !k.cdata && !src.slice(k.s, k.e).trim());
@@ -3836,7 +3916,7 @@ function makeSegment(src, run, rules, out, tag) {
   text = text.replace(/\s+/g, " ").replace(/ *\ue000 */g, "\n").trim();
   if (!/[\p{L}\p{N}]/u.test(text.replace(/<\/?\d+\/?>/g, ""))) return;
   const s = tags[1] && tags[1].initial ? first.s : nodes[0].s, e = nodes[nodes.length - 1].e;
-  out.push({ text, s, e, tag, ...(next > 1 ? { tags } : {}) });
+  out.push({ text, s, e, tag, ...(next > 1 ? { tags } : {}), ...(block ? { block: { s: block.s, e: block.e, open: src.slice(block.s, block.cs), close: src.slice(block.ce, block.e) } } : {}) });
 }
 
 /** Turn a translation back into markup, restoring the segment's inline elements. */
@@ -3981,10 +4061,12 @@ async function saveBook(book, bytes, segments, translations, opts = {}) {
     const raw = f.src.slice(seg.s, seg.e);
     const lead = /^\s*/.exec(raw)[0], trail = /\s*$/.exec(raw)[0];
     if (!edits.has(seg.file)) edits.set(seg.file, []);
-    edits.get(seg.file).push({ s: seg.s, e: seg.e, text: lead + markupOf(tr, seg.tags, rulesFor(f.type)) + trail });
+    const markup = markupOf(tr, seg.tags, rulesFor(f.type));
+    if (opts.bilingual) edits.get(seg.file).push(bilingualEdit(seg, f, markup, opts));
+    else edits.get(seg.file).push({ s: seg.s, e: seg.e, text: lead + markup + trail });
     replaced++;
   }
-  const lang = (opts.lang || "").trim();
+  const lang = opts.bilingual ? "" : (opts.lang || "").trim(); // (a bilingual book keeps its language)
   const changed = new Map();
   book.files.forEach((f, fi) => {
     const list = (edits.get(fi) || []).sort((a, b) => a.s - b.s);
@@ -4010,6 +4092,33 @@ async function saveBook(book, bytes, segments, translations, opts = {}) {
     result = await zipWrite(entries);
   }
   return { bytes: result, stats: { replaced, untranslated: segments.length - replaced, shrunk: [], missing: 0, missingChars: "" } };
+}
+
+const CELL_TAGS = new Set(["td", "th"]);
+
+/**
+ * Bilingual book: the translation follows the original. A paragraph, heading, list item or verse
+ * line is repeated with the translation (without its id, so links still lead to the original);
+ * a table cell holds both, one under the other; titles in the metadata and the table of contents
+ * read "original / translation".
+ */
+function bilingualEdit(seg, f, markup, opts) {
+  const code = (opts.lang || "").replace(/[^A-Za-z0-9-]/g, "");
+  const tag = (seg.block && /^<([^\s/>]+)/.exec(seg.block.open) || [])[1] || "";
+  const local = tag.replace(/^.*:/, "").toLowerCase();
+  if (seg.block && !seg.hidden && !CELL_TAGS.has(local) && (f.type === "xhtml" || f.type === "fb2")) {
+    let open = seg.block.open;
+    if (code && f.type === "xhtml") open = open.replace(/\s(?:xml:)?lang\s*=\s*("[^"]*"|'[^']*')/gi, "").replace(/\s*(\/?)>$/, ` lang="${code}" xml:lang="${code}"$1>`);
+    // The copy is the whole element with the translation in place of the text (so an <em> around
+    // the paragraph stays), without ids: they must stay unique.
+    const inner = f.src.slice(seg.block.s + seg.block.open.length, seg.s) + markup + f.src.slice(seg.e, seg.block.e - seg.block.close.length);
+    const copy = (open + inner + seg.block.close).replace(/<[^>]+>/g, (t) => t.replace(/\s(?:xml:)?id\s*=\s*("[^"]*"|'[^']*')/gi, ""));
+    // (whitespace that indents the original element is repeated before the copy)
+    const indent = /\n[ \t]*$/.exec(f.src.slice(Math.max(0, seg.block.s - 80), seg.block.s));
+    return { s: seg.block.e, e: seg.block.e, text: (indent ? indent[0] : "\n") + copy };
+  }
+  const sep = f.type === "xhtml" && !seg.hidden ? "<br/>" : " / ";
+  return { s: seg.e, e: seg.e, text: sep + markup };
 }
 
 /** Mark the book as being in the target language (dc:language, lang attributes, FB2 <lang>). */
@@ -4178,6 +4287,7 @@ const state = {
   markups: [],        // drawings on the pages (see markup.js)
   outView: null,      // e-books: {pages, boxes} of the laid-out translated book
   overrides: {},      // id -> the user's box, size, font, colour for that field (see tools.js)
+  rotations: {},      // page -> degrees the user turned it (PDFs; applied when saving)
 };
 
 /** The open document is an e-book (EPUB/FB2) rather than a PDF. */
@@ -4482,6 +4592,7 @@ function openDocument(doc, bytes) {
   document.title = `${doc.name} · PDF Translate`;
 
   loadOverrides();
+  loadRotations();
   fillPageFilter();
   $("#search").value = "";
   $("#filterStatus").value = "all";
@@ -4596,12 +4707,33 @@ function closeDocument() {
 
 function fitZoom() {
   const avail = $("#pages").clientWidth - 48;
-  const widest = Math.max(...state.doc.pages.map((p) => p.width));
+  const widest = Math.max(...state.doc.pages.map((p, i) => (state.rotations[i] % 180 ? p.height : p.width)));
   const z = Math.floor((avail / (widest * 1.25)) * 10) / 10;
   return Math.min(1.5, Math.max(0.4, z || 1));
 }
 
 const pageCssWidth = (page) => Math.round(page.width * 1.25 * state.zoom);
+
+/** How far the user turned page i (PDF pages only). */
+const pageRotation = (i) => (isBook() ? 0 : state.rotations[i] || 0);
+
+/** Width and height of page i as shown (turned pages swap them), in points. */
+function shownSize(i) {
+  const p = viewPages()[i];
+  return pageRotation(i) % 180 ? [p.height, p.width] : [p.width, p.height];
+}
+
+/** Size a page element for the zoom, and turn its body for a rotated page. */
+function sizePage(el) {
+  const i = Number(el.dataset.page), page = viewPages()[i], rot = pageRotation(i);
+  const w = pageCssWidth(page), h = Math.round((w * page.height) / page.width);
+  el.style.width = `${rot % 180 ? h : w}px`;
+  el.style.aspectRatio = rot % 180 ? `${page.height} / ${page.width}` : `${page.width} / ${page.height}`;
+  const body = el.querySelector(".page-body");
+  body.style.width = `${w}px`;
+  body.style.height = `${h}px`;
+  body.style.transform = `translate(-50%, -50%)${rot ? ` rotate(${rot}deg)` : ""}`;
+}
 
 function renderZoom(page) {
   const px = pageCssWidth(page) * Math.min(2, window.devicePixelRatio || 1);
@@ -4692,10 +4824,11 @@ function renderPages() {
   observer.disconnect();
   clearImageCache();
   visiblePages.clear();
+  // The picture, boxes and markups are in .page-body, which is turned for pages the user rotated.
   const html = viewPages().map((page, i) =>
-    `<div class="page" data-page="${i}" style="width:${pageCssWidth(page)}px;aspect-ratio:${page.width} / ${page.height}">` +
-    `<span class="page-label">${t("page.n", { n: i + 1 })}</span><img alt=""></div>`).join("");
+    `<div class="page" data-page="${i}"><span class="page-label">${t("page.n", { n: i + 1 })}</span><div class="page-body"><img alt=""></div></div>`).join("");
   wrap.innerHTML = html;
+  wrap.querySelectorAll(".page").forEach((el) => sizePage(el));
   segsByPage = new Map();
   boxesByPage = new Map();
   const addBox = (page, s, bbox) => {
@@ -4731,7 +4864,7 @@ function ensureBoxes(i) {
     const cls = "box" + (hasTr(s.id) ? " done" : "") + (s.skip ? " skip" : "") + (active ? " active" : "") + (custom ? " custom" : "");
     return `<div class="${cls}" data-id="${s.id}" title="#${s.id}" style="left:${((x0 - page.x0) / page.width) * 100}%;top:${((y0 - page.y0) / page.height) * 100}%;width:${((x1 - x0) / page.width) * 100}%;height:${((y1 - y0) / page.height) * 100}%">${active && !isBook() ? HANDLES : ""}</div>`;
   }).join("");
-  el.insertAdjacentHTML("beforeend", html);
+  el.querySelector(".page-body").insertAdjacentHTML("beforeend", html);
   renderMarkups(i);
   return el;
 }
@@ -4739,7 +4872,7 @@ function ensureBoxes(i) {
 function refreshImages() {
   if (!state.doc) return;
   document.querySelectorAll(".page").forEach((el) => {
-    el.style.width = `${pageCssWidth(viewPages()[Number(el.dataset.page)])}px`;
+    sizePage(el);
   });
   renderQueue = [];
   for (const i of visiblePages) queueRender(i);
@@ -4778,7 +4911,7 @@ function setZoom(z, anchor) {
   const el = pages.find((p) => p.offsetTop + p.offsetHeight + 11 >= cy) || pages[pages.length - 1];
   const fx = (cx - el.offsetLeft) / el.offsetWidth, fy = (cy - el.offsetTop) / el.offsetHeight;
   state.zoom = z;
-  for (const p of pages) p.style.width = `${pageCssWidth(viewPages()[Number(p.dataset.page)])}px`;
+  for (const p of pages) sizePage(p);
   box.scrollLeft = el.offsetLeft + fx * el.offsetWidth - ax;
   box.scrollTop = el.offsetTop + fy * el.offsetHeight - ay;
   $("#zoomLabel").textContent = `${Math.round(z * 100)}%`;
@@ -4788,7 +4921,7 @@ function setZoom(z, anchor) {
 
 function fitWidth() {
   const box = $("#pages");
-  const widest = Math.max(...state.doc.pages.map((p) => p.width));
+  const widest = Math.max(...viewPages().map((p, i) => shownSize(i)[0]));
   setZoom((box.clientWidth - 48) / (widest * 1.25));
 }
 
@@ -5145,14 +5278,36 @@ function setBuilt(built) {
 
 async function downloadOutput() {
   try {
-    if (!state.outBytes || state.outDirty) {
+    // (the copy saved by the build has no markups and no turned pages: those are added on saving)
+    const extras = (state.markups && state.markups.length) || (!isBook() && Object.keys(state.rotations).length);
+    if (!state.outBytes || state.outDirty || extras) {
       busy(t("msg.saving"));
-      state.outBytes = await pool.workers[0].call("save", { markups: state.markups });
+      state.outBytes = await pool.workers[0].call("save", { markups: state.markups, rotations: isBook() ? {} : state.rotations });
       state.outDirty = false;
     }
     const kind = state.doc.kind || "pdf";
     const type = { pdf: "application/pdf", epub: "application/epub+zip", fb2: "application/x-fictionbook+xml" }[kind];
     saveBlob(new Blob([state.outBytes], { type }), `${stem()}.translated.${kind}`);
+  } catch (err) {
+    toast(t("msg.saveFailed", { err: err.message || err }), "error");
+  } finally {
+    busy("");
+  }
+}
+
+/**
+ * Both languages in one file: a PDF with the original on the odd and the translation on the
+ * even pages; an e-book with each paragraph followed by its translation.
+ */
+async function downloadBilingual() {
+  try {
+    busy(t("msg.saving"));
+    const kind = state.doc.kind || "pdf";
+    const bytes = kind === "pdf"
+      ? await pool.workers[0].call("saveBilingual", { markups: state.markups, rotations: state.rotations })
+      : await pool.workers[0].call("saveBilingual", { segments: state.doc.segments, translations: state.applied, opts: buildOptions() });
+    const type = { pdf: "application/pdf", epub: "application/epub+zip", fb2: "application/x-fictionbook+xml" }[kind];
+    saveBlob(new Blob([bytes], { type }), `${stem()}.bilingual.${kind}`);
   } catch (err) {
     toast(t("msg.saveFailed", { err: err.message || err }), "error");
   } finally {
@@ -5653,7 +5808,9 @@ function saveMarkups() {
 }
 
 function updateDownloadButton() {
-  $("#btnDownload").hidden = !(state.hasOutput || (state.markups && state.markups.length));
+  const turned = !isBook() && Object.keys(state.rotations || {}).length > 0;
+  $("#btnDownload").hidden = !(state.hasOutput || (state.markups && state.markups.length) || turned);
+  $("#btnDownloadBi").hidden = !state.hasOutput;
 }
 
 /** Replace all markups (used by undo/redo) and redraw. */
@@ -5689,7 +5846,7 @@ function layerFor(i) {
   if (!svg) {
     const p = state.doc.pages[i];
     svg = svgEl("svg", { class: "mk-layer", viewBox: `${p.x0} ${p.y0} ${p.width} ${p.height}`, preserveAspectRatio: "none" });
-    pageEl.appendChild(svg);
+    pageEl.querySelector(".page-body").appendChild(svg);
   }
   return svg;
 }
@@ -5911,7 +6068,7 @@ function measureText(text, size) {
 
 function openTextEditor(i, pt, existing) {
   closeTextEditor(true);
-  const pageEl = document.querySelector(`.page[data-page="${i}"]`);
+  const pageEl = document.querySelector(`.page[data-page="${i}"] .page-body`); // (turned with the page)
   const p = state.doc.pages[i];
   const scale = pageEl.clientWidth / p.width;
   const size = existing ? existing.size : TEXT_SIZES[mk.width] || 12;
@@ -6219,9 +6376,15 @@ function showHandles(id) {
 
 const boxDrag = { cur: null, justDragged: false };
 
+/** The page point under the pointer (also on a turned page). */
 function pagePoint(pageEl, e) {
-  const p = viewPages()[Number(pageEl.dataset.page)], r = pageEl.getBoundingClientRect();
-  return [p.x0 + ((e.clientX - r.left) / r.width) * p.width, p.y0 + ((e.clientY - r.top) / r.height) * p.height];
+  const i = Number(pageEl.dataset.page), p = viewPages()[i], body = pageEl.querySelector(".page-body");
+  const r = body.getBoundingClientRect();
+  let vx = e.clientX - (r.left + r.right) / 2, vy = e.clientY - (r.top + r.bottom) / 2;
+  const rot = pageRotation(i); // undo the clockwise turn of the body
+  if (rot === 90) [vx, vy] = [vy, -vx]; else if (rot === 180) [vx, vy] = [-vx, -vy]; else if (rot === 270) [vx, vy] = [-vy, vx];
+  const W = body.offsetWidth, H = body.offsetHeight;
+  return [p.x0 + ((vx + W / 2) / W) * p.width, p.y0 + ((vy + H / 2) / H) * p.height];
 }
 
 function onBoxDown(e) {
@@ -6241,7 +6404,7 @@ function onBoxMove(e) {
   const dx = pt[0] - d.start[0], dy = pt[1] - d.start[1];
   const page = viewPages()[Number(d.pageEl.dataset.page)];
   if (!d.moved) {
-    const scale = d.pageEl.getBoundingClientRect().width / page.width; // screen px per point
+    const scale = d.pageEl.querySelector(".page-body").offsetWidth / page.width; // screen px per point
     if (Math.hypot(dx, dy) * scale < 4) return;
     d.moved = true;
     document.body.classList.add("box-dragging");
@@ -6335,10 +6498,37 @@ function toggleAppFullscreen() {
 /** Zoom so that the whole current page is visible. */
 function fitPage() {
   if (!state.doc) return;
-  const box = $("#pages"), i = currentPageIndex(), p = viewPages()[i];
-  const zw = (box.clientWidth - 48) / (p.width * 1.25), zh = (box.clientHeight - 44) / (p.height * 1.25);
+  const box = $("#pages"), i = currentPageIndex(), [w, h] = shownSize(i);
+  const zw = (box.clientWidth - 48) / (w * 1.25), zh = (box.clientHeight - 44) / (h * 1.25);
   setZoom(Math.min(zw, zh));
   requestAnimationFrame(() => goToPage(i));
+}
+
+/* ------------------------------------------------------------ turning pages */
+
+const rotKey = (id) => `pdftr:rot:${id}`;
+
+function loadRotations() {
+  try { state.rotations = isBook() ? {} : JSON.parse(localStorage.getItem(rotKey(state.doc.id)) || "{}"); } catch (_) { state.rotations = {}; }
+}
+
+function setRotation(i, deg) {
+  if (deg) state.rotations[i] = deg; else delete state.rotations[i];
+  try { localStorage.setItem(rotKey(state.doc.id), JSON.stringify(state.rotations)); } catch (_) { /* storage blocked */ }
+  const el = document.querySelector(`.page[data-page="${i}"]`);
+  if (el) sizePage(el);
+  state.outDirty = true; // the saved copy must be made again
+  updateDownloadButton();
+  requestAnimationFrame(() => goToPage(i));
+}
+
+/** Turn the current page by 90° clockwise (counter-clockwise with Shift). Undoable. */
+function rotateCurrentPage(e) {
+  if (!state.doc || isBook()) return;
+  const i = currentPageIndex(), before = state.rotations[i] || 0;
+  const after = (before + (e && e.shiftKey ? 270 : 90)) % 360;
+  setRotation(i, after);
+  pushHistory({ label: t("hist.rotate"), undo: () => setRotation(i, before), redo: () => setRotation(i, after) });
 }
 
 /* ------------------------------------------------------ password dialog */
@@ -6573,6 +6763,8 @@ function initTools() {
     $("#btnAppFullscreen").classList.toggle("on", Boolean(document.fullscreenElement) && !document.body.classList.contains("viewer-only"));
   });
   $("#zoomPage").addEventListener("click", fitPage);
+  $("#pageRotate").addEventListener("click", rotateCurrentPage);
+  $("#btnDownloadBi").addEventListener("click", (e) => { e.preventDefault(); downloadBilingual(); });
   $("#btnOcr").addEventListener("click", openOcrDialog);
   $("#ocrGo").addEventListener("click", (e) => { e.preventDefault(); $("#ocrDialog").close(); startOcr(); });
 }

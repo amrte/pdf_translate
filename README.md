@@ -56,6 +56,9 @@ Extra features in the standalone version:
 * Full-screen PDF view (button or F), full screen for the whole app, fit width / fit page.
 * Fields can be moved and resized on the page (drag the box / its handles); size, font, bold,
   italic and colour can be set per field (**Aa** on a card).
+* Pages can be turned by 90° (↻ in the page toolbar).
+* Bilingual download: a PDF with the original on odd and the translation on even pages; an EPUB /
+  FB2 with each paragraph followed by its translation.
 * Password protection is removed (restrictions automatically, an open password after you enter it).
 * **OCR** for scanned pages (English, German, French, Ukrainian, Finnish, Chinese) with Tesseract.js,
   loaded on demand from cdn.jsdelivr.net; the translation is set on a patch of the paper colour.

@@ -2020,6 +2020,76 @@ function ocrToBlocks(data, zoom, origin, colors) {
   return { blocks: lines.length ? [{ lines }] : [], seps };
 }
 
+/** Turn pages by a multiple of 90° (added to the rotation they already have): {page: degrees}. */
+function rotatePages(doc, rotations) {
+  for (const [p, deg] of Object.entries(rotations || {})) {
+    if (!deg || Number(p) >= doc.countPages()) continue;
+    const obj = doc.findPage(Number(p));
+    const old = obj.getInheritable("Rotate");
+    const cur = old.isNull() ? 0 : old.asNumber();
+    obj.put("Rotate", (((cur + deg) % 360) + 360) % 360);
+  }
+}
+
+/**
+ * The translated PDF (or the original when nothing is translated) with markups and turned
+ * pages. Those go into a copy, so the editable document never accumulates them.
+ */
+function savePdf(W, markups, rotations) {
+  const turned = Object.values(rotations).some(Boolean);
+  if (!W.edit && !markups.length && !turned) throw new Error("Nothing to save yet.");
+  let doc = W.edit, temp = null;
+  if (markups.length || turned || !W.edit) {
+    let src = W.bytes;
+    if (W.edit) { const b = W.edit.saveToBuffer(""); src = b.asUint8Array().slice(); free(b); }
+    temp = doc = M.Document.openDocument(src.slice(), "application/pdf");
+    addMarkups(doc, markups);
+    if (markups.some((m) => m.type === "text")) doc.subsetFonts();
+    rotatePages(doc, rotations);
+  }
+  const buf = doc.saveToBuffer("garbage,compress");
+  const bytes = buf.asUint8Array().slice();
+  free(buf);
+  free(temp);
+  return bytes;
+}
+
+/**
+ * A bilingual PDF: the odd pages are the original, the even pages its translation (page 1
+ * original, page 2 translated page 1, page 3 original page 2, …). Fonts and images shared by
+ * pages of one document are copied once.
+ */
+function bilingualPdf(W, markups, rotations) {
+  const translated = M.Document.openDocument(savePdf(W, markups, rotations), "application/pdf");
+  const original = M.Document.openDocument(W.bytes.slice(), "application/pdf");
+  rotatePages(original, rotations);
+  const out = new M.PDFDocument();
+  try {
+    const fromOriginal = out.newGraftMap(), fromTranslated = out.newGraftMap();
+    const n = original.countPages();
+    // Grafting copies a page without its annotations (links, markups): they are copied as well.
+    const graft = (map, src, i) => {
+      const at = out.countPages();
+      map.graftPage(at, src, i);
+      const annots = src.findPage(i).get("Annots");
+      if (!annots.isArray() || !annots.length) return;
+      const page = out.findPage(at), copy = map.graftObject(annots);
+      for (let k = 0; k < copy.length; k++) { const a = copy.get(k); if (a.isDictionary()) a.put("P", page); }
+      page.put("Annots", copy);
+    };
+    for (let i = 0; i < n; i++) {
+      graft(fromOriginal, original, i);
+      graft(fromTranslated, translated, i);
+    }
+    const buf = out.saveToBuffer("garbage,compress");
+    const bytes = buf.asUint8Array().slice();
+    free(buf);
+    return bytes;
+  } finally {
+    free(out); free(original); free(translated);
+  }
+}
+
 // ---------------------------------------------------------- worker protocol
 /**
  * Request handler shared by the Web Worker and the in-page fallback. It keeps an open copy of
@@ -2093,22 +2163,17 @@ function createHandler() {
       return { result: bytes, transfer: [bytes.buffer] };
     }
     if (cmd === "save") {
-      // The translated PDF (or the original if nothing was translated) plus markups. Markups
-      // go into a copy, so the editable document never accumulates them.
-      const markups = args.markups || [];
-      if (!W.edit && !markups.length) throw new Error("Nothing to save yet.");
-      let doc = W.edit, temp = null;
-      if (markups.length) {
-        let src = W.bytes;
-        if (W.edit) { const b = W.edit.saveToBuffer(""); src = b.asUint8Array().slice(); free(b); }
-        temp = doc = M.Document.openDocument(src.slice(), "application/pdf");
-        addMarkups(doc, markups);
-        if (markups.some((m) => m.type === "text")) doc.subsetFonts();
-      }
-      const buf = doc.saveToBuffer("garbage,compress");
-      const bytes = buf.asUint8Array().slice();
-      free(buf);
-      free(temp);
+      const bytes = savePdf(W, args.markups || [], args.rotations || {});
+      return { result: bytes, transfer: [bytes.buffer] };
+    }
+    if (cmd === "saveBilingual" && W.kind !== "pdf") {
+      // E-book: each paragraph in the original, followed by its translation.
+      if (!W.book) W.book = (await openBook(W.bytes, W.kind)).book;
+      const { bytes } = await saveBook(W.book, W.bytes, args.segments, args.translations, { ...(args.opts || {}), bilingual: true });
+      return { result: bytes, transfer: [bytes.buffer] };
+    }
+    if (cmd === "saveBilingual") {
+      const bytes = bilingualPdf(W, args.markups || [], args.rotations || {});
       return { result: bytes, transfer: [bytes.buffer] };
     }
     if (cmd === "resetOutput") {

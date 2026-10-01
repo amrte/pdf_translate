@@ -4,6 +4,21 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.09
+
+- **Turn pages**: new ↻ button in the page toolbar turns the current page by 90° clockwise (with
+  Shift: counter-clockwise). The page is shown turned, fields can still be moved on it, and the
+  downloaded PDF has the page turned. Undo / redo work. (PDFs only.)
+- **Bilingual download** (new button next to Download):
+  - **PDF**: the odd pages are the original, the even pages the translation (page 1 original,
+    page 2 translated page 1, page 3 original page 2 …). Turned pages and markups are included.
+  - **EPUB / FB2**: e-books have no fixed pages, so each paragraph, heading, list item, quote
+    and line of verse in the original is followed by its translation (same formatting); table
+    cells hold both, one under the other; the title and the table of contents read
+    "original / translation". With a language code in the build dialog, the translated
+    paragraphs are marked with that language.
+- Fixed: markups drawn before **Build PDF** were missing from the download.
+
 ## 1.08
 
 - **Full screen for the whole app**: new button in the top bar (the existing button in the page

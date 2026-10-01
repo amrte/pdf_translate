@@ -32,6 +32,7 @@ const state = {
   markups: [],        // drawings on the pages (see markup.js)
   outView: null,      // e-books: {pages, boxes} of the laid-out translated book
   overrides: {},      // id -> the user's box, size, font, colour for that field (see tools.js)
+  rotations: {},      // page -> degrees the user turned it (PDFs; applied when saving)
 };
 
 /** The open document is an e-book (EPUB/FB2) rather than a PDF. */
@@ -336,6 +337,7 @@ function openDocument(doc, bytes) {
   document.title = `${doc.name} · PDF Translate`;
 
   loadOverrides();
+  loadRotations();
   fillPageFilter();
   $("#search").value = "";
   $("#filterStatus").value = "all";
@@ -450,12 +452,33 @@ function closeDocument() {
 
 function fitZoom() {
   const avail = $("#pages").clientWidth - 48;
-  const widest = Math.max(...state.doc.pages.map((p) => p.width));
+  const widest = Math.max(...state.doc.pages.map((p, i) => (state.rotations[i] % 180 ? p.height : p.width)));
   const z = Math.floor((avail / (widest * 1.25)) * 10) / 10;
   return Math.min(1.5, Math.max(0.4, z || 1));
 }
 
 const pageCssWidth = (page) => Math.round(page.width * 1.25 * state.zoom);
+
+/** How far the user turned page i (PDF pages only). */
+const pageRotation = (i) => (isBook() ? 0 : state.rotations[i] || 0);
+
+/** Width and height of page i as shown (turned pages swap them), in points. */
+function shownSize(i) {
+  const p = viewPages()[i];
+  return pageRotation(i) % 180 ? [p.height, p.width] : [p.width, p.height];
+}
+
+/** Size a page element for the zoom, and turn its body for a rotated page. */
+function sizePage(el) {
+  const i = Number(el.dataset.page), page = viewPages()[i], rot = pageRotation(i);
+  const w = pageCssWidth(page), h = Math.round((w * page.height) / page.width);
+  el.style.width = `${rot % 180 ? h : w}px`;
+  el.style.aspectRatio = rot % 180 ? `${page.height} / ${page.width}` : `${page.width} / ${page.height}`;
+  const body = el.querySelector(".page-body");
+  body.style.width = `${w}px`;
+  body.style.height = `${h}px`;
+  body.style.transform = `translate(-50%, -50%)${rot ? ` rotate(${rot}deg)` : ""}`;
+}
 
 function renderZoom(page) {
   const px = pageCssWidth(page) * Math.min(2, window.devicePixelRatio || 1);
@@ -546,10 +569,11 @@ function renderPages() {
   observer.disconnect();
   clearImageCache();
   visiblePages.clear();
+  // The picture, boxes and markups are in .page-body, which is turned for pages the user rotated.
   const html = viewPages().map((page, i) =>
-    `<div class="page" data-page="${i}" style="width:${pageCssWidth(page)}px;aspect-ratio:${page.width} / ${page.height}">` +
-    `<span class="page-label">${t("page.n", { n: i + 1 })}</span><img alt=""></div>`).join("");
+    `<div class="page" data-page="${i}"><span class="page-label">${t("page.n", { n: i + 1 })}</span><div class="page-body"><img alt=""></div></div>`).join("");
   wrap.innerHTML = html;
+  wrap.querySelectorAll(".page").forEach((el) => sizePage(el));
   segsByPage = new Map();
   boxesByPage = new Map();
   const addBox = (page, s, bbox) => {
@@ -585,7 +609,7 @@ function ensureBoxes(i) {
     const cls = "box" + (hasTr(s.id) ? " done" : "") + (s.skip ? " skip" : "") + (active ? " active" : "") + (custom ? " custom" : "");
     return `<div class="${cls}" data-id="${s.id}" title="#${s.id}" style="left:${((x0 - page.x0) / page.width) * 100}%;top:${((y0 - page.y0) / page.height) * 100}%;width:${((x1 - x0) / page.width) * 100}%;height:${((y1 - y0) / page.height) * 100}%">${active && !isBook() ? HANDLES : ""}</div>`;
   }).join("");
-  el.insertAdjacentHTML("beforeend", html);
+  el.querySelector(".page-body").insertAdjacentHTML("beforeend", html);
   renderMarkups(i);
   return el;
 }
@@ -593,7 +617,7 @@ function ensureBoxes(i) {
 function refreshImages() {
   if (!state.doc) return;
   document.querySelectorAll(".page").forEach((el) => {
-    el.style.width = `${pageCssWidth(viewPages()[Number(el.dataset.page)])}px`;
+    sizePage(el);
   });
   renderQueue = [];
   for (const i of visiblePages) queueRender(i);
@@ -632,7 +656,7 @@ function setZoom(z, anchor) {
   const el = pages.find((p) => p.offsetTop + p.offsetHeight + 11 >= cy) || pages[pages.length - 1];
   const fx = (cx - el.offsetLeft) / el.offsetWidth, fy = (cy - el.offsetTop) / el.offsetHeight;
   state.zoom = z;
-  for (const p of pages) p.style.width = `${pageCssWidth(viewPages()[Number(p.dataset.page)])}px`;
+  for (const p of pages) sizePage(p);
   box.scrollLeft = el.offsetLeft + fx * el.offsetWidth - ax;
   box.scrollTop = el.offsetTop + fy * el.offsetHeight - ay;
   $("#zoomLabel").textContent = `${Math.round(z * 100)}%`;
@@ -642,7 +666,7 @@ function setZoom(z, anchor) {
 
 function fitWidth() {
   const box = $("#pages");
-  const widest = Math.max(...state.doc.pages.map((p) => p.width));
+  const widest = Math.max(...viewPages().map((p, i) => shownSize(i)[0]));
   setZoom((box.clientWidth - 48) / (widest * 1.25));
 }
 
@@ -999,14 +1023,36 @@ function setBuilt(built) {
 
 async function downloadOutput() {
   try {
-    if (!state.outBytes || state.outDirty) {
+    // (the copy saved by the build has no markups and no turned pages: those are added on saving)
+    const extras = (state.markups && state.markups.length) || (!isBook() && Object.keys(state.rotations).length);
+    if (!state.outBytes || state.outDirty || extras) {
       busy(t("msg.saving"));
-      state.outBytes = await pool.workers[0].call("save", { markups: state.markups });
+      state.outBytes = await pool.workers[0].call("save", { markups: state.markups, rotations: isBook() ? {} : state.rotations });
       state.outDirty = false;
     }
     const kind = state.doc.kind || "pdf";
     const type = { pdf: "application/pdf", epub: "application/epub+zip", fb2: "application/x-fictionbook+xml" }[kind];
     saveBlob(new Blob([state.outBytes], { type }), `${stem()}.translated.${kind}`);
+  } catch (err) {
+    toast(t("msg.saveFailed", { err: err.message || err }), "error");
+  } finally {
+    busy("");
+  }
+}
+
+/**
+ * Both languages in one file: a PDF with the original on the odd and the translation on the
+ * even pages; an e-book with each paragraph followed by its translation.
+ */
+async function downloadBilingual() {
+  try {
+    busy(t("msg.saving"));
+    const kind = state.doc.kind || "pdf";
+    const bytes = kind === "pdf"
+      ? await pool.workers[0].call("saveBilingual", { markups: state.markups, rotations: state.rotations })
+      : await pool.workers[0].call("saveBilingual", { segments: state.doc.segments, translations: state.applied, opts: buildOptions() });
+    const type = { pdf: "application/pdf", epub: "application/epub+zip", fb2: "application/x-fictionbook+xml" }[kind];
+    saveBlob(new Blob([bytes], { type }), `${stem()}.bilingual.${kind}`);
   } catch (err) {
     toast(t("msg.saveFailed", { err: err.message || err }), "error");
   } finally {

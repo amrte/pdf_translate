@@ -243,8 +243,11 @@ function collectSegments(src, root, rules, out, tagName = "") {
   const visit = (el) => {
     if (el.name && rules.skip.has(el.name)) return;
     let run = [];
+    // An element holding only inline content (a paragraph, heading, cell …) is the segment's
+    // block: a bilingual book repeats it with the translation.
+    const whole = el.name !== "#root" && el.name !== "body" && el.kids.every((k) => isInline(k));
     const flush = () => {
-      if (run.length) makeSegment(src, run, rules, out, el.name === "#root" ? tagName : el.name);
+      if (run.length) makeSegment(src, run, rules, out, el.name === "#root" ? tagName : el.name, whole ? el : null);
       run = [];
     };
     for (const k of el.kids) {
@@ -256,7 +259,7 @@ function collectSegments(src, root, rules, out, tagName = "") {
   visit(root);
 }
 
-function makeSegment(src, run, rules, out, tag) {
+function makeSegment(src, run, rules, out, tag, block = null) {
   // Trim whitespace-only text and comments at both ends.
   let a = 0, b = run.length;
   const blank = (k) => k.other || (k.text && !k.cdata && !src.slice(k.s, k.e).trim());
@@ -309,7 +312,7 @@ function makeSegment(src, run, rules, out, tag) {
   text = text.replace(/\s+/g, " ").replace(/ *\ue000 */g, "\n").trim();
   if (!/[\p{L}\p{N}]/u.test(text.replace(/<\/?\d+\/?>/g, ""))) return;
   const s = tags[1] && tags[1].initial ? first.s : nodes[0].s, e = nodes[nodes.length - 1].e;
-  out.push({ text, s, e, tag, ...(next > 1 ? { tags } : {}) });
+  out.push({ text, s, e, tag, ...(next > 1 ? { tags } : {}), ...(block ? { block: { s: block.s, e: block.e, open: src.slice(block.s, block.cs), close: src.slice(block.ce, block.e) } } : {}) });
 }
 
 /** Turn a translation back into markup, restoring the segment's inline elements. */
@@ -454,10 +457,12 @@ async function saveBook(book, bytes, segments, translations, opts = {}) {
     const raw = f.src.slice(seg.s, seg.e);
     const lead = /^\s*/.exec(raw)[0], trail = /\s*$/.exec(raw)[0];
     if (!edits.has(seg.file)) edits.set(seg.file, []);
-    edits.get(seg.file).push({ s: seg.s, e: seg.e, text: lead + markupOf(tr, seg.tags, rulesFor(f.type)) + trail });
+    const markup = markupOf(tr, seg.tags, rulesFor(f.type));
+    if (opts.bilingual) edits.get(seg.file).push(bilingualEdit(seg, f, markup, opts));
+    else edits.get(seg.file).push({ s: seg.s, e: seg.e, text: lead + markup + trail });
     replaced++;
   }
-  const lang = (opts.lang || "").trim();
+  const lang = opts.bilingual ? "" : (opts.lang || "").trim(); // (a bilingual book keeps its language)
   const changed = new Map();
   book.files.forEach((f, fi) => {
     const list = (edits.get(fi) || []).sort((a, b) => a.s - b.s);
@@ -483,6 +488,33 @@ async function saveBook(book, bytes, segments, translations, opts = {}) {
     result = await zipWrite(entries);
   }
   return { bytes: result, stats: { replaced, untranslated: segments.length - replaced, shrunk: [], missing: 0, missingChars: "" } };
+}
+
+const CELL_TAGS = new Set(["td", "th"]);
+
+/**
+ * Bilingual book: the translation follows the original. A paragraph, heading, list item or verse
+ * line is repeated with the translation (without its id, so links still lead to the original);
+ * a table cell holds both, one under the other; titles in the metadata and the table of contents
+ * read "original / translation".
+ */
+function bilingualEdit(seg, f, markup, opts) {
+  const code = (opts.lang || "").replace(/[^A-Za-z0-9-]/g, "");
+  const tag = (seg.block && /^<([^\s/>]+)/.exec(seg.block.open) || [])[1] || "";
+  const local = tag.replace(/^.*:/, "").toLowerCase();
+  if (seg.block && !seg.hidden && !CELL_TAGS.has(local) && (f.type === "xhtml" || f.type === "fb2")) {
+    let open = seg.block.open;
+    if (code && f.type === "xhtml") open = open.replace(/\s(?:xml:)?lang\s*=\s*("[^"]*"|'[^']*')/gi, "").replace(/\s*(\/?)>$/, ` lang="${code}" xml:lang="${code}"$1>`);
+    // The copy is the whole element with the translation in place of the text (so an <em> around
+    // the paragraph stays), without ids: they must stay unique.
+    const inner = f.src.slice(seg.block.s + seg.block.open.length, seg.s) + markup + f.src.slice(seg.e, seg.block.e - seg.block.close.length);
+    const copy = (open + inner + seg.block.close).replace(/<[^>]+>/g, (t) => t.replace(/\s(?:xml:)?id\s*=\s*("[^"]*"|'[^']*')/gi, ""));
+    // (whitespace that indents the original element is repeated before the copy)
+    const indent = /\n[ \t]*$/.exec(f.src.slice(Math.max(0, seg.block.s - 80), seg.block.s));
+    return { s: seg.block.e, e: seg.block.e, text: (indent ? indent[0] : "\n") + copy };
+  }
+  const sep = f.type === "xhtml" && !seg.hidden ? "<br/>" : " / ";
+  return { s: seg.e, e: seg.e, text: sep + markup };
 }
 
 /** Mark the book as being in the target language (dc:language, lang attributes, FB2 <lang>). */

@@ -90,7 +90,9 @@ function saveMarkups() {
 }
 
 function updateDownloadButton() {
-  $("#btnDownload").hidden = !(state.hasOutput || (state.markups && state.markups.length));
+  const turned = !isBook() && Object.keys(state.rotations || {}).length > 0;
+  $("#btnDownload").hidden = !(state.hasOutput || (state.markups && state.markups.length) || turned);
+  $("#btnDownloadBi").hidden = !state.hasOutput;
 }
 
 /** Replace all markups (used by undo/redo) and redraw. */
@@ -126,7 +128,7 @@ function layerFor(i) {
   if (!svg) {
     const p = state.doc.pages[i];
     svg = svgEl("svg", { class: "mk-layer", viewBox: `${p.x0} ${p.y0} ${p.width} ${p.height}`, preserveAspectRatio: "none" });
-    pageEl.appendChild(svg);
+    pageEl.querySelector(".page-body").appendChild(svg);
   }
   return svg;
 }
@@ -348,7 +350,7 @@ function measureText(text, size) {
 
 function openTextEditor(i, pt, existing) {
   closeTextEditor(true);
-  const pageEl = document.querySelector(`.page[data-page="${i}"]`);
+  const pageEl = document.querySelector(`.page[data-page="${i}"] .page-body`); // (turned with the page)
   const p = state.doc.pages[i];
   const scale = pageEl.clientWidth / p.width;
   const size = existing ? existing.size : TEXT_SIZES[mk.width] || 12;

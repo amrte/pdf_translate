@@ -359,7 +359,7 @@ kbd { font: 11.5px ui-monospace, monospace; border: 1px solid var(--border); bor
   font-family: Helvetica, Arial, sans-serif; line-height: 1.2; background: rgba(255, 255, 255, .92);
   border: 1.5px dashed var(--accent); border-radius: 3px; outline: none;
 }
-@container (max-width: 560px) { .boxes-check span { display: none; } }
+@container (max-width: 780px) { .boxes-check span { display: none; } } /* (the checkbox keeps its tooltip) */
 .viewer-pane { container-type: inline-size; }
 
 /* ---------- v1.03: full screen, wider help/AI window, AI parts, new logo ---------- */
@@ -402,3 +402,7 @@ body.box-dragging, body.box-dragging .box { cursor: grabbing !important; user-se
 .ocr-langs { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 2px 12px; margin-top: 4px; }
 .error-text { color: var(--danger, #c62828); font-weight: 600; }
 .top-fs.on { color: var(--accent, #3158d4); }
+
+/* ---- v1.09: turned pages, bilingual download ---- */
+.page-body { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); transform-origin: 50% 50%; }
+.bi-btn { padding: 0 9px; }

@@ -118,9 +118,15 @@ function showHandles(id) {
 
 const boxDrag = { cur: null, justDragged: false };
 
+/** The page point under the pointer (also on a turned page). */
 function pagePoint(pageEl, e) {
-  const p = viewPages()[Number(pageEl.dataset.page)], r = pageEl.getBoundingClientRect();
-  return [p.x0 + ((e.clientX - r.left) / r.width) * p.width, p.y0 + ((e.clientY - r.top) / r.height) * p.height];
+  const i = Number(pageEl.dataset.page), p = viewPages()[i], body = pageEl.querySelector(".page-body");
+  const r = body.getBoundingClientRect();
+  let vx = e.clientX - (r.left + r.right) / 2, vy = e.clientY - (r.top + r.bottom) / 2;
+  const rot = pageRotation(i); // undo the clockwise turn of the body
+  if (rot === 90) [vx, vy] = [vy, -vx]; else if (rot === 180) [vx, vy] = [-vx, -vy]; else if (rot === 270) [vx, vy] = [-vy, vx];
+  const W = body.offsetWidth, H = body.offsetHeight;
+  return [p.x0 + ((vx + W / 2) / W) * p.width, p.y0 + ((vy + H / 2) / H) * p.height];
 }
 
 function onBoxDown(e) {
@@ -140,7 +146,7 @@ function onBoxMove(e) {
   const dx = pt[0] - d.start[0], dy = pt[1] - d.start[1];
   const page = viewPages()[Number(d.pageEl.dataset.page)];
   if (!d.moved) {
-    const scale = d.pageEl.getBoundingClientRect().width / page.width; // screen px per point
+    const scale = d.pageEl.querySelector(".page-body").offsetWidth / page.width; // screen px per point
     if (Math.hypot(dx, dy) * scale < 4) return;
     d.moved = true;
     document.body.classList.add("box-dragging");
@@ -234,10 +240,37 @@ function toggleAppFullscreen() {
 /** Zoom so that the whole current page is visible. */
 function fitPage() {
   if (!state.doc) return;
-  const box = $("#pages"), i = currentPageIndex(), p = viewPages()[i];
-  const zw = (box.clientWidth - 48) / (p.width * 1.25), zh = (box.clientHeight - 44) / (p.height * 1.25);
+  const box = $("#pages"), i = currentPageIndex(), [w, h] = shownSize(i);
+  const zw = (box.clientWidth - 48) / (w * 1.25), zh = (box.clientHeight - 44) / (h * 1.25);
   setZoom(Math.min(zw, zh));
   requestAnimationFrame(() => goToPage(i));
+}
+
+/* ------------------------------------------------------------ turning pages */
+
+const rotKey = (id) => `pdftr:rot:${id}`;
+
+function loadRotations() {
+  try { state.rotations = isBook() ? {} : JSON.parse(localStorage.getItem(rotKey(state.doc.id)) || "{}"); } catch (_) { state.rotations = {}; }
+}
+
+function setRotation(i, deg) {
+  if (deg) state.rotations[i] = deg; else delete state.rotations[i];
+  try { localStorage.setItem(rotKey(state.doc.id), JSON.stringify(state.rotations)); } catch (_) { /* storage blocked */ }
+  const el = document.querySelector(`.page[data-page="${i}"]`);
+  if (el) sizePage(el);
+  state.outDirty = true; // the saved copy must be made again
+  updateDownloadButton();
+  requestAnimationFrame(() => goToPage(i));
+}
+
+/** Turn the current page by 90° clockwise (counter-clockwise with Shift). Undoable. */
+function rotateCurrentPage(e) {
+  if (!state.doc || isBook()) return;
+  const i = currentPageIndex(), before = state.rotations[i] || 0;
+  const after = (before + (e && e.shiftKey ? 270 : 90)) % 360;
+  setRotation(i, after);
+  pushHistory({ label: t("hist.rotate"), undo: () => setRotation(i, before), redo: () => setRotation(i, after) });
 }
 
 /* ------------------------------------------------------ password dialog */
@@ -472,6 +505,8 @@ function initTools() {
     $("#btnAppFullscreen").classList.toggle("on", Boolean(document.fullscreenElement) && !document.body.classList.contains("viewer-only"));
   });
   $("#zoomPage").addEventListener("click", fitPage);
+  $("#pageRotate").addEventListener("click", rotateCurrentPage);
+  $("#btnDownloadBi").addEventListener("click", (e) => { e.preventDefault(); downloadBilingual(); });
   $("#btnOcr").addEventListener("click", openOcrDialog);
   $("#ocrGo").addEventListener("click", (e) => { e.preventDefault(); $("#ocrDialog").close(); startOcr(); });
 }
