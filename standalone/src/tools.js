@@ -61,14 +61,22 @@ function effSeg(s) {
 }
 
 /** Change a field's overrides (undoable); null values remove a setting. */
-function setOverride(id, patch, label) {
-  const before = state.overrides[id] ? clone(state.overrides[id]) : null;
+function setOverride(id, patch, label, mergeKey) {
+  let before = state.overrides[id] ? clone(state.overrides[id]) : null;
   const next = patch === null ? {} : { ...(state.overrides[id] || {}), ...patch };
   for (const k of Object.keys(next)) if (next[k] === null || next[k] === undefined || next[k] === "") delete next[k];
   const after = Object.keys(next).length ? next : null;
   if (JSON.stringify(before) === JSON.stringify(after)) return;
   applyOverride(id, after);
-  pushHistory({ label: label || t("hist.field"), undo: () => applyOverride(id, before), redo: () => applyOverride(id, after) });
+  // Typing "14" into a field is one step to undo, not two.
+  const last = history.undo[history.undo.length - 1];
+  const key = mergeKey && `${mergeKey}:${id}`;
+  if (key && last && last.mergeKey === key && Date.now() - last.at < 2000) {
+    before = last.before;
+    history.undo.pop();
+  }
+  pushHistory({ label: label || t("hist.field"), mergeKey: key, at: Date.now(), before,
+    undo: () => applyOverride(id, before), redo: () => applyOverride(id, after) });
 }
 
 function applyOverride(id, value) {
@@ -188,7 +196,7 @@ function stylePanelHtml(s) {
   const fonts = [["", "st.fontOrig"], ["sans-serif", "st.sans"], ["serif", "st.serif"], ["monospace", "st.mono"]];
   if (state.customFont || o.font === "custom") fonts.push(["custom", "st.custom"]);
   return `<div class="seg-style">
-    <label title="${escapeHtml(t("st.sizeTitle"))}">${t("st.size")} <input type="number" data-st="size" min="1" max="2000" step="0.5" value="${o.size || ""}" placeholder="${Math.round(s.size * 10) / 10}"></label>
+    <label title="${escapeHtml(t("st.sizeTitle"))}">${t("st.size")} <input type="number" data-st="size" min="0.5" step="any" value="${o.size || ""}" placeholder="${Math.round(s.size * 10) / 10}"></label>
     <select data-st="font" title="${escapeHtml(t("st.font"))}">${fonts.map(([v, k]) => `<option value="${v}"${(o.font || "") === v ? " selected" : ""}>${escapeHtml(t(k))}</option>`).join("")}</select>
     <button type="button" class="mini toggle${bold ? " on" : ""}" data-st="bold" title="${escapeHtml(t("st.bold"))}"><b>B</b></button>
     <button type="button" class="mini toggle${italic ? " on" : ""}" data-st="italic" title="${escapeHtml(t("st.italic"))}"><i>I</i></button>
@@ -202,9 +210,21 @@ function stylePanelHtml(s) {
 function refreshStylePanel(id) {
   const card = vl.rendered.get(id);
   if (!card) return;
-  card.querySelector(".seg-style")?.remove();
   card.querySelector('[data-act="style"]')?.classList.toggle("on", Boolean(state.overrides[id]));
-  if (styleOpen.has(id)) card.querySelector(".seg-src").insertAdjacentHTML("beforebegin", stylePanelHtml(segById(id)));
+  const panel = card.querySelector(".seg-style");
+  if (!styleOpen.has(id)) { panel?.remove(); return; }
+  const html = stylePanelHtml(segById(id));
+  if (!panel) { card.querySelector(".seg-src").insertAdjacentHTML("beforebegin", html); return; }
+  // Update the open panel in place: rebuilding it would take the focus out of the size field
+  // after the first digit, so "12" could never be typed.
+  const tmp = document.createElement("div");
+  tmp.innerHTML = html;
+  for (const fresh of tmp.querySelectorAll("[data-st]")) {
+    const el = panel.querySelector(`[data-st="${fresh.dataset.st}"]`);
+    if (!el) continue;
+    if (el.tagName === "BUTTON") el.className = fresh.className;
+    else if (el !== document.activeElement) el.value = fresh.value;
+  }
 }
 
 function onStyleInput(e) {
@@ -214,9 +234,9 @@ function onStyleInput(e) {
   const st = el.dataset.st;
   if (st === "size") {
     const v = Number(el.value);
-    setOverride(id, { size: v > 0 && Math.abs(v - s.size) > 0.01 ? v : null }, t("hist.field"));
+    setOverride(id, { size: v > 0 && Math.abs(v - s.size) > 0.01 ? v : null }, t("hist.field"), "size");
   } else if (st === "font") setOverride(id, { font: el.value || null }, t("hist.field"));
-  else if (st === "color") setOverride(id, { color: el.value.toLowerCase() === s.color ? null : el.value.toLowerCase() }, t("hist.field"));
+  else if (st === "color") setOverride(id, { color: el.value.toLowerCase() === s.color ? null : el.value.toLowerCase() }, t("hist.field"), "color");
 }
 
 function onStyleClick(e) {

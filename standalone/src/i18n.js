@@ -7,7 +7,7 @@ const I18N = {
     "step.translate": "Übersetzen",
     "step.rebuild": "{fmt} erstellen",
     "help.btn": "? Hilfe",
-    "help.btnTitle": "So funktioniert es – und ein Prompt zum Übersetzen mit KI",
+    "help.btnTitle": "So funktioniert es",
     "top.new": "Andere Datei öffnen",
 
     "upload.title": "PDF, EPUB oder FB2 hier ablegen oder <u>Datei auswählen</u>",
@@ -110,7 +110,7 @@ const I18N = {
 
     "help.title": "Hilfe",
     "help.step1": "<b>Extrahieren:</b> PDF, EPUB oder FB2 öffnen. Jeder Absatz, jede Beschriftung und Tabellenzelle wird zu einem nummerierten Segment; ein Klick auf einen Rahmen auf der Seite springt dorthin. Felder nur mit Zahlen oder Datum werden nicht übersetzt.",
-    "help.step2": "<b>Übersetzen:</b> in die Felder tippen, oder mit dem Prompt unten eine KI bzw. ein Übersetzungstool nutzen und die Antwort unter <b>Importieren</b> einfügen.",
+    "help.step2": "<b>Übersetzen:</b> in die Felder tippen, oder unter <b>KI</b> einen Prompt für eine KI kopieren (bzw. ein Übersetzungstool nutzen) und die Antwort unter <b>Importieren</b> einfügen.",
     "help.step3": "<b>Erstellen:</b> <b>PDF erstellen</b> schreibt alle Übersetzungen in die PDF. Um später ein Segment zu korrigieren, ändern Sie es und klicken auf <b>⟳ in PDF übernehmen</b> (oder <kbd>Strg</kbd>+<kbd>S</kbd>). Nur diese Seite wird neu erstellt. Bei E-Books (EPUB, FB2) wird das Buch neu gesetzt und im selben Format heruntergeladen; Markierungen wie &lt;1&gt;…&lt;/1&gt; stehen für Kursiv, Fett, Links und Fußnoten.",
     "help.shortcuts": "Tastenkürzel im Übersetzungsfeld: <kbd>Strg</kbd>+<kbd>Enter</kbd> nächstes Segment · <kbd>Alt</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> vorheriges/nächstes · <kbd>Strg</kbd>+<kbd>S</kbd> Segment in PDF übernehmen · <kbd>Strg</kbd> + Mausrad zoomen.",
     "ai.title": "Mit KI übersetzen (ChatGPT, Claude, Gemini…)",
@@ -301,7 +301,7 @@ const I18N = {
     "step.translate": "Translate",
     "step.rebuild": "Rebuild {fmt}",
     "help.btn": "? Help",
-    "help.btnTitle": "How it works, and a prompt for translating with AI",
+    "help.btnTitle": "How it works",
     "top.new": "Open another file",
 
     "upload.title": "Drop a PDF, EPUB or FB2 here or <u>choose a file</u>",
@@ -404,7 +404,7 @@ const I18N = {
 
     "help.title": "Help",
     "help.step1": "<b>Extract:</b> open a PDF, EPUB or FB2. Each paragraph, label and table cell becomes a numbered segment; click a box on the page to jump to it. Fields with only numbers or dates are not translated.",
-    "help.step2": "<b>Translate:</b> type in the boxes, or use an AI or translation tool with the prompt below and paste its answer into <b>Import</b>.",
+    "help.step2": "<b>Translate:</b> type in the boxes, or copy a prompt for an AI under <b>AI</b> (or use a translation tool) and paste its answer into <b>Import</b>.",
     "help.step3": "<b>Rebuild:</b> <b>Build PDF</b> writes every translation into the PDF. To fix one segment afterwards, edit it and press <b>⟳ update PDF</b> on its card (or <kbd>Ctrl</kbd>+<kbd>S</kbd>). Only that page is redone. E-books (EPUB, FB2) are laid out again and downloaded in the same format; markers such as &lt;1&gt;…&lt;/1&gt; stand for italics, bold, links and footnotes.",
     "help.shortcuts": "Shortcuts in a translation box: <kbd>Ctrl</kbd>+<kbd>Enter</kbd> next segment · <kbd>Alt</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> previous/next · <kbd>Ctrl</kbd>+<kbd>S</kbd> update this segment in the PDF · <kbd>Ctrl</kbd> + mouse wheel to zoom.",
     "ai.title": "Translate with AI (ChatGPT, Claude, Gemini…)",

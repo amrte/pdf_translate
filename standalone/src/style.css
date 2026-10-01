@@ -298,6 +298,16 @@ kbd { font: 11.5px ui-monospace, monospace; border: 1px solid var(--border); bor
 .lang-switch button.active { background: var(--accent-soft); color: var(--accent); }
 .version { font-size: 11px; color: var(--muted); font-weight: 500; padding: 1px 6px; border: 1px solid var(--border); border-radius: 99px; }
 .help-version { margin-top: 4px; }
+.help-part, .ai-part { display: flex; flex-direction: column; gap: 12px; }
+p.help-part, button.ai-part { display: block; }
+#helpDialog.mode-ai .help-part, #helpDialog.mode-help .ai-part { display: none; }
+#helpDialog.mode-help { width: min(720px, calc(100% - 32px)); }
+.modal-x {
+  position: absolute; top: 10px; right: 10px; z-index: 2; width: 30px; height: 30px; padding: 0;
+  border: none; border-radius: 8px; background: transparent; color: var(--muted); font-size: 22px; line-height: 1; cursor: pointer;
+}
+.modal-x:hover { background: var(--hover, rgba(127, 127, 127, .15)); color: var(--text); }
+.modal h2 { padding-right: 32px; }
 /* Narrow editor pane: icon-only secondary buttons (their titles explain them). */
 .editor-pane { container-type: inline-size; }
 .pane-toolbar #btnFind { padding: 0 8px; }

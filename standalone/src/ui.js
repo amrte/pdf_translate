@@ -1455,11 +1455,29 @@ function openHelp(focusAi) {
     if (helpDocId !== state.doc.id) { $("#aiFrom").value = 1; $("#aiTo").value = state.doc.pages.length; helpDocId = state.doc.id; }
   }
   refreshAiPrompt();
-  $("#helpDialog").showModal();
-  if (focusAi) $("#aiTitle").scrollIntoView({ block: "start" });
+  const dlg = $("#helpDialog");
+  dlg.classList.toggle("mode-ai", focusAi);
+  dlg.classList.toggle("mode-help", !focusAi);
+  dlg.showModal();
+  dlg.scrollTop = 0;
+}
+
+/** A close cross in the top right corner of every pop-up window. */
+function addCloseButtons() {
+  for (const dlg of document.querySelectorAll("dialog.modal")) {
+    const x = document.createElement("button");
+    x.type = "button";
+    x.className = "modal-x";
+    x.dataset.i18nTitle = "common.close";
+    x.title = t("common.close");
+    x.textContent = "×";
+    x.addEventListener("click", () => dlg.close("cancel"));
+    dlg.append(x);
+  }
 }
 
 function initHelp() {
+  addCloseButtons();
   $("#btnHelp").addEventListener("click", () => openHelp(false));
   $("#btnAi").addEventListener("click", () => openHelp(true));
   for (const id of ["#aiTarget", "#aiFrom", "#aiTo", "#aiOnlyTodo", "#aiContext", "#aiGlossary", "#aiPartSize"]) {

@@ -4,6 +4,15 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.13
+
+- **Font size of a field (Aa)**: the size field lost the cursor after the first digit, so sizes of
+  10 and more could not be typed. It now keeps the cursor, and any size can be entered (there is no
+  upper limit; the text may run past its box). Typing a number is one step for undo.
+- **Fit width** button shows horizontal arrows.
+- **AI** opens only the AI prompt, **Help** only the help.
+- **Close cross (×)** in the top right corner of every pop-up window.
+
 ## 1.12
 
 - **Import of answers copied from chat apps** such as Copilot: their answers come as Markdown, so a

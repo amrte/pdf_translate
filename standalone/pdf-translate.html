@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="PDF Translate 1.12">
+  <meta name="generator" content="PDF Translate 1.13">
   <title>PDF Translate</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Cdefs%3E%3ClinearGradient id=%22g%22 x1=%220%22 y1=%220%22 x2=%221%22 y2=%221%22%3E%3Cstop offset=%220%22 stop-color=%22#4a6cf7%22/%3E%3Cstop offset=%221%22 stop-color=%22#2440b3%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=%2232%22 height=%2232%22 rx=%227%22 fill=%22url%28#g%29%22/%3E%3Cpath d=%22M8 4.5h9.5l6 6V23a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V6.5a2 2 0 0 1 2-2z%22 fill=%22#fff%22/%3E%3Cpath d=%22M17.5 4.5v4.8a1.2 1.2 0 0 0 1.2 1.2h4.8z%22 fill=%22#c7d2fe%22/%3E%3Crect x=%229%22 y=%2213%22 width=%229%22 height=%221.7%22 rx=%22.85%22 fill=%22#9aabf0%22/%3E%3Crect x=%229%22 y=%2216.6%22 width=%2211%22 height=%221.7%22 rx=%22.85%22 fill=%22#9aabf0%22/%3E%3Crect x=%229%22 y=%2220.2%22 width=%226%22 height=%221.7%22 rx=%22.85%22 fill=%22#9aabf0%22/%3E%3Ccircle cx=%2224%22 cy=%2224%22 r=%227%22 fill=%22#f59e0b%22 stroke=%22#fff%22 stroke-width=%221.6%22/%3E%3Cpath d=%22M20.4 21.7h4.6M27.6 26.3H23%22 fill=%22none%22 stroke=%22#fff%22 stroke-width=%221.6%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M24.6 19.4l3.5 2.3-3.5 2.3zM23.4 24l-3.5 2.3 3.5 2.3z%22 fill=%22#fff%22/%3E%3C/svg%3E">
   <style>
@@ -307,6 +307,16 @@ kbd { font: 11.5px ui-monospace, monospace; border: 1px solid var(--border); bor
 .lang-switch button.active { background: var(--accent-soft); color: var(--accent); }
 .version { font-size: 11px; color: var(--muted); font-weight: 500; padding: 1px 6px; border: 1px solid var(--border); border-radius: 99px; }
 .help-version { margin-top: 4px; }
+.help-part, .ai-part { display: flex; flex-direction: column; gap: 12px; }
+p.help-part, button.ai-part { display: block; }
+#helpDialog.mode-ai .help-part, #helpDialog.mode-help .ai-part { display: none; }
+#helpDialog.mode-help { width: min(720px, calc(100% - 32px)); }
+.modal-x {
+  position: absolute; top: 10px; right: 10px; z-index: 2; width: 30px; height: 30px; padding: 0;
+  border: none; border-radius: 8px; background: transparent; color: var(--muted); font-size: 22px; line-height: 1; cursor: pointer;
+}
+.modal-x:hover { background: var(--hover, rgba(127, 127, 127, .15)); color: var(--text); }
+.modal h2 { padding-right: 32px; }
 /* Narrow editor pane: icon-only secondary buttons (their titles explain them). */
 .editor-pane { container-type: inline-size; }
 .pane-toolbar #btnFind { padding: 0 8px; }
@@ -441,7 +451,7 @@ mark.find.cur { background: #ff9f1c; box-shadow: 0 0 0 1px #e07b00; }
   <div class="brand">
     <span class="logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><defs><linearGradient id="logoGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4a6cf7"/><stop offset="1" stop-color="#2440b3"/></linearGradient></defs><rect width="32" height="32" rx="7" fill="url(#logoGrad)"/><path d="M8 4.5h9.5l6 6V23a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V6.5a2 2 0 0 1 2-2z" fill="#fff"/><path d="M17.5 4.5v4.8a1.2 1.2 0 0 0 1.2 1.2h4.8z" fill="#c7d2fe"/><rect x="9" y="13" width="9" height="1.7" rx=".85" fill="#9aabf0"/><rect x="9" y="16.6" width="11" height="1.7" rx=".85" fill="#9aabf0"/><rect x="9" y="20.2" width="6" height="1.7" rx=".85" fill="#9aabf0"/><circle cx="24" cy="24" r="7" fill="#f59e0b" stroke="#fff" stroke-width="1.6"/><path d="M20.4 21.7h4.6M27.6 26.3H23" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/><path d="M24.6 19.4l3.5 2.3-3.5 2.3zM23.4 24l-3.5 2.3 3.5 2.3z" fill="#fff"/></svg></span>
     <span>PDF Translate</span>
-    <span class="version" id="appVersion">v1.12</span>
+    <span class="version" id="appVersion">v1.13</span>
   </div>
   <ol class="steps" id="steps">
     <li data-step="1"><span>1</span> <i data-i18n="step.extract">Extract text</i></li>
@@ -500,7 +510,7 @@ mark.find.cur { background: #ff9f1c; box-shadow: 0 0 0 1px #e07b00; }
       <button class="icon-btn" id="zoomOut" data-i18n-title="zoom.out">−</button>
       <span class="zoom-label" id="zoomLabel">100%</span>
       <button class="icon-btn" id="zoomIn" data-i18n-title="zoom.in">+</button>
-      <button class="icon-btn" id="zoomFit" data-i18n-title="zoom.fit">⤢</button>
+      <button class="icon-btn" id="zoomFit" data-i18n-title="zoom.fit"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5v14M21 5v14M7 12h10M10 9l-3 3 3 3M14 9l3 3-3 3"/></svg></button>
       <button class="icon-btn" id="zoomPage" data-i18n-title="zoom.page"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3" width="12" height="18" rx="1.5"/><path d="M10 8h4M10 12h4M10 16h2"/></svg></button>
       <button class="icon-btn" id="btnFullscreen" data-i18n-title="view.fullscreen">
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path class="fs-on" d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/><path class="fs-off" d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg>
@@ -706,6 +716,7 @@ mark.find.cur { background: #ff9f1c; box-shadow: 0 0 0 1px #e07b00; }
 <!-- Help + AI prompt dialog -->
 <dialog id="helpDialog" class="modal xwide">
   <form method="dialog">
+    <div class="help-part">
     <h2 data-i18n="help.title">Help</h2>
     <ol class="help-steps">
       <li data-i18n="help.step1"></li>
@@ -714,6 +725,8 @@ mark.find.cur { background: #ff9f1c; box-shadow: 0 0 0 1px #e07b00; }
     </ol>
     <p class="muted small" data-i18n="help.shortcuts"></p>
     <p class="muted small" data-i18n="help.markup"></p>
+    </div>
+    <div class="ai-part">
 
     <h2 id="aiTitle" data-i18n="ai.title">Translate with AI</h2>
     <div class="ai-grid">
@@ -732,10 +745,11 @@ mark.find.cur { background: #ff9f1c; box-shadow: 0 0 0 1px #e07b00; }
     <p class="muted small" id="aiStats"></p>
     <div class="ai-parts-head"><b data-i18n="ai.parts">Copy prompt + text</b> <span class="muted small" data-i18n="ai.partsHint"></span></div>
     <div class="ai-parts" id="aiParts"></div>
-    <p class="muted small help-version">PDF Translate v1.12</p>
+    </div>
+    <p class="muted small help-version help-part">PDF Translate v1.13</p>
     <div class="modal-actions">
       <button value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
-      <button type="button" class="btn" id="aiCopyPrompt" data-i18n="ai.copyPrompt">Copy prompt only</button>
+      <button type="button" class="btn ai-part" id="aiCopyPrompt" data-i18n="ai.copyPrompt">Copy prompt only</button>
     </div>
   </form>
 </dialog>
@@ -790,7 +804,7 @@ const I18N = {
     "step.translate": "Übersetzen",
     "step.rebuild": "{fmt} erstellen",
     "help.btn": "? Hilfe",
-    "help.btnTitle": "So funktioniert es – und ein Prompt zum Übersetzen mit KI",
+    "help.btnTitle": "So funktioniert es",
     "top.new": "Andere Datei öffnen",
 
     "upload.title": "PDF, EPUB oder FB2 hier ablegen oder <u>Datei auswählen</u>",
@@ -893,7 +907,7 @@ const I18N = {
 
     "help.title": "Hilfe",
     "help.step1": "<b>Extrahieren:</b> PDF, EPUB oder FB2 öffnen. Jeder Absatz, jede Beschriftung und Tabellenzelle wird zu einem nummerierten Segment; ein Klick auf einen Rahmen auf der Seite springt dorthin. Felder nur mit Zahlen oder Datum werden nicht übersetzt.",
-    "help.step2": "<b>Übersetzen:</b> in die Felder tippen, oder mit dem Prompt unten eine KI bzw. ein Übersetzungstool nutzen und die Antwort unter <b>Importieren</b> einfügen.",
+    "help.step2": "<b>Übersetzen:</b> in die Felder tippen, oder unter <b>KI</b> einen Prompt für eine KI kopieren (bzw. ein Übersetzungstool nutzen) und die Antwort unter <b>Importieren</b> einfügen.",
     "help.step3": "<b>Erstellen:</b> <b>PDF erstellen</b> schreibt alle Übersetzungen in die PDF. Um später ein Segment zu korrigieren, ändern Sie es und klicken auf <b>⟳ in PDF übernehmen</b> (oder <kbd>Strg</kbd>+<kbd>S</kbd>). Nur diese Seite wird neu erstellt. Bei E-Books (EPUB, FB2) wird das Buch neu gesetzt und im selben Format heruntergeladen; Markierungen wie &lt;1&gt;…&lt;/1&gt; stehen für Kursiv, Fett, Links und Fußnoten.",
     "help.shortcuts": "Tastenkürzel im Übersetzungsfeld: <kbd>Strg</kbd>+<kbd>Enter</kbd> nächstes Segment · <kbd>Alt</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> vorheriges/nächstes · <kbd>Strg</kbd>+<kbd>S</kbd> Segment in PDF übernehmen · <kbd>Strg</kbd> + Mausrad zoomen.",
     "ai.title": "Mit KI übersetzen (ChatGPT, Claude, Gemini…)",
@@ -1084,7 +1098,7 @@ const I18N = {
     "step.translate": "Translate",
     "step.rebuild": "Rebuild {fmt}",
     "help.btn": "? Help",
-    "help.btnTitle": "How it works, and a prompt for translating with AI",
+    "help.btnTitle": "How it works",
     "top.new": "Open another file",
 
     "upload.title": "Drop a PDF, EPUB or FB2 here or <u>choose a file</u>",
@@ -1187,7 +1201,7 @@ const I18N = {
 
     "help.title": "Help",
     "help.step1": "<b>Extract:</b> open a PDF, EPUB or FB2. Each paragraph, label and table cell becomes a numbered segment; click a box on the page to jump to it. Fields with only numbers or dates are not translated.",
-    "help.step2": "<b>Translate:</b> type in the boxes, or use an AI or translation tool with the prompt below and paste its answer into <b>Import</b>.",
+    "help.step2": "<b>Translate:</b> type in the boxes, or copy a prompt for an AI under <b>AI</b> (or use a translation tool) and paste its answer into <b>Import</b>.",
     "help.step3": "<b>Rebuild:</b> <b>Build PDF</b> writes every translation into the PDF. To fix one segment afterwards, edit it and press <b>⟳ update PDF</b> on its card (or <kbd>Ctrl</kbd>+<kbd>S</kbd>). Only that page is redone. E-books (EPUB, FB2) are laid out again and downloaded in the same format; markers such as &lt;1&gt;…&lt;/1&gt; stand for italics, bold, links and footnotes.",
     "help.shortcuts": "Shortcuts in a translation box: <kbd>Ctrl</kbd>+<kbd>Enter</kbd> next segment · <kbd>Alt</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> previous/next · <kbd>Ctrl</kbd>+<kbd>S</kbd> update this segment in the PDF · <kbd>Ctrl</kbd> + mouse wheel to zoom.",
     "ai.title": "Translate with AI (ChatGPT, Claude, Gemini…)",
@@ -5858,11 +5872,29 @@ function openHelp(focusAi) {
     if (helpDocId !== state.doc.id) { $("#aiFrom").value = 1; $("#aiTo").value = state.doc.pages.length; helpDocId = state.doc.id; }
   }
   refreshAiPrompt();
-  $("#helpDialog").showModal();
-  if (focusAi) $("#aiTitle").scrollIntoView({ block: "start" });
+  const dlg = $("#helpDialog");
+  dlg.classList.toggle("mode-ai", focusAi);
+  dlg.classList.toggle("mode-help", !focusAi);
+  dlg.showModal();
+  dlg.scrollTop = 0;
+}
+
+/** A close cross in the top right corner of every pop-up window. */
+function addCloseButtons() {
+  for (const dlg of document.querySelectorAll("dialog.modal")) {
+    const x = document.createElement("button");
+    x.type = "button";
+    x.className = "modal-x";
+    x.dataset.i18nTitle = "common.close";
+    x.title = t("common.close");
+    x.textContent = "×";
+    x.addEventListener("click", () => dlg.close("cancel"));
+    dlg.append(x);
+  }
 }
 
 function initHelp() {
+  addCloseButtons();
   $("#btnHelp").addEventListener("click", () => openHelp(false));
   $("#btnAi").addEventListener("click", () => openHelp(true));
   for (const id of ["#aiTarget", "#aiFrom", "#aiTo", "#aiOnlyTodo", "#aiContext", "#aiGlossary", "#aiPartSize"]) {
@@ -6481,14 +6513,22 @@ function effSeg(s) {
 }
 
 /** Change a field's overrides (undoable); null values remove a setting. */
-function setOverride(id, patch, label) {
-  const before = state.overrides[id] ? clone(state.overrides[id]) : null;
+function setOverride(id, patch, label, mergeKey) {
+  let before = state.overrides[id] ? clone(state.overrides[id]) : null;
   const next = patch === null ? {} : { ...(state.overrides[id] || {}), ...patch };
   for (const k of Object.keys(next)) if (next[k] === null || next[k] === undefined || next[k] === "") delete next[k];
   const after = Object.keys(next).length ? next : null;
   if (JSON.stringify(before) === JSON.stringify(after)) return;
   applyOverride(id, after);
-  pushHistory({ label: label || t("hist.field"), undo: () => applyOverride(id, before), redo: () => applyOverride(id, after) });
+  // Typing "14" into a field is one step to undo, not two.
+  const last = history.undo[history.undo.length - 1];
+  const key = mergeKey && `${mergeKey}:${id}`;
+  if (key && last && last.mergeKey === key && Date.now() - last.at < 2000) {
+    before = last.before;
+    history.undo.pop();
+  }
+  pushHistory({ label: label || t("hist.field"), mergeKey: key, at: Date.now(), before,
+    undo: () => applyOverride(id, before), redo: () => applyOverride(id, after) });
 }
 
 function applyOverride(id, value) {
@@ -6608,7 +6648,7 @@ function stylePanelHtml(s) {
   const fonts = [["", "st.fontOrig"], ["sans-serif", "st.sans"], ["serif", "st.serif"], ["monospace", "st.mono"]];
   if (state.customFont || o.font === "custom") fonts.push(["custom", "st.custom"]);
   return `<div class="seg-style">
-    <label title="${escapeHtml(t("st.sizeTitle"))}">${t("st.size")} <input type="number" data-st="size" min="1" max="2000" step="0.5" value="${o.size || ""}" placeholder="${Math.round(s.size * 10) / 10}"></label>
+    <label title="${escapeHtml(t("st.sizeTitle"))}">${t("st.size")} <input type="number" data-st="size" min="0.5" step="any" value="${o.size || ""}" placeholder="${Math.round(s.size * 10) / 10}"></label>
     <select data-st="font" title="${escapeHtml(t("st.font"))}">${fonts.map(([v, k]) => `<option value="${v}"${(o.font || "") === v ? " selected" : ""}>${escapeHtml(t(k))}</option>`).join("")}</select>
     <button type="button" class="mini toggle${bold ? " on" : ""}" data-st="bold" title="${escapeHtml(t("st.bold"))}"><b>B</b></button>
     <button type="button" class="mini toggle${italic ? " on" : ""}" data-st="italic" title="${escapeHtml(t("st.italic"))}"><i>I</i></button>
@@ -6622,9 +6662,21 @@ function stylePanelHtml(s) {
 function refreshStylePanel(id) {
   const card = vl.rendered.get(id);
   if (!card) return;
-  card.querySelector(".seg-style")?.remove();
   card.querySelector('[data-act="style"]')?.classList.toggle("on", Boolean(state.overrides[id]));
-  if (styleOpen.has(id)) card.querySelector(".seg-src").insertAdjacentHTML("beforebegin", stylePanelHtml(segById(id)));
+  const panel = card.querySelector(".seg-style");
+  if (!styleOpen.has(id)) { panel?.remove(); return; }
+  const html = stylePanelHtml(segById(id));
+  if (!panel) { card.querySelector(".seg-src").insertAdjacentHTML("beforebegin", html); return; }
+  // Update the open panel in place: rebuilding it would take the focus out of the size field
+  // after the first digit, so "12" could never be typed.
+  const tmp = document.createElement("div");
+  tmp.innerHTML = html;
+  for (const fresh of tmp.querySelectorAll("[data-st]")) {
+    const el = panel.querySelector(`[data-st="${fresh.dataset.st}"]`);
+    if (!el) continue;
+    if (el.tagName === "BUTTON") el.className = fresh.className;
+    else if (el !== document.activeElement) el.value = fresh.value;
+  }
 }
 
 function onStyleInput(e) {
@@ -6634,9 +6686,9 @@ function onStyleInput(e) {
   const st = el.dataset.st;
   if (st === "size") {
     const v = Number(el.value);
-    setOverride(id, { size: v > 0 && Math.abs(v - s.size) > 0.01 ? v : null }, t("hist.field"));
+    setOverride(id, { size: v > 0 && Math.abs(v - s.size) > 0.01 ? v : null }, t("hist.field"), "size");
   } else if (st === "font") setOverride(id, { font: el.value || null }, t("hist.field"));
-  else if (st === "color") setOverride(id, { color: el.value.toLowerCase() === s.color ? null : el.value.toLowerCase() }, t("hist.field"));
+  else if (st === "color") setOverride(id, { color: el.value.toLowerCase() === s.color ? null : el.value.toLowerCase() }, t("hist.field"), "color");
 }
 
 function onStyleClick(e) {
