@@ -236,6 +236,7 @@ async function openPdf(file) {
     return;
   }
   const bytes = new Uint8Array(await file.arrayBuffer());
+  if (state.doc) closeFind(); // (another file replaces the open one)
   await loadBytes(bytes, file.name, true);
   $("#fileInput").value = "";
 }
@@ -338,6 +339,7 @@ function openDocument(doc, bytes) {
   $("#uploadView").hidden = true;
   $("#workView").hidden = false;
   $("#btnNew").hidden = false;
+  $("#btnClose").hidden = false;
   $("#docName").textContent = doc.name;
   $("#docName").title = doc.name;
   document.body.classList.toggle("is-book", isBook());
@@ -453,6 +455,7 @@ function closeDocument() {
   $("#workView").hidden = true;
   $("#uploadView").hidden = false;
   $("#btnNew").hidden = true;
+  $("#btnClose").hidden = true;
   $("#docName").textContent = "";
   document.title = "PDF Translate";
   document.body.classList.remove("is-book", "is-office");
@@ -1259,7 +1262,12 @@ function setupDropzone(zone, onFile) {
 function init() {
   setupDropzone($("#dropzone"), openPdf);
   $("#fileInput").addEventListener("change", (e) => openPdf(e.target.files[0]));
-  $("#btnNew").addEventListener("click", closeDocument);
+  // "Open another file" picks the new file at once (cancelling keeps the open one); ✕ closes it.
+  $("#btnNew").addEventListener("click", () => $("#fileInput").click());
+  $("#btnClose").addEventListener("click", closeDocument);
+  // The workflow overview of the start page is shown in Help too.
+  $("#wfHelp").innerHTML = $("#wfStart").innerHTML.replace(' id="wfTitle"', "");
+  applyI18n($("#wfHelp"));
 
   document.addEventListener("dragover", (e) => e.preventDefault());
   document.addEventListener("drop", (e) => {

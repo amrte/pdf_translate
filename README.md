@@ -70,6 +70,8 @@ Extra features in the standalone version:
 * Find and replace in translations (and find in the original): 🔍, Ctrl+F / Ctrl+H.
 * **Compare** view: original and translation side by side, scrolling together (page by page for a
   PDF, by matching paragraphs for e-books and Office files); a click on a field selects it.
+* The start page and Help show the workflow in six steps with the app's own buttons; ✕ **Close**
+  in the top bar closes the open file.
 * The border between the page view and the fields can be dragged (double-click resets it); the
   markup tool bar can be folded to the left edge.
 * Bilingual download: a PDF with original and translation on one double-size page (portrait pages

@@ -4,6 +4,15 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.18
+
+- **Workflow overview** on the start page and in **Help**: the six steps (open, hand out, import,
+  rebuild, review and adjust, save), each with the app's own buttons as they look in the app, in
+  German or English with the language switch.
+- **Close a file**: the new **✕ Close** button in the top bar closes the open file and goes back to
+  the start page (it is not reopened at the next start; its translations stay saved in the
+  browser). **Open another file** now opens the file chooser at once; cancelling keeps the open file.
+
 ## 1.17
 
 - **Comparison view**: one scrollbar (on the right) for both sides, and the two sides now move

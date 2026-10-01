@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="PDF Translate 1.17">
+  <meta name="generator" content="PDF Translate 1.18">
   <title>PDF Translate</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Cdefs%3E%3ClinearGradient id=%22g%22 x1=%220%22 y1=%220%22 x2=%221%22 y2=%221%22%3E%3Cstop offset=%220%22 stop-color=%22#4a6cf7%22/%3E%3Cstop offset=%221%22 stop-color=%22#2440b3%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=%2232%22 height=%2232%22 rx=%227%22 fill=%22url%28#g%29%22/%3E%3Cpath d=%22M8 4.5h9.5l6 6V23a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V6.5a2 2 0 0 1 2-2z%22 fill=%22#fff%22/%3E%3Cpath d=%22M17.5 4.5v4.8a1.2 1.2 0 0 0 1.2 1.2h4.8z%22 fill=%22#c7d2fe%22/%3E%3Crect x=%229%22 y=%2213%22 width=%229%22 height=%221.7%22 rx=%22.85%22 fill=%22#9aabf0%22/%3E%3Crect x=%229%22 y=%2216.6%22 width=%2211%22 height=%221.7%22 rx=%22.85%22 fill=%22#9aabf0%22/%3E%3Crect x=%229%22 y=%2220.2%22 width=%226%22 height=%221.7%22 rx=%22.85%22 fill=%22#9aabf0%22/%3E%3Ccircle cx=%2224%22 cy=%2224%22 r=%227%22 fill=%22#f59e0b%22 stroke=%22#fff%22 stroke-width=%221.6%22/%3E%3Cpath d=%22M20.4 21.7h4.6M27.6 26.3H23%22 fill=%22none%22 stroke=%22#fff%22 stroke-width=%221.6%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M24.6 19.4l3.5 2.3-3.5 2.3zM23.4 24l-3.5 2.3 3.5 2.3z%22 fill=%22#fff%22/%3E%3C/svg%3E">
   <style>
@@ -119,9 +119,6 @@ code { font-size: 12.5px; background: var(--surface-2); border: 1px solid var(--
 .dz-title u { color: var(--accent); text-decoration-thickness: 1.5px; text-underline-offset: 3px; }
 .dz-sub { color: var(--muted); }
 .dz-progress { display: flex; gap: 10px; align-items: center; color: var(--accent); font-weight: 600; margin-top: 10px; }
-.how { width: min(980px, 100%); display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
-.how-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; }
-.how-item p { margin: 6px 0 0; color: var(--muted); }
 
 /* ---------- workspace ---------- */
 .work-view { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1.15fr) 6px minmax(380px, 1fr); }
@@ -270,7 +267,6 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); ou
 .seg.pending .seg-head .mini.apply { display: inline-block; }
 .seg.pending .seg-status { background: var(--warn); }
 /* help dialog */
-.help-steps { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
 kbd { font: 11.5px ui-monospace, monospace; border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; background: var(--surface-2); }
 .ai-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px 16px; align-items: center; }
 .ai-grid label:not(.check) { display: flex; flex-direction: column; gap: 4px; font-weight: 550; }
@@ -278,8 +274,7 @@ kbd { font: 11.5px ui-monospace, monospace; border: 1px solid var(--border); bor
 .ai-grid .range { display: flex; align-items: center; gap: 6px; font-weight: 400; }
 .ai-grid .range input { width: 80px; }
 #helpDialog { max-height: calc(100vh - 40px); }
-#helpDialog h2 + .help-steps { margin-top: -4px; }
-.modal-actions { flex-wrap: wrap; }
+#helpDialog h2 + .modal-actions { flex-wrap: wrap; }
 .editor-pane .pane-toolbar .btn { padding: 0 10px; }
 .page .box.skip { border: 1px dotted rgba(120, 120, 120, .45); background: transparent; }
 .page .box.skip:hover { background: rgba(120, 120, 120, .08); }
@@ -481,6 +476,55 @@ body.splitting .pages, body.splitting iframe { pointer-events: none; }
 .cpage svg.mk-layer { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; z-index: 3; }
 .cpage svg.mk-layer * { pointer-events: none !important; }
 
+/* ---------- v1.18: workflow overview (start page and Help), close button ---------- */
+.wf { width: min(1060px, 100%); container-type: inline-size; display: grid; gap: 14px; }
+.wf-title { margin: 0; font-size: 18px; text-align: center; }
+.wf.in-help .wf-title { display: none; }
+.wf-flow { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.wf-step { position: relative; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 14px 13px; display: grid; gap: 10px; align-content: start; min-width: 0; text-align: left; }
+.wf-step::after { content: "→"; position: absolute; right: -13px; top: 19px; width: 12px; text-align: center; color: var(--muted); }
+.wf-step:nth-child(3n)::after, .wf-step:last-child::after { content: none; }
+.wf-head { display: flex; align-items: center; gap: 9px; }
+.wf-head h3 { margin: 0; font-size: 16px; line-height: 1.25; }
+.wf-num { flex: none; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: #fff; font-weight: 700; font-size: 13px; }
+.wf-step p { margin: 0; color: var(--muted); font-size: 13px; }
+.wf-step p b, .wf-out b { color: var(--text); font-weight: 600; }
+.wf-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.wf .btn { pointer-events: none; height: 28px; padding: 0 10px; border-radius: 7px; font-size: 13px; gap: 5px; }
+.wf .btn svg { width: 15px; height: 15px; }
+.wf .btn.bi-btn { padding: 0 9px; }
+.wf-drop { border: 2px dashed var(--border); border-radius: 10px; padding: 10px; display: grid; justify-items: center; gap: 3px; font-size: 12.5px; font-weight: 600; color: var(--text); }
+.wf-drop svg { color: var(--accent); }
+.wf-drop u { color: var(--accent); text-decoration-thickness: 1.5px; text-underline-offset: 3px; }
+.wf-sample { margin: 0; font: 12px/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: var(--accent-soft); color: var(--text); border-radius: 8px; padding: 7px 10px; white-space: pre; overflow-x: auto; }
+.wf-sample .m { color: var(--accent); }
+.wf-toggle { display: inline-flex; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 2px; }
+.wf-toggle span { color: var(--muted); font-weight: 550; font-size: 13px; padding: 2px 10px; border-radius: 6px; }
+.wf-toggle span.on { background: var(--surface); color: var(--text); box-shadow: 0 1px 2px rgba(0, 0, 0, .12); }
+.wf-card { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; font-size: 12.5px; }
+.wf-card-head { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 4px; padding: 5px 8px; }
+.wf-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--success); }
+.wf-meta { color: var(--muted); margin-right: auto; }
+.wf-mini { color: var(--muted); font-size: 12px; padding: 2px 5px; border-radius: 5px; white-space: nowrap; }
+.wf-mini.on { background: var(--accent-soft); color: var(--accent); }
+.wf-mini.apply { color: var(--accent); font-weight: 600; }
+.wf-card-tr { border-top: 1px solid var(--border); background: var(--surface-2); padding: 5px 8px; }
+.wf-loop { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.wf-again { font-size: 12.5px; color: var(--accent); font-weight: 600; }
+.wf-again kbd { font: 600 11px system-ui, sans-serif; border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; background: var(--surface); color: var(--text); }
+.wf-save { border-color: var(--success); box-shadow: 0 0 0 3px var(--success-soft); }
+.wf-save .wf-num { background: var(--success); }
+.wf-out { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+@container (max-width: 820px) {
+  .wf-flow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .wf-step::after { content: none; }
+}
+@container (max-width: 520px) {
+  .wf-flow { grid-template-columns: minmax(0, 1fr); }
+}
+#helpDialog.mode-help { width: min(1080px, calc(100% - 32px)); }
+#btnClose { gap: 5px; }
+
   </style>
 </head>
 <body>
@@ -488,7 +532,7 @@ body.splitting .pages, body.splitting iframe { pointer-events: none; }
   <div class="brand">
     <span class="logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><defs><linearGradient id="logoGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4a6cf7"/><stop offset="1" stop-color="#2440b3"/></linearGradient></defs><rect width="32" height="32" rx="7" fill="url(#logoGrad)"/><path d="M8 4.5h9.5l6 6V23a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V6.5a2 2 0 0 1 2-2z" fill="#fff"/><path d="M17.5 4.5v4.8a1.2 1.2 0 0 0 1.2 1.2h4.8z" fill="#c7d2fe"/><rect x="9" y="13" width="9" height="1.7" rx=".85" fill="#9aabf0"/><rect x="9" y="16.6" width="11" height="1.7" rx=".85" fill="#9aabf0"/><rect x="9" y="20.2" width="6" height="1.7" rx=".85" fill="#9aabf0"/><circle cx="24" cy="24" r="7" fill="#f59e0b" stroke="#fff" stroke-width="1.6"/><path d="M20.4 21.7h4.6M27.6 26.3H23" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/><path d="M24.6 19.4l3.5 2.3-3.5 2.3zM23.4 24l-3.5 2.3 3.5 2.3z" fill="#fff"/></svg></span>
     <span>PDF Translate</span>
-    <span class="version" id="appVersion">v1.17</span>
+    <span class="version" id="appVersion">v1.18</span>
   </div>
   <ol class="steps" id="steps">
     <li data-step="1"><span>1</span> <i data-i18n="step.extract">Extract text</i></li>
@@ -503,6 +547,7 @@ body.splitting .pages, body.splitting iframe { pointer-events: none; }
     </div>
     <button class="btn ghost" id="btnHelp" data-i18n-title="help.btnTitle" data-i18n="help.btn">? Help</button>
     <button class="btn ghost" id="btnNew" hidden data-i18n="top.new">Open another PDF</button>
+    <button class="btn ghost" id="btnClose" hidden data-i18n-title="top.closeTitle"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg><span data-i18n="top.close">Close</span></button>
     <button class="icon-btn top-fs" id="btnAppFullscreen" data-i18n-title="top.fullscreen"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9V3h6M21 9V3h-6M3 15v6h6M21 15v6h-6"/><rect x="8" y="8" width="8" height="8" rx="1"/></svg></button>
   </div>
 </header>
@@ -520,10 +565,49 @@ body.splitting .pages, body.splitting iframe { pointer-events: none; }
     <div class="engine-status" id="engineStatus"><div class="spinner"></div> <span data-i18n="upload.engine">Loading the PDF engine…</span></div>
     <div class="privacy" data-i18n="upload.privacy">Everything runs in your browser. Your PDF is never uploaded.</div>
   </label>
-  <section class="how">
-    <div class="how-item"><b data-i18n="how.1.title">1 · Extract</b><p data-i18n="how.1.text"></p></div>
-    <div class="how-item"><b data-i18n="how.2.title">2 · Translate anywhere</b><p data-i18n="how.2.text"></p></div>
-    <div class="how-item"><b data-i18n="how.3.title">3 · Rebuild</b><p data-i18n="how.3.text"></p></div>
+  <!-- The workflow in six steps (also copied into Help); the buttons look as they do in the app. -->
+  <section class="wf" id="wfStart" aria-labelledby="wfTitle">
+    <h2 class="wf-title" id="wfTitle" data-i18n="wf.title">The workflow in six steps</h2>
+    <ol class="wf-flow">
+      <li class="wf-step">
+        <div class="wf-head"><span class="wf-num">1</span><h3 data-i18n="wf.1.title"></h3></div>
+        <p data-i18n="wf.1.text"></p>
+        <div class="wf-drop"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 17v-6"/><path d="m9 14 3-3 3 3"/></svg><span data-i18n="wf.1.drop"></span></div>
+        <div class="wf-row"><span class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/><path d="M8 9h8M8 12h8M8 15h5"/></svg><span data-i18n="tb.ocr">OCR</span></span><span class="btn ghost" data-i18n="top.new"></span></div>
+      </li>
+      <li class="wf-step">
+        <div class="wf-head"><span class="wf-num">2</span><h3 data-i18n="wf.2.title"></h3></div>
+        <p data-i18n="wf.2.text"></p>
+        <pre class="wf-sample" data-i18n="wf.2.sample"></pre>
+        <div class="wf-row"><span class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v12m0 0-4-4m4 4 4-4M5 21h14"/></svg><span data-i18n="tb.export"></span></span><span class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><span data-i18n="tb.copy"></span></span><span class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg><span data-i18n="tb.ai"></span></span></div>
+      </li>
+      <li class="wf-step">
+        <div class="wf-head"><span class="wf-num">3</span><h3 data-i18n="wf.3.title"></h3></div>
+        <p data-i18n="wf.3.text"></p>
+        <div class="wf-row"><span class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 15V3m0 0L8 7m4-4 4 4M5 21h14"/></svg><span data-i18n="tb.import"></span></span><span class="btn primary" data-i18n="import.go"></span></div>
+      </li>
+      <li class="wf-step">
+        <div class="wf-head"><span class="wf-num">4</span><h3 data-i18n="wf.4.title"></h3></div>
+        <p data-i18n="wf.4.text"></p>
+        <div class="wf-row"><span class="btn primary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="m9 14 2 2 4-4"/></svg><span data-i18n="tb.build"></span></span></div>
+        <div class="wf-row"><span class="wf-toggle"><span data-i18n="view.original"></span><span class="on" data-i18n="view.translated"></span><span data-i18n="view.compare"></span></span></div>
+      </li>
+      <li class="wf-step wf-loop">
+        <div class="wf-head"><span class="wf-num">5</span><h3 data-i18n="wf.5.title"></h3></div>
+        <p data-i18n="wf.5.text"></p>
+        <div class="wf-row"><span class="wf-toggle"><span data-i18n="view.original"></span><span data-i18n="view.translated"></span><span class="on" data-i18n="view.compare"></span></span><span class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg></span></div>
+        <div class="wf-card">
+          <div class="wf-card-head"><span class="wf-dot"></span><b>#13</b><span class="wf-meta" data-i18n="wf.5.meta"></span><span class="wf-mini on">Aa</span><span class="wf-mini apply" data-i18n="card.apply"></span></div>
+          <div class="wf-card-tr" data-i18n="wf.5.sample"></div>
+        </div>
+        <div class="wf-again" data-i18n="wf.5.again"></div>
+      </li>
+      <li class="wf-step wf-save">
+        <div class="wf-head"><span class="wf-num">6</span><h3 data-i18n="wf.6.title"></h3></div>
+        <div class="wf-out"><div class="wf-row"><span class="btn success" data-i18n="tb.download"></span></div><span data-i18n="wf.6.one"></span></div>
+        <div class="wf-out"><div class="wf-row"><span class="btn success bi-btn"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="8" height="16" rx="1"/><rect x="13" y="4" width="8" height="16" rx="1"/><path d="M5.5 9h3M5.5 12h3M15.5 9h3M15.5 12h3"/></svg></span></div><span data-i18n="wf.6.both"></span></div>
+      </li>
+    </ol>
   </section>
 </main>
 
@@ -777,11 +861,7 @@ body.splitting .pages, body.splitting iframe { pointer-events: none; }
   <form method="dialog">
     <div class="help-part">
     <h2 data-i18n="help.title">Help</h2>
-    <ol class="help-steps">
-      <li data-i18n="help.step1"></li>
-      <li data-i18n="help.step2"></li>
-      <li data-i18n="help.step3"></li>
-    </ol>
+    <div class="wf in-help" id="wfHelp"></div>
     <p class="muted small" data-i18n="help.shortcuts"></p>
     <p class="muted small" data-i18n="help.markup"></p>
     </div>
@@ -805,7 +885,7 @@ body.splitting .pages, body.splitting iframe { pointer-events: none; }
     <div class="ai-parts-head"><b data-i18n="ai.parts">Copy prompt + text</b> <span class="muted small" data-i18n="ai.partsHint"></span></div>
     <div class="ai-parts" id="aiParts"></div>
     </div>
-    <p class="muted small help-version help-part">PDF Translate v1.17</p>
+    <p class="muted small help-version help-part">PDF Translate v1.18</p>
     <div class="modal-actions">
       <button value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
       <button type="button" class="btn ai-part" id="aiCopyPrompt" data-i18n="ai.copyPrompt">Copy prompt only</button>
@@ -865,17 +945,32 @@ const I18N = {
     "help.btn": "? Hilfe",
     "help.btnTitle": "So funktioniert es",
     "top.new": "Andere Datei öffnen",
+    "top.close": "Schließen",
+    "top.closeTitle": "Datei schließen und zur Startseite zurück (die Übersetzungen bleiben im Browser gespeichert)",
+    "wf.title": "Der Arbeitsablauf in sechs Schritten",
+    "wf.1.title": "Dokument öffnen",
+    "wf.1.text": "Eine <b>PDF-, Word-, PowerPoint-, Excel-, EPUB- oder FB2-Datei</b> hineinziehen. Jeder Absatz, jede Beschriftung und Tabellenzelle wird ein nummeriertes Segment. Gescannte Seiten: <b>OCR</b>.",
+    "wf.1.drop": "Datei hier ablegen oder <u>Datei auswählen</u>",
+    "wf.2.title": "Hinausgeben",
+    "wf.2.text": "Mit <b>Export</b> eine Datei für Übersetzer oder CAT-Tool, mit <b>Kopieren</b> die Segmente, mit <b>KI</b> ein fertiger Prompt für ChatGPT, Claude, Gemini oder Copilot. Die Markierungen beibehalten.",
+    "wf.2.sample": "<span class=\"m\">[[12]]</span>\nZusammenfassung\n<span class=\"m\">[[13]]</span>\nDas Projekt hat im dritten Quartal …",
+    "wf.3.title": "Übersetzung importieren",
+    "wf.3.text": "Antwort einfügen oder die übersetzte Datei laden (TXT, DOCX, XLIFF, CSV, JSON). Jeder Text kommt über seine Nummer in sein Feld.",
+    "wf.4.title": "Neu erstellen",
+    "wf.4.text": "Die Übersetzungen werden ins Original-Layout geschrieben. Bilder, Zeichnungen, Zahlen und Formeln bleiben unverändert.",
+    "wf.5.title": "Prüfen und anpassen",
+    "wf.5.text": "Im <b>Vergleich</b> stehen Original und Übersetzung nebeneinander. Text ändern, mit <b>Aa</b> Größe, Schrift und Farbe setzen, Rahmen ziehen zum Verschieben oder Skalieren, Markierungen setzen.",
+    "wf.5.meta": "S. 1 · 12pt · links",
+    "wf.5.sample": "Das Projekt hat die Datenmigration abgeschlossen …",
+    "wf.5.again": "↺ Jede Änderung wirkt sofort · <kbd>Strg</kbd>+<kbd>S</kbd>",
+    "wf.6.title": "Speichern",
+    "wf.6.one": "Die <b>übersetzte Datei</b>, im Format des Originals.",
+    "wf.6.both": "<b>Beide Sprachen</b>: nebeneinander auf einer Seite, abwechselnde Seiten oder jeder Absatz mit seiner Übersetzung.",
 
     "upload.title": "PDF, Word, PowerPoint, Excel, EPUB oder FB2 hier ablegen oder <u>Datei auswählen</u>",
     "upload.sub": "Der Text wird extrahiert; Bilder, Zeichnungen und Layout bleiben unverändert. Word-, PowerPoint- und Excel-Dateien sowie E-Books (EPUB, FB2) behalten Formatierung, Bilder und Fußnoten.",
     "upload.engine": "PDF-Engine wird geladen (ca. 4 MB, nur beim ersten Mal)…",
     "upload.privacy": "Alles läuft in Ihrem Browser. Ihre Datei wird nirgendwo hochgeladen.",
-    "how.1.title": "1 · Extrahieren",
-    "how.1.text": "Jeder Absatz, jede Überschrift, Beschriftung und Tabellenzelle wird zu einem nummerierten Segment. Position, Schriftgröße, Farbe und Stil werden gespeichert.",
-    "how.2.title": "2 · Beliebig übersetzen",
-    "how.2.text": "Exportieren Sie die Segmente als TXT, Word, XLIFF, CSV oder JSON. Übersetzen Sie sie mit DeepL, Google Übersetzer, einer KI, einem CAT-Tool oder von Hand und importieren Sie das Ergebnis. Übersetzungen lassen sich auch direkt hier bearbeiten.",
-    "how.3.title": "3 · Neu erstellen",
-    "how.3.text": "Der Originaltext wird entfernt und die Übersetzung an dieselbe Stelle geschrieben. Bilder, Vektorgrafiken und der Rest der Seite bleiben unberührt.",
 
     "view.original": "Original",
     "view.translated": "Übersetzung",
@@ -970,9 +1065,6 @@ const I18N = {
     "build.fontsNote": "Die eingebauten Schriften decken Lateinisch, Griechisch, Kyrillisch, Chinesisch, Japanisch und Koreanisch ab. Für andere Schriftsysteme laden Sie eine passende Schrift. Rechts-nach-links- und komplexe Schriften (Arabisch, Hebräisch, indische Schriften, Thai) werden nicht korrekt gesetzt.",
 
     "help.title": "Hilfe",
-    "help.step1": "<b>Extrahieren:</b> PDF, Word (DOCX), PowerPoint (PPTX), Excel (XLSX), EPUB oder FB2 öffnen. Jeder Absatz, jede Beschriftung und Tabellenzelle wird zu einem nummerierten Segment; ein Klick auf einen Rahmen auf der Seite springt dorthin. Felder nur mit Zahlen oder Datum werden nicht übersetzt.",
-    "help.step2": "<b>Übersetzen:</b> in die Felder tippen, oder unter <b>KI</b> einen Prompt für eine KI kopieren (bzw. ein Übersetzungstool nutzen) und die Antwort unter <b>Importieren</b> einfügen.",
-    "help.step3": "<b>Erstellen:</b> <b>PDF erstellen</b> schreibt alle Übersetzungen in die PDF. Um später ein Segment zu korrigieren, ändern Sie es und klicken auf <b>⟳ in PDF übernehmen</b> (oder <kbd>Strg</kbd>+<kbd>S</kbd>). Nur diese Seite wird neu erstellt. Word-, PowerPoint- und Excel-Dateien sowie E-Books (EPUB, FB2) werden im selben Format heruntergeladen, mit allen Formatierungen; Markierungen wie &lt;1&gt;…&lt;/1&gt; stehen für Kursiv, Fett, Links und Fußnoten.",
     "help.shortcuts": "Tastenkürzel im Übersetzungsfeld: <kbd>Strg</kbd>+<kbd>Enter</kbd> nächstes Segment · <kbd>Alt</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> vorheriges/nächstes · <kbd>Strg</kbd>+<kbd>S</kbd> Segment in PDF übernehmen · <kbd>Strg</kbd> + Mausrad zoomen.",
     "ai.title": "Mit KI übersetzen (ChatGPT, Claude, Gemini…)",
     "ai.targetPh": "z. B. Englisch",
@@ -1171,17 +1263,32 @@ const I18N = {
     "help.btn": "? Help",
     "help.btnTitle": "How it works",
     "top.new": "Open another file",
+    "top.close": "Close",
+    "top.closeTitle": "Close the file and go back to the start page (the translations stay saved in the browser)",
+    "wf.title": "The workflow in six steps",
+    "wf.1.title": "Open the document",
+    "wf.1.text": "Drop a <b>PDF, Word, PowerPoint, Excel, EPUB or FB2</b> file. Every paragraph, label and table cell becomes a numbered segment. Scanned pages: <b>OCR</b>.",
+    "wf.1.drop": "Drop a file here or <u>choose a file</u>",
+    "wf.2.title": "Send it out",
+    "wf.2.text": "<b>Export</b> a file for a translator or CAT tool, <b>Copy</b> the segments, or <b>AI</b> for a ready prompt for ChatGPT, Claude, Gemini or Copilot. Keep the markers.",
+    "wf.2.sample": "<span class=\"m\">[[12]]</span>\nExecutive summary\n<span class=\"m\">[[13]]</span>\nIn the third quarter, the project …",
+    "wf.3.title": "Import the translation",
+    "wf.3.text": "Paste the answer or load the translated file (TXT, DOCX, XLIFF, CSV, JSON). Each text lands in its field by its number.",
+    "wf.4.title": "Rebuild",
+    "wf.4.text": "The translations are written into the original layout. Images, drawings, numbers and formulas stay as they are.",
+    "wf.5.title": "Review and adjust",
+    "wf.5.text": "<b>Compare</b> shows original and translation side by side. Edit a text, set size, font and colour with <b>Aa</b>, drag a box to move or resize it, add markups.",
+    "wf.5.meta": "p. 1 · 12pt · left",
+    "wf.5.sample": "The project completed the data migration …",
+    "wf.5.again": "↺ Each change is applied at once · <kbd>Ctrl</kbd>+<kbd>S</kbd>",
+    "wf.6.title": "Save",
+    "wf.6.one": "The <b>translated file</b>, in the same format as the original.",
+    "wf.6.both": "<b>Both languages</b>: side by side on one page, alternating pages, or each paragraph followed by its translation.",
 
     "upload.title": "Drop a PDF, Word, PowerPoint, Excel, EPUB or FB2 file here or <u>choose a file</u>",
     "upload.sub": "The text is extracted; pictures, drawings and layout stay as they are. Word, PowerPoint and Excel files and e-books (EPUB, FB2) keep their formatting, images and footnotes.",
     "upload.engine": "Loading the PDF engine (about 4 MB, the first time only)…",
     "upload.privacy": "Everything runs in your browser. Your file is never uploaded.",
-    "how.1.title": "1 · Extract",
-    "how.1.text": "Each paragraph, heading, label and table cell becomes a numbered segment. Its position, font size, colour and style are saved.",
-    "how.2.title": "2 · Translate anywhere",
-    "how.2.text": "Export the segments as TXT, Word, XLIFF, CSV or JSON. Translate them in DeepL, Google Translate, an AI chat, a CAT tool or by hand, then import the result. You can also edit translations here.",
-    "how.3.title": "3 · Rebuild",
-    "how.3.text": "The original text is removed and the translation is written into the same place. Images, vector graphics and the rest of the page are not touched.",
 
     "view.original": "Original",
     "view.translated": "Translated",
@@ -1276,9 +1383,6 @@ const I18N = {
     "build.fontsNote": "Built-in fonts cover Latin, Greek, Cyrillic, Chinese, Japanese and Korean. For other alphabets, upload a font that supports them. Right-to-left and complex scripts (Arabic, Hebrew, Indic, Thai) are not shaped correctly.",
 
     "help.title": "Help",
-    "help.step1": "<b>Extract:</b> open a PDF, Word (DOCX), PowerPoint (PPTX), Excel (XLSX), EPUB or FB2 file. Each paragraph, label and table cell becomes a numbered segment; click a box on the page to jump to it. Fields with only numbers or dates are not translated.",
-    "help.step2": "<b>Translate:</b> type in the boxes, or copy a prompt for an AI under <b>AI</b> (or use a translation tool) and paste its answer into <b>Import</b>.",
-    "help.step3": "<b>Rebuild:</b> <b>Build PDF</b> writes every translation into the PDF. To fix one segment afterwards, edit it and press <b>⟳ update PDF</b> on its card (or <kbd>Ctrl</kbd>+<kbd>S</kbd>). Only that page is redone. Word, PowerPoint and Excel files and e-books (EPUB, FB2) are downloaded in the same format, with all their formatting; markers such as &lt;1&gt;…&lt;/1&gt; stand for italics, bold, links and footnotes.",
     "help.shortcuts": "Shortcuts in a translation box: <kbd>Ctrl</kbd>+<kbd>Enter</kbd> next segment · <kbd>Alt</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> previous/next · <kbd>Ctrl</kbd>+<kbd>S</kbd> update this segment in the PDF · <kbd>Ctrl</kbd> + mouse wheel to zoom.",
     "ai.title": "Translate with AI (ChatGPT, Claude, Gemini…)",
     "ai.targetPh": "e.g. English",
@@ -5477,6 +5581,7 @@ async function openPdf(file) {
     return;
   }
   const bytes = new Uint8Array(await file.arrayBuffer());
+  if (state.doc) closeFind(); // (another file replaces the open one)
   await loadBytes(bytes, file.name, true);
   $("#fileInput").value = "";
 }
@@ -5579,6 +5684,7 @@ function openDocument(doc, bytes) {
   $("#uploadView").hidden = true;
   $("#workView").hidden = false;
   $("#btnNew").hidden = false;
+  $("#btnClose").hidden = false;
   $("#docName").textContent = doc.name;
   $("#docName").title = doc.name;
   document.body.classList.toggle("is-book", isBook());
@@ -5694,6 +5800,7 @@ function closeDocument() {
   $("#workView").hidden = true;
   $("#uploadView").hidden = false;
   $("#btnNew").hidden = true;
+  $("#btnClose").hidden = true;
   $("#docName").textContent = "";
   document.title = "PDF Translate";
   document.body.classList.remove("is-book", "is-office");
@@ -6500,7 +6607,12 @@ function setupDropzone(zone, onFile) {
 function init() {
   setupDropzone($("#dropzone"), openPdf);
   $("#fileInput").addEventListener("change", (e) => openPdf(e.target.files[0]));
-  $("#btnNew").addEventListener("click", closeDocument);
+  // "Open another file" picks the new file at once (cancelling keeps the open one); ✕ closes it.
+  $("#btnNew").addEventListener("click", () => $("#fileInput").click());
+  $("#btnClose").addEventListener("click", closeDocument);
+  // The workflow overview of the start page is shown in Help too.
+  $("#wfHelp").innerHTML = $("#wfStart").innerHTML.replace(' id="wfTitle"', "");
+  applyI18n($("#wfHelp"));
 
   document.addEventListener("dragover", (e) => e.preventDefault());
   document.addEventListener("drop", (e) => {
