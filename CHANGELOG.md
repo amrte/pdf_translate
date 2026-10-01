@@ -4,6 +4,14 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.12
+
+- **Import of answers copied from chat apps** such as Copilot: their answers come as Markdown, so a
+  copy turns `[[12]]` into `\[\[12]]`, `2.` into `2\.` and can put all segments on one line.
+  Pasted text like that is now recognised: the escapes are removed and markers inside a line start a
+  new segment (as long as the numbers keep counting up, so a number in brackets inside the text
+  stays text). Markers in **bold** or with one bracket lost are accepted too.
+
 ## 1.11
 
 - **Layout fix for paragraphs tagged with "ActualText"** (replacement text that some PDF writers

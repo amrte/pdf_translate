@@ -912,7 +912,11 @@ async function extractDocument(bytes, onProgress) {
 
 // --------------------------------------------------------- exchange formats
 
-const MARKER_LINE_RE = /^\s*[\[［【〔(（<«]{2}\s*#?\s*(\p{Nd}+)\s*[\]］】〕)）>»]{2}\s*(.*)$/u;
+/** A [[n]] marker; chat apps sometimes drop one bracket or wrap it in **bold**. */
+const MARKER_RE = /(?:\*\*)?([\[［【〔(（<«]{1,2})\s*#?\s*(\p{Nd}+)\s*([\]］】〕)）>»]{1,2})(?:\*\*)?/gu;
+/** Markdown escapes as chat apps copy them: "\[\[12]] 2\. Title". */
+const MD_ESCAPE_RE = /\\([\\`*_{}\[\]()#+\-.!|~<>])/g;
+const MD_MARKER_RE = /\\\[\s*(?:\\\[)?\s*\p{Nd}+\s*\\?\]/u;
 const digitsToInt = (s) => parseInt(s.replace(/\p{Nd}/gu, (d) => {
   const code = d.codePointAt(0);
   for (const zero of [0x30, 0x660, 0x6f0, 0x966, 0x9e6, 0xe50, 0xff10]) if (code >= zero && code <= zero + 9) return String(code - zero);
@@ -924,23 +928,28 @@ function exportTxt(segments, tr = {}) {
 }
 
 function parseMarkedText(text) {
+  text = text.replace(/\r\n?/g, "\n");
+  if (MD_MARKER_RE.test(text)) text = text.replace(MD_ESCAPE_RE, "$1");
   const result = {};
-  let current = null, buf = [];
-  const flush = () => {
-    if (current !== null) {
-      const v = buf.join("\n").trim();
-      if (v) result[current] = v;
-    }
+  let current = null, from = 0;
+  const flush = (end) => {
+    if (current === null) return;
+    const v = text.slice(from, end).trim();
+    if (v) result[current] = v;
   };
-  for (const raw of text.replace(/\r\n?/g, "\n").split("\n")) {
-    const m = raw.match(MARKER_LINE_RE);
-    if (m) {
-      flush();
-      current = digitsToInt(m[1]);
-      buf = m[2].trim() ? [m[2]] : [];
-    } else if (current !== null) buf.push(raw);
+  for (const m of text.matchAll(MARKER_RE)) {
+    if (m[1].length + m[3].length < 3) continue; // "[1]" is a citation, not a marker
+    const id = digitsToInt(m[2]);
+    const lineStart = text.lastIndexOf("\n", m.index - 1) + 1;
+    const atLineStart = !text.slice(lineStart, m.index).trim();
+    // Markers inside a line come from answers pasted as one line; they must keep counting
+    // up, so a number in brackets inside the text is not taken for a marker.
+    if (!atLineStart && current !== null && id <= current) continue;
+    flush(m.index);
+    current = id;
+    from = m.index + m[0].length;
   }
-  flush();
+  flush(text.length);
   return result;
 }
 
