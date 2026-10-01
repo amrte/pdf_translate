@@ -29,6 +29,7 @@ const state = {
   activeId: null,
   customFont: null,   // {name, bytes}
   shrunk: new Set(),
+  markups: [],        // drawings on the pages (see markup.js)
 };
 
 /* --------------------------------------------------------------- workers */
@@ -305,12 +306,15 @@ function openDocument(doc, bytes) {
   $("#filterStatus").value = "all";
 
   state.zoom = fitZoom();
+  initMarkupsForDocument();
   renderPages();
   vl.reset();
   applyFilter();
   setBuilt(false);
   setVariant("original");
   updateProgress();
+  const unknown = doc.segments.reduce((n, s) => n + (s.text.match(/\ufffd/g) || []).length, 0);
+  if (unknown) toast(t("msg.unknownChars", { n: unknown }), "error");
   if (!doc.segments.length) {
     toast(t("msg.noText"), "error");
   }
@@ -362,6 +366,7 @@ async function clearAllTranslations() {
   setBuilt(false);
   if (state.variant === "translated") setVariant("original");
   refreshCards();
+  recordTranslations(backup, Object.fromEntries(Object.keys(backup).map((id) => [id, ""])), t("hist.clear"));
   toast(t("clear.done", { n }), "ok", {
     label: t("common.undo"),
     run: () => {
@@ -529,6 +534,7 @@ function ensureBoxes(i) {
     return `<div class="${cls}" data-id="${s.id}" title="#${s.id}" style="left:${((x0 - page.x0) / page.width) * 100}%;top:${((y0 - page.y0) / page.height) * 100}%;width:${((x1 - x0) / page.width) * 100}%;height:${((y1 - y0) / page.height) * 100}%"></div>`;
   }).join("");
   el.insertAdjacentHTML("beforeend", html);
+  renderMarkups(i);
   return el;
 }
 
@@ -868,13 +874,17 @@ function mergeImported(parsed) {
   const unknown = ids.length - matched.length;
   const overwrite = $("#importOverwrite").checked;
   let applied = 0;
+  const before = {}, after = {};
   for (const id of matched) {
     if (!overwrite && hasTr(id)) continue;
+    before[id] = state.translations[id] || "";
+    after[id] = parsed[id];
     state.translations[id] = parsed[id];
     vl.heights.delete(id);
     applied++;
   }
   persist();
+  if (applied) recordTranslations(before, after, t("hist.import"));
   // Update what is on screen; everything else picks the new text up when it is shown.
   for (const [id, el] of vl.rendered) {
     const ta = el.querySelector("textarea");
@@ -919,7 +929,7 @@ function importPasted() {
 
 function setBuilt(built) {
   $("#viewTranslated").disabled = !built;
-  $("#btnDownload").hidden = !built;
+  updateDownloadButton();
   updateProgress();
 }
 
@@ -927,7 +937,7 @@ async function downloadOutput() {
   try {
     if (!state.outBytes || state.outDirty) {
       busy(t("msg.saving"));
-      state.outBytes = await pool.workers[0].call("save");
+      state.outBytes = await pool.workers[0].call("save", { markups: state.markups });
       state.outDirty = false;
     }
     saveBlob(new Blob([state.outBytes], { type: "application/pdf" }), `${stem()}.translated.pdf`);
@@ -978,7 +988,7 @@ function applyField(id) {
       if (state.variant !== "translated") setVariant("translated"); else queueRender(s.page);
       ensureBoxes(s.page);
       document.querySelector(`.box[data-id="${id}"]`)?.scrollIntoView({ block: "nearest", behavior: "smooth" });
-      if (stats.missing) toast(t("msg.fontMissing", { n: stats.missing }), "error");
+      if (stats.missing) toast(t("msg.fontMissing", { n: stats.missing, chars: stats.missingChars }), "error");
     } catch (err) {
       toast(t("msg.updateFailed", { err: err.message || err }), "error");
     }
@@ -1027,7 +1037,7 @@ async function doBuild() {
     if (stats.shrunk.length) msg += t("msg.shrunk", { n: stats.shrunk.length });
     toast(msg, "ok");
     if (stats.missing) {
-      toast(t("msg.fontMissing", { n: stats.missing }), "error");
+      toast(t("msg.fontMissing", { n: stats.missing, chars: stats.missingChars }), "error");
     }
   } catch (err) {
     console.error(err);
@@ -1101,7 +1111,15 @@ function init() {
     setTranslation(Number(e.target.closest(".seg").dataset.id), e.target.value);
     autoGrow(e.target);
   });
+  list.addEventListener("change", (e) => { // fires when a changed translation box is left
+    if (e.target.tagName !== "TEXTAREA") return;
+    const id = e.target.closest(".seg").dataset.id;
+    const before = e.target.dataset.before || "", after = e.target.value;
+    e.target.dataset.before = after;
+    if (before !== after) recordTranslations({ [id]: before }, { [id]: after }, t("hist.translation"));
+  });
   list.addEventListener("focusin", (e) => {
+    if (e.target.tagName === "TEXTAREA") e.target.dataset.before = e.target.value;
     const card = e.target.closest(".seg");
     if (card && Number(card.dataset.id) !== state.activeId) setActive(Number(card.dataset.id), { scrollViewer: true });
   });
@@ -1114,9 +1132,12 @@ function init() {
       navigator.clipboard?.writeText(segById(id).text).then(() => toast(t("msg.sourceCopied")));
     } else if (act === "same") {
       const ta = card.querySelector("textarea");
+      const before = state.translations[id] || "";
       ta.value = segById(id).text;
+      ta.dataset.before = ta.value;
       setTranslation(id, ta.value);
       autoGrow(ta);
+      recordTranslations({ [id]: before }, { [id]: ta.value }, t("hist.translation"));
     } else if (act === "apply") {
       applyField(id);
     } else if (e.target.classList.contains("seg-src")) {
@@ -1195,9 +1216,6 @@ function init() {
   }
 }
 
-document.querySelectorAll(".lang-switch button").forEach((b) => b.addEventListener("click", () => setLanguage(b.dataset.lang)));
-document.addEventListener("languagechange", onLanguageChange);
-init();
 
 /* ------------------------------------------------------------ AI prompt */
 

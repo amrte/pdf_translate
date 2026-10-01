@@ -16,7 +16,8 @@ def main() -> None:
         "STYLE": (SRC / "style.css").read_text("utf-8"),
         "I18N": (SRC / "i18n.js").read_text("utf-8").replace("{{VERSION}}", version),
         "ENGINE": (SRC / "engine.js").read_text("utf-8"),
-        "UI": (SRC / "ui.js").read_text("utf-8").replace("{{VERSION}}", version),
+        # One module: interface, markup tools, then start-up.
+        "UI": "\n".join((SRC / f).read_text("utf-8") for f in ("ui.js", "markup.js", "main.js")).replace("{{VERSION}}", version),
     }
     for name in ("I18N", "ENGINE", "UI"):
         if "</script" in parts[name].lower():

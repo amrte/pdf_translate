@@ -12,7 +12,7 @@ A small web app for translating PDF documents **without losing their layout**:
 
 ![workflow](https://img.shields.io/badge/PDF-extract%20%E2%86%92%20translate%20%E2%86%92%20rebuild-3158d4)
 
-## Standalone version (one HTML file, no server) – v1.00
+## Standalone version (one HTML file, no server)
 
 Current version: see [`VERSION`](VERSION) and [`CHANGELOG.md`](CHANGELOG.md). Each update adds 0.01.
 The interface is in German by default; switch to English with DE / EN in the top bar.
@@ -41,6 +41,9 @@ Extra features in the standalone version:
   labels, and leave codes, numbers and paths unchanged. It can include document context, a
   glossary and a page range, and it copies the prompt together with the segments; you paste
   the AI's answer into **Import**.
+* Markup tools (rectangle, ellipse, highlighter, pen, arrow, text note, whiteout, eraser) with
+  colours and line widths; saved into the downloaded PDF as standard annotations.
+* Page turning (‹ / ›, page field, Page Up / Page Down / Home / End) and undo / redo (Ctrl+Z / Ctrl+Y).
 * Fields with no letters (numbers, amounts, dates such as `30.09.2026`, times, `-`) need no
   translation. They are left out of exports, Copy, the AI prompt and the progress count, keep
   their original text, and appear under the "Numbers only (kept)" filter.

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="PDF Translate 1.01">
+  <meta name="generator" content="PDF Translate 1.02">
   <title>PDF Translate</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%233158d4'/%3E%3Ctext x='16' y='22' font-size='15' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='bold'%3EA%E2%86%92%3C/text%3E%3C/svg%3E">
   <style>
@@ -318,6 +318,53 @@ kbd { font: 11.5px ui-monospace, monospace; border: 1px solid var(--border); bor
 .toast-action { margin-left: auto; border: 1px solid currentColor; background: transparent; color: inherit; font: inherit; font-weight: 700; border-radius: 6px; padding: 2px 10px; cursor: pointer; }
 .toast-action:hover { background: rgba(255, 255, 255, .15); }
 
+/* ---------- markup tools, page navigation (v1.02) ---------- */
+.viewer-body { flex: 1; min-height: 0; display: flex; }
+.viewer-body .pages { flex: 1; min-width: 0; }
+.tool-rail {
+  width: 40px; flex: none; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 6px 0; background: var(--surface); border-right: 1px solid var(--border); overflow-y: auto;
+}
+.tool-rail .tool {
+  width: 30px; height: 30px; flex: none; display: grid; place-items: center; border-radius: 7px;
+  border: 1px solid transparent; background: transparent; color: var(--text); cursor: pointer;
+}
+.tool-rail .tool:hover:not(:disabled) { background: var(--surface-2); border-color: var(--border); }
+.tool-rail .tool.active { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+.tool-rail .tool:disabled { opacity: .35; cursor: default; }
+.rail-sep { width: 22px; height: 1px; background: var(--border); margin: 4px 0; flex: none; }
+.swatches { display: grid; grid-template-columns: repeat(2, 13px); gap: 4px; flex: none; }
+.swatch { width: 13px; height: 13px; border-radius: 50%; border: 1px solid rgba(0, 0, 0, .25); background: var(--c); cursor: pointer; padding: 0; }
+.swatch.active { outline: 2px solid var(--accent); outline-offset: 1px; }
+.widths { display: flex; flex-direction: column; gap: 2px; margin-top: 4px; flex: none; }
+.width-btn { width: 30px; height: 14px; display: grid; place-items: center; border: 1px solid transparent; border-radius: 4px; background: transparent; cursor: pointer; padding: 0; }
+.width-btn span { display: block; width: 18px; background: var(--text); border-radius: 2px; }
+.width-btn.active { border-color: var(--accent); background: var(--accent-soft); }
+.page-nav { display: inline-flex; align-items: center; gap: 4px; margin-right: 6px; }
+.page-nav input { width: 46px; font: inherit; font-size: 12.5px; text-align: right; padding: 2px 4px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface-2); color: var(--text); -moz-appearance: textfield; }
+.page-nav input::-webkit-inner-spin-button { display: none; }
+.page-nav #pageCount { font-size: 12.5px; min-width: 30px; }
+.icon-btn:disabled { opacity: .4; cursor: default; }
+
+.page svg.mk-layer { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; z-index: 3; }
+.mk-layer .mk .hit, .mk-layer .mk .hl, .mk-layer .mk .wo, .mk-layer .mk text { pointer-events: all; }
+.pages[data-tool="select"] .mk { cursor: move; }
+.pages.erasing .mk { cursor: crosshair; }
+.pages.drawing svg.mk-layer { pointer-events: all; cursor: crosshair; }
+.pages.drawing .box, .pages.erasing .box { pointer-events: none; }
+.pages.drawing[data-tool="text"] svg.mk-layer { cursor: text; }
+.mk-layer .hl { mix-blend-mode: multiply; }
+.mk-layer .wo { stroke: #b9bec9; stroke-width: 1; stroke-dasharray: 3 2; vector-effect: non-scaling-stroke; }
+.mk-layer .selbox { fill: none; stroke: #f0a020; stroke-width: 1.5; stroke-dasharray: 4 3; vector-effect: non-scaling-stroke; pointer-events: none; }
+.pages.erasing .mk:hover { opacity: .45; }
+.mk-editor {
+  position: absolute; z-index: 5; min-width: 160px; min-height: 2.4em; padding: 1px 3px; resize: both;
+  font-family: Helvetica, Arial, sans-serif; line-height: 1.2; background: rgba(255, 255, 255, .92);
+  border: 1.5px dashed var(--accent); border-radius: 3px; outline: none;
+}
+@container (max-width: 560px) { .boxes-check span { display: none; } }
+.viewer-pane { container-type: inline-size; }
+
   </style>
 </head>
 <body>
@@ -325,7 +372,7 @@ kbd { font: 11.5px ui-monospace, monospace; border: 1px solid var(--border); bor
   <div class="brand">
     <span class="logo">A→</span>
     <span>PDF Translate</span>
-    <span class="version" id="appVersion">v1.01</span>
+    <span class="version" id="appVersion">v1.02</span>
   </div>
   <ol class="steps" id="steps">
     <li data-step="1"><span>1</span> <i data-i18n="step.extract">Extract text</i></li>
@@ -371,14 +418,51 @@ kbd { font: 11.5px ui-monospace, monospace; border: 1px solid var(--border); bor
         <button class="active" data-variant="original" id="viewOriginal" data-i18n="view.original">Original</button>
         <button data-variant="translated" id="viewTranslated" disabled data-i18n="view.translated">Translated</button>
       </div>
-      <label class="check"><input type="checkbox" id="showBoxes" checked> <span data-i18n="view.boxes">Show segments</span></label>
+      <label class="check boxes-check" data-i18n-title="view.boxes"><input type="checkbox" id="showBoxes" checked> <span data-i18n="view.boxes">Show segments</span></label>
       <div class="spacer"></div>
+      <div class="page-nav">
+        <button class="icon-btn" id="pagePrev" data-i18n-title="nav.prev">‹</button>
+        <input id="pageInput" type="number" min="1" value="1" data-i18n-title="nav.page">
+        <span id="pageCount" class="muted">/ 1</span>
+        <button class="icon-btn" id="pageNext" data-i18n-title="nav.next">›</button>
+      </div>
       <button class="icon-btn" id="zoomOut" data-i18n-title="zoom.out">−</button>
       <span class="zoom-label" id="zoomLabel">100%</span>
       <button class="icon-btn" id="zoomIn" data-i18n-title="zoom.in">+</button>
       <button class="icon-btn" id="zoomFit" data-i18n-title="zoom.fit">⤢</button>
     </div>
+    <div class="viewer-body">
+    <div class="tool-rail" id="toolRail">
+      <button type="button" class="tool active" data-tool="select" data-i18n-title="tool.select"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3l14 8-6 2-3 6z"/></svg></button>
+      <button type="button" class="tool" data-tool="rect" data-i18n-title="tool.rect"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="6" width="16" height="12" rx="1"/></svg></button>
+      <button type="button" class="tool" data-tool="ellipse" data-i18n-title="tool.ellipse"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="12" rx="9" ry="6.5"/></svg></button>
+      <button type="button" class="tool" data-tool="highlight" data-i18n-title="tool.highlight"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h7"/><path d="M14.5 4.5l5 5-8 8H6.5v-5z"/><path d="M12 7l5 5"/></svg></button>
+      <button type="button" class="tool" data-tool="ink" data-i18n-title="tool.ink"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17c2.5-5 4.5-7 6-3s3.5 4 6-2 4-3 6 1"/></svg></button>
+      <button type="button" class="tool" data-tool="arrow" data-i18n-title="tool.arrow"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19L19 5"/><path d="M10 5h9v9"/></svg></button>
+      <button type="button" class="tool" data-tool="text" data-i18n-title="tool.text"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 6V4h14v2"/><path d="M12 4v16"/><path d="M9 20h6"/></svg></button>
+      <button type="button" class="tool" data-tool="whiteout" data-i18n-title="tool.whiteout"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="1" fill="currentColor" fill-opacity=".15"/><path d="M7 12h10" stroke-dasharray="2 2"/></svg></button>
+      <button type="button" class="tool" data-tool="eraser" data-i18n-title="tool.eraser"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20H9L4 15l9.5-9.5a2 2 0 0 1 2.8 0l3.2 3.2a2 2 0 0 1 0 2.8L12 19"/><path d="M8 11l6 6"/></svg></button>
+      <div class="rail-sep"></div>
+      <div class="swatches">
+        <button type="button" class="swatch" data-color="#e53935" style="--c:#e53935" data-i18n-title="tool.color"></button>
+        <button type="button" class="swatch" data-color="#1e66f5" style="--c:#1e66f5" data-i18n-title="tool.color"></button>
+        <button type="button" class="swatch" data-color="#2e9d4f" style="--c:#2e9d4f" data-i18n-title="tool.color"></button>
+        <button type="button" class="swatch" data-color="#ffd400" style="--c:#ffd400" data-i18n-title="tool.color"></button>
+        <button type="button" class="swatch" data-color="#f57c00" style="--c:#f57c00" data-i18n-title="tool.color"></button>
+        <button type="button" class="swatch" data-color="#222222" style="--c:#222222" data-i18n-title="tool.color"></button>
+      </div>
+      <div class="widths">
+        <button type="button" class="width-btn" data-width="1" data-i18n-title="tool.width"><span style="height:1px"></span></button>
+        <button type="button" class="width-btn active" data-width="2" data-i18n-title="tool.width"><span style="height:2px"></span></button>
+        <button type="button" class="width-btn" data-width="4" data-i18n-title="tool.width"><span style="height:4px"></span></button>
+      </div>
+      <div class="rail-sep"></div>
+      <button type="button" class="tool" id="btnUndo" disabled data-i18n-title="tool.undo"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg></button>
+      <button type="button" class="tool" id="btnRedo" disabled data-i18n-title="tool.redo"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14l5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h3"/></svg></button>
+      <button type="button" class="tool" id="btnClearMarkups" data-i18n-title="tool.clear"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button>
+    </div>
     <div class="pages" id="pages"></div>
+    </div>
   </section>
 
   <section class="editor-pane">
@@ -518,6 +602,7 @@ kbd { font: 11.5px ui-monospace, monospace; border: 1px solid var(--border); bor
       <li data-i18n="help.step3"></li>
     </ol>
     <p class="muted small" data-i18n="help.shortcuts"></p>
+    <p class="muted small" data-i18n="help.markup"></p>
 
     <h2 id="aiTitle" data-i18n="ai.title">Translate with AI</h2>
     <div class="ai-grid">
@@ -533,7 +618,7 @@ kbd { font: 11.5px ui-monospace, monospace; border: 1px solid var(--border); bor
     </label>
     <textarea id="aiPrompt" rows="9" readonly></textarea>
     <p class="muted small" id="aiStats"></p>
-    <p class="muted small help-version">PDF Translate v1.01</p>
+    <p class="muted small help-version">PDF Translate v1.02</p>
     <div class="modal-actions">
       <button value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
       <button type="button" class="btn" id="aiCopyPrompt" data-i18n="ai.copyPrompt">Copy prompt only</button>
@@ -695,7 +780,8 @@ const I18N = {
     "msg.pasteFirst": "Fügen Sie zuerst übersetzten Text ein.",
     "msg.saving": "PDF wird gespeichert…",
     "msg.saveFailed": "Die PDF konnte nicht gespeichert werden: {err}",
-    "msg.fontMissing": "{n} Zeichen sind in den eingebauten Schriften nicht enthalten. Wählen Sie im Dialog „PDF erstellen“ eine passende Schrift.",
+    "msg.fontMissing": "{n} Zeichen sind in den eingebauten Schriften nicht enthalten ({chars}) und fehlen in der PDF. Wählen Sie im Dialog „PDF erstellen“ eine Schrift, die sie enthält.",
+    "msg.unknownChars": "{n} Zeichen dieser PDF haben keine Unicode-Zuordnung und erscheinen als „�“. Ersetzen Sie sie in den Übersetzungen durch das richtige Zeichen.",
     "msg.updateFailed": "Die PDF konnte nicht aktualisiert werden: {err}",
     "msg.noTranslations": "Noch keine Übersetzungen. Tippen, einfügen oder importieren Sie zuerst welche.",
     "msg.chooseFont": "Wählen Sie zuerst eine Schriftdatei oder eine andere Schriftoption.",
@@ -712,6 +798,34 @@ const I18N = {
     "msg.promptCopied": "Prompt kopiert. Fügen Sie die Segmente (Kopieren) dahinter ein, senden Sie alles an die KI und fügen Sie die Antwort unter „Importieren“ ein.",
     "msg.promptAllCopied": "Prompt und {n} Segmente kopiert. In den KI-Chat einfügen, dann die Antwort unter „Importieren“ einfügen.",
     "msg.working": "Bitte warten…",
+    "nav.prev": "Vorherige Seite (Bild ↑)",
+    "nav.next": "Nächste Seite (Bild ↓)",
+    "nav.page": "Zu Seite springen",
+    "tool.select": "Auswählen, verschieben, löschen (V)",
+    "tool.rect": "Rechteck (R)",
+    "tool.ellipse": "Ellipse (O)",
+    "tool.highlight": "Textmarker (H)",
+    "tool.ink": "Freihand-Stift (P)",
+    "tool.arrow": "Pfeil (A)",
+    "tool.text": "Textnotiz (T)",
+    "tool.whiteout": "Abdecken – weiße Fläche (W)",
+    "tool.eraser": "Radierer: Markierung anklicken zum Löschen (E)",
+    "tool.color": "Farbe",
+    "tool.width": "Linienstärke / Textgröße",
+    "tool.undo": "Rückgängig (Strg+Z)",
+    "tool.redo": "Wiederholen (Strg+Y)",
+    "tool.clear": "Alle Markierungen löschen",
+    "mk.clearConfirm": "Alle {n} Markierungen löschen?",
+    "mk.none": "Es gibt keine Markierungen.",
+    "mk.textPlaceholder": "Text… (Enter = fertig, Umschalt+Enter = neue Zeile)",
+    "mk.undone": "Rückgängig: {what}",
+    "mk.redone": "Wiederholt: {what}",
+    "hist.markup": "Markierung",
+    "hist.translation": "Übersetzung",
+    "hist.import": "Import",
+    "hist.clear": "Alle Übersetzungen gelöscht",
+    "hist.nothing": "Nichts rückgängig zu machen.",
+    "help.markup": "<b>Markieren:</b> Werkzeuge links neben der Seite – Rechteck <kbd>R</kbd>, Ellipse <kbd>O</kbd>, Textmarker <kbd>H</kbd>, Stift <kbd>P</kbd>, Pfeil <kbd>A</kbd>, Textnotiz <kbd>T</kbd>, Abdecken <kbd>W</kbd>, Radierer <kbd>E</kbd>, Auswählen <kbd>V</kbd>/<kbd>Esc</kbd>. Ausgewählte Markierung verschieben oder mit <kbd>Entf</kbd> löschen; Doppelklick bearbeitet eine Textnotiz. <kbd>Strg</kbd>+<kbd>Z</kbd>/<kbd>Y</kbd> macht Markierungen, Importe und Übersetzungsänderungen rückgängig. Seiten blättern: <kbd>Bild ↑</kbd>/<kbd>Bild ↓</kbd>, <kbd>Pos1</kbd>/<kbd>Ende</kbd>. Markierungen werden beim Download als normale PDF-Anmerkungen gespeichert.",
     "default.targetCode": "de",
     "default.targetName": "Deutsch",
     "clear.title": "Alle Übersetzungen löschen",
@@ -866,7 +980,8 @@ const I18N = {
     "msg.pasteFirst": "Paste some translated text first.",
     "msg.saving": "Saving PDF…",
     "msg.saveFailed": "Could not save the PDF: {err}",
-    "msg.fontMissing": "{n} character(s) are not covered by the built-in fonts. Choose a font that supports your language in the Build dialog.",
+    "msg.fontMissing": "{n} character(s) are not covered by the built-in fonts ({chars}) and are missing from the PDF. Choose a font that contains them in the Build dialog.",
+    "msg.unknownChars": "{n} character(s) in this PDF have no Unicode mapping and show as “�”. Replace them with the right character in the translations.",
     "msg.updateFailed": "Could not update the PDF: {err}",
     "msg.noTranslations": "There are no translations yet. Type, paste or import some first.",
     "msg.chooseFont": "Choose a font file first, or pick another font option.",
@@ -883,6 +998,34 @@ const I18N = {
     "msg.promptCopied": "Prompt copied. Add the segments (Copy) after it, send it to the AI, then paste the answer into Import.",
     "msg.promptAllCopied": "Prompt and {n} segments copied. Paste them into the AI chat, then paste its answer into Import.",
     "msg.working": "Working…",
+    "nav.prev": "Previous page (Page Up)",
+    "nav.next": "Next page (Page Down)",
+    "nav.page": "Go to page",
+    "tool.select": "Select, move, delete (V)",
+    "tool.rect": "Rectangle (R)",
+    "tool.ellipse": "Ellipse (O)",
+    "tool.highlight": "Highlighter (H)",
+    "tool.ink": "Freehand pen (P)",
+    "tool.arrow": "Arrow (A)",
+    "tool.text": "Text note (T)",
+    "tool.whiteout": "Whiteout – white box (W)",
+    "tool.eraser": "Eraser: click a markup to delete it (E)",
+    "tool.color": "Colour",
+    "tool.width": "Line width / text size",
+    "tool.undo": "Undo (Ctrl+Z)",
+    "tool.redo": "Redo (Ctrl+Y)",
+    "tool.clear": "Delete all markups",
+    "mk.clearConfirm": "Delete all {n} markups?",
+    "mk.none": "There are no markups.",
+    "mk.textPlaceholder": "Text… (Enter = done, Shift+Enter = new line)",
+    "mk.undone": "Undone: {what}",
+    "mk.redone": "Redone: {what}",
+    "hist.markup": "markup",
+    "hist.translation": "translation",
+    "hist.import": "import",
+    "hist.clear": "all translations removed",
+    "hist.nothing": "Nothing to undo.",
+    "help.markup": "<b>Markup:</b> tools to the left of the page – rectangle <kbd>R</kbd>, ellipse <kbd>O</kbd>, highlighter <kbd>H</kbd>, pen <kbd>P</kbd>, arrow <kbd>A</kbd>, text note <kbd>T</kbd>, whiteout <kbd>W</kbd>, eraser <kbd>E</kbd>, select <kbd>V</kbd>/<kbd>Esc</kbd>. Drag a selected markup to move it or press <kbd>Delete</kbd>; double-click a text note to edit it. <kbd>Ctrl</kbd>+<kbd>Z</kbd>/<kbd>Y</kbd> undoes markups, imports and translation changes. Turn pages with <kbd>Page Up</kbd>/<kbd>Page Down</kbd>, <kbd>Home</kbd>/<kbd>End</kbd>. Markups are saved as standard PDF annotations when you download.",
     "default.targetCode": "en",
     "default.targetName": "English",
     "clear.title": "Remove all translations",
@@ -1726,6 +1869,26 @@ function exportDocx(segments, tr = {}) {
   ]);
 }
 
+// Word's Symbol and Wingdings characters (stored as private-use codes) -> Unicode.
+const SYMBOL_FONT = {
+  0x22: "∀", 0x24: "∃", 0x27: "∋", 0x2d: "−", 0x40: "≅", 0x41: "Α", 0x42: "Β", 0x44: "Δ", 0x46: "Φ", 0x47: "Γ",
+  0x4c: "Λ", 0x50: "Π", 0x51: "Θ", 0x53: "Σ", 0x57: "Ω", 0x61: "α", 0x62: "β", 0x63: "χ", 0x64: "δ", 0x65: "ε",
+  0x66: "φ", 0x67: "γ", 0x68: "η", 0x6a: "ϕ", 0x6b: "κ", 0x6c: "λ", 0x6d: "μ", 0x6e: "ν", 0x70: "π", 0x71: "θ",
+  0x72: "ρ", 0x73: "σ", 0x74: "τ", 0x77: "ω", 0x78: "ξ", 0x79: "ψ", 0x7a: "ζ", 0x7e: "∼", 0xa3: "≤", 0xa5: "∞",
+  0xab: "↔", 0xac: "←", 0xad: "↑", 0xae: "→", 0xaf: "↓", 0xb0: "°", 0xb1: "±", 0xb3: "≥", 0xb4: "×", 0xb5: "∝",
+  0xb6: "∂", 0xb7: "•", 0xb8: "÷", 0xb9: "≠", 0xba: "≡", 0xbb: "≈", 0xbc: "…", 0xc6: "∅", 0xd0: "∇", 0xd5: "∏",
+  0xd6: "√", 0xd7: "⋅", 0xdb: "⇔", 0xdc: "⇐", 0xde: "⇒", 0xe5: "∑", 0xf2: "∫",
+};
+const WINGDINGS = { 0x6c: "●", 0x6e: "■", 0x6f: "□", 0x71: "❖", 0x75: "◆", 0x9f: "•", 0xa8: "☐", 0xab: "★", 0xd8: "➢", 0xe0: "→", 0xe8: "➔", 0xef: "⇦", 0xf0: "⇨", 0xfb: "✗", 0xfc: "✓", 0xfd: "☒", 0xfe: "☑" };
+
+function wordSymbol(font, code) {
+  const c = parseInt(code || "", 16);
+  if (!Number.isFinite(c)) return "";
+  const low = c >= 0xf000 ? c - 0xf000 : c;
+  const table = /symbol/i.test(font || "") ? SYMBOL_FONT : /wingdings/i.test(font || "") ? WINGDINGS : null;
+  return (table && table[low]) || (c >= 0xf000 ? "" : String.fromCodePoint(c));
+}
+
 async function parseDocx(bytes) {
   const xml = new TextDecoder().decode(await unzipEntry(bytes, "word/document.xml"));
   const dom = new DOMParser().parseFromString(xml, "application/xml");
@@ -1735,17 +1898,33 @@ async function parseDocx(bytes) {
       if (el.localName === "t") s += el.textContent;
       else if (el.localName === "br" || el.localName === "cr") s += "\n";
       else if (el.localName === "tab") s += "\t";
+      else if (el.localName === "sym") s += wordSymbol(el.getAttributeNS(W_NS, "font"), el.getAttributeNS(W_NS, "char"));
     }
     return s;
   });
   return parseMarkedText(paras.join("\n"));
 }
 
+/**
+ * Decode an imported text file. Excel's default "CSV" and older Notepad versions save in the
+ * Windows code page rather than UTF-8; reading those as UTF-8 would turn umlauts and signs
+ * into "?" replacement characters.
+ */
+function decodeText(bytes) {
+  if (bytes[0] === 0xff && bytes[1] === 0xfe) return new TextDecoder("utf-16le").decode(bytes.subarray(2));
+  if (bytes[0] === 0xfe && bytes[1] === 0xff) return new TextDecoder("utf-16be").decode(bytes.subarray(2));
+  try {
+    return new TextDecoder("utf-8", { fatal: true }).decode(bytes).replace(/^\ufeff/, "");
+  } catch (_) {
+    return new TextDecoder("windows-1252").decode(bytes);
+  }
+}
+
 /** Detect the format of a translated file and parse it into {id: text}. */
 async function parseImport(name, bytes) {
   name = (name || "").toLowerCase();
   if (name.endsWith(".docx") || (bytes[0] === 0x50 && bytes[1] === 0x4b)) return parseDocx(bytes);
-  const text = new TextDecoder().decode(bytes).replace(/^﻿/, "");
+  const text = decodeText(bytes);
   const head = text.trimStart();
   if (/\.(xlf|xliff)$/.test(name) || (head.startsWith("<") && head.slice(0, 500).includes("xliff"))) return parseXliff(text);
   if (name.endsWith(".json") || head.startsWith("{") || head.startsWith("[")) {
@@ -1760,12 +1939,30 @@ async function parseImport(name, bytes) {
 const CJK_RE = /[ᄀ-ᇿ⺀-鿿ꥠ-꥿가-퟿豈-﫿＀-￯]|[\u{20000}-\u{3134f}]/u;
 const NO_LINE_START = new Set([..."、。，．！？：；）」』】》〉,.!?;:)]}%"]);
 
+/** Look-alikes for signs that none of the built-in fonts contain. */
+const GLYPH_SUBST = {
+  0x2300: 0xd8,   // ⌀ diameter -> Ø
+  0x25ba: 0x25b6, // ► -> ▶
+  0x25c4: 0x25c0, // ◄ -> ◀
+  0x25b8: 0x25b6, // ▸ -> ▶
+  0x25c2: 0x25c0, // ◂ -> ◀
+  0x2610: 0x25a1, // ☐ -> □
+  0x223f: 0x223d, // ∿ -> ∽
+  0x2259: 0x3d,   // ≙ -> =
+  0x2011: 0x2d,   // non-breaking hyphen -> -
+  0x2212: 0x2d,   // minus sign -> - (if missing)
+  0x202f: 0x20,   // narrow no-break space
+  0x2009: 0x20,   // thin space
+  0x200b: 0x20,   // zero-width space
+};
+
 class FontKit {
   constructor(doc, opts) {
     this.doc = doc;
     this.opts = opts;
     this.entries = new Map();
     this.missing = 0;
+    this.missingChars = new Set();
   }
   entry(name) {
     let e = this.entries.get(name);
@@ -1781,7 +1978,7 @@ class FontKit {
     const v = (seg.bold ? 1 : 0) + (seg.italic ? 2 : 0);
     const chain = [];
     if (this.opts.fontMode === "custom" && this.opts.customFont) chain.push("custom");
-    chain.push(BASE_FONTS[family][v]);
+    chain.push(BASE_FONTS[family][v], "Symbol", "ZapfDingbats");
     let cjk = this.opts.cjk || "zh-Hans";
     if (/[぀-ヿ]/.test(text)) cjk = "ja";
     else if (/[가-힯ᄀ-ᇿ]/.test(text)) cjk = "ko";
@@ -1789,15 +1986,23 @@ class FontKit {
     return chain;
   }
   glyph(chain, cp) {
+    const found = this.lookup(chain, cp) || (GLYPH_SUBST[cp] && this.lookup(chain, GLYPH_SUBST[cp]));
+    if (found) return found;
+    if (cp > 32) { this.missing++; this.missingChars.add(String.fromCodePoint(cp)); }
+    const e = this.entry(chain[0]);
+    return { e, gid: 0, adv: this.advance(e, 0) };
+  }
+  lookup(chain, cp) {
+    // U+FFFD is "unknown character": the fallback font draws it as a "?" in a diamond, which
+    // looks like a wrong translation. It is reported as missing instead of being drawn.
+    if (cp === 0xfffd) return null;
     for (const name of chain) {
       const e = this.entry(name);
       let gid = e.gid.get(cp);
       if (gid === undefined) { gid = e.font.encodeCharacter(cp); e.gid.set(cp, gid); }
       if (gid > 0) return { e, gid, adv: this.advance(e, gid) };
     }
-    if (cp > 32) this.missing++;
-    const e = this.entry(chain[0]);
-    return { e, gid: 0, adv: this.advance(e, 0) };
+    return null;
   }
   advance(e, gid) {
     let a = e.adv.get(gid);
@@ -2075,6 +2280,7 @@ function updatePage(out, src, pno, segs, translations, pageInfo, opts) {
     const stats = { replaced: 0, untranslated: 0, shrunk: [], missing: 0 };
     translatePage(tmp, 0, fk, segs, translations, pageInfo, opts, stats);
     stats.missing = fk.missing;
+    stats.missingChars = [...fk.missingChars].join("");
     tmp.subsetFonts();
     out.deletePage(pno);
     out.graftPage(pno, tmp, 0);
@@ -2107,12 +2313,89 @@ async function buildTranslated(bytes, segments, translations, pages, opts, onPro
     if (done % 4 === 0) await tick();
   }
   stats.missing = fk.missing;
+  stats.missingChars = [...fk.missingChars].join("");
   doc.subsetFonts();
   const buf = doc.saveToBuffer("garbage,compress");
   const out = buf.asUint8Array().slice();
   free(buf);
   free(doc);
   return { bytes: out, stats };
+}
+
+const hexRgb = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
+
+/**
+ * Write the user's markups into the document as standard PDF annotations, so they stay
+ * editable in other PDF programs. Coordinates are in page space (as used for segments).
+ */
+function addMarkups(doc, markups) {
+  const pages = new Map();
+  let fk = null; // fonts for text notes, created when the first one is drawn
+  for (const m of markups) {
+    let page = pages.get(m.page);
+    if (!page) { page = doc.loadPage(m.page); pages.set(m.page, page); }
+    const rgb = hexRgb(m.color || "#e53935");
+    const box = [Math.min(m.x0, m.x1), Math.min(m.y0, m.y1), Math.max(m.x0, m.x1), Math.max(m.y0, m.y1)];
+    let a = null;
+    if (m.type === "rect" || m.type === "ellipse") {
+      a = page.createAnnotation(m.type === "rect" ? "Square" : "Circle");
+      a.setRect(box); a.setColor(rgb); a.setBorderWidth(m.width);
+    } else if (m.type === "whiteout") {
+      a = page.createAnnotation("Square");
+      a.setRect(box); a.setColor([1, 1, 1]); a.setInteriorColor([1, 1, 1]); a.setBorderWidth(0);
+    } else if (m.type === "highlight") {
+      a = page.createAnnotation("Highlight");
+      a.setQuadPoints([[box[0], box[1], box[2], box[1], box[0], box[3], box[2], box[3]]]);
+      a.setColor(rgb);
+    } else if (m.type === "ink") {
+      a = page.createAnnotation("Ink");
+      a.setInkList([m.points.map((p) => [p[0], p[1]])]); a.setColor(rgb); a.setBorderWidth(m.width);
+    } else if (m.type === "arrow") {
+      a = page.createAnnotation("Line");
+      a.setLine([m.x0, m.y0], [m.x1, m.y1]); a.setLineEndingStyles("None", "OpenArrow");
+      a.setColor(rgb); a.setBorderWidth(m.width);
+    } else if (m.type === "text") {
+      a = page.createAnnotation("FreeText");
+      a.setRect([m.x0, m.y0, m.x0 + m.w, m.y0 + m.h]); a.setContents(m.text);
+      a.setDefaultAppearance("Helv", m.size, rgb); a.setBorderWidth(0);
+      a.setAuthor("PDF Translate");
+      a.update();
+      // MuPDF's own appearance uses plain Helvetica, which lacks signs such as ≥ or ✓; draw it
+      // with the same font fallback as the translations instead. The text stays editable.
+      fk = fk || new FontKit(doc, { fontMode: "auto" });
+      const { ops, res } = textAppearance(doc, fk, m, rgb);
+      a.setAppearance(null, null, M.Matrix.identity, [0, 0, m.w, m.h], res, ops);
+      free(a);
+      continue;
+    }
+    if (a) { a.setAuthor("PDF Translate"); a.update(); free(a); }
+  }
+  for (const p of pages.values()) free(p);
+}
+
+/** Appearance stream (operators + resources) for a text note, in its own box coordinates. */
+function textAppearance(doc, fk, m, rgb) {
+  const chain = fk.chain({ family: "sans-serif", bold: false, italic: false }, m.text);
+  const used = new Set();
+  const ops = [`BT ${rgb.map(fmt).join(" ")} rg`];
+  let cur = null;
+  m.text.split("\n").forEach((line, i) => {
+    let x = 2;
+    const y = m.h - 2 - m.size * 0.88 - i * m.size * 1.2;
+    for (const ch of line) {
+      const g = fk.glyph(chain, ch.codePointAt(0));
+      fk.ref(g.e);
+      used.add(g.e);
+      if (cur !== g.e) { ops.push(`/${g.e.res} 1 Tf`); cur = g.e; }
+      ops.push(`${fmt(m.size)} 0 0 ${fmt(m.size)} ${fmt(x)} ${fmt(y)} Tm <${g.gid.toString(16).padStart(4, "0")}> Tj`);
+      x += g.adv * m.size;
+    }
+  });
+  ops.push("ET");
+  const res = doc.newDictionary(), fonts = doc.newDictionary();
+  for (const e of used) fonts.put(e.res, e.ref);
+  res.put("Font", fonts);
+  return { ops: ops.join("\n"), res };
 }
 
 /** Render a page to PNG bytes (a copy, safe to transfer). */
@@ -2168,10 +2451,22 @@ function createHandler() {
       return { result: updatePage(W.edit, W.doc, args.page, args.segments, args.translations, args.pageInfo, args.opts) };
     }
     if (cmd === "save") {
-      if (!W.edit) throw new Error("Nothing has been translated yet.");
-      const buf = W.edit.saveToBuffer("garbage,compress");
+      // The translated PDF (or the original if nothing was translated) plus markups. Markups
+      // go into a copy, so the editable document never accumulates them.
+      const markups = args.markups || [];
+      if (!W.edit && !markups.length) throw new Error("Nothing to save yet.");
+      let doc = W.edit, temp = null;
+      if (markups.length) {
+        let src = W.bytes;
+        if (W.edit) { const b = W.edit.saveToBuffer(""); src = b.asUint8Array().slice(); free(b); }
+        temp = doc = M.Document.openDocument(src.slice(), "application/pdf");
+        addMarkups(doc, markups);
+        if (markups.some((m) => m.type === "text")) doc.subsetFonts();
+      }
+      const buf = doc.saveToBuffer("garbage,compress");
       const bytes = buf.asUint8Array().slice();
       free(buf);
+      free(temp);
       return { result: bytes, transfer: [bytes.buffer] };
     }
     if (cmd === "resetOutput") {
@@ -2235,6 +2530,7 @@ const state = {
   activeId: null,
   customFont: null,   // {name, bytes}
   shrunk: new Set(),
+  markups: [],        // drawings on the pages (see markup.js)
 };
 
 /* --------------------------------------------------------------- workers */
@@ -2511,12 +2807,15 @@ function openDocument(doc, bytes) {
   $("#filterStatus").value = "all";
 
   state.zoom = fitZoom();
+  initMarkupsForDocument();
   renderPages();
   vl.reset();
   applyFilter();
   setBuilt(false);
   setVariant("original");
   updateProgress();
+  const unknown = doc.segments.reduce((n, s) => n + (s.text.match(/\ufffd/g) || []).length, 0);
+  if (unknown) toast(t("msg.unknownChars", { n: unknown }), "error");
   if (!doc.segments.length) {
     toast(t("msg.noText"), "error");
   }
@@ -2568,6 +2867,7 @@ async function clearAllTranslations() {
   setBuilt(false);
   if (state.variant === "translated") setVariant("original");
   refreshCards();
+  recordTranslations(backup, Object.fromEntries(Object.keys(backup).map((id) => [id, ""])), t("hist.clear"));
   toast(t("clear.done", { n }), "ok", {
     label: t("common.undo"),
     run: () => {
@@ -2735,6 +3035,7 @@ function ensureBoxes(i) {
     return `<div class="${cls}" data-id="${s.id}" title="#${s.id}" style="left:${((x0 - page.x0) / page.width) * 100}%;top:${((y0 - page.y0) / page.height) * 100}%;width:${((x1 - x0) / page.width) * 100}%;height:${((y1 - y0) / page.height) * 100}%"></div>`;
   }).join("");
   el.insertAdjacentHTML("beforeend", html);
+  renderMarkups(i);
   return el;
 }
 
@@ -3074,13 +3375,17 @@ function mergeImported(parsed) {
   const unknown = ids.length - matched.length;
   const overwrite = $("#importOverwrite").checked;
   let applied = 0;
+  const before = {}, after = {};
   for (const id of matched) {
     if (!overwrite && hasTr(id)) continue;
+    before[id] = state.translations[id] || "";
+    after[id] = parsed[id];
     state.translations[id] = parsed[id];
     vl.heights.delete(id);
     applied++;
   }
   persist();
+  if (applied) recordTranslations(before, after, t("hist.import"));
   // Update what is on screen; everything else picks the new text up when it is shown.
   for (const [id, el] of vl.rendered) {
     const ta = el.querySelector("textarea");
@@ -3125,7 +3430,7 @@ function importPasted() {
 
 function setBuilt(built) {
   $("#viewTranslated").disabled = !built;
-  $("#btnDownload").hidden = !built;
+  updateDownloadButton();
   updateProgress();
 }
 
@@ -3133,7 +3438,7 @@ async function downloadOutput() {
   try {
     if (!state.outBytes || state.outDirty) {
       busy(t("msg.saving"));
-      state.outBytes = await pool.workers[0].call("save");
+      state.outBytes = await pool.workers[0].call("save", { markups: state.markups });
       state.outDirty = false;
     }
     saveBlob(new Blob([state.outBytes], { type: "application/pdf" }), `${stem()}.translated.pdf`);
@@ -3184,7 +3489,7 @@ function applyField(id) {
       if (state.variant !== "translated") setVariant("translated"); else queueRender(s.page);
       ensureBoxes(s.page);
       document.querySelector(`.box[data-id="${id}"]`)?.scrollIntoView({ block: "nearest", behavior: "smooth" });
-      if (stats.missing) toast(t("msg.fontMissing", { n: stats.missing }), "error");
+      if (stats.missing) toast(t("msg.fontMissing", { n: stats.missing, chars: stats.missingChars }), "error");
     } catch (err) {
       toast(t("msg.updateFailed", { err: err.message || err }), "error");
     }
@@ -3233,7 +3538,7 @@ async function doBuild() {
     if (stats.shrunk.length) msg += t("msg.shrunk", { n: stats.shrunk.length });
     toast(msg, "ok");
     if (stats.missing) {
-      toast(t("msg.fontMissing", { n: stats.missing }), "error");
+      toast(t("msg.fontMissing", { n: stats.missing, chars: stats.missingChars }), "error");
     }
   } catch (err) {
     console.error(err);
@@ -3307,7 +3612,15 @@ function init() {
     setTranslation(Number(e.target.closest(".seg").dataset.id), e.target.value);
     autoGrow(e.target);
   });
+  list.addEventListener("change", (e) => { // fires when a changed translation box is left
+    if (e.target.tagName !== "TEXTAREA") return;
+    const id = e.target.closest(".seg").dataset.id;
+    const before = e.target.dataset.before || "", after = e.target.value;
+    e.target.dataset.before = after;
+    if (before !== after) recordTranslations({ [id]: before }, { [id]: after }, t("hist.translation"));
+  });
   list.addEventListener("focusin", (e) => {
+    if (e.target.tagName === "TEXTAREA") e.target.dataset.before = e.target.value;
     const card = e.target.closest(".seg");
     if (card && Number(card.dataset.id) !== state.activeId) setActive(Number(card.dataset.id), { scrollViewer: true });
   });
@@ -3320,9 +3633,12 @@ function init() {
       navigator.clipboard?.writeText(segById(id).text).then(() => toast(t("msg.sourceCopied")));
     } else if (act === "same") {
       const ta = card.querySelector("textarea");
+      const before = state.translations[id] || "";
       ta.value = segById(id).text;
+      ta.dataset.before = ta.value;
       setTranslation(id, ta.value);
       autoGrow(ta);
+      recordTranslations({ [id]: before }, { [id]: ta.value }, t("hist.translation"));
     } else if (act === "apply") {
       applyField(id);
     } else if (e.target.classList.contains("seg-src")) {
@@ -3401,9 +3717,6 @@ function init() {
   }
 }
 
-document.querySelectorAll(".lang-switch button").forEach((b) => b.addEventListener("click", () => setLanguage(b.dataset.lang)));
-document.addEventListener("languagechange", onLanguageChange);
-init();
 
 /* ------------------------------------------------------------ AI prompt */
 
@@ -3474,6 +3787,530 @@ function initHelp() {
 }
 
 initHelp();
+
+// ======================================================================
+// Markup tools (rectangle, ellipse, highlighter, pen, arrow, text note, whiteout, eraser),
+// page navigation, and undo/redo. Markups live in page coordinates (the same space as the
+// segment boxes), are drawn on an SVG layer over each page, stored per document in
+// localStorage, and written into the PDF as standard annotations when it is downloaded.
+// ======================================================================
+const SVGNS = "http://www.w3.org/2000/svg";
+const TOOL_KEYS = { v: "select", r: "rect", o: "ellipse", h: "highlight", p: "ink", a: "arrow", t: "text", w: "whiteout", e: "eraser" };
+const BOX_TOOLS = new Set(["rect", "ellipse", "highlight", "whiteout"]);
+const TEXT_SIZES = { 1: 9, 2: 12, 4: 16 };
+
+const mk = {
+  tool: "select",
+  color: "#e53935",
+  highlightColor: "#ffd400",
+  width: 2,
+  selected: null,  // id of the selected markup
+  draft: null,     // shape being drawn
+  drag: null,      // markup being moved
+  seq: 1,
+};
+const mkKey = (id) => `pdftr:mk:${id}`;
+const clone = (v) => JSON.parse(JSON.stringify(v));
+
+/* ---------------------------------------------------------------- history */
+
+const history = { undo: [], redo: [] };
+
+/** Record an undoable action: {label, undo(), redo()}. */
+function pushHistory(entry) {
+  history.undo.push(entry);
+  if (history.undo.length > 300) history.undo.shift();
+  history.redo = [];
+  updateHistoryButtons();
+}
+
+function undo() {
+  const e = history.undo.pop();
+  if (!e) { toast(t("hist.nothing")); return; }
+  e.undo();
+  history.redo.push(e);
+  updateHistoryButtons();
+  toast(t("mk.undone", { what: e.label }));
+}
+
+function redo() {
+  const e = history.redo.pop();
+  if (!e) return;
+  e.redo();
+  history.undo.push(e);
+  updateHistoryButtons();
+  toast(t("mk.redone", { what: e.label }));
+}
+
+function resetHistory() {
+  history.undo = [];
+  history.redo = [];
+  updateHistoryButtons();
+}
+
+function updateHistoryButtons() {
+  $("#btnUndo").disabled = !history.undo.length;
+  $("#btnRedo").disabled = !history.redo.length;
+}
+
+/** Undo support for translation changes: `before`/`after` map segment id -> text ("" = none). */
+function recordTranslations(before, after, label) {
+  const apply = (map) => {
+    for (const [id, text] of Object.entries(map)) {
+      if (text && text.trim()) state.translations[id] = text; else delete state.translations[id];
+    }
+    persist();
+    refreshCards();
+  };
+  pushHistory({ label, undo: () => apply(before), redo: () => apply(after) });
+}
+
+/* ---------------------------------------------------------------- storage */
+
+function loadMarkups() {
+  try { state.markups = JSON.parse(localStorage.getItem(mkKey(state.doc.id)) || "[]"); } catch (_) { state.markups = []; }
+  mk.seq = state.markups.reduce((n, m) => Math.max(n, m.id), 0) + 1;
+  mk.selected = null;
+}
+
+function saveMarkups() {
+  try { localStorage.setItem(mkKey(state.doc.id), JSON.stringify(state.markups)); } catch (_) { /* quota / private mode */ }
+  state.outDirty = true;
+  updateDownloadButton();
+}
+
+function updateDownloadButton() {
+  $("#btnDownload").hidden = !(state.hasOutput || (state.markups && state.markups.length));
+}
+
+/** Replace all markups (used by undo/redo) and redraw. */
+function setMarkups(list) {
+  state.markups = clone(list);
+  if (!state.markups.some((m) => m.id === mk.selected)) mk.selected = null;
+  saveMarkups();
+  renderAllMarkups();
+}
+
+/** Run `change` on the markups and make it undoable. */
+function changeMarkups(change) {
+  const before = clone(state.markups);
+  change();
+  const after = clone(state.markups);
+  saveMarkups();
+  renderAllMarkups();
+  pushHistory({ label: t("hist.markup"), undo: () => setMarkups(before), redo: () => setMarkups(after) });
+}
+
+/* -------------------------------------------------------------- rendering */
+
+function svgEl(name, attrs) {
+  const el = document.createElementNS(SVGNS, name);
+  for (const [k, v] of Object.entries(attrs || {})) el.setAttribute(k, v);
+  return el;
+}
+
+function layerFor(i) {
+  const pageEl = document.querySelector(`.page[data-page="${i}"]`);
+  if (!pageEl) return null;
+  let svg = pageEl.querySelector("svg.mk-layer");
+  if (!svg) {
+    const p = state.doc.pages[i];
+    svg = svgEl("svg", { class: "mk-layer", viewBox: `${p.x0} ${p.y0} ${p.width} ${p.height}`, preserveAspectRatio: "none" });
+    pageEl.appendChild(svg);
+  }
+  return svg;
+}
+
+const boxOfMarkup = (m) => {
+  if (m.type === "ink") {
+    const xs = m.points.map((p) => p[0]), ys = m.points.map((p) => p[1]);
+    return [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)];
+  }
+  if (m.type === "text") return [m.x0, m.y0, m.x0 + m.w, m.y0 + m.h];
+  return [Math.min(m.x0, m.x1), Math.min(m.y0, m.y1), Math.max(m.x0, m.x1), Math.max(m.y0, m.y1)];
+};
+
+function arrowHead(m) {
+  const len = Math.max(6, m.width * 4), ang = Math.atan2(m.y1 - m.y0, m.x1 - m.x0);
+  const p = (d) => `${m.x1 - len * Math.cos(ang + d)},${m.y1 - len * Math.sin(ang + d)}`;
+  return `M${p(0.45)} L${m.x1},${m.y1} L${p(-0.45)}`;
+}
+
+function markupNode(m) {
+  const g = svgEl("g", { class: `mk mk-${m.type}${mk.selected === m.id ? " sel" : ""}`, "data-mk": m.id });
+  const [x0, y0, x1, y1] = boxOfMarkup(m);
+  const w = x1 - x0, h = y1 - y0;
+  const stroke = { stroke: m.color, "stroke-width": m.width, fill: "none", "stroke-linecap": "round", "stroke-linejoin": "round" };
+  const hitStroke = { stroke: "transparent", "stroke-width": Math.max(8, m.width + 6), fill: "none", class: "hit" };
+  if (m.type === "rect") {
+    g.append(svgEl("rect", { x: x0, y: y0, width: w, height: h, ...hitStroke }), svgEl("rect", { x: x0, y: y0, width: w, height: h, ...stroke }));
+  } else if (m.type === "ellipse") {
+    const e = { cx: x0 + w / 2, cy: y0 + h / 2, rx: w / 2, ry: h / 2 };
+    g.append(svgEl("ellipse", { ...e, ...hitStroke }), svgEl("ellipse", { ...e, ...stroke }));
+  } else if (m.type === "highlight") {
+    g.append(svgEl("rect", { x: x0, y: y0, width: w, height: h, fill: m.color, "fill-opacity": 0.4, class: "hl" }));
+  } else if (m.type === "whiteout") {
+    g.append(svgEl("rect", { x: x0, y: y0, width: w, height: h, fill: "#fff", class: "wo" }));
+  } else if (m.type === "ink") {
+    const pts = m.points.map((p) => p.join(",")).join(" ");
+    g.append(svgEl("polyline", { points: pts, ...hitStroke }), svgEl("polyline", { points: pts, ...stroke }));
+  } else if (m.type === "arrow") {
+    const d = `M${m.x0},${m.y0} L${m.x1},${m.y1} ${arrowHead(m)}`;
+    g.append(svgEl("path", { d, ...hitStroke }), svgEl("path", { d, ...stroke }));
+  } else if (m.type === "text") {
+    g.append(svgEl("rect", { x: x0, y: y0, width: w, height: h, fill: "transparent", class: "hit" }));
+    const text = svgEl("text", { x: m.x0 + 2, y: m.y0 + 2 + m.size * 0.88, fill: m.color, "font-size": m.size, "font-family": "Helvetica, Arial, sans-serif" });
+    m.text.split("\n").forEach((line, i) => {
+      const ts = svgEl("tspan", { x: m.x0 + 2, dy: i ? m.size * 1.2 : 0 });
+      ts.textContent = line || " ";
+      text.append(ts);
+    });
+    g.append(text);
+  }
+  if (mk.selected === m.id) g.append(svgEl("rect", { x: x0 - 2, y: y0 - 2, width: w + 4, height: h + 4, class: "selbox" }));
+  return g;
+}
+
+function renderMarkups(i, extra) {
+  const svg = layerFor(i);
+  if (!svg) return;
+  svg.replaceChildren(...state.markups.filter((m) => m.page === i).map(markupNode), ...(extra ? [markupNode(extra)] : []));
+}
+
+function renderAllMarkups() {
+  const pages = new Set(state.markups.map((m) => m.page));
+  document.querySelectorAll(".page svg.mk-layer").forEach((s) => pages.add(Number(s.parentElement.dataset.page)));
+  for (const i of pages) if (document.querySelector(`.page[data-page="${i}"]`)?.dataset.boxes) renderMarkups(i);
+}
+
+/* ------------------------------------------------------------ interaction */
+
+function toPagePoint(svg, e) {
+  const pt = svg.createSVGPoint();
+  pt.x = e.clientX;
+  pt.y = e.clientY;
+  const p = pt.matrixTransform(svg.getScreenCTM().inverse());
+  return [Math.round(p.x * 100) / 100, Math.round(p.y * 100) / 100];
+}
+
+function setTool(tool) {
+  mk.tool = tool;
+  document.querySelectorAll("#toolRail .tool[data-tool]").forEach((b) => b.classList.toggle("active", b.dataset.tool === tool));
+  const pages = $("#pages");
+  pages.classList.toggle("drawing", tool !== "select" && tool !== "eraser");
+  pages.classList.toggle("erasing", tool === "eraser");
+  pages.dataset.tool = tool;
+  if (tool !== "select") select(null);
+  updateSwatches();
+}
+
+const currentColor = () => (mk.tool === "highlight" ? mk.highlightColor : mk.color);
+
+function updateSwatches() {
+  const sel = state.markups && state.markups.find((m) => m.id === mk.selected);
+  const color = sel ? sel.color : currentColor();
+  const width = sel && sel.width ? sel.width : mk.width;
+  document.querySelectorAll("#toolRail .swatch").forEach((b) => b.classList.toggle("active", b.dataset.color === color));
+  document.querySelectorAll("#toolRail .width-btn").forEach((b) => b.classList.toggle("active", Number(b.dataset.width) === width));
+}
+
+function select(id) {
+  if (mk.selected === id) return;
+  const pagesToRedraw = new Set();
+  for (const m of state.markups || []) if (m.id === mk.selected || m.id === id) pagesToRedraw.add(m.page);
+  mk.selected = id;
+  for (const i of pagesToRedraw) renderMarkups(i);
+  updateSwatches();
+}
+
+function deleteMarkup(id) {
+  changeMarkups(() => { state.markups = state.markups.filter((m) => m.id !== id); });
+  if (mk.selected === id) mk.selected = null;
+}
+
+function onPointerDown(e) {
+  if (e.button !== 0 || !state.doc) return;
+  const pageEl = e.target.closest(".page");
+  if (!pageEl) return;
+  const i = Number(pageEl.dataset.page);
+  ensureBoxes(i);
+  const svg = layerFor(i);
+  const hit = e.target.closest(".mk");
+  const id = hit ? Number(hit.dataset.mk) : null;
+  const pt = toPagePoint(svg, e);
+
+  if (mk.tool === "select") {
+    if (!hit) { select(null); return; } // the click may still select a segment box below
+    e.preventDefault();
+    e.stopPropagation();
+    select(id);
+    mk.drag = { id, start: pt, orig: clone(state.markups.find((m) => m.id === id)), before: clone(state.markups), svg, page: i, moved: false };
+    return;
+  }
+  if (mk.tool === "eraser") {
+    if (hit) { e.preventDefault(); deleteMarkup(id); }
+    return;
+  }
+  e.preventDefault();
+  if (mk.tool === "text") { openTextEditor(i, pt); return; }
+  const m = { id: mk.seq++, page: i, type: mk.tool, color: currentColor(), width: mk.width, x0: pt[0], y0: pt[1], x1: pt[0], y1: pt[1] };
+  if (m.type === "ink") m.points = [pt];
+  mk.draft = { m, svg, page: i };
+}
+
+function onPointerMove(e) {
+  if (mk.draft) {
+    const { m, svg, page } = mk.draft;
+    const pt = toPagePoint(svg, e);
+    if (m.type === "ink") {
+      const last = m.points[m.points.length - 1];
+      if (Math.hypot(pt[0] - last[0], pt[1] - last[1]) > 0.8) m.points.push(pt);
+    } else {
+      m.x1 = pt[0];
+      m.y1 = pt[1];
+      if (e.shiftKey && BOX_TOOLS.has(m.type)) { // square / circle
+        const s = Math.max(Math.abs(m.x1 - m.x0), Math.abs(m.y1 - m.y0));
+        m.x1 = m.x0 + Math.sign(m.x1 - m.x0 || 1) * s;
+        m.y1 = m.y0 + Math.sign(m.y1 - m.y0 || 1) * s;
+      }
+    }
+    renderMarkups(page, m);
+  } else if (mk.drag) {
+    const d = mk.drag;
+    const pt = toPagePoint(d.svg, e);
+    const dx = pt[0] - d.start[0], dy = pt[1] - d.start[1];
+    if (!d.moved && Math.hypot(dx, dy) < 1) return;
+    d.moved = true;
+    const m = state.markups.find((x) => x.id === d.id);
+    const o = d.orig;
+    if (m.type === "ink") m.points = o.points.map((p) => [p[0] + dx, p[1] + dy]);
+    else { m.x0 = o.x0 + dx; m.y0 = o.y0 + dy; if ("x1" in o) { m.x1 = o.x1 + dx; m.y1 = o.y1 + dy; } }
+    renderMarkups(d.page);
+  }
+}
+
+function onPointerUp() {
+  if (mk.draft) {
+    const { m, page } = mk.draft;
+    mk.draft = null;
+    const [x0, y0, x1, y1] = boxOfMarkup(m);
+    const big = m.type === "ink" ? m.points.length > 1 : m.type === "arrow" ? Math.hypot(m.x1 - m.x0, m.y1 - m.y0) > 3 : x1 - x0 > 2 && y1 - y0 > 2;
+    if (big) {
+      if (m.type === "ink") m.points = simplify(m.points, 0.4);
+      changeMarkups(() => { state.markups.push(m); });
+    } else {
+      renderMarkups(page);
+    }
+  } else if (mk.drag) {
+    const d = mk.drag;
+    mk.drag = null;
+    if (d.moved) {
+      const after = clone(state.markups);
+      saveMarkups();
+      pushHistory({ label: t("hist.markup"), undo: () => setMarkups(d.before), redo: () => setMarkups(after) });
+    }
+  }
+}
+
+/** Drop pen points that add almost nothing (Ramer–Douglas–Peucker). */
+function simplify(points, tol) {
+  if (points.length < 3) return points;
+  const [a, b] = [points[0], points[points.length - 1]];
+  let idx = 0, max = 0;
+  for (let i = 1; i < points.length - 1; i++) {
+    const p = points[i];
+    const d = Math.abs((b[1] - a[1]) * p[0] - (b[0] - a[0]) * p[1] + b[0] * a[1] - b[1] * a[0]) / (Math.hypot(b[0] - a[0], b[1] - a[1]) || 1);
+    if (d > max) { max = d; idx = i; }
+  }
+  if (max <= tol) return [a, b];
+  return simplify(points.slice(0, idx + 1), tol).slice(0, -1).concat(simplify(points.slice(idx), tol));
+}
+
+/* ------------------------------------------------------------ text notes */
+
+let measureCtx = null;
+function measureText(text, size) {
+  measureCtx = measureCtx || document.createElement("canvas").getContext("2d");
+  measureCtx.font = `${size}px Helvetica, Arial, sans-serif`;
+  const lines = text.split("\n");
+  return { w: Math.max(...lines.map((l) => measureCtx.measureText(l).width)) + 6, h: lines.length * size * 1.2 + 4 };
+}
+
+function openTextEditor(i, pt, existing) {
+  closeTextEditor(true);
+  const pageEl = document.querySelector(`.page[data-page="${i}"]`);
+  const p = state.doc.pages[i];
+  const scale = pageEl.clientWidth / p.width;
+  const size = existing ? existing.size : TEXT_SIZES[mk.width] || 12;
+  const color = existing ? existing.color : mk.color;
+  const ta = document.createElement("textarea");
+  ta.className = "mk-editor";
+  ta.placeholder = t("mk.textPlaceholder");
+  ta.value = existing ? existing.text : "";
+  Object.assign(ta.style, {
+    left: `${((pt[0] - p.x0) / p.width) * 100}%`, top: `${((pt[1] - p.y0) / p.height) * 100}%`,
+    fontSize: `${size * scale}px`, color,
+  });
+  pageEl.appendChild(ta);
+  ta.focus();
+  let closed = false; // removing the box fires "blur", which must not commit a second time
+  const close = () => { if (closed) return false; closed = true; mk.editor = null; ta.remove(); return true; };
+  const commit = () => {
+    const text = ta.value.replace(/\s+$/, "");
+    if (!close()) return;
+    if (existing) {
+      if (text === existing.text) return;
+      if (!text) { deleteMarkup(existing.id); return; }
+      changeMarkups(() => { const m = state.markups.find((x) => x.id === existing.id); Object.assign(m, { text }, measureText(text, m.size)); });
+    } else if (text) {
+      changeMarkups(() => { state.markups.push({ id: mk.seq++, page: i, type: "text", color, size, width: mk.width, x0: pt[0], y0: pt[1], text, ...measureText(text, size) }); });
+    }
+  };
+  ta.addEventListener("keydown", (e) => {
+    e.stopPropagation();
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); commit(); }
+    if (e.key === "Escape") close();
+  });
+  ta.addEventListener("blur", commit);
+  ta.addEventListener("pointerdown", (e) => e.stopPropagation());
+  mk.editor = { ta, commit, close };
+}
+
+function closeTextEditor(commit) {
+  if (!mk.editor) return;
+  if (commit) mk.editor.commit(); else mk.editor.close();
+}
+
+/* -------------------------------------------------------- page navigation */
+
+function pageElements() { return [...document.querySelectorAll("#pages .page")]; }
+
+/** Index of the page at the upper third of the viewer. */
+function currentPageIndex() {
+  const box = $("#pages");
+  const y = box.scrollTop + box.clientHeight * 0.33;
+  const els = pageElements();
+  let lo = 0, hi = els.length - 1;
+  while (lo < hi) {
+    const mid = (lo + hi + 1) >> 1;
+    if (els[mid].offsetTop <= y) lo = mid; else hi = mid - 1;
+  }
+  return lo;
+}
+
+function updatePageNav() {
+  if (!state.doc) return;
+  const n = state.doc.pages.length, i = currentPageIndex();
+  if (document.activeElement !== $("#pageInput")) $("#pageInput").value = i + 1;
+  $("#pageInput").max = n;
+  $("#pageCount").textContent = `/ ${n}`;
+  $("#pagePrev").disabled = i <= 0;
+  $("#pageNext").disabled = i >= n - 1;
+}
+
+function goToPage(i) {
+  if (!state.doc) return;
+  i = Math.max(0, Math.min(state.doc.pages.length - 1, i));
+  const el = pageElements()[i];
+  if (el) $("#pages").scrollTop = el.offsetTop - 22;
+  updatePageNav();
+}
+
+/* ------------------------------------------------------------ keyboard */
+
+function isTyping(e) {
+  const tag = e.target.tagName;
+  return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || e.target.isContentEditable || document.querySelector("dialog[open]");
+}
+
+function onKeyDown(e) {
+  if (!state.doc || isTyping(e)) return;
+  const k = e.key.toLowerCase();
+  if ((e.ctrlKey || e.metaKey) && !e.altKey) {
+    if (k === "z" && !e.shiftKey) { e.preventDefault(); undo(); }
+    else if (k === "y" || (k === "z" && e.shiftKey)) { e.preventDefault(); redo(); }
+    return;
+  }
+  if (e.altKey) return;
+  if (k === "pagedown") { e.preventDefault(); goToPage(currentPageIndex() + 1); }
+  else if (k === "pageup") { e.preventDefault(); goToPage(currentPageIndex() - 1); }
+  else if (k === "home") { e.preventDefault(); goToPage(0); }
+  else if (k === "end") { e.preventDefault(); goToPage(state.doc.pages.length - 1); }
+  else if ((k === "delete" || k === "backspace") && mk.selected !== null) { e.preventDefault(); deleteMarkup(mk.selected); }
+  else if (k === "escape") { if (mk.draft) { const p = mk.draft.page; mk.draft = null; renderMarkups(p); } setTool("select"); select(null); }
+  else if (TOOL_KEYS[k] && !e.shiftKey) setTool(TOOL_KEYS[k]);
+}
+
+/* ------------------------------------------------------------------ setup */
+
+/** Called when a document is opened. */
+function initMarkupsForDocument() {
+  loadMarkups();
+  resetHistory();
+  setTool("select");
+  updateDownloadButton();
+  requestAnimationFrame(updatePageNav);
+}
+
+function initMarkup() {
+  const pages = $("#pages");
+  pages.addEventListener("pointerdown", onPointerDown, true);
+  window.addEventListener("pointermove", onPointerMove);
+  window.addEventListener("pointerup", onPointerUp);
+  pages.addEventListener("dblclick", (e) => {
+    const hit = e.target.closest(".mk-text");
+    if (!hit || mk.tool !== "select") return;
+    const m = state.markups.find((x) => x.id === Number(hit.dataset.mk));
+    if (m) openTextEditor(m.page, [m.x0, m.y0], m);
+  });
+  // A click that selected or drew a markup must not also select the segment box below it.
+  pages.addEventListener("click", (e) => { if (mk.tool !== "select" || e.target.closest(".mk")) e.stopPropagation(); }, true);
+
+  document.querySelectorAll("#toolRail .tool[data-tool]").forEach((b) => b.addEventListener("click", () => setTool(b.dataset.tool)));
+  document.querySelectorAll("#toolRail .swatch").forEach((b) => b.addEventListener("click", () => {
+    const color = b.dataset.color;
+    const sel = state.markups.find((m) => m.id === mk.selected);
+    if (sel && sel.type !== "whiteout") changeMarkups(() => { state.markups.find((m) => m.id === sel.id).color = color; });
+    else if (mk.tool === "highlight") mk.highlightColor = color;
+    else mk.color = color;
+    updateSwatches();
+  }));
+  document.querySelectorAll("#toolRail .width-btn").forEach((b) => b.addEventListener("click", () => {
+    const width = Number(b.dataset.width);
+    mk.width = width;
+    const sel = state.markups.find((m) => m.id === mk.selected);
+    if (sel) {
+      changeMarkups(() => {
+        const m = state.markups.find((x) => x.id === sel.id);
+        m.width = width;
+        if (m.type === "text") { m.size = TEXT_SIZES[width]; Object.assign(m, measureText(m.text, m.size)); }
+      });
+    }
+    updateSwatches();
+  }));
+  $("#btnUndo").addEventListener("click", undo);
+  $("#btnRedo").addEventListener("click", redo);
+  $("#btnClearMarkups").addEventListener("click", () => {
+    if (!state.doc || !state.markups.length) { toast(t("mk.none")); return; }
+    if (!confirm(t("mk.clearConfirm", { n: state.markups.length }))) return;
+    changeMarkups(() => { state.markups = []; });
+    mk.selected = null;
+  });
+
+  $("#pagePrev").addEventListener("click", () => goToPage(currentPageIndex() - 1));
+  $("#pageNext").addEventListener("click", () => goToPage(currentPageIndex() + 1));
+  $("#pageInput").addEventListener("change", (e) => goToPage(Number(e.target.value) - 1));
+  $("#pageInput").addEventListener("keydown", (e) => { if (e.key === "Enter") { goToPage(Number(e.target.value) - 1); e.target.blur(); } });
+  let raf = 0;
+  pages.addEventListener("scroll", () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; updatePageNav(); }); }, { passive: true });
+  document.addEventListener("keydown", onKeyDown);
+}
+
+// Start-up (runs after ui.js and markup.js have defined everything).
+document.querySelectorAll(".lang-switch button").forEach((b) => b.addEventListener("click", () => setLanguage(b.dataset.lang)));
+document.addEventListener("languagechange", onLanguageChange);
+initMarkup();
+init();
 
 </script>
 </body>

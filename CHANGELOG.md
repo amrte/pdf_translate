@@ -4,6 +4,24 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.02
+
+- **Markup tools** in a tool bar left of the page: rectangle, ellipse, highlighter, freehand pen,
+  arrow, text note, whiteout (white box) and eraser, with 6 colours and 3 line widths / text sizes.
+  Select a markup to move it, recolour it or delete it (Delete key); double-click a text note to edit
+  it; Shift draws squares and circles. Markups are kept per document and saved into the downloaded
+  PDF as standard annotations (still editable in other PDF programs). Download now works with
+  markups only, too.
+- **Page turning:** ‹ / › buttons, a page number field, and Page Up / Page Down / Home / End.
+- **Undo / redo** (buttons and Ctrl+Z / Ctrl+Y) for markups, imports, "keep", "remove all" and
+  translations changed in a box (once you leave the box).
+- Keyboard shortcuts for the tools: V, R, O, H, P, A, T, W, E, Esc.
+- **Special signs no longer turn into "?"**: the PDF now also uses the Symbol and ZapfDingbats
+  fonts (≥ ⇒ ∅ ✓ ✔ ▲ ■ ★ …) and look-alikes for signs no built-in font has (⌀ → Ø, ► → ▶, ☐ → □).
+  Imported files saved by Excel ("CSV") or Notepad in Windows or UTF-16 encoding are read correctly,
+  Word "Insert › Symbol" characters (Symbol, Wingdings) are converted, and characters that cannot be
+  drawn are listed in a message instead of appearing as "?". Text notes show every sign as well.
+
 ## 1.01
 
 - New button (bin icon next to the progress bar) to **remove all translations**. It asks for

@@ -755,6 +755,26 @@ function exportDocx(segments, tr = {}) {
   ]);
 }
 
+// Word's Symbol and Wingdings characters (stored as private-use codes) -> Unicode.
+const SYMBOL_FONT = {
+  0x22: "∀", 0x24: "∃", 0x27: "∋", 0x2d: "−", 0x40: "≅", 0x41: "Α", 0x42: "Β", 0x44: "Δ", 0x46: "Φ", 0x47: "Γ",
+  0x4c: "Λ", 0x50: "Π", 0x51: "Θ", 0x53: "Σ", 0x57: "Ω", 0x61: "α", 0x62: "β", 0x63: "χ", 0x64: "δ", 0x65: "ε",
+  0x66: "φ", 0x67: "γ", 0x68: "η", 0x6a: "ϕ", 0x6b: "κ", 0x6c: "λ", 0x6d: "μ", 0x6e: "ν", 0x70: "π", 0x71: "θ",
+  0x72: "ρ", 0x73: "σ", 0x74: "τ", 0x77: "ω", 0x78: "ξ", 0x79: "ψ", 0x7a: "ζ", 0x7e: "∼", 0xa3: "≤", 0xa5: "∞",
+  0xab: "↔", 0xac: "←", 0xad: "↑", 0xae: "→", 0xaf: "↓", 0xb0: "°", 0xb1: "±", 0xb3: "≥", 0xb4: "×", 0xb5: "∝",
+  0xb6: "∂", 0xb7: "•", 0xb8: "÷", 0xb9: "≠", 0xba: "≡", 0xbb: "≈", 0xbc: "…", 0xc6: "∅", 0xd0: "∇", 0xd5: "∏",
+  0xd6: "√", 0xd7: "⋅", 0xdb: "⇔", 0xdc: "⇐", 0xde: "⇒", 0xe5: "∑", 0xf2: "∫",
+};
+const WINGDINGS = { 0x6c: "●", 0x6e: "■", 0x6f: "□", 0x71: "❖", 0x75: "◆", 0x9f: "•", 0xa8: "☐", 0xab: "★", 0xd8: "➢", 0xe0: "→", 0xe8: "➔", 0xef: "⇦", 0xf0: "⇨", 0xfb: "✗", 0xfc: "✓", 0xfd: "☒", 0xfe: "☑" };
+
+function wordSymbol(font, code) {
+  const c = parseInt(code || "", 16);
+  if (!Number.isFinite(c)) return "";
+  const low = c >= 0xf000 ? c - 0xf000 : c;
+  const table = /symbol/i.test(font || "") ? SYMBOL_FONT : /wingdings/i.test(font || "") ? WINGDINGS : null;
+  return (table && table[low]) || (c >= 0xf000 ? "" : String.fromCodePoint(c));
+}
+
 async function parseDocx(bytes) {
   const xml = new TextDecoder().decode(await unzipEntry(bytes, "word/document.xml"));
   const dom = new DOMParser().parseFromString(xml, "application/xml");
@@ -764,17 +784,33 @@ async function parseDocx(bytes) {
       if (el.localName === "t") s += el.textContent;
       else if (el.localName === "br" || el.localName === "cr") s += "\n";
       else if (el.localName === "tab") s += "\t";
+      else if (el.localName === "sym") s += wordSymbol(el.getAttributeNS(W_NS, "font"), el.getAttributeNS(W_NS, "char"));
     }
     return s;
   });
   return parseMarkedText(paras.join("\n"));
 }
 
+/**
+ * Decode an imported text file. Excel's default "CSV" and older Notepad versions save in the
+ * Windows code page rather than UTF-8; reading those as UTF-8 would turn umlauts and signs
+ * into "?" replacement characters.
+ */
+function decodeText(bytes) {
+  if (bytes[0] === 0xff && bytes[1] === 0xfe) return new TextDecoder("utf-16le").decode(bytes.subarray(2));
+  if (bytes[0] === 0xfe && bytes[1] === 0xff) return new TextDecoder("utf-16be").decode(bytes.subarray(2));
+  try {
+    return new TextDecoder("utf-8", { fatal: true }).decode(bytes).replace(/^\ufeff/, "");
+  } catch (_) {
+    return new TextDecoder("windows-1252").decode(bytes);
+  }
+}
+
 /** Detect the format of a translated file and parse it into {id: text}. */
 async function parseImport(name, bytes) {
   name = (name || "").toLowerCase();
   if (name.endsWith(".docx") || (bytes[0] === 0x50 && bytes[1] === 0x4b)) return parseDocx(bytes);
-  const text = new TextDecoder().decode(bytes).replace(/^﻿/, "");
+  const text = decodeText(bytes);
   const head = text.trimStart();
   if (/\.(xlf|xliff)$/.test(name) || (head.startsWith("<") && head.slice(0, 500).includes("xliff"))) return parseXliff(text);
   if (name.endsWith(".json") || head.startsWith("{") || head.startsWith("[")) {
@@ -789,12 +825,30 @@ async function parseImport(name, bytes) {
 const CJK_RE = /[ᄀ-ᇿ⺀-鿿ꥠ-꥿가-퟿豈-﫿＀-￯]|[\u{20000}-\u{3134f}]/u;
 const NO_LINE_START = new Set([..."、。，．！？：；）」』】》〉,.!?;:)]}%"]);
 
+/** Look-alikes for signs that none of the built-in fonts contain. */
+const GLYPH_SUBST = {
+  0x2300: 0xd8,   // ⌀ diameter -> Ø
+  0x25ba: 0x25b6, // ► -> ▶
+  0x25c4: 0x25c0, // ◄ -> ◀
+  0x25b8: 0x25b6, // ▸ -> ▶
+  0x25c2: 0x25c0, // ◂ -> ◀
+  0x2610: 0x25a1, // ☐ -> □
+  0x223f: 0x223d, // ∿ -> ∽
+  0x2259: 0x3d,   // ≙ -> =
+  0x2011: 0x2d,   // non-breaking hyphen -> -
+  0x2212: 0x2d,   // minus sign -> - (if missing)
+  0x202f: 0x20,   // narrow no-break space
+  0x2009: 0x20,   // thin space
+  0x200b: 0x20,   // zero-width space
+};
+
 class FontKit {
   constructor(doc, opts) {
     this.doc = doc;
     this.opts = opts;
     this.entries = new Map();
     this.missing = 0;
+    this.missingChars = new Set();
   }
   entry(name) {
     let e = this.entries.get(name);
@@ -810,7 +864,7 @@ class FontKit {
     const v = (seg.bold ? 1 : 0) + (seg.italic ? 2 : 0);
     const chain = [];
     if (this.opts.fontMode === "custom" && this.opts.customFont) chain.push("custom");
-    chain.push(BASE_FONTS[family][v]);
+    chain.push(BASE_FONTS[family][v], "Symbol", "ZapfDingbats");
     let cjk = this.opts.cjk || "zh-Hans";
     if (/[぀-ヿ]/.test(text)) cjk = "ja";
     else if (/[가-힯ᄀ-ᇿ]/.test(text)) cjk = "ko";
@@ -818,15 +872,23 @@ class FontKit {
     return chain;
   }
   glyph(chain, cp) {
+    const found = this.lookup(chain, cp) || (GLYPH_SUBST[cp] && this.lookup(chain, GLYPH_SUBST[cp]));
+    if (found) return found;
+    if (cp > 32) { this.missing++; this.missingChars.add(String.fromCodePoint(cp)); }
+    const e = this.entry(chain[0]);
+    return { e, gid: 0, adv: this.advance(e, 0) };
+  }
+  lookup(chain, cp) {
+    // U+FFFD is "unknown character": the fallback font draws it as a "?" in a diamond, which
+    // looks like a wrong translation. It is reported as missing instead of being drawn.
+    if (cp === 0xfffd) return null;
     for (const name of chain) {
       const e = this.entry(name);
       let gid = e.gid.get(cp);
       if (gid === undefined) { gid = e.font.encodeCharacter(cp); e.gid.set(cp, gid); }
       if (gid > 0) return { e, gid, adv: this.advance(e, gid) };
     }
-    if (cp > 32) this.missing++;
-    const e = this.entry(chain[0]);
-    return { e, gid: 0, adv: this.advance(e, 0) };
+    return null;
   }
   advance(e, gid) {
     let a = e.adv.get(gid);
@@ -1104,6 +1166,7 @@ function updatePage(out, src, pno, segs, translations, pageInfo, opts) {
     const stats = { replaced: 0, untranslated: 0, shrunk: [], missing: 0 };
     translatePage(tmp, 0, fk, segs, translations, pageInfo, opts, stats);
     stats.missing = fk.missing;
+    stats.missingChars = [...fk.missingChars].join("");
     tmp.subsetFonts();
     out.deletePage(pno);
     out.graftPage(pno, tmp, 0);
@@ -1136,12 +1199,89 @@ async function buildTranslated(bytes, segments, translations, pages, opts, onPro
     if (done % 4 === 0) await tick();
   }
   stats.missing = fk.missing;
+  stats.missingChars = [...fk.missingChars].join("");
   doc.subsetFonts();
   const buf = doc.saveToBuffer("garbage,compress");
   const out = buf.asUint8Array().slice();
   free(buf);
   free(doc);
   return { bytes: out, stats };
+}
+
+const hexRgb = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
+
+/**
+ * Write the user's markups into the document as standard PDF annotations, so they stay
+ * editable in other PDF programs. Coordinates are in page space (as used for segments).
+ */
+function addMarkups(doc, markups) {
+  const pages = new Map();
+  let fk = null; // fonts for text notes, created when the first one is drawn
+  for (const m of markups) {
+    let page = pages.get(m.page);
+    if (!page) { page = doc.loadPage(m.page); pages.set(m.page, page); }
+    const rgb = hexRgb(m.color || "#e53935");
+    const box = [Math.min(m.x0, m.x1), Math.min(m.y0, m.y1), Math.max(m.x0, m.x1), Math.max(m.y0, m.y1)];
+    let a = null;
+    if (m.type === "rect" || m.type === "ellipse") {
+      a = page.createAnnotation(m.type === "rect" ? "Square" : "Circle");
+      a.setRect(box); a.setColor(rgb); a.setBorderWidth(m.width);
+    } else if (m.type === "whiteout") {
+      a = page.createAnnotation("Square");
+      a.setRect(box); a.setColor([1, 1, 1]); a.setInteriorColor([1, 1, 1]); a.setBorderWidth(0);
+    } else if (m.type === "highlight") {
+      a = page.createAnnotation("Highlight");
+      a.setQuadPoints([[box[0], box[1], box[2], box[1], box[0], box[3], box[2], box[3]]]);
+      a.setColor(rgb);
+    } else if (m.type === "ink") {
+      a = page.createAnnotation("Ink");
+      a.setInkList([m.points.map((p) => [p[0], p[1]])]); a.setColor(rgb); a.setBorderWidth(m.width);
+    } else if (m.type === "arrow") {
+      a = page.createAnnotation("Line");
+      a.setLine([m.x0, m.y0], [m.x1, m.y1]); a.setLineEndingStyles("None", "OpenArrow");
+      a.setColor(rgb); a.setBorderWidth(m.width);
+    } else if (m.type === "text") {
+      a = page.createAnnotation("FreeText");
+      a.setRect([m.x0, m.y0, m.x0 + m.w, m.y0 + m.h]); a.setContents(m.text);
+      a.setDefaultAppearance("Helv", m.size, rgb); a.setBorderWidth(0);
+      a.setAuthor("PDF Translate");
+      a.update();
+      // MuPDF's own appearance uses plain Helvetica, which lacks signs such as ≥ or ✓; draw it
+      // with the same font fallback as the translations instead. The text stays editable.
+      fk = fk || new FontKit(doc, { fontMode: "auto" });
+      const { ops, res } = textAppearance(doc, fk, m, rgb);
+      a.setAppearance(null, null, M.Matrix.identity, [0, 0, m.w, m.h], res, ops);
+      free(a);
+      continue;
+    }
+    if (a) { a.setAuthor("PDF Translate"); a.update(); free(a); }
+  }
+  for (const p of pages.values()) free(p);
+}
+
+/** Appearance stream (operators + resources) for a text note, in its own box coordinates. */
+function textAppearance(doc, fk, m, rgb) {
+  const chain = fk.chain({ family: "sans-serif", bold: false, italic: false }, m.text);
+  const used = new Set();
+  const ops = [`BT ${rgb.map(fmt).join(" ")} rg`];
+  let cur = null;
+  m.text.split("\n").forEach((line, i) => {
+    let x = 2;
+    const y = m.h - 2 - m.size * 0.88 - i * m.size * 1.2;
+    for (const ch of line) {
+      const g = fk.glyph(chain, ch.codePointAt(0));
+      fk.ref(g.e);
+      used.add(g.e);
+      if (cur !== g.e) { ops.push(`/${g.e.res} 1 Tf`); cur = g.e; }
+      ops.push(`${fmt(m.size)} 0 0 ${fmt(m.size)} ${fmt(x)} ${fmt(y)} Tm <${g.gid.toString(16).padStart(4, "0")}> Tj`);
+      x += g.adv * m.size;
+    }
+  });
+  ops.push("ET");
+  const res = doc.newDictionary(), fonts = doc.newDictionary();
+  for (const e of used) fonts.put(e.res, e.ref);
+  res.put("Font", fonts);
+  return { ops: ops.join("\n"), res };
 }
 
 /** Render a page to PNG bytes (a copy, safe to transfer). */
@@ -1197,10 +1337,22 @@ function createHandler() {
       return { result: updatePage(W.edit, W.doc, args.page, args.segments, args.translations, args.pageInfo, args.opts) };
     }
     if (cmd === "save") {
-      if (!W.edit) throw new Error("Nothing has been translated yet.");
-      const buf = W.edit.saveToBuffer("garbage,compress");
+      // The translated PDF (or the original if nothing was translated) plus markups. Markups
+      // go into a copy, so the editable document never accumulates them.
+      const markups = args.markups || [];
+      if (!W.edit && !markups.length) throw new Error("Nothing to save yet.");
+      let doc = W.edit, temp = null;
+      if (markups.length) {
+        let src = W.bytes;
+        if (W.edit) { const b = W.edit.saveToBuffer(""); src = b.asUint8Array().slice(); free(b); }
+        temp = doc = M.Document.openDocument(src.slice(), "application/pdf");
+        addMarkups(doc, markups);
+        if (markups.some((m) => m.type === "text")) doc.subsetFonts();
+      }
+      const buf = doc.saveToBuffer("garbage,compress");
       const bytes = buf.asUint8Array().slice();
       free(buf);
+      free(temp);
       return { result: bytes, transfer: [bytes.buffer] };
     }
     if (cmd === "resetOutput") {

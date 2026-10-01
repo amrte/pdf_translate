@@ -61,14 +61,51 @@
         <button class="active" data-variant="original" id="viewOriginal" data-i18n="view.original">Original</button>
         <button data-variant="translated" id="viewTranslated" disabled data-i18n="view.translated">Translated</button>
       </div>
-      <label class="check"><input type="checkbox" id="showBoxes" checked> <span data-i18n="view.boxes">Show segments</span></label>
+      <label class="check boxes-check" data-i18n-title="view.boxes"><input type="checkbox" id="showBoxes" checked> <span data-i18n="view.boxes">Show segments</span></label>
       <div class="spacer"></div>
+      <div class="page-nav">
+        <button class="icon-btn" id="pagePrev" data-i18n-title="nav.prev">‹</button>
+        <input id="pageInput" type="number" min="1" value="1" data-i18n-title="nav.page">
+        <span id="pageCount" class="muted">/ 1</span>
+        <button class="icon-btn" id="pageNext" data-i18n-title="nav.next">›</button>
+      </div>
       <button class="icon-btn" id="zoomOut" data-i18n-title="zoom.out">−</button>
       <span class="zoom-label" id="zoomLabel">100%</span>
       <button class="icon-btn" id="zoomIn" data-i18n-title="zoom.in">+</button>
       <button class="icon-btn" id="zoomFit" data-i18n-title="zoom.fit">⤢</button>
     </div>
+    <div class="viewer-body">
+    <div class="tool-rail" id="toolRail">
+      <button type="button" class="tool active" data-tool="select" data-i18n-title="tool.select"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3l14 8-6 2-3 6z"/></svg></button>
+      <button type="button" class="tool" data-tool="rect" data-i18n-title="tool.rect"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="6" width="16" height="12" rx="1"/></svg></button>
+      <button type="button" class="tool" data-tool="ellipse" data-i18n-title="tool.ellipse"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="12" rx="9" ry="6.5"/></svg></button>
+      <button type="button" class="tool" data-tool="highlight" data-i18n-title="tool.highlight"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h7"/><path d="M14.5 4.5l5 5-8 8H6.5v-5z"/><path d="M12 7l5 5"/></svg></button>
+      <button type="button" class="tool" data-tool="ink" data-i18n-title="tool.ink"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17c2.5-5 4.5-7 6-3s3.5 4 6-2 4-3 6 1"/></svg></button>
+      <button type="button" class="tool" data-tool="arrow" data-i18n-title="tool.arrow"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19L19 5"/><path d="M10 5h9v9"/></svg></button>
+      <button type="button" class="tool" data-tool="text" data-i18n-title="tool.text"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 6V4h14v2"/><path d="M12 4v16"/><path d="M9 20h6"/></svg></button>
+      <button type="button" class="tool" data-tool="whiteout" data-i18n-title="tool.whiteout"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="1" fill="currentColor" fill-opacity=".15"/><path d="M7 12h10" stroke-dasharray="2 2"/></svg></button>
+      <button type="button" class="tool" data-tool="eraser" data-i18n-title="tool.eraser"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20H9L4 15l9.5-9.5a2 2 0 0 1 2.8 0l3.2 3.2a2 2 0 0 1 0 2.8L12 19"/><path d="M8 11l6 6"/></svg></button>
+      <div class="rail-sep"></div>
+      <div class="swatches">
+        <button type="button" class="swatch" data-color="#e53935" style="--c:#e53935" data-i18n-title="tool.color"></button>
+        <button type="button" class="swatch" data-color="#1e66f5" style="--c:#1e66f5" data-i18n-title="tool.color"></button>
+        <button type="button" class="swatch" data-color="#2e9d4f" style="--c:#2e9d4f" data-i18n-title="tool.color"></button>
+        <button type="button" class="swatch" data-color="#ffd400" style="--c:#ffd400" data-i18n-title="tool.color"></button>
+        <button type="button" class="swatch" data-color="#f57c00" style="--c:#f57c00" data-i18n-title="tool.color"></button>
+        <button type="button" class="swatch" data-color="#222222" style="--c:#222222" data-i18n-title="tool.color"></button>
+      </div>
+      <div class="widths">
+        <button type="button" class="width-btn" data-width="1" data-i18n-title="tool.width"><span style="height:1px"></span></button>
+        <button type="button" class="width-btn active" data-width="2" data-i18n-title="tool.width"><span style="height:2px"></span></button>
+        <button type="button" class="width-btn" data-width="4" data-i18n-title="tool.width"><span style="height:4px"></span></button>
+      </div>
+      <div class="rail-sep"></div>
+      <button type="button" class="tool" id="btnUndo" disabled data-i18n-title="tool.undo"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg></button>
+      <button type="button" class="tool" id="btnRedo" disabled data-i18n-title="tool.redo"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14l5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h3"/></svg></button>
+      <button type="button" class="tool" id="btnClearMarkups" data-i18n-title="tool.clear"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button>
+    </div>
     <div class="pages" id="pages"></div>
+    </div>
   </section>
 
   <section class="editor-pane">
@@ -208,6 +245,7 @@
       <li data-i18n="help.step3"></li>
     </ol>
     <p class="muted small" data-i18n="help.shortcuts"></p>
+    <p class="muted small" data-i18n="help.markup"></p>
 
     <h2 id="aiTitle" data-i18n="ai.title">Translate with AI</h2>
     <div class="ai-grid">
