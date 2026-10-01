@@ -37,7 +37,7 @@
 <!-- Upload screen -->
 <main id="uploadView" class="upload-view">
   <label class="dropzone" id="dropzone">
-    <input type="file" id="fileInput" accept="application/pdf,.pdf,application/epub+zip,.epub,.fb2,.fbz,.zip" hidden>
+    <input type="file" id="fileInput" accept="application/pdf,.pdf,application/epub+zip,.epub,.fb2,.fbz,.zip,.docx,.pptx,.xlsx" hidden>
     <div class="dz-icon">
       <svg viewBox="0 0 24 24" width="44" height="44" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 17v-6"/><path d="m9 14 3-3 3 3"/></svg>
     </div>
@@ -61,6 +61,7 @@
       <div class="seg-toggle" role="tablist">
         <button class="active" data-variant="original" id="viewOriginal" data-i18n="view.original">Original</button>
         <button data-variant="translated" id="viewTranslated" disabled data-i18n="view.translated">Translated</button>
+        <button id="viewCompare" disabled data-i18n="view.compare" data-i18n-title="view.compareTitle">Compare</button>
       </div>
       <label class="check boxes-check" data-i18n-title="view.boxes"><input type="checkbox" id="showBoxes" checked> <span data-i18n="view.boxes">Show segments</span></label>
       <div class="spacer"></div>
@@ -111,6 +112,7 @@
       <button type="button" class="tool" id="btnClearMarkups" data-i18n-title="tool.clear"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button>
     </div>
     <div class="pages" id="pages"></div>
+    <div class="pages translated cmp-pages" id="pagesCmp" hidden></div>
     </div>
   </section>
 
@@ -261,7 +263,8 @@
   <form method="dialog">
     <h2 data-i18n="build.title">Rebuild the PDF</h2>
     <p class="muted pdf-only" data-i18n="build.text"></p>
-    <p class="muted book-only" data-i18n="build.bookText"></p>
+    <p class="muted book-only ebook-only" data-i18n="build.bookText"></p>
+    <p class="muted office-only" data-i18n="build.officeText"></p>
     <label class="field book-only"><span data-i18n="build.bookLang"></span> <input id="bookLang" size="8" placeholder="uk"></label>
     <div class="pdf-only">
     <label class="field"><span data-i18n="build.font">Font</span>

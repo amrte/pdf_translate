@@ -1853,7 +1853,7 @@ function renderPNG(doc, index, zoom) {
 
 const Engine = {
   init: initEngine, extract: extractDocument, extractPages, build: buildTranslated, renderPNG,
-  detectKind, openBook, saveBook, extractBook, openLaidOut, mapTranslated, ocrToBlocks, sampleColors, refineOcr,
+  detectKind, openBook, saveBook, extractBook, openLaidOut, mapTranslated, openOffice, officePreviewHtml, ocrToBlocks, sampleColors, refineOcr,
   open: (bytes) => M.Document.openDocument(bytes, "application/pdf"),
   exportTxt, exportCsv, exportJson, exportXliff, exportDocx, parseImport, parseMarkedText,
 };
@@ -2228,7 +2228,12 @@ function createHandler() {
       W.book = null; W.outBytes = null;
       if (W.kind !== "pdf") {
         if (W.kind === "fb2") W.bytes = await unzipFb2(args.bytes); // .fb2.zip / .fbz
-        W.doc = openLaidOut(W.bytes.slice(), W.kind);
+        if (OFFICE_KINDS.has(W.kind)) {
+          const { book, segments } = await openOffice(W.bytes, W.kind);
+          segments.forEach((sg, i) => { sg.id = i + 1; });
+          W.book = book;
+          W.doc = openOfficePreview(book, segments, {}, W.kind);
+        } else W.doc = openLaidOut(W.bytes.slice(), W.kind);
         return { result: W.doc.countPages() };
       }
       W.doc = M.Document.openDocument(args.bytes.slice(), "application/pdf");
@@ -2261,7 +2266,7 @@ function createHandler() {
       const result = await saveBook(W.book, W.bytes, args.segments, args.translations, args.opts || {});
       W.outBytes = result.bytes.slice();
       free(W.edit);
-      W.edit = openLaidOut(result.bytes.slice(), W.kind);
+      W.edit = OFFICE_KINDS.has(W.kind) ? openOfficePreview(W.book, args.segments, args.translations, W.kind) : openLaidOut(result.bytes.slice(), W.kind);
       result.view = mapTranslated(W.edit, args.segments, args.translations);
       return { result, transfer: [result.bytes.buffer] };
     }

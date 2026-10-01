@@ -716,6 +716,7 @@ function onFindKey(e) {
 /* ------------------------------------------------------------------- setup */
 
 function initTools() {
+  initCompare();
   const pages = $("#pages");
   pages.addEventListener("pointerdown", onBoxDown);
   window.addEventListener("pointermove", onBoxMove);
@@ -765,4 +766,220 @@ function initTools() {
   }, true);
   $("#btnOcr").addEventListener("click", openOcrDialog);
   $("#ocrGo").addEventListener("click", (e) => { e.preventDefault(); $("#ocrDialog").close(); startOcr(); });
+}
+
+/* ---------------------------------------------------------- comparison view */
+
+// Original (the main viewer, left) and translation (right) side by side, scrolling together.
+// PDF pages correspond one to one; the pages of a translated e-book or Office document are
+// matched through the segments shown near the top of the view.
+const cmp = { on: false, observer: null, visible: new Set(), queue: [], busy: false, cache: new Map(), quiet: { main: 0, cmp: 0 }, savedZoom: null };
+const CMP_CACHE_MAX = 30;
+
+const cmpPages = () => (isBook() && state.outView ? state.outView.pages : state.doc.pages);
+const cmpKey = (i) => `${state.buildNo}.${state.pageVersion.get(i) || 0}:${i}:${renderZoom(cmpPages()[i])}`;
+
+function setCompare(on) {
+  if (on && (!state.doc || !state.hasOutput)) return;
+  if (on === cmp.on) return;
+  cmp.on = on;
+  if (on && state.variant !== "original") setVariant("original");
+  document.body.classList.toggle("comparing", on);
+  $("#pagesCmp").hidden = !on;
+  $("#viewCompare").classList.toggle("active", on);
+  $("#viewOriginal").classList.toggle("active", !on && state.variant === "original");
+  if (on) {
+    cmp.savedZoom = state.zoom;
+    renderCmpPages();
+    requestAnimationFrame(() => { fitWidth(); syncCmp("main"); });
+  } else {
+    cmp.observer?.disconnect();
+    $("#pagesCmp").innerHTML = "";
+    for (const url of cmp.cache.values()) URL.revokeObjectURL(url);
+    cmp.cache.clear();
+    if (cmp.savedZoom) requestAnimationFrame(() => setZoom(cmp.savedZoom));
+  }
+}
+
+function sizeCmpPage(el) {
+  const i = Number(el.dataset.cpage), page = cmpPages()[i];
+  if (!page) return;
+  const rot = isBook() ? 0 : pageRotation(i);
+  const w = pageCssWidth(page), h = Math.round((w * page.height) / page.width);
+  el.style.width = `${rot % 180 ? h : w}px`;
+  el.style.aspectRatio = rot % 180 ? `${page.height} / ${page.width}` : `${page.width} / ${page.height}`;
+  const body = el.querySelector(".page-body");
+  body.style.width = `${w}px`;
+  body.style.height = `${h}px`;
+  body.style.transform = `translate(-50%, -50%)${rot ? ` rotate(${rot}deg)` : ""}`;
+}
+
+/** Where each segment is shown on the two sides: {id: [page, bbox]} (the first box). */
+function cmpPlaces(side) {
+  const out = new Map();
+  for (const s of state.doc.segments) {
+    const boxes = side === "cmp"
+      ? (isBook() ? state.outView && state.outView.boxes[s.id] : s.bbox && [[s.page, shownBox(s)]])
+      : s.boxes || (s.bbox && [[s.page, shownBox(s)]]);
+    if (boxes && boxes.length) out.set(s.id, boxes);
+  }
+  return out;
+}
+
+function renderCmpPages() {
+  if (!cmp.on) return;
+  const wrap = $("#pagesCmp");
+  cmp.observer?.disconnect();
+  cmp.visible.clear();
+  cmp.queue = [];
+  cmp.places = { main: cmpPlaces("main"), cmp: cmpPlaces("cmp") };
+  wrap.innerHTML = cmpPages().map((p, i) =>
+    `<div class="cpage" data-cpage="${i}"><span class="page-label">${t("page.n", { n: i + 1 })}</span><div class="page-body"><img alt=""></div></div>`).join("");
+  wrap.querySelectorAll(".cpage").forEach(sizeCmpPage);
+  // Boxes to click on the translated side (by page, added as the page comes near).
+  cmp.byPage = new Map();
+  for (const [id, boxes] of cmp.places.cmp) for (const [p, bbox] of boxes) {
+    if (!cmp.byPage.has(p)) cmp.byPage.set(p, []);
+    cmp.byPage.get(p).push([id, bbox]);
+  }
+  cmp.observer = new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      const i = Number(e.target.dataset.cpage);
+      if (e.isIntersecting) { cmp.visible.add(i); cmpBoxes(e.target, i); cmpQueue(i); } else cmp.visible.delete(i);
+    }
+  }, { root: wrap, rootMargin: "800px 0px" });
+  wrap.querySelectorAll(".cpage").forEach((el) => cmp.observer.observe(el));
+}
+
+function cmpBoxes(el, i) {
+  if (el.dataset.boxes) return;
+  el.dataset.boxes = "1";
+  const page = cmpPages()[i];
+  el.querySelector(".page-body").insertAdjacentHTML("beforeend", (cmp.byPage.get(i) || []).map(([id, [x0, y0, x1, y1]]) =>
+    `<div class="cbox${id === state.activeId ? " active" : ""}" data-id="${id}" title="#${id}" style="left:${((x0 - page.x0) / page.width) * 100}%;top:${((y0 - page.y0) / page.height) * 100}%;width:${((x1 - x0) / page.width) * 100}%;height:${((y1 - y0) / page.height) * 100}%"></div>`).join(""));
+}
+
+/** Show the active segment on the translated side too. */
+function cmpMarkActive(id) {
+  if (!cmp.on) return;
+  document.querySelectorAll("#pagesCmp .cbox.active").forEach((b) => b.classList.remove("active"));
+  if (id !== null && id !== undefined) document.querySelectorAll(`#pagesCmp .cbox[data-id="${id}"]`).forEach((b) => b.classList.add("active"));
+}
+
+function cmpQueue(i) {
+  const el = $("#pagesCmp").querySelector(`.cpage[data-cpage="${i}"]`);
+  if (!el) return;
+  const key = cmpKey(i), img = el.querySelector("img");
+  if (img.dataset.key === key) return;
+  const url = cmp.cache.get(key);
+  if (url) { img.src = url; img.dataset.key = key; return; }
+  if (!cmp.queue.includes(i)) cmp.queue.push(i);
+  cmpPump();
+}
+
+async function cmpPump() {
+  if (cmp.busy) return;
+  cmp.busy = true;
+  const doc = state.doc;
+  try {
+    while (cmp.on && state.doc === doc && cmp.queue.length) {
+      cmp.queue = cmp.queue.filter((i) => cmp.visible.has(i));
+      if (!cmp.queue.length) break;
+      const i = cmp.queue.shift(), key = cmpKey(i), page = cmpPages()[i];
+      // The translated document lives in worker 0.
+      const buf = await pool.workers[0].call("render", { page: i, zoom: renderZoom(page), variant: "translated" });
+      if (!cmp.on || state.doc !== doc) break;
+      const url = URL.createObjectURL(new Blob([buf], { type: "image/png" }));
+      cmp.cache.set(key, url);
+      while (cmp.cache.size > CMP_CACHE_MAX) {
+        const [oldKey, oldUrl] = cmp.cache.entries().next().value;
+        cmp.cache.delete(oldKey);
+        URL.revokeObjectURL(oldUrl);
+        const stale = document.querySelector(`#pagesCmp img[data-key="${CSS.escape(oldKey)}"]`);
+        if (stale) { stale.removeAttribute("src"); delete stale.dataset.key; }
+      }
+      const img = document.querySelector(`#pagesCmp .cpage[data-cpage="${i}"] img`);
+      if (img && cmpKey(i) === key) { img.src = url; img.dataset.key = key; }
+    }
+  } catch (err) {
+    console.warn("compare render failed", err);
+  } finally {
+    cmp.busy = false;
+  }
+}
+
+/** After a zoom, a build or an applied field: resize and redraw the translated side. */
+function refreshCmp(rebuild = false) {
+  if (!cmp.on) return;
+  if (rebuild || $("#pagesCmp").querySelectorAll(".cpage").length !== cmpPages().length) { renderCmpPages(); syncCmp("main"); return; }
+  $("#pagesCmp").querySelectorAll(".cpage").forEach(sizeCmpPage);
+  for (const i of cmp.visible) cmpQueue(i);
+}
+
+/** The page at the top of a side and how far down it is shown: {i, f} (f from 0 to 1). */
+function cmpAnchor(wrap, sel, attr) {
+  const top = wrap.getBoundingClientRect().top;
+  for (const el of wrap.querySelectorAll(sel)) {
+    const r = el.getBoundingClientRect();
+    if (r.bottom > top + 1) return { i: Number(el.dataset[attr]), f: Math.max(0, (top - r.top) / r.height), el };
+  }
+  return null;
+}
+
+/** Scroll the other side so it shows the same place as `from` ("main" or "cmp"). */
+function syncCmp(from) {
+  if (!cmp.on) return;
+  const main = $("#pages"), other = $("#pagesCmp");
+  const [src, dst] = from === "main" ? [main, other] : [other, main];
+  const [srcSel, srcAttr, dstSel, dstAttr] = from === "main" ? [".page", "page", ".cpage", "cpage"] : [".cpage", "cpage", ".page", "page"];
+  const a = cmpAnchor(src, srcSel, srcAttr);
+  if (!a) return;
+  let target = { i: a.i, f: a.f };
+  if (isBook()) {
+    // The first segment shown from the top of this side, found on the other side.
+    const srcPages = from === "main" ? state.doc.pages : cmpPages(), dstPages = from === "main" ? cmpPages() : state.doc.pages;
+    const sp = srcPages[a.i];
+    const y = sp.y0 + a.f * sp.height;
+    let best = null;
+    for (const [id, boxes] of cmp.places[from]) {
+      for (const [p, b] of boxes) {
+        if (p < a.i || (p === a.i && b[3] < y)) continue;
+        if (!best || p < best.p || (p === best.p && b[1] < best.y)) best = { id, p, y: b[1] };
+        break;
+      }
+    }
+    const there = best && cmp.places[from === "main" ? "cmp" : "main"].get(best.id);
+    if (there) {
+      // Keep the segment the same distance below the top on both sides.
+      const dp = dstPages[there[0][0]];
+      const gap = best.p === a.i ? (best.y - y) / sp.height : 0;
+      target = { i: there[0][0], f: (there[0][1][1] - dp.y0) / dp.height - gap };
+    } else {
+      const pos = (a.i + a.f) / srcPages.length * dstPages.length;
+      target = { i: Math.min(dstPages.length - 1, Math.floor(pos)), f: pos % 1 };
+    }
+  }
+  const el = dst.querySelector(`${dstSel}[data-${dstAttr}="${target.i}"]`);
+  if (!el) return;
+  const delta = el.getBoundingClientRect().top - dst.getBoundingClientRect().top + target.f * el.getBoundingClientRect().height;
+  if (Math.abs(delta) < 1 && dst.scrollLeft === src.scrollLeft) return;
+  cmp.quiet[from === "main" ? "cmp" : "main"] = performance.now() + 120; // (its own scroll event is not synced back)
+  dst.scrollTop += delta;
+  dst.scrollLeft = src.scrollLeft;
+}
+
+function initCompare() {
+  $("#viewCompare").addEventListener("click", () => setCompare(!cmp.on));
+  for (const [id, side] of [["#pages", "main"], ["#pagesCmp", "cmp"]]) {
+    let raf = 0;
+    $(id).addEventListener("scroll", () => {
+      if (!cmp.on || performance.now() < cmp.quiet[side]) return;
+      if (!raf) raf = requestAnimationFrame(() => { raf = 0; syncCmp(side); });
+    }, { passive: true });
+  }
+  $("#pagesCmp").addEventListener("click", (e) => {
+    const box = e.target.closest(".cbox");
+    if (box) setActive(Number(box.dataset.id), { scrollList: true, scrollViewer: true, focus: true });
+    else clearActive();
+  });
 }

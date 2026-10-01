@@ -9,12 +9,14 @@ const BOOK_LAYOUT = [420, 595, 11];
 
 const BOOK_MIME = { epub: "application/epub+zip", fb2: "application/x-fictionbook" };
 
-/** "pdf", "epub" or "fb2" from the file's first bytes (and its name as a hint). */
+/** "pdf", "epub", "fb2", "docx", "pptx" or "xlsx" from the file's bytes (and its name as a hint). */
 function detectKind(bytes, name = "") {
   const head = new TextDecoder("latin1").decode(bytes.subarray(0, 1024));
   if (head.startsWith("%PDF") || head.slice(0, 1024).includes("%PDF-")) return "pdf";
   if (head.startsWith("PK")) {
     if (head.includes("mimetypeapplication/epub+zip") || /\.epub$/i.test(name)) return "epub";
+    const office = officeKindOf(bytes);
+    if (office) return office;
     if (/\.(fb2\.zip|fbz|zip)$/i.test(name) || /\.fb2/i.test(head)) return "fb2";
     return "epub";
   }
@@ -385,6 +387,7 @@ function findAll(el, pred, out = []) {
  * Segments carry {file, s, e, tags} to write the translation back.
  */
 async function openBook(bytes, kind) {
+  if (OFFICE_KINDS.has(kind)) return openOffice(bytes, kind);
   const files = [];
   const book = { kind, files, entries: null };
   if (kind === "fb2") {
@@ -457,6 +460,11 @@ async function saveBook(book, bytes, segments, translations, opts = {}) {
     const raw = f.src.slice(seg.s, seg.e);
     const lead = /^\s*/.exec(raw)[0], trail = /\s*$/.exec(raw)[0];
     if (!edits.has(seg.file)) edits.set(seg.file, []);
+    if (seg.ox) { // Office document
+      edits.get(seg.file).push(opts.bilingual ? oxBilingual(seg, f, tr, opts) : { s: seg.s, e: seg.e, text: oxMarkup(tr, seg, opts) });
+      replaced++;
+      continue;
+    }
     const markup = markupOf(tr, seg.tags, rulesFor(f.type));
     if (opts.bilingual) edits.get(seg.file).push(bilingualEdit(seg, f, markup, opts));
     else edits.get(seg.file).push({ s: seg.s, e: seg.e, text: lead + markup + trail });
@@ -619,6 +627,7 @@ function mapBook(chars, items) {
 }
 
 function openLaidOut(bytes, kind) {
+  if (OFFICE_KINDS.has(kind)) throw new Error("Office documents are laid out from their preview.");
   const doc = M.Document.openDocument(bytes, BOOK_MIME[kind]);
   doc.layout(...BOOK_LAYOUT);
   return doc;

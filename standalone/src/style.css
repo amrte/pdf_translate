@@ -370,7 +370,7 @@ p.help-part, button.ai-part { display: block; }
   font-family: Helvetica, Arial, sans-serif; line-height: 1.2; background: rgba(255, 255, 255, .92);
   border: 1.5px dashed var(--accent); border-radius: 3px; outline: none;
 }
-@container (max-width: 780px) { .boxes-check span { display: none; } } /* (the checkbox keeps its tooltip) */
+@container (max-width: 880px) { .boxes-check span { display: none; } } /* (the checkbox keeps its tooltip) */
 .viewer-pane { container-type: inline-size; }
 
 /* ---------- v1.03: full screen, wider help/AI window, AI parts, new logo ---------- */
@@ -392,6 +392,7 @@ body.viewer-only #btnFullscreen .fs-off { display: inline; }
 
 /* ---- v1.06: e-books (EPUB / FB2) ---- */
 body:not(.is-book) .book-only, body.is-book .pdf-only { display: none !important; }
+body:not(.is-office) .office-only, body.is-office .ebook-only { display: none !important; }
 body.is-book .tool-rail { display: none; }
 
 /* ---- v1.08: fields you can move and resize, field style, OCR, passwords ---- */
@@ -434,3 +435,15 @@ mark.find.cur { background: #ff9f1c; box-shadow: 0 0 0 1px #e07b00; }
   border-radius: 0 0 var(--radius) var(--radius); font: inherit; }
 .ta-backdrop mark.find { color: transparent; }
 .seg textarea.findable { background: transparent; position: relative; }
+
+/* ---------- v1.15: comparison view (original left, translation right) ---------- */
+.cpage { position: relative; background: #fff; box-shadow: var(--page-shadow); flex: none; margin: 0 auto; }
+.cpage img { display: block; width: 100%; height: 100%; user-select: none; -webkit-user-drag: none; }
+.cpage img:not([src]) { visibility: hidden; }
+.cmp-pages { border-left: 1px solid var(--border); }
+.cmp-pages[hidden] { display: none; }
+.cbox { position: absolute; border: 1px solid transparent; border-radius: 2px; cursor: pointer; }
+.cbox:hover { border-color: rgba(49, 88, 212, .55); background: rgba(49, 88, 212, .1); }
+.cbox.active { border: 2px solid #f0a020; z-index: 2; }
+.pages.no-boxes ~ .cmp-pages .cbox:not(.active) { display: none; }
+body.comparing .viewer-body .pages { flex: 1 1 0; }

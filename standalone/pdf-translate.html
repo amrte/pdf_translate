@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="PDF Translate 1.14">
+  <meta name="generator" content="PDF Translate 1.15">
   <title>PDF Translate</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Cdefs%3E%3ClinearGradient id=%22g%22 x1=%220%22 y1=%220%22 x2=%221%22 y2=%221%22%3E%3Cstop offset=%220%22 stop-color=%22#4a6cf7%22/%3E%3Cstop offset=%221%22 stop-color=%22#2440b3%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=%2232%22 height=%2232%22 rx=%227%22 fill=%22url%28#g%29%22/%3E%3Cpath d=%22M8 4.5h9.5l6 6V23a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V6.5a2 2 0 0 1 2-2z%22 fill=%22#fff%22/%3E%3Cpath d=%22M17.5 4.5v4.8a1.2 1.2 0 0 0 1.2 1.2h4.8z%22 fill=%22#c7d2fe%22/%3E%3Crect x=%229%22 y=%2213%22 width=%229%22 height=%221.7%22 rx=%22.85%22 fill=%22#9aabf0%22/%3E%3Crect x=%229%22 y=%2216.6%22 width=%2211%22 height=%221.7%22 rx=%22.85%22 fill=%22#9aabf0%22/%3E%3Crect x=%229%22 y=%2220.2%22 width=%226%22 height=%221.7%22 rx=%22.85%22 fill=%22#9aabf0%22/%3E%3Ccircle cx=%2224%22 cy=%2224%22 r=%227%22 fill=%22#f59e0b%22 stroke=%22#fff%22 stroke-width=%221.6%22/%3E%3Cpath d=%22M20.4 21.7h4.6M27.6 26.3H23%22 fill=%22none%22 stroke=%22#fff%22 stroke-width=%221.6%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M24.6 19.4l3.5 2.3-3.5 2.3zM23.4 24l-3.5 2.3 3.5 2.3z%22 fill=%22#fff%22/%3E%3C/svg%3E">
   <style>
@@ -379,7 +379,7 @@ p.help-part, button.ai-part { display: block; }
   font-family: Helvetica, Arial, sans-serif; line-height: 1.2; background: rgba(255, 255, 255, .92);
   border: 1.5px dashed var(--accent); border-radius: 3px; outline: none;
 }
-@container (max-width: 780px) { .boxes-check span { display: none; } } /* (the checkbox keeps its tooltip) */
+@container (max-width: 880px) { .boxes-check span { display: none; } } /* (the checkbox keeps its tooltip) */
 .viewer-pane { container-type: inline-size; }
 
 /* ---------- v1.03: full screen, wider help/AI window, AI parts, new logo ---------- */
@@ -401,6 +401,7 @@ body.viewer-only #btnFullscreen .fs-off { display: inline; }
 
 /* ---- v1.06: e-books (EPUB / FB2) ---- */
 body:not(.is-book) .book-only, body.is-book .pdf-only { display: none !important; }
+body:not(.is-office) .office-only, body.is-office .ebook-only { display: none !important; }
 body.is-book .tool-rail { display: none; }
 
 /* ---- v1.08: fields you can move and resize, field style, OCR, passwords ---- */
@@ -444,6 +445,18 @@ mark.find.cur { background: #ff9f1c; box-shadow: 0 0 0 1px #e07b00; }
 .ta-backdrop mark.find { color: transparent; }
 .seg textarea.findable { background: transparent; position: relative; }
 
+/* ---------- v1.15: comparison view (original left, translation right) ---------- */
+.cpage { position: relative; background: #fff; box-shadow: var(--page-shadow); flex: none; margin: 0 auto; }
+.cpage img { display: block; width: 100%; height: 100%; user-select: none; -webkit-user-drag: none; }
+.cpage img:not([src]) { visibility: hidden; }
+.cmp-pages { border-left: 1px solid var(--border); }
+.cmp-pages[hidden] { display: none; }
+.cbox { position: absolute; border: 1px solid transparent; border-radius: 2px; cursor: pointer; }
+.cbox:hover { border-color: rgba(49, 88, 212, .55); background: rgba(49, 88, 212, .1); }
+.cbox.active { border: 2px solid #f0a020; z-index: 2; }
+.pages.no-boxes ~ .cmp-pages .cbox:not(.active) { display: none; }
+body.comparing .viewer-body .pages { flex: 1 1 0; }
+
   </style>
 </head>
 <body>
@@ -451,7 +464,7 @@ mark.find.cur { background: #ff9f1c; box-shadow: 0 0 0 1px #e07b00; }
   <div class="brand">
     <span class="logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><defs><linearGradient id="logoGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4a6cf7"/><stop offset="1" stop-color="#2440b3"/></linearGradient></defs><rect width="32" height="32" rx="7" fill="url(#logoGrad)"/><path d="M8 4.5h9.5l6 6V23a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V6.5a2 2 0 0 1 2-2z" fill="#fff"/><path d="M17.5 4.5v4.8a1.2 1.2 0 0 0 1.2 1.2h4.8z" fill="#c7d2fe"/><rect x="9" y="13" width="9" height="1.7" rx=".85" fill="#9aabf0"/><rect x="9" y="16.6" width="11" height="1.7" rx=".85" fill="#9aabf0"/><rect x="9" y="20.2" width="6" height="1.7" rx=".85" fill="#9aabf0"/><circle cx="24" cy="24" r="7" fill="#f59e0b" stroke="#fff" stroke-width="1.6"/><path d="M20.4 21.7h4.6M27.6 26.3H23" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/><path d="M24.6 19.4l3.5 2.3-3.5 2.3zM23.4 24l-3.5 2.3 3.5 2.3z" fill="#fff"/></svg></span>
     <span>PDF Translate</span>
-    <span class="version" id="appVersion">v1.14</span>
+    <span class="version" id="appVersion">v1.15</span>
   </div>
   <ol class="steps" id="steps">
     <li data-step="1"><span>1</span> <i data-i18n="step.extract">Extract text</i></li>
@@ -473,7 +486,7 @@ mark.find.cur { background: #ff9f1c; box-shadow: 0 0 0 1px #e07b00; }
 <!-- Upload screen -->
 <main id="uploadView" class="upload-view">
   <label class="dropzone" id="dropzone">
-    <input type="file" id="fileInput" accept="application/pdf,.pdf,application/epub+zip,.epub,.fb2,.fbz,.zip" hidden>
+    <input type="file" id="fileInput" accept="application/pdf,.pdf,application/epub+zip,.epub,.fb2,.fbz,.zip,.docx,.pptx,.xlsx" hidden>
     <div class="dz-icon">
       <svg viewBox="0 0 24 24" width="44" height="44" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 17v-6"/><path d="m9 14 3-3 3 3"/></svg>
     </div>
@@ -497,6 +510,7 @@ mark.find.cur { background: #ff9f1c; box-shadow: 0 0 0 1px #e07b00; }
       <div class="seg-toggle" role="tablist">
         <button class="active" data-variant="original" id="viewOriginal" data-i18n="view.original">Original</button>
         <button data-variant="translated" id="viewTranslated" disabled data-i18n="view.translated">Translated</button>
+        <button id="viewCompare" disabled data-i18n="view.compare" data-i18n-title="view.compareTitle">Compare</button>
       </div>
       <label class="check boxes-check" data-i18n-title="view.boxes"><input type="checkbox" id="showBoxes" checked> <span data-i18n="view.boxes">Show segments</span></label>
       <div class="spacer"></div>
@@ -547,6 +561,7 @@ mark.find.cur { background: #ff9f1c; box-shadow: 0 0 0 1px #e07b00; }
       <button type="button" class="tool" id="btnClearMarkups" data-i18n-title="tool.clear"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button>
     </div>
     <div class="pages" id="pages"></div>
+    <div class="pages translated cmp-pages" id="pagesCmp" hidden></div>
     </div>
   </section>
 
@@ -697,7 +712,8 @@ mark.find.cur { background: #ff9f1c; box-shadow: 0 0 0 1px #e07b00; }
   <form method="dialog">
     <h2 data-i18n="build.title">Rebuild the PDF</h2>
     <p class="muted pdf-only" data-i18n="build.text"></p>
-    <p class="muted book-only" data-i18n="build.bookText"></p>
+    <p class="muted book-only ebook-only" data-i18n="build.bookText"></p>
+    <p class="muted office-only" data-i18n="build.officeText"></p>
     <label class="field book-only"><span data-i18n="build.bookLang"></span> <input id="bookLang" size="8" placeholder="uk"></label>
     <div class="pdf-only">
     <label class="field"><span data-i18n="build.font">Font</span>
@@ -763,7 +779,7 @@ mark.find.cur { background: #ff9f1c; box-shadow: 0 0 0 1px #e07b00; }
     <div class="ai-parts-head"><b data-i18n="ai.parts">Copy prompt + text</b> <span class="muted small" data-i18n="ai.partsHint"></span></div>
     <div class="ai-parts" id="aiParts"></div>
     </div>
-    <p class="muted small help-version help-part">PDF Translate v1.14</p>
+    <p class="muted small help-version help-part">PDF Translate v1.15</p>
     <div class="modal-actions">
       <button value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
       <button type="button" class="btn ai-part" id="aiCopyPrompt" data-i18n="ai.copyPrompt">Copy prompt only</button>
@@ -824,8 +840,8 @@ const I18N = {
     "help.btnTitle": "So funktioniert es",
     "top.new": "Andere Datei öffnen",
 
-    "upload.title": "PDF, EPUB oder FB2 hier ablegen oder <u>Datei auswählen</u>",
-    "upload.sub": "Der Text wird extrahiert; Bilder, Zeichnungen und Layout bleiben unverändert. E-Books (EPUB, FB2) behalten Formatierung, Bilder und Fußnoten.",
+    "upload.title": "PDF, Word, PowerPoint, Excel, EPUB oder FB2 hier ablegen oder <u>Datei auswählen</u>",
+    "upload.sub": "Der Text wird extrahiert; Bilder, Zeichnungen und Layout bleiben unverändert. Word-, PowerPoint- und Excel-Dateien sowie E-Books (EPUB, FB2) behalten Formatierung, Bilder und Fußnoten.",
     "upload.engine": "PDF-Engine wird geladen (ca. 4 MB, nur beim ersten Mal)…",
     "upload.privacy": "Alles läuft in Ihrem Browser. Ihre Datei wird nirgendwo hochgeladen.",
     "how.1.title": "1 · Extrahieren",
@@ -837,6 +853,8 @@ const I18N = {
 
     "view.original": "Original",
     "view.translated": "Übersetzung",
+    "view.compare": "Vergleich",
+    "view.compareTitle": "Original und Übersetzung nebeneinander, synchron scrollend",
     "view.boxes": "Segmente anzeigen",
     "zoom.out": "Verkleinern",
     "zoom.in": "Vergrößern (oder Strg + Mausrad)",
@@ -923,9 +941,9 @@ const I18N = {
     "build.fontsNote": "Die eingebauten Schriften decken Lateinisch, Griechisch, Kyrillisch, Chinesisch, Japanisch und Koreanisch ab. Für andere Schriftsysteme laden Sie eine passende Schrift. Rechts-nach-links- und komplexe Schriften (Arabisch, Hebräisch, indische Schriften, Thai) werden nicht korrekt gesetzt.",
 
     "help.title": "Hilfe",
-    "help.step1": "<b>Extrahieren:</b> PDF, EPUB oder FB2 öffnen. Jeder Absatz, jede Beschriftung und Tabellenzelle wird zu einem nummerierten Segment; ein Klick auf einen Rahmen auf der Seite springt dorthin. Felder nur mit Zahlen oder Datum werden nicht übersetzt.",
+    "help.step1": "<b>Extrahieren:</b> PDF, Word (DOCX), PowerPoint (PPTX), Excel (XLSX), EPUB oder FB2 öffnen. Jeder Absatz, jede Beschriftung und Tabellenzelle wird zu einem nummerierten Segment; ein Klick auf einen Rahmen auf der Seite springt dorthin. Felder nur mit Zahlen oder Datum werden nicht übersetzt.",
     "help.step2": "<b>Übersetzen:</b> in die Felder tippen, oder unter <b>KI</b> einen Prompt für eine KI kopieren (bzw. ein Übersetzungstool nutzen) und die Antwort unter <b>Importieren</b> einfügen.",
-    "help.step3": "<b>Erstellen:</b> <b>PDF erstellen</b> schreibt alle Übersetzungen in die PDF. Um später ein Segment zu korrigieren, ändern Sie es und klicken auf <b>⟳ in PDF übernehmen</b> (oder <kbd>Strg</kbd>+<kbd>S</kbd>). Nur diese Seite wird neu erstellt. Bei E-Books (EPUB, FB2) wird das Buch neu gesetzt und im selben Format heruntergeladen; Markierungen wie &lt;1&gt;…&lt;/1&gt; stehen für Kursiv, Fett, Links und Fußnoten.",
+    "help.step3": "<b>Erstellen:</b> <b>PDF erstellen</b> schreibt alle Übersetzungen in die PDF. Um später ein Segment zu korrigieren, ändern Sie es und klicken auf <b>⟳ in PDF übernehmen</b> (oder <kbd>Strg</kbd>+<kbd>S</kbd>). Nur diese Seite wird neu erstellt. Word-, PowerPoint- und Excel-Dateien sowie E-Books (EPUB, FB2) werden im selben Format heruntergeladen, mit allen Formatierungen; Markierungen wie &lt;1&gt;…&lt;/1&gt; stehen für Kursiv, Fett, Links und Fußnoten.",
     "help.shortcuts": "Tastenkürzel im Übersetzungsfeld: <kbd>Strg</kbd>+<kbd>Enter</kbd> nächstes Segment · <kbd>Alt</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> vorheriges/nächstes · <kbd>Strg</kbd>+<kbd>S</kbd> Segment in PDF übernehmen · <kbd>Strg</kbd> + Mausrad zoomen.",
     "ai.title": "Mit KI übersetzen (ChatGPT, Claude, Gemini…)",
     "ai.targetPh": "z. B. Englisch",
@@ -952,7 +970,7 @@ const I18N = {
     "ai.tooLong": " Das ist viel für eine KI-Antwort, die abgeschnitten werden könnte: übersetzen Sie wenige Seiten auf einmal (Feld „Seiten“) und importieren Sie jede Antwort; Importe werden ergänzt.",
     "ai.pasteHere": "[Segmente hier einfügen]",
 
-    "msg.chooseFile": "Bitte wählen Sie eine PDF-, EPUB- oder FB2-Datei.",
+    "msg.chooseFile": "Bitte wählen Sie eine PDF-, Word-, PowerPoint-, Excel-, EPUB- oder FB2-Datei.",
     "msg.loadingEngine": "PDF-Engine wird geladen…",
     "msg.opening": "Wird geöffnet…",
     "find.title": "Suchen und ersetzen (Strg+F, Strg+H)",
@@ -978,7 +996,7 @@ const I18N = {
     "hist.replaceAll": "{n}× ersetzt",
     "nav.rotate": "Diese Seite um 90° drehen (mit Umschalt: gegen den Uhrzeigersinn). Wird in die PDF übernommen.",
     "hist.rotate": "Seite gedreht",
-    "tb.bilingualTitle": "Zweisprachig herunterladen – PDF: Original und Übersetzung auf einer Seite oder abwechselnde Seiten; E-Book: jeder Absatz im Original, gefolgt von der Übersetzung",
+    "tb.bilingualTitle": "Zweisprachig herunterladen – PDF: Original und Übersetzung auf einer Seite oder abwechselnde Seiten; Word, PowerPoint, Excel, E-Book: jeder Absatz im Original, gefolgt von der Übersetzung",
     "bi.title": "Zweisprachig herunterladen",
     "bi.side": "Auf einer Seite nebeneinander",
     "bi.sideHint": "Gleiche Seitenzahl wie das Original, jede Seite doppelt so groß: Hochformat-Seiten nebeneinander (Original links), Querformat-Seiten übereinander (Original oben). Markierungen werden in die Seiten gezeichnet, Links entfallen.",
@@ -1039,11 +1057,12 @@ const I18N = {
     "ocrlang.fin": "Finnisch",
     "ocrlang.chi_sim": "Chinesisch (Kurzzeichen)",
     "ocrlang.chi_tra": "Chinesisch (Langzeichen)",
-    "msg.readingBook": "E-Book wird gelesen und gesetzt…",
+    "msg.readingBook": "Dokument wird gelesen und gesetzt…",
     "msg.updating": "Wird aktualisiert…",
     "meta.notShown": "nicht im Fließtext (Metadaten / Inhaltsverzeichnis)",
     "build.bookText": "Die Übersetzungen ersetzen den Text in den Kapiteldateien. Formatierung (kursiv, fett, Links), Bilder, Fußnoten, Inhaltsverzeichnis und Stylesheets bleiben erhalten. Markierungen wie &lt;1&gt;…&lt;/1&gt; in den Segmenten stehen für diese Formatierung; fehlen sie in einer Übersetzung, wird der Text ohne sie eingesetzt, Bilder und Fußnotenverweise bleiben trotzdem erhalten.",
-    "build.bookLang": "Sprache des übersetzten Buchs (Code, z. B. uk, en, de; leer = unverändert)",
+    "build.bookLang": "Sprache der Übersetzung (Code, z. B. uk, en, de; leer = unverändert)",
+    "build.officeText": "Die Übersetzungen ersetzen den Text in der Datei. Formatierung, Bilder, Tabellen, Formeln, Felder und Notizen bleiben erhalten. Markierungen wie &lt;1&gt;…&lt;/1&gt; stehen für Text mit eigener Formatierung (fett, kursiv, Farbe, Links); &lt;2/&gt; für ein Feld, einen Tabulator oder einen Fußnotenverweis. Die Vorschau zeigt nur den Text, nicht das genaue Layout.",
     "msg.extracting": "Text wird extrahiert… Seite {i} von {n}",
     "msg.openFailed": "Diese Datei konnte nicht geöffnet werden: {err}",
     "msg.password": "Passwortgeschützte PDFs werden nicht unterstützt.",
@@ -1123,8 +1142,8 @@ const I18N = {
     "help.btnTitle": "How it works",
     "top.new": "Open another file",
 
-    "upload.title": "Drop a PDF, EPUB or FB2 here or <u>choose a file</u>",
-    "upload.sub": "The text is extracted; pictures, drawings and layout stay as they are. E-books (EPUB, FB2) keep their formatting, images and footnotes.",
+    "upload.title": "Drop a PDF, Word, PowerPoint, Excel, EPUB or FB2 file here or <u>choose a file</u>",
+    "upload.sub": "The text is extracted; pictures, drawings and layout stay as they are. Word, PowerPoint and Excel files and e-books (EPUB, FB2) keep their formatting, images and footnotes.",
     "upload.engine": "Loading the PDF engine (about 4 MB, the first time only)…",
     "upload.privacy": "Everything runs in your browser. Your file is never uploaded.",
     "how.1.title": "1 · Extract",
@@ -1136,6 +1155,8 @@ const I18N = {
 
     "view.original": "Original",
     "view.translated": "Translated",
+    "view.compare": "Compare",
+    "view.compareTitle": "Original and translation side by side, scrolling together",
     "view.boxes": "Show segments",
     "zoom.out": "Zoom out",
     "zoom.in": "Zoom in (or Ctrl + mouse wheel)",
@@ -1222,9 +1243,9 @@ const I18N = {
     "build.fontsNote": "Built-in fonts cover Latin, Greek, Cyrillic, Chinese, Japanese and Korean. For other alphabets, upload a font that supports them. Right-to-left and complex scripts (Arabic, Hebrew, Indic, Thai) are not shaped correctly.",
 
     "help.title": "Help",
-    "help.step1": "<b>Extract:</b> open a PDF, EPUB or FB2. Each paragraph, label and table cell becomes a numbered segment; click a box on the page to jump to it. Fields with only numbers or dates are not translated.",
+    "help.step1": "<b>Extract:</b> open a PDF, Word (DOCX), PowerPoint (PPTX), Excel (XLSX), EPUB or FB2 file. Each paragraph, label and table cell becomes a numbered segment; click a box on the page to jump to it. Fields with only numbers or dates are not translated.",
     "help.step2": "<b>Translate:</b> type in the boxes, or copy a prompt for an AI under <b>AI</b> (or use a translation tool) and paste its answer into <b>Import</b>.",
-    "help.step3": "<b>Rebuild:</b> <b>Build PDF</b> writes every translation into the PDF. To fix one segment afterwards, edit it and press <b>⟳ update PDF</b> on its card (or <kbd>Ctrl</kbd>+<kbd>S</kbd>). Only that page is redone. E-books (EPUB, FB2) are laid out again and downloaded in the same format; markers such as &lt;1&gt;…&lt;/1&gt; stand for italics, bold, links and footnotes.",
+    "help.step3": "<b>Rebuild:</b> <b>Build PDF</b> writes every translation into the PDF. To fix one segment afterwards, edit it and press <b>⟳ update PDF</b> on its card (or <kbd>Ctrl</kbd>+<kbd>S</kbd>). Only that page is redone. Word, PowerPoint and Excel files and e-books (EPUB, FB2) are downloaded in the same format, with all their formatting; markers such as &lt;1&gt;…&lt;/1&gt; stand for italics, bold, links and footnotes.",
     "help.shortcuts": "Shortcuts in a translation box: <kbd>Ctrl</kbd>+<kbd>Enter</kbd> next segment · <kbd>Alt</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> previous/next · <kbd>Ctrl</kbd>+<kbd>S</kbd> update this segment in the PDF · <kbd>Ctrl</kbd> + mouse wheel to zoom.",
     "ai.title": "Translate with AI (ChatGPT, Claude, Gemini…)",
     "ai.targetPh": "e.g. English",
@@ -1251,7 +1272,7 @@ const I18N = {
     "ai.tooLong": " That is a lot for one AI answer, which may be cut off: translate a few pages at a time (Pages field) and import each answer; imports add up.",
     "ai.pasteHere": "[paste the segments here]",
 
-    "msg.chooseFile": "Please choose a PDF, EPUB or FB2 file.",
+    "msg.chooseFile": "Please choose a PDF, Word, PowerPoint, Excel, EPUB or FB2 file.",
     "msg.loadingEngine": "Loading the PDF engine…",
     "msg.opening": "Opening…",
     "find.title": "Find and replace (Ctrl+F, Ctrl+H)",
@@ -1277,7 +1298,7 @@ const I18N = {
     "hist.replaceAll": "{n}× replaced",
     "nav.rotate": "Turn this page by 90° (with Shift: counter-clockwise). Applied to the PDF.",
     "hist.rotate": "page turned",
-    "tb.bilingualTitle": "Download both languages – PDF: original and translation on one page, or alternating pages; e-book: each paragraph in the original, followed by its translation",
+    "tb.bilingualTitle": "Download both languages – PDF: original and translation on one page, or alternating pages; Word, PowerPoint, Excel, e-book: each paragraph in the original, followed by its translation",
     "bi.title": "Download both languages",
     "bi.side": "Side by side on one page",
     "bi.sideHint": "Same number of pages as the original, each twice as large: portrait pages side by side (original on the left), landscape pages one above the other (original on top). Markups are drawn into the pages; links are not kept.",
@@ -1338,11 +1359,12 @@ const I18N = {
     "ocrlang.fin": "Finnish",
     "ocrlang.chi_sim": "Chinese (simplified)",
     "ocrlang.chi_tra": "Chinese (traditional)",
-    "msg.readingBook": "Reading and laying out the e-book…",
+    "msg.readingBook": "Reading and laying out the document…",
     "msg.updating": "Updating…",
     "meta.notShown": "not in the running text (metadata / table of contents)",
     "build.bookText": "The translations replace the text in the chapter files. Formatting (italic, bold, links), images, footnotes, the table of contents and style sheets are kept. Markers such as &lt;1&gt;…&lt;/1&gt; in the segments stand for that formatting; if a translation leaves them out, its text is used without them, and images and footnote references are still kept.",
-    "build.bookLang": "Language of the translated book (code, e.g. uk, en, de; empty = unchanged)",
+    "build.bookLang": "Language of the translation (code, e.g. uk, en, de; empty = unchanged)",
+    "build.officeText": "The translations replace the text in the file. Formatting, images, tables, formulas, fields and notes are kept. Markers such as &lt;1&gt;…&lt;/1&gt; stand for text with its own formatting (bold, italic, colour, links); &lt;2/&gt; for a field, a tab or a footnote reference. The preview shows the text, not the exact layout.",
     "msg.extracting": "Extracting text… page {i} of {n}",
     "msg.openFailed": "Could not open this file: {err}",
     "msg.password": "Password-protected PDFs are not supported.",
@@ -1446,6 +1468,17 @@ const AI_PROMPT = {
     context: (c) => `Kontext: Das Dokument ist ${c}. Verwende die Fachsprache dieses Gebiets.`,
     glossary: "Verwende für die folgenden Begriffe diese Übersetzungen:",
     segments: "Segmente:",
+    officeRules: [
+      "Die Segmente stammen aus einem Office-Dokument (Word, PowerPoint oder Excel). Jede Übersetzung ersetzt den Originaltext an derselben Stelle der Datei. Halte dich strikt an diese Regeln:",
+      "",
+      "1. Jedes Segment beginnt mit einer Markierungszeile wie [[12]]. Übernimm jede Markierung exakt, in einer eigenen Zeile und in derselben Reihenfolge. Füge keine Segmente hinzu, lass keine weg, führe keine zusammen, teile keine und nummeriere nicht neu.",
+      "2. Schreibe die Übersetzung jedes Segments direkt unter seine Markierung. Gib jedes Segment zurück, auch solche, die keine Übersetzung brauchen: diese unverändert übernehmen.",
+      "3. Ein Segment ist ein Absatz, eine Überschrift, ein Listenpunkt, ein Textfeld einer Folie oder eine Tabellen- bzw. Tabellenkalkulationszelle. Übersetze es als Ganzes; Zellen und Folientexte sind oft Stichworte: knapp und so, wie man sie in der Zielsprache schreibt.",
+      "4. Markierungen wie <1>…</1> stehen für Text mit eigener Formatierung (fett, kursiv, Farbe, Links); <2/> steht für ein Feld, einen Tabulator oder einen Fußnotenverweis. Behalte jede Markierung mit derselben Nummer bei: setze <1> und </1> um die entsprechenden Wörter der Übersetzung und lass <2/> an der passenden Stelle stehen.",
+      "5. Behalte Satzzeichen-Konventionen der Zielsprache bei (z. B. Anführungszeichen). Zahlen, URLs und Codes nicht ändern.",
+      "6. Zeilenumbrüche innerhalb eines Segments nur dort, wo auch das Original welche hat.",
+      "7. Antworte nur mit den übersetzten Segmenten im exakt gleichen [[n]]-Format, als reiner Text: keine Einleitung, keine Kommentare, kein Markdown, kein Codeblock.",
+    ],
     part: (k, total, a, b) => `Dies ist Teil ${k} von ${total} des Dokuments (Segmente [[${a}]] bis [[${b}]]). Die Nummerierung setzt die vorherigen Teile fort: übernimm die Nummern genau so und beginne nicht wieder bei 1.`,
   },
   en: {
@@ -1477,6 +1510,17 @@ const AI_PROMPT = {
     context: (c) => `Context: the document is ${c}. Use the terminology of that field.`,
     glossary: "Use these translations for the following terms:",
     segments: "Segments:",
+    officeRules: [
+      "The segments were extracted from an Office document (Word, PowerPoint or Excel). Each translation replaces the original text at the same place in the file. Follow these rules strictly:",
+      "",
+      "1. Every segment starts with a marker line like [[12]]. Copy every marker exactly, on its own line, in the same order. Do not add, remove, merge, split or renumber segments.",
+      "2. Put the translation of each segment directly under its marker. Return every segment, also those that need no translation: copy them unchanged.",
+      "3. A segment is a paragraph, heading, list item, text on a slide, or a table or spreadsheet cell. Translate it as a whole; cells and slide texts are often short phrases: keep them brief, as they are written in the target language.",
+      "4. Markers such as <1>…</1> stand for text with its own formatting (bold, italic, colour, links); <2/> stands for a field, a tab or a footnote reference. Keep every marker with the same number: put <1> and </1> around the corresponding words of the translation, and keep <2/> at the matching place.",
+      "5. Use the punctuation conventions of the target language (e.g. quotation marks). Do not change numbers, URLs or codes.",
+      "6. Keep line breaks inside a segment only where the original has them.",
+      "7. Reply with the translated segments only, in exactly the same [[n]] format, as plain text: no introduction, no comments, no Markdown, no code block.",
+    ],
     part: (k, total, a, b) => `This is part ${k} of ${total} of the document (segments [[${a}]] to [[${b}]]). The numbering continues from the previous parts: keep the numbers exactly as they are and do not restart at 1.`,
   },
 };
@@ -1486,7 +1530,7 @@ let LANG = "de";
 try { LANG = localStorage.getItem(LANG_KEY) || "de"; } catch (_) { /* storage blocked */ }
 if (!I18N[LANG]) LANG = "de";
 
-/** Format of the open document ("PDF", "EPUB", "FB2"), for {fmt} in the texts. */
+/** Format of the open document ("PDF", "EPUB", "FB2", "DOCX", …), for {fmt} in the texts. */
 let DOC_FMT = "PDF";
 
 /** Translate a key, filling {placeholders} from vars. */
@@ -3379,7 +3423,7 @@ function renderPNG(doc, index, zoom) {
 
 const Engine = {
   init: initEngine, extract: extractDocument, extractPages, build: buildTranslated, renderPNG,
-  detectKind, openBook, saveBook, extractBook, openLaidOut, mapTranslated, ocrToBlocks, sampleColors, refineOcr,
+  detectKind, openBook, saveBook, extractBook, openLaidOut, mapTranslated, openOffice, officePreviewHtml, ocrToBlocks, sampleColors, refineOcr,
   open: (bytes) => M.Document.openDocument(bytes, "application/pdf"),
   exportTxt, exportCsv, exportJson, exportXliff, exportDocx, parseImport, parseMarkedText,
 };
@@ -3754,7 +3798,12 @@ function createHandler() {
       W.book = null; W.outBytes = null;
       if (W.kind !== "pdf") {
         if (W.kind === "fb2") W.bytes = await unzipFb2(args.bytes); // .fb2.zip / .fbz
-        W.doc = openLaidOut(W.bytes.slice(), W.kind);
+        if (OFFICE_KINDS.has(W.kind)) {
+          const { book, segments } = await openOffice(W.bytes, W.kind);
+          segments.forEach((sg, i) => { sg.id = i + 1; });
+          W.book = book;
+          W.doc = openOfficePreview(book, segments, {}, W.kind);
+        } else W.doc = openLaidOut(W.bytes.slice(), W.kind);
         return { result: W.doc.countPages() };
       }
       W.doc = M.Document.openDocument(args.bytes.slice(), "application/pdf");
@@ -3787,7 +3836,7 @@ function createHandler() {
       const result = await saveBook(W.book, W.bytes, args.segments, args.translations, args.opts || {});
       W.outBytes = result.bytes.slice();
       free(W.edit);
-      W.edit = openLaidOut(result.bytes.slice(), W.kind);
+      W.edit = OFFICE_KINDS.has(W.kind) ? openOfficePreview(W.book, args.segments, args.translations, W.kind) : openLaidOut(result.bytes.slice(), W.kind);
       result.view = mapTranslated(W.edit, args.segments, args.translations);
       return { result, transfer: [result.bytes.buffer] };
     }
@@ -3859,12 +3908,14 @@ const BOOK_LAYOUT = [420, 595, 11];
 
 const BOOK_MIME = { epub: "application/epub+zip", fb2: "application/x-fictionbook" };
 
-/** "pdf", "epub" or "fb2" from the file's first bytes (and its name as a hint). */
+/** "pdf", "epub", "fb2", "docx", "pptx" or "xlsx" from the file's bytes (and its name as a hint). */
 function detectKind(bytes, name = "") {
   const head = new TextDecoder("latin1").decode(bytes.subarray(0, 1024));
   if (head.startsWith("%PDF") || head.slice(0, 1024).includes("%PDF-")) return "pdf";
   if (head.startsWith("PK")) {
     if (head.includes("mimetypeapplication/epub+zip") || /\.epub$/i.test(name)) return "epub";
+    const office = officeKindOf(bytes);
+    if (office) return office;
     if (/\.(fb2\.zip|fbz|zip)$/i.test(name) || /\.fb2/i.test(head)) return "fb2";
     return "epub";
   }
@@ -4235,6 +4286,7 @@ function findAll(el, pred, out = []) {
  * Segments carry {file, s, e, tags} to write the translation back.
  */
 async function openBook(bytes, kind) {
+  if (OFFICE_KINDS.has(kind)) return openOffice(bytes, kind);
   const files = [];
   const book = { kind, files, entries: null };
   if (kind === "fb2") {
@@ -4307,6 +4359,11 @@ async function saveBook(book, bytes, segments, translations, opts = {}) {
     const raw = f.src.slice(seg.s, seg.e);
     const lead = /^\s*/.exec(raw)[0], trail = /\s*$/.exec(raw)[0];
     if (!edits.has(seg.file)) edits.set(seg.file, []);
+    if (seg.ox) { // Office document
+      edits.get(seg.file).push(opts.bilingual ? oxBilingual(seg, f, tr, opts) : { s: seg.s, e: seg.e, text: oxMarkup(tr, seg, opts) });
+      replaced++;
+      continue;
+    }
     const markup = markupOf(tr, seg.tags, rulesFor(f.type));
     if (opts.bilingual) edits.get(seg.file).push(bilingualEdit(seg, f, markup, opts));
     else edits.get(seg.file).push({ s: seg.s, e: seg.e, text: lead + markup + trail });
@@ -4469,6 +4526,7 @@ function mapBook(chars, items) {
 }
 
 function openLaidOut(bytes, kind) {
+  if (OFFICE_KINDS.has(kind)) throw new Error("Office documents are laid out from their preview.");
   const doc = M.Document.openDocument(bytes, BOOK_MIME[kind]);
   doc.layout(...BOOK_LAYOUT);
   return doc;
@@ -4495,6 +4553,605 @@ function mapTranslated(doc, segments, translations) {
   const chars = bookChars(doc);
   const items = segments.map((s) => ({ id: s.id, hidden: s.hidden, text: shownText((translations[s.id] || "").trim() || s.text, s.tags) }));
   return { pages: chars.pages, boxes: mapBook(chars, items) };
+}
+
+// ======================================================================
+// Office documents (Word .docx, PowerPoint .pptx, Excel .xlsx): segments come from the Office
+// Open XML parts, translations are written back into those parts (styles, images, formulas and
+// everything else stay as they are), and a simple HTML preview is laid out by MuPDF for the
+// viewer: the document as one flow, one page per slide, one page per sheet.
+// ======================================================================
+
+const OFFICE_KINDS = new Set(["docx", "pptx", "xlsx"]);
+const OFFICE_MIME = {
+  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+};
+/** Page size and font size of the preview: A4, a 4:3 slide, landscape A4. */
+const OFFICE_LAYOUT = { docx: [595, 842, 10], pptx: [720, 540, 12], xlsx: [842, 595, 11] };
+const XLSX_MAX_ROWS = 2000, XLSX_MAX_COLS = 50;
+
+/** "docx", "pptx" or "xlsx" from the parts of a zip, or null. */
+function officeKindOf(bytes) {
+  try {
+    const names = new Set(zipEntries(bytes).map((e) => e.name));
+    if (names.has("word/document.xml")) return "docx";
+    if (names.has("ppt/presentation.xml")) return "pptx";
+    if (names.has("xl/workbook.xml")) return "xlsx";
+  } catch (_) { /* not a zip */ }
+  return null;
+}
+
+// ---------------------------------------------------------- paragraphs
+
+// Inside a paragraph (w:p, a:p) or a string item (si, is):
+const OX_PARA = new Set(["p", "si", "is"]);
+/** Elements around runs that are kept around the translated runs (links, insertions, fields). */
+const OX_WRAP = new Set(["hyperlink", "smarttag", "ins", "customxml", "fldsimple", "dir", "bdo", "moveto"]);
+/** Left out of the translation: paragraph properties, deleted text, spelling marks. */
+const OX_DROP = new Set(["ppr", "endpararpr", "del", "movefrom", "prooferr", "lastrenderedpagebreak", "rph", "phoneticpr", "rpr",
+  "deltext", "delinstrtext", "softhyphen", "annotationref"]);
+/** Zero-width markers: carried to the start or end of the translation. */
+const OX_MARK = new Set(["bookmarkstart", "bookmarkend", "commentrangestart", "commentrangeend", "permstart", "permend",
+  "movefromrangestart", "movefromrangeend", "movetorangestart", "movetorangeend"]);
+/** A run holding a drawing or text box: the paragraph's text is split around it. */
+const OX_BLOCK = new Set(["drawing", "pict", "object", "alternatecontent"]);
+
+/** A label of the preview (sheet name, slide number) that segment texts are never matched in. */
+const label = (s) => escapeXmlText([...s].join("\u200b"));
+
+const xmlAttr = (src, el, name) => {
+  const m = new RegExp(`\\s${name.replace(":", "\\:")}\\s*=\\s*("([^"]*)"|'([^']*)')`).exec(src.slice(el.s, el.cs));
+  return m ? decodeEntities(m[2] ?? m[3]) : null;
+};
+const kidsNamed = (el, name) => (el.kids || []).filter((k) => k.name === name);
+const firstNamed = (el, name) => (el.kids || []).find((k) => k.name === name);
+const hasDeep = (el, names) => (el.kids || []).some((k) => k.kids && (names.has(k.name) || hasDeep(k, names)));
+
+/** Style key of a run: its properties without language and spelling flags. */
+function runKey(rpr) {
+  return rpr.replace(/<(?:\w+:)?lang\b[^>]*\/>/g, "").replace(/<(?:\w+:)?noProof\b[^>]*\/>/g, "")
+    .replace(/\s(?:w:hint|lang|altLang|dirty|err|smtClean|smtId|noProof)="[^"]*"/g, "").replace(/\s+/g, " ")
+    .replace(/<((?:\w+:)?rPr)\s*>\s*<\/\1>|<(?:\w+:)?rPr\s*\/>/g, "");
+}
+
+/**
+ * Turn a paragraph into preview chunks and segments. Returns [string | {seg}]: the paragraph's
+ * text as HTML pieces, with {seg: index} where a segment is shown.
+ */
+function oxParagraph(src, p, ctx) {
+  const chunks = [];
+  let toks = [], first = -1, last = -1;
+  const flush = () => {
+    if (toks.length) chunks.push(...oxSegment(src, p, toks, first, last, ctx));
+    toks = []; first = last = -1;
+  };
+  const add = (tok, top) => { toks.push(tok); if (first < 0) first = top.s; last = top.e; };
+  const plainT = p.name !== "p"; // xlsx string: <t> directly in <si>, or rich-text runs <r>
+  const run = (r, wraps, top) => {
+    const rprEl = firstNamed(r, "rpr");
+    const rpr = rprEl ? src.slice(rprEl.s, rprEl.e) : "";
+    const style = { rpr, wraps, open: src.slice(r.s, r.cs), close: src.slice(r.ce, r.e), q: r.qname };
+    style.key = wraps.map((w) => w.open).join("") + "|" + runKey(rpr);
+    const atom = (xml, shown = "") => add({ t: "atom", xml: style.open + rpr + xml + style.close, shown }, top);
+    for (const k of r.kids) {
+      if (k.text || k.other || OX_DROP.has(k.name)) continue;
+      if (k.name === "t") {
+        style.tq = k.qname;
+        add({ t: "text", text: plainOf(src, k.kids), style }, top);
+      } else if ((k.name === "br" || k.name === "cr") && !/type\s*=\s*["'](page|column)/.test(src.slice(k.s, k.cs))) {
+        add({ t: "br", style }, top);
+      } else if (k.name === "nobreakhyphen") add({ t: "text", text: "\u2011", style }, top);
+      else if (k.name === "tab") atom(src.slice(k.s, k.e), " ");
+      else atom(src.slice(k.s, k.e)); // field characters, footnote references, symbols …
+    }
+  };
+  const visit = (k, wraps, top) => {
+    if (k.text || k.other || OX_DROP.has(k.name)) return;
+    if (OX_MARK.has(k.name)) { add({ t: "mark", xml: src.slice(k.s, k.e) }, top); return; }
+    if (k.name === "r" && top === k && hasDeep(k, OX_BLOCK)) {
+      // A drawing or text box: its own paragraphs are shown (and translated) after this text.
+      flush();
+      chunks.push(...oxNested(src, k, ctx));
+      return;
+    }
+    if (k.name === "r") { run(k, wraps, top); return; }
+    if (k.name === "t" && plainT) {
+      add({ t: "text", text: plainOf(src, k.kids), style: { rpr: "", wraps, key: "|", plain: true, tq: k.qname } }, top);
+      return;
+    }
+    if (k.name === "br" && k.qname.includes(":")) { // DrawingML line break <a:br><a:rPr/></a:br>
+      const rprEl = firstNamed(k, "rpr");
+      const rpr = rprEl ? src.slice(rprEl.s, rprEl.e) : "";
+      add({ t: "br", style: { rpr, wraps, key: wraps.map((w) => w.open).join("") + "|" + runKey(rpr), q: k.qname.replace(/br$/, "r") } }, top);
+      return;
+    }
+    if (OX_WRAP.has(k.name) && k.kids && !hasDeep(k, OX_BLOCK)) {
+      const props = k.kids.filter((c) => c.kids && /pr$/.test(c.name)).map((c) => src.slice(c.s, c.e)).join("");
+      const w = { open: src.slice(k.s, k.cs) + props, close: src.slice(k.ce, k.e) };
+      for (const c of k.kids) if (!(c.kids && /pr$/.test(c.name))) visit(c, [...wraps, w], top);
+      return;
+    }
+    // Anything else (a DrawingML field <a:fld>, math, a content control) is kept as it is.
+    add({ t: "atom", xml: src.slice(k.s, k.e), shown: k.name === "fld" ? plainOf(src, k.kids).trim() : "" }, top);
+  };
+  for (const k of p.kids) visit(k, [], k);
+  flush();
+  // A paragraph that is one segment can be repeated with its translation (bilingual file).
+  const segChunks = chunks.filter((c) => typeof c === "object");
+  if (segChunks.length === 1 && chunks.every((c) => typeof c === "object" || !c.includes("<div"))) {
+    const seg = ctx.out[segChunks[0].seg];
+    if (seg.ox.fmt !== "x") seg.block = { s: p.s, e: p.e, open: src.slice(p.s, p.cs), close: src.slice(p.ce, p.e) };
+  }
+  return chunks;
+}
+
+/** Paragraphs inside a drawing (text boxes): the fallback copy for old programs is skipped. */
+function oxNested(src, el, ctx) {
+  const chunks = [];
+  const walk = (k) => {
+    if (!k.kids || k.name === "fallback") return;
+    if (k.name === "txbxcontent") {
+      chunks.push('<div class="box">');
+      chunks.push(...oxBlocks(src, k, { ...ctx, tag: "box" }));
+      chunks.push("</div>");
+      return;
+    }
+    k.kids.forEach(walk);
+  };
+  walk(el);
+  return chunks;
+}
+
+/** One segment from a paragraph's tokens; returns its preview chunks. */
+function oxSegment(src, p, toks, s, e, ctx) {
+  // Neighbouring atoms (the parts of a field) become one.
+  const list = [];
+  for (const tk of toks) {
+    const prev = list[list.length - 1];
+    if (tk.t === "atom" && prev && prev.t === "atom") list[list.length - 1] = { ...prev, xml: prev.xml + tk.xml, shown: prev.shown + tk.shown };
+    else list.push(tk);
+  }
+  const plain = list.map((tk) => (tk.t === "text" ? tk.text : tk.t === "br" ? "\n" : tk.t === "atom" ? tk.shown : "")).join("");
+  if (!hasLetters(plain)) return plain.trim() ? [escapeXmlText(plain).replace(/\n/g, "<br/>")] : [];
+  // The style with the most text is the paragraph's own; other styles become <n>…</n>.
+  const weight = new Map();
+  for (const tk of list) if (tk.t === "text") weight.set(tk.style.key, (weight.get(tk.style.key) || 0) + tk.text.length);
+  let baseKey = null, best = -1;
+  for (const [k, w] of weight) if (w > best) { best = w; baseKey = k; }
+  const base = list.find((tk) => tk.t === "text" && tk.style.key === baseKey).style;
+  const tags = {}, styles = {}, pre = [], post = [];
+  let text = "", next = 1, open = null, any = false;
+  const close = () => { if (open !== null) { text += `</${open.n}>`; open = null; } };
+  for (const tk of list) {
+    if (tk.t === "mark") { (any ? post : pre).push(tk.xml); continue; }
+    any = true;
+    if (tk.t === "atom") {
+      close();
+      const n = next++;
+      tags[n] = { empty: tk.xml, keep: true, ...(tk.shown.trim() ? { text: tk.shown } : {}) };
+      text += `<${n}/>`;
+      continue;
+    }
+    const piece = tk.t === "br" ? "\ue000" : tk.text;
+    const key = tk.style.key;
+    if (key === baseKey || (tk.t === "br" && !weight.has(key))) { close(); text += piece; continue; }
+    if (!open || open.key !== key) {
+      close();
+      const n = next++;
+      tags[n] = {};
+      styles[n] = tk.style;
+      open = { n, key };
+      text += `<${n}>`;
+    }
+    text += piece;
+  }
+  close();
+  // Spaces at the ends (e.g. before a text box) are put back around the translation.
+  const lead = /^[ \t]*/.exec(text)[0], trail = /[ \t]*$/.exec(text)[0];
+  text = text.replace(/^[\s\ue000]+|[\s\ue000]+$/g, "").replace(/\ue000/g, "\n");
+  const fmt = base.plain ? "x" : /^a:/.test(base.q || "") || p.qname.startsWith("a:") ? "a" : p.name === "p" ? "w" : "x";
+  const seg = { text, s, e, tag: ctx.tag, file: ctx.file, ...(next > 1 ? { tags } : {}), ox: { base, styles, pre, post, fmt, lead, trail } };
+  ctx.out.push(seg);
+  return [{ seg: ctx.out.length - 1 }];
+}
+
+// ------------------------------------------------------------- writing back
+
+/** A translation (with its <n> tags and line breaks) as Office XML runs. */
+function oxMarkup(translation, seg, opts = {}) {
+  const ox = seg.ox, tags = seg.tags || {};
+  if (ox.lead && !/^\s/.test(translation)) translation = ox.lead + translation;
+  if (ox.trail && !/\s$/.test(translation)) translation += ox.trail;
+  const pieces = [];
+  const re = /<(\/?)(\d+)(\/?)>|\n/g;
+  let lastAt = 0, m;
+  while ((m = re.exec(translation))) {
+    if (m.index > lastAt) pieces.push({ text: translation.slice(lastAt, m.index) });
+    if (m[0] === "\n") pieces.push({ br: true });
+    else if (!tags[Number(m[2])]) pieces.push({ text: m[0] });
+    else pieces.push({ id: Number(m[2]), close: !!m[1], empty: !!m[3] });
+    lastAt = re.lastIndex;
+  }
+  if (lastAt < translation.length) pieces.push({ text: translation.slice(lastAt) });
+  const stack = [], keep = new Set();
+  pieces.forEach((p, i) => {
+    if (p.id === undefined || p.empty) return;
+    if (!p.close) { stack.push(i); return; }
+    const top = stack.length ? stack[stack.length - 1] : -1;
+    if (top >= 0 && pieces[top].id === p.id) { stack.pop(); keep.add(top); keep.add(i); }
+  });
+  if (ox.fmt === "x" && ox.base.plain) {
+    // A plain spreadsheet string: one <t>, no formatting.
+    let plainText = "";
+    for (const p of pieces) plainText += p.text !== undefined ? p.text : p.br ? "\n" : p.empty && tags[p.id].text ? tags[p.id].text : "";
+    const tq = ox.base.tq || "t";
+    return `${ox.pre.join("")}<${tq} xml:space="preserve">${escapeXmlText(plainText)}</${tq}>${ox.post.join("")}`;
+  }
+  const used = new Set(), open = [];
+  let out = "";
+  const styleNow = () => (open.length && ox.styles[open[open.length - 1]]) || ox.base;
+  pieces.forEach((p, i) => {
+    if (p.text !== undefined) { out += oxRun(styleNow(), p.text, ox.fmt, opts); return; }
+    if (p.br) { out += oxBreak(styleNow(), ox.fmt, opts); return; }
+    const tag = tags[p.id];
+    if (p.empty) { if (tag.empty) { out += tag.empty; used.add(p.id); } return; }
+    if (!keep.has(i) || tag.empty) return;
+    if (p.close) { const k = open.lastIndexOf(p.id); if (k >= 0) open.splice(k, 1); } else open.push(p.id);
+  });
+  for (const [id, tag] of Object.entries(tags)) if (tag.keep && !used.has(Number(id))) out += tag.empty;
+  return ox.pre.join("") + out + ox.post.join("");
+}
+
+function withLang(rpr, fmt, lang) {
+  const code = (lang || "").replace(/[^A-Za-z0-9-]/g, "");
+  if (!code || !rpr) return rpr;
+  if (fmt === "w") return rpr.replace(/(<w:lang\b[^>]*\bw:val=")[^"]*"/, `$1${code}"`);
+  if (fmt === "a") return rpr.replace(/^(<a:rPr\b[^>]*?\slang=")[^"]*"/, `$1${code}"`);
+  return rpr;
+}
+
+function oxRun(style, text, fmt, opts) {
+  if (!text) return "";
+  const rpr = withLang(style.rpr, fmt, opts.lang);
+  const q = style.q || (fmt === "a" ? "a:r" : fmt === "w" ? "w:r" : "r");
+  const tq = style.tq || q.replace(/r$/, "t");
+  const runOpen = style.open || `<${q}>`, runClose = style.close || `</${q}>`;
+  const t = fmt === "a" ? `<${tq}>${escapeXmlText(text)}</${tq}>` : `<${tq} xml:space="preserve">${escapeXmlText(text)}</${tq}>`;
+  const run = `${runOpen.endsWith("/>") ? `<${q}>` : runOpen}${rpr}${t}${runOpen.endsWith("/>") ? `</${q}>` : runClose}`;
+  return (style.wraps || []).reduceRight((inner, w) => w.open + inner + w.close, run);
+}
+
+function oxBreak(style, fmt, opts) {
+  if (fmt === "x") return oxRun(style, "\n", fmt, opts);
+  const rpr = withLang(style.rpr, fmt, opts.lang);
+  const q = style.q || (fmt === "a" ? "a:r" : "w:r");
+  if (fmt === "a") {
+    const bq = q.replace(/r$/, "br");
+    return rpr ? `<${bq}>${rpr}</${bq}>` : `<${bq}/>`;
+  }
+  const runOpen = style.open && !style.open.endsWith("/>") ? style.open : `<${q}>`;
+  return (style.wraps || []).reduceRight((inner, w) => w.open + inner + w.close, `${runOpen}${rpr}<${q.replace(/r$/, "br")}/></${q}>`);
+}
+
+/**
+ * Bilingual file: a paragraph is repeated with the translation (without numbering, bookmarks
+ * and paragraph ids); a spreadsheet cell holds the original and the translation on two lines.
+ */
+function oxBilingual(seg, f, tr, opts) {
+  if (!seg.block && seg.ox.base.plain) return { s: seg.s, e: seg.e, text: oxMarkup(`${seg.text}\n${tr}`, seg, opts) };
+  if (!seg.block) return { s: seg.s, e: seg.e, text: oxMarkup(seg.text, seg, {}) + oxBreak(seg.ox.base, seg.ox.fmt, {}) + oxMarkup(tr, seg, opts) };
+  const b = seg.block;
+  const inner = f.src.slice(b.s + b.open.length, seg.s) + oxMarkup(tr, seg, opts) + f.src.slice(seg.e, b.e - b.close.length);
+  const copy = (b.open + inner + b.close)
+    .replace(/\s(?:w14:paraId|w14:textId)="[^"]*"/g, "")
+    .replace(/<w:bookmark(?:Start|End)\b[^>]*\/>/g, "")
+    .replace(/<w:numPr>[\s\S]*?<\/w:numPr>/g, "");
+  return { s: b.e, e: b.e, text: copy };
+}
+
+// ------------------------------------------------------------------ parts
+
+/** Relationships of a part: {id: {target (resolved path), type}}. */
+function oxRels(text, part) {
+  const rels = {};
+  if (!text) return rels;
+  const relsPath = part.replace(/[^/]*$/, (n) => `_rels/${n}.rels`);
+  const root = parseXml(text);
+  for (const r of findAll(root, (k) => k.name === "relationship")) {
+    const target = xmlAttr(text, r, "Target") || "";
+    if (xmlAttr(text, r, "TargetMode") === "External") continue;
+    rels[xmlAttr(text, r, "Id")] = { target: target.startsWith("/") ? target.slice(1) : resolvePath(relsPath.replace(/_rels\/[^/]*$/, ""), target), type: xmlAttr(text, r, "Type") || "" };
+  }
+  return rels;
+}
+
+/** Block-level content (Word body, header, footnote, table cell, text box) as preview chunks. */
+function oxBlocks(src, el, ctx) {
+  const chunks = [];
+  for (const k of el.kids || []) {
+    if (!k.kids) continue;
+    if (k.name === "p") {
+      const ppr = firstNamed(k, "ppr");
+      const pprSrc = ppr ? src.slice(ppr.s, ppr.e) : "";
+      const style = (/<w:pStyle\b[^>]*w:val="([^"]+)"/.exec(pprSrc) || [])[1] || "";
+      const level = /^(title|titel|otsikko)$/i.test(style) ? 1 : +((/(?:heading|berschrift|otsikko|заголовок|titre)\s*(\d)/i.exec(style) || [])[1] || 0);
+      const list = /<w:numPr>/.test(pprSrc);
+      const tag = ctx.tag !== "p" ? ctx.tag : level ? `h${Math.min(level, 4)}` : list ? "li" : "p";
+      const el2 = level ? `h${Math.min(level + 1, 4)}` : "p";
+      chunks.push(`<${el2}${list ? ' class="li"' : ""}>${list ? "• " : ""}`);
+      chunks.push(...oxParagraph(src, k, { ...ctx, tag }));
+      chunks.push(`</${el2}>`);
+    } else if (k.name === "tbl") {
+      chunks.push("<table>");
+      for (const tr of kidsNamed(k, "tr")) {
+        chunks.push("<tr>");
+        for (const tc of kidsNamed(tr, "tc")) {
+          const span = /<w:gridSpan\b[^>]*w:val="(\d+)"/.exec(src.slice(tc.s, tc.e));
+          chunks.push(span ? `<td colspan="${span[1]}">` : "<td>");
+          chunks.push(...oxBlocks(src, tc, { ...ctx, tag: ctx.tag === "p" ? "td" : ctx.tag }));
+          chunks.push("</td>");
+        }
+        chunks.push("</tr>");
+      }
+      chunks.push("</table>");
+    } else if (k.name === "fallback") {
+      continue;
+    } else if (k.name !== "sectpr" && k.name !== "tblpr" && k.name !== "tblgrid" && k.name !== "sdtpr") {
+      chunks.push(...oxBlocks(src, k, ctx)); // content controls, custom XML, alternate content …
+    }
+  }
+  return chunks;
+}
+
+/** DrawingML text (slides, notes, tables on slides) as preview chunks. */
+function oxDrawing(src, el, ctx) {
+  const chunks = [];
+  for (const k of el.kids || []) {
+    if (!k.kids || k.name === "fallback") continue;
+    if (k.name === "sp") {
+      const ph = findAll(k, (x) => x.name === "ph")[0];
+      const type = ph ? xmlAttr(src, ph, "type") || "" : "";
+      if (ctx.notes && /^(sldNum|sldImg|hdr|ftr|dt)$/.test(type)) continue;
+      const title = /title/i.test(type);
+      const body = findAll(k, (x) => x.name === "txbody")[0];
+      if (!body) continue;
+      chunks.push(title ? '<div class="title">' : '<div class="shape">');
+      for (const p of kidsNamed(body, "p")) {
+        chunks.push("<p>");
+        chunks.push(...oxParagraph(src, p, { ...ctx, tag: ctx.notes ? "notes" : title ? "title" : "p" }));
+        chunks.push("</p>");
+      }
+      chunks.push("</div>");
+    } else if (k.name === "tbl") {
+      chunks.push("<table>");
+      for (const tr of kidsNamed(k, "tr")) {
+        chunks.push("<tr>");
+        for (const tc of kidsNamed(tr, "tc")) {
+          chunks.push("<td>");
+          const body = firstNamed(tc, "txbody");
+          for (const p of body ? kidsNamed(body, "p") : []) {
+            chunks.push("<p>");
+            chunks.push(...oxParagraph(src, p, { ...ctx, tag: "td" }));
+            chunks.push("</p>");
+          }
+          chunks.push("</td>");
+        }
+        chunks.push("</tr>");
+      }
+      chunks.push("</table>");
+    } else {
+      chunks.push(...oxDrawing(src, k, ctx)); // groups, graphic frames …
+    }
+  }
+  return chunks;
+}
+
+/** "B12" -> 1 (the column index, from 0). */
+function colIndex(ref) {
+  const letters = (/^[A-Z]+/i.exec(ref || "") || [""])[0].toUpperCase();
+  let n = 0;
+  for (const c of letters) n = n * 26 + (c.charCodeAt(0) - 64);
+  return n - 1;
+}
+
+/**
+ * Open an Office document: {book: {kind, files, entries, preview}, segments}. The preview is a
+ * list of HTML pieces and {seg: index} where a segment is shown; segments come in the order the
+ * preview shows them (strings no sheet uses come last, marked hidden).
+ */
+async function openOffice(bytes, kind) {
+  const entries = zipEntries(bytes);
+  const byName = new Map(entries.map((e) => [e.name, e]));
+  const text = async (name) => { const e = byName.get(name); return e ? decodeXml(await zipRead(e)) : null; };
+  const relsOf = async (part) => oxRels(await text(part.replace(/[^/]*$/, (n) => `_rels/${n}.rels`)), part);
+  const files = [], segments = [], preview = [];
+  const book = { kind, files, entries, preview };
+  const addFile = async (path) => {
+    const src = await text(path);
+    if (src === null) return null;
+    files.push({ path, type: "ox", src });
+    return { fi: files.length - 1, src, root: parseXml(src) };
+  };
+  const pageBreak = '<div class="pb"></div>';
+
+  if (kind === "docx") {
+    const rels = await relsOf("word/document.xml");
+    const parts = Object.values(rels);
+    const ofType = (re) => parts.filter((r) => re.test(r.type)).map((r) => r.target).sort();
+    const section = async (path, cls, tag) => {
+      const f = await addFile(path);
+      if (!f) return;
+      const root = findAll(f.root, (k) => ["document", "hdr", "ftr", "footnotes", "endnotes"].includes(k.name))[0] || f.root;
+      const body = root.name === "document" ? firstNamed(root, "body") || root : root;
+      const ctx = { file: f.fi, out: segments, tag };
+      const chunks = [];
+      if (root.name === "footnotes" || root.name === "endnotes") {
+        for (const note of [...kidsNamed(root, "footnote"), ...kidsNamed(root, "endnote")]) {
+          if (xmlAttr(f.src, note, "w:type")) continue; // separators
+          chunks.push(...oxBlocks(f.src, note, ctx));
+        }
+      } else chunks.push(...oxBlocks(f.src, body, ctx));
+      if (chunks.some((c) => typeof c === "object" || /\w/.test(c.replace(/<[^>]*>/g, "")))) preview.push(cls ? `<div class="${cls}">` : "", ...chunks, cls ? "</div>" : "");
+    };
+    for (const h of ofType(/\/header$/)) await section(h, "hdr", "header");
+    await section("word/document.xml", "", "p");
+    for (const n of ofType(/\/(footnotes|endnotes)$/)) await section(n, "notes", "footnote");
+    for (const h of ofType(/\/footer$/)) await section(h, "ftr", "footer");
+  } else if (kind === "pptx") {
+    const pres = await text("ppt/presentation.xml");
+    const rels = await relsOf("ppt/presentation.xml");
+    const presRoot = parseXml(pres || "");
+    const slides = findAll(presRoot, (k) => k.name === "sldid").map((k) => rels[xmlAttr(pres, k, "r:id")]).filter(Boolean).map((r) => r.target);
+    for (const [i, path] of slides.entries()) {
+      const f = await addFile(path);
+      if (!f) continue;
+      if (i) preview.push(pageBreak);
+      preview.push(`<p class="slide-no">${label(String(i + 1))}</p>`);
+      const tree = findAll(f.root, (k) => k.name === "sptree")[0];
+      if (tree) preview.push(...oxDrawing(f.src, tree, { file: f.fi, out: segments, tag: "p" }));
+      const notesRel = Object.values(await relsOf(path)).find((r) => /\/notesSlide$/.test(r.type));
+      const nf = notesRel && await addFile(notesRel.target);
+      const ntree = nf && findAll(nf.root, (k) => k.name === "sptree")[0];
+      if (ntree) {
+        const chunks = oxDrawing(nf.src, ntree, { file: nf.fi, out: segments, tag: "notes", notes: true });
+        if (chunks.some((c) => typeof c === "object")) preview.push('<div class="notes">', ...chunks, "</div>");
+      }
+    }
+  } else {
+    const wbPath = "xl/workbook.xml";
+    const wb = await text(wbPath);
+    const rels = await relsOf(wbPath);
+    const sstRel = Object.values(rels).find((r) => /\/sharedStrings$/.test(r.type));
+    const sst = sstRel ? await addFile(sstRel.target) : null;
+    const sstChunks = [];
+    if (sst) {
+      const table = findAll(sst.root, (k) => k.name === "sst")[0] || sst.root;
+      for (const si of kidsNamed(table, "si")) sstChunks.push(oxParagraph(sst.src, si, { file: sst.fi, out: segments, tag: "cell" }));
+    }
+    const wbRoot = parseXml(wb || "");
+    const sheets = findAll(wbRoot, (k) => k.name === "sheet").map((k) => ({ name: xmlAttr(wb, k, "name") || "", rel: rels[xmlAttr(wb, k, "r:id")] })).filter((s) => s.rel);
+    for (const [i, sh] of sheets.entries()) {
+      const f = await addFile(sh.rel.target);
+      if (!f) continue;
+      if (i) preview.push(pageBreak);
+      preview.push(`<h2>${label(sh.name)}</h2><table>`);
+      const data = findAll(f.root, (k) => k.name === "sheetdata")[0];
+      const rows = data ? kidsNamed(data, "row") : [];
+      for (const row of rows.slice(0, XLSX_MAX_ROWS)) {
+        const cells = [];
+        for (const c of kidsNamed(row, "c")) {
+          const col = colIndex(xmlAttr(f.src, c, "r"));
+          if (col < 0 || col >= XLSX_MAX_COLS) continue;
+          const type = xmlAttr(f.src, c, "t") || "n";
+          const v = firstNamed(c, "v"), vText = v ? plainOf(f.src, v.kids) : "";
+          let chunks = [];
+          if (type === "s") chunks = sstChunks[+vText] || [];
+          else if (type === "inlineStr") {
+            const is = firstNamed(c, "is");
+            if (is) chunks = oxParagraph(f.src, is, { file: f.fi, out: segments, tag: "cell" });
+          } else if (type === "b") chunks = [vText === "1" ? "TRUE" : "FALSE"];
+          else if (vText) chunks = [escapeXmlText(vText)];
+          cells[col] = chunks;
+        }
+        if (!cells.length) continue;
+        preview.push("<tr>");
+        for (let k = 0; k < cells.length; k++) preview.push("<td>", ...(cells[k] || []), "</td>");
+        preview.push("</tr>");
+      }
+      preview.push("</table>");
+    }
+  }
+  // Segments in the order the preview shows them, so they can be found on the laid-out pages.
+  const order = [], seen = new Set();
+  for (const c of preview) if (typeof c === "object" && !seen.has(c.seg)) { seen.add(c.seg); order.push(c.seg); }
+  segments.forEach((_, k) => { if (!seen.has(k)) order.push(k); });
+  const newIndex = new Map(order.map((k, i) => [k, i]));
+  for (const c of preview) if (typeof c === "object") c.seg = newIndex.get(c.seg);
+  const sorted = order.map((k) => (seen.has(k) ? segments[k] : { ...segments[k], hidden: true }));
+  return { book, segments: sorted };
+}
+
+// ---------------------------------------------------------------- preview
+
+const PREVIEW_CSS = `
+body { font-family: sans-serif; margin: 0; }
+p { margin: 0 0 0.45em; } p.li { margin-left: 1em; }
+h2 { font-size: 1.6em; margin: 0.3em 0 0.4em; } h3 { font-size: 1.3em; margin: 0.3em 0; } h4 { font-size: 1.1em; margin: 0.3em 0; }
+table { border-collapse: collapse; margin: 0.4em 0; }
+td { border: 0.5pt solid #999; padding: 1pt 3pt; vertical-align: top; }
+td p { margin: 0; }
+.hdr, .ftr { color: #666; font-size: 0.85em; margin: 0 0 1em; }
+.ftr { margin: 1em 0 0; }
+.notes { color: #555; font-size: 0.9em; border-top: 0.5pt solid #aaa; margin-top: 1em; padding-top: 0.3em; }
+.box { border: 0.5pt dashed #aaa; padding: 2pt 4pt; margin: 0.3em 0; }
+.slide-no { color: #999; font-size: 0.75em; }
+.title p { font-size: 1.5em; font-weight: bold; }
+.shape { margin: 0 0 0.6em; }
+.pb { page-break-after: always; }
+`;
+
+/** CSS for a run's properties (bold, italic, underline, colour). */
+function oxCss(rpr) {
+  if (!rpr) return "";
+  const css = [];
+  const flag = (name) => {
+    const el = new RegExp(`<(?:\\w+:)?${name}(\\s[^>]*)?/>`).exec(rpr);
+    if (el) return !/val="(0|false|off|none)"/i.test(el[1] || "");
+    return new RegExp(`^<a:rPr\\b[^>]*\\s${name}="(1|true|sng|dbl|[a-z]+)"`).test(rpr) && !new RegExp(`\\s${name}="none"`).test(rpr);
+  };
+  if (flag("b")) css.push("font-weight:bold");
+  if (flag("i")) css.push("font-style:italic");
+  if (flag("u")) css.push("text-decoration:underline");
+  const color = /<(?:\w+:)?color\b[^>]*?(?:w:val|rgb)="(?:FF)?([0-9A-Fa-f]{6})"/.exec(rpr) || /<a:srgbClr val="([0-9A-Fa-f]{6})"/.exec(rpr);
+  if (color) css.push(`color:#${color[1]}`);
+  return css.join(";");
+}
+
+/** A segment's text (original or translation) as preview HTML. */
+function oxSegHtml(seg, text) {
+  const tags = seg.tags || {}, ox = seg.ox;
+  const used = new Set();
+  let out = "", depth = 0;
+  const re = /<(\/?)(\d+)(\/?)>|\n/g;
+  let lastAt = 0, m;
+  const esc = escapeXmlText;
+  while ((m = re.exec(text))) {
+    out += esc(text.slice(lastAt, m.index));
+    lastAt = re.lastIndex;
+    if (m[0] === "\n") { out += "<br/>"; continue; }
+    const id = Number(m[2]), tag = tags[id];
+    if (!tag) { out += esc(m[0]); continue; }
+    if (m[3]) { used.add(id); out += esc(tag.text || ""); continue; }
+    if (m[1]) { if (depth) { out += "</span>"; depth--; } continue; }
+    out += `<span style="${oxCss(ox.styles[id] && ox.styles[id].rpr)}">`;
+    depth++;
+  }
+  out += esc(text.slice(lastAt));
+  while (depth--) out += "</span>";
+  for (const [id, tag] of Object.entries(tags)) if (tag.keep && tag.text && !used.has(Number(id))) out += esc(tag.text);
+  const base = oxCss(ox.base.rpr);
+  return base ? `<span style="${base}">${out}</span>` : out;
+}
+
+/** The preview as an HTML document, with translations where there are any. */
+function officePreviewHtml(book, segments, translations = {}) {
+  // (segment ids are their place in the extracted order, from 1)
+  const byId = new Map(segments.map((sg) => [sg.id, sg]));
+  const body = book.preview.map((c) => {
+    if (typeof c === "string") return c;
+    const seg = byId.get(c.seg + 1);
+    if (!seg) return "";
+    return oxSegHtml(seg, (translations[seg.id] || "").trim() || seg.text);
+  }).join("");
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"/><style>${PREVIEW_CSS}</style></head><body>${body}</body></html>`;
+}
+
+function openOfficePreview(book, segments, translations, kind) {
+  const doc = M.Document.openDocument(new TextEncoder().encode(officePreviewHtml(book, segments, translations)), "text/html");
+  doc.layout(...OFFICE_LAYOUT[kind]);
+  return doc;
 }
 
 </script>
@@ -4538,7 +5195,14 @@ const state = {
 
 /** The open document is an e-book (EPUB/FB2) rather than a PDF. */
 const isBook = () => Boolean(state.doc && state.doc.kind && state.doc.kind !== "pdf");
-const FORMAT_LABEL = { pdf: "PDF", epub: "EPUB", fb2: "FB2" };
+const FORMAT_LABEL = { pdf: "PDF", epub: "EPUB", fb2: "FB2", docx: "DOCX", pptx: "PPTX", xlsx: "XLSX" };
+const isOffice = () => Boolean(state.doc && ["docx", "pptx", "xlsx"].includes(state.doc.kind));
+const MIME = {
+  pdf: "application/pdf", epub: "application/epub+zip", fb2: "application/x-fictionbook+xml",
+  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+};
 /** Pages shown in the viewer: the translated e-book has its own page count. */
 const viewPages = () => (state.variant === "translated" && state.outView ? state.outView.pages : state.doc.pages);
 
@@ -4672,7 +5336,7 @@ function saveBlob(blob, filename) {
   setTimeout(() => URL.revokeObjectURL(url), 5000);
 }
 
-const stem = () => (state.doc.name || "document.pdf").replace(/\.(pdf|epub|fb2|fbz|fb2\.zip|zip)$/i, "") || "document";
+const stem = () => (state.doc.name || "document.pdf").replace(/\.(pdf|epub|fb2|fbz|fb2\.zip|zip|docx|pptx|xlsx)$/i, "") || "document";
 const escapeHtml = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 
 async function sha256(bytes) {
@@ -4725,7 +5389,7 @@ async function idbGet() {
 
 async function openPdf(file) {
   if (!file) return;
-  if (!/\.(pdf|epub|fb2|fbz|zip)$/i.test(file.name) && !/pdf|epub|fictionbook/i.test(file.type)) {
+  if (!/\.(pdf|epub|fb2|fbz|zip|docx|pptx|xlsx)$/i.test(file.name) && !/pdf|epub|fictionbook|officedocument/i.test(file.type)) {
     toast(t("msg.chooseFile"), "error");
     return;
   }
@@ -4817,6 +5481,7 @@ function openDocument(doc, bytes) {
   disposeOutput();
   state.doc = doc;
   state.srcBytes = bytes;
+  setCompare(false);
   state.variant = "original";
   state.activeId = null;
   state.shrunk = new Set();
@@ -4834,6 +5499,7 @@ function openDocument(doc, bytes) {
   $("#docName").textContent = doc.name;
   $("#docName").title = doc.name;
   document.body.classList.toggle("is-book", isBook());
+  document.body.classList.toggle("is-office", isOffice());
   setDocFormat(FORMAT_LABEL[doc.kind || "pdf"]);
   document.title = `${doc.name} · PDF Translate`;
 
@@ -4902,6 +5568,7 @@ async function clearAllTranslations() {
   state.buildNo++;
   pool.workers[0]?.call("resetOutput").catch(() => {});
   setBuilt(false);
+  setCompare(false);
   if (state.variant === "translated") setVariant("original");
   refreshCards();
   recordTranslations(backup, Object.fromEntries(Object.keys(backup).map((id) => [id, ""])), t("hist.clear"));
@@ -4945,7 +5612,7 @@ function closeDocument() {
   $("#btnNew").hidden = true;
   $("#docName").textContent = "";
   document.title = "PDF Translate";
-  document.body.classList.remove("is-book");
+  document.body.classList.remove("is-book", "is-office");
   setDocFormat("PDF");
   updateSteps();
 }
@@ -5091,6 +5758,7 @@ function renderPages() {
   }
   wrap.querySelectorAll(".page").forEach((el) => observer.observe(el));
   $("#zoomLabel").textContent = `${Math.round(state.zoom * 100)}%`;
+  refreshCmp(true);
 }
 
 let segsByPage = new Map(), boxesByPage = new Map();
@@ -5124,6 +5792,7 @@ function refreshImages() {
   renderQueue = [];
   for (const i of visiblePages) queueRender(i);
   $("#zoomLabel").textContent = `${Math.round(state.zoom * 100)}%`;
+  refreshCmp();
 }
 
 function setVariant(variant) {
@@ -5161,6 +5830,7 @@ function setZoom(z, anchor) {
   for (const p of pages) sizePage(p);
   box.scrollLeft = el.offsetLeft + fx * el.offsetWidth - ax;
   box.scrollTop = el.offsetTop + fy * el.offsetHeight - ay;
+  if (cmp.on) { $("#pagesCmp").querySelectorAll(".cpage").forEach(sizeCmpPage); syncCmp("main"); }
   $("#zoomLabel").textContent = `${Math.round(z * 100)}%`;
   clearTimeout(zoomRenderTimer);
   zoomRenderTimer = setTimeout(refreshImages, 180);
@@ -5412,6 +6082,7 @@ function setActive(id, { scrollList = false, scrollViewer = false, focus = false
   ensureBoxes(boxPage(s));
   const box = document.querySelector(`.box[data-id="${id}"]`);
   document.querySelectorAll(`.box[data-id="${id}"]`).forEach((b) => b.classList.add("active"));
+  cmpMarkActive(id);
   showHandles(id);
   if (scrollViewer && box) box.scrollIntoView({ block: "center", inline: "center", behavior: "smooth" });
   if (focus) vl.rendered.get(id)?.querySelector("textarea").focus({ preventScroll: true });
@@ -5423,6 +6094,7 @@ function clearActive() {
   vl.rendered.get(state.activeId)?.classList.remove("active");
   document.querySelectorAll(`.box[data-id="${state.activeId}"]`).forEach((b) => b.classList.remove("active"));
   state.activeId = null;
+  cmpMarkActive(null);
   showHandles(null);
   const focused = document.activeElement;
   if (focused && focused.closest && focused.closest(".seg")) focused.blur();
@@ -5531,6 +6203,7 @@ function importPasted() {
 
 function setBuilt(built) {
   $("#viewTranslated").disabled = !built;
+  $("#viewCompare").disabled = !built;
   updateDownloadButton();
   updateProgress();
 }
@@ -5545,7 +6218,7 @@ async function downloadOutput() {
       state.outDirty = false;
     }
     const kind = state.doc.kind || "pdf";
-    const type = { pdf: "application/pdf", epub: "application/epub+zip", fb2: "application/x-fictionbook+xml" }[kind];
+    const type = MIME[kind];
     saveBlob(new Blob([state.outBytes], { type }), `${stem()}.translated.${kind}`);
   } catch (err) {
     toast(t("msg.saveFailed", { err: err.message || err }), "error");
@@ -5574,7 +6247,7 @@ async function downloadBilingual(layout = "pages") {
     const bytes = kind === "pdf"
       ? await pool.workers[0].call("saveBilingual", { markups: state.markups, rotations: state.rotations, layout })
       : await pool.workers[0].call("saveBilingual", { segments: state.doc.segments, translations: state.applied, opts: buildOptions() });
-    const type = { pdf: "application/pdf", epub: "application/epub+zip", fb2: "application/x-fictionbook+xml" }[kind];
+    const type = MIME[kind];
     saveBlob(new Blob([bytes], { type }), `${stem()}.bilingual.${kind}`);
   } catch (err) {
     toast(t("msg.saveFailed", { err: err.message || err }), "error");
@@ -5622,7 +6295,7 @@ function applyField(id) {
         if (el) { el.classList.toggle("shrunk", state.shrunk.has(x.id)); el.classList.toggle("pending", isPending(x.id)); }
       }
       setBuilt(true);
-      if (state.variant !== "translated") setVariant("translated"); else queueRender(s.page);
+      if (cmp.on) { cmp.places.cmp = cmpPlaces("cmp"); cmpQueue(s.page); } else if (state.variant !== "translated") setVariant("translated"); else queueRender(s.page);
       ensureBoxes(s.page);
       document.querySelector(`.box[data-id="${id}"]`)?.scrollIntoView({ block: "nearest", behavior: "smooth" });
       if (stats.missing) toast(t("msg.fontMissing", { n: stats.missing, chars: stats.missingChars }), "error");
@@ -5645,7 +6318,7 @@ async function applyBook(id) {
     state.buildNo++;
     for (const [x, el] of vl.rendered) el.classList.toggle("pending", isPending(x));
     setBuilt(true);
-    if (state.variant !== "translated") setVariant("translated"); else renderPages();
+    if (cmp.on) refreshCmp(true); else if (state.variant !== "translated") setVariant("translated"); else renderPages();
     const page = boxPage(segById(id));
     ensureBoxes(page);
     const box = document.querySelector(`.box[data-id="${id}"]`);
@@ -5694,8 +6367,11 @@ async function doBuild() {
       el.classList.toggle("pending", isPending(id));
     }
     setBuilt(true);
-    if (isBook() && state.variant === "translated") { state.variant = "original"; } // force the page list to be rebuilt
-    setVariant("translated");
+    if (cmp.on) refreshCmp(true);
+    else {
+      if (isBook() && state.variant === "translated") { state.variant = "original"; } // force the page list to be rebuilt
+      setVariant("translated");
+    }
     const secs = ((performance.now() - started) / 1000).toFixed(1);
     let msg = t("msg.built", { n: stats.replaced, secs, mb: (bytes.length / 1048576).toFixed(1) });
     if (stats.shrunk.length) msg += t("msg.shrunk", { n: stats.shrunk.length });
@@ -5747,8 +6423,8 @@ function init() {
     if (file && /\.pdf$/i.test(file.name) && !document.querySelector("dialog[open]")) openPdf(file);
   });
 
-  $("#viewOriginal").addEventListener("click", () => setVariant("original"));
-  $("#viewTranslated").addEventListener("click", () => setVariant("translated"));
+  $("#viewOriginal").addEventListener("click", () => { setCompare(false); setVariant("original"); });
+  $("#viewTranslated").addEventListener("click", () => { setCompare(false); setVariant("translated"); });
   $("#zoomIn").addEventListener("click", () => setZoom(state.zoom * 1.25));
   $("#zoomOut").addEventListener("click", () => setZoom(state.zoom / 1.25));
   $("#zoomFit").addEventListener("click", fitWidth);
@@ -5908,7 +6584,7 @@ function aiPromptText(part) {
   const target = $("#aiTarget").value.trim() || P.target;
   const context = $("#aiContext").value.trim();
   const glossary = $("#aiGlossary").value.trim();
-  const lines = [P.intro(target), "", ...(isBook() ? P.bookRules : P.rules)];
+  const lines = [P.intro(target), "", ...(isOffice() ? P.officeRules : isBook() ? P.bookRules : P.rules)];
   if (context) lines.push("", P.context(context.replace(/\.$/, "")));
   if (glossary) lines.push("", P.glossary, ...glossary.split(/\n/).map((l) => l.trim()).filter(Boolean).map((l) => `- ${l}`));
   if (part && part.total > 1) lines.push("", P.part(part.k, part.total, part.a, part.b));
@@ -7261,6 +7937,7 @@ function onFindKey(e) {
 /* ------------------------------------------------------------------- setup */
 
 function initTools() {
+  initCompare();
   const pages = $("#pages");
   pages.addEventListener("pointerdown", onBoxDown);
   window.addEventListener("pointermove", onBoxMove);
@@ -7310,6 +7987,222 @@ function initTools() {
   }, true);
   $("#btnOcr").addEventListener("click", openOcrDialog);
   $("#ocrGo").addEventListener("click", (e) => { e.preventDefault(); $("#ocrDialog").close(); startOcr(); });
+}
+
+/* ---------------------------------------------------------- comparison view */
+
+// Original (the main viewer, left) and translation (right) side by side, scrolling together.
+// PDF pages correspond one to one; the pages of a translated e-book or Office document are
+// matched through the segments shown near the top of the view.
+const cmp = { on: false, observer: null, visible: new Set(), queue: [], busy: false, cache: new Map(), quiet: { main: 0, cmp: 0 }, savedZoom: null };
+const CMP_CACHE_MAX = 30;
+
+const cmpPages = () => (isBook() && state.outView ? state.outView.pages : state.doc.pages);
+const cmpKey = (i) => `${state.buildNo}.${state.pageVersion.get(i) || 0}:${i}:${renderZoom(cmpPages()[i])}`;
+
+function setCompare(on) {
+  if (on && (!state.doc || !state.hasOutput)) return;
+  if (on === cmp.on) return;
+  cmp.on = on;
+  if (on && state.variant !== "original") setVariant("original");
+  document.body.classList.toggle("comparing", on);
+  $("#pagesCmp").hidden = !on;
+  $("#viewCompare").classList.toggle("active", on);
+  $("#viewOriginal").classList.toggle("active", !on && state.variant === "original");
+  if (on) {
+    cmp.savedZoom = state.zoom;
+    renderCmpPages();
+    requestAnimationFrame(() => { fitWidth(); syncCmp("main"); });
+  } else {
+    cmp.observer?.disconnect();
+    $("#pagesCmp").innerHTML = "";
+    for (const url of cmp.cache.values()) URL.revokeObjectURL(url);
+    cmp.cache.clear();
+    if (cmp.savedZoom) requestAnimationFrame(() => setZoom(cmp.savedZoom));
+  }
+}
+
+function sizeCmpPage(el) {
+  const i = Number(el.dataset.cpage), page = cmpPages()[i];
+  if (!page) return;
+  const rot = isBook() ? 0 : pageRotation(i);
+  const w = pageCssWidth(page), h = Math.round((w * page.height) / page.width);
+  el.style.width = `${rot % 180 ? h : w}px`;
+  el.style.aspectRatio = rot % 180 ? `${page.height} / ${page.width}` : `${page.width} / ${page.height}`;
+  const body = el.querySelector(".page-body");
+  body.style.width = `${w}px`;
+  body.style.height = `${h}px`;
+  body.style.transform = `translate(-50%, -50%)${rot ? ` rotate(${rot}deg)` : ""}`;
+}
+
+/** Where each segment is shown on the two sides: {id: [page, bbox]} (the first box). */
+function cmpPlaces(side) {
+  const out = new Map();
+  for (const s of state.doc.segments) {
+    const boxes = side === "cmp"
+      ? (isBook() ? state.outView && state.outView.boxes[s.id] : s.bbox && [[s.page, shownBox(s)]])
+      : s.boxes || (s.bbox && [[s.page, shownBox(s)]]);
+    if (boxes && boxes.length) out.set(s.id, boxes);
+  }
+  return out;
+}
+
+function renderCmpPages() {
+  if (!cmp.on) return;
+  const wrap = $("#pagesCmp");
+  cmp.observer?.disconnect();
+  cmp.visible.clear();
+  cmp.queue = [];
+  cmp.places = { main: cmpPlaces("main"), cmp: cmpPlaces("cmp") };
+  wrap.innerHTML = cmpPages().map((p, i) =>
+    `<div class="cpage" data-cpage="${i}"><span class="page-label">${t("page.n", { n: i + 1 })}</span><div class="page-body"><img alt=""></div></div>`).join("");
+  wrap.querySelectorAll(".cpage").forEach(sizeCmpPage);
+  // Boxes to click on the translated side (by page, added as the page comes near).
+  cmp.byPage = new Map();
+  for (const [id, boxes] of cmp.places.cmp) for (const [p, bbox] of boxes) {
+    if (!cmp.byPage.has(p)) cmp.byPage.set(p, []);
+    cmp.byPage.get(p).push([id, bbox]);
+  }
+  cmp.observer = new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      const i = Number(e.target.dataset.cpage);
+      if (e.isIntersecting) { cmp.visible.add(i); cmpBoxes(e.target, i); cmpQueue(i); } else cmp.visible.delete(i);
+    }
+  }, { root: wrap, rootMargin: "800px 0px" });
+  wrap.querySelectorAll(".cpage").forEach((el) => cmp.observer.observe(el));
+}
+
+function cmpBoxes(el, i) {
+  if (el.dataset.boxes) return;
+  el.dataset.boxes = "1";
+  const page = cmpPages()[i];
+  el.querySelector(".page-body").insertAdjacentHTML("beforeend", (cmp.byPage.get(i) || []).map(([id, [x0, y0, x1, y1]]) =>
+    `<div class="cbox${id === state.activeId ? " active" : ""}" data-id="${id}" title="#${id}" style="left:${((x0 - page.x0) / page.width) * 100}%;top:${((y0 - page.y0) / page.height) * 100}%;width:${((x1 - x0) / page.width) * 100}%;height:${((y1 - y0) / page.height) * 100}%"></div>`).join(""));
+}
+
+/** Show the active segment on the translated side too. */
+function cmpMarkActive(id) {
+  if (!cmp.on) return;
+  document.querySelectorAll("#pagesCmp .cbox.active").forEach((b) => b.classList.remove("active"));
+  if (id !== null && id !== undefined) document.querySelectorAll(`#pagesCmp .cbox[data-id="${id}"]`).forEach((b) => b.classList.add("active"));
+}
+
+function cmpQueue(i) {
+  const el = $("#pagesCmp").querySelector(`.cpage[data-cpage="${i}"]`);
+  if (!el) return;
+  const key = cmpKey(i), img = el.querySelector("img");
+  if (img.dataset.key === key) return;
+  const url = cmp.cache.get(key);
+  if (url) { img.src = url; img.dataset.key = key; return; }
+  if (!cmp.queue.includes(i)) cmp.queue.push(i);
+  cmpPump();
+}
+
+async function cmpPump() {
+  if (cmp.busy) return;
+  cmp.busy = true;
+  const doc = state.doc;
+  try {
+    while (cmp.on && state.doc === doc && cmp.queue.length) {
+      cmp.queue = cmp.queue.filter((i) => cmp.visible.has(i));
+      if (!cmp.queue.length) break;
+      const i = cmp.queue.shift(), key = cmpKey(i), page = cmpPages()[i];
+      // The translated document lives in worker 0.
+      const buf = await pool.workers[0].call("render", { page: i, zoom: renderZoom(page), variant: "translated" });
+      if (!cmp.on || state.doc !== doc) break;
+      const url = URL.createObjectURL(new Blob([buf], { type: "image/png" }));
+      cmp.cache.set(key, url);
+      while (cmp.cache.size > CMP_CACHE_MAX) {
+        const [oldKey, oldUrl] = cmp.cache.entries().next().value;
+        cmp.cache.delete(oldKey);
+        URL.revokeObjectURL(oldUrl);
+        const stale = document.querySelector(`#pagesCmp img[data-key="${CSS.escape(oldKey)}"]`);
+        if (stale) { stale.removeAttribute("src"); delete stale.dataset.key; }
+      }
+      const img = document.querySelector(`#pagesCmp .cpage[data-cpage="${i}"] img`);
+      if (img && cmpKey(i) === key) { img.src = url; img.dataset.key = key; }
+    }
+  } catch (err) {
+    console.warn("compare render failed", err);
+  } finally {
+    cmp.busy = false;
+  }
+}
+
+/** After a zoom, a build or an applied field: resize and redraw the translated side. */
+function refreshCmp(rebuild = false) {
+  if (!cmp.on) return;
+  if (rebuild || $("#pagesCmp").querySelectorAll(".cpage").length !== cmpPages().length) { renderCmpPages(); syncCmp("main"); return; }
+  $("#pagesCmp").querySelectorAll(".cpage").forEach(sizeCmpPage);
+  for (const i of cmp.visible) cmpQueue(i);
+}
+
+/** The page at the top of a side and how far down it is shown: {i, f} (f from 0 to 1). */
+function cmpAnchor(wrap, sel, attr) {
+  const top = wrap.getBoundingClientRect().top;
+  for (const el of wrap.querySelectorAll(sel)) {
+    const r = el.getBoundingClientRect();
+    if (r.bottom > top + 1) return { i: Number(el.dataset[attr]), f: Math.max(0, (top - r.top) / r.height), el };
+  }
+  return null;
+}
+
+/** Scroll the other side so it shows the same place as `from` ("main" or "cmp"). */
+function syncCmp(from) {
+  if (!cmp.on) return;
+  const main = $("#pages"), other = $("#pagesCmp");
+  const [src, dst] = from === "main" ? [main, other] : [other, main];
+  const [srcSel, srcAttr, dstSel, dstAttr] = from === "main" ? [".page", "page", ".cpage", "cpage"] : [".cpage", "cpage", ".page", "page"];
+  const a = cmpAnchor(src, srcSel, srcAttr);
+  if (!a) return;
+  let target = { i: a.i, f: a.f };
+  if (isBook()) {
+    // The first segment shown from the top of this side, found on the other side.
+    const srcPages = from === "main" ? state.doc.pages : cmpPages(), dstPages = from === "main" ? cmpPages() : state.doc.pages;
+    const sp = srcPages[a.i];
+    const y = sp.y0 + a.f * sp.height;
+    let best = null;
+    for (const [id, boxes] of cmp.places[from]) {
+      for (const [p, b] of boxes) {
+        if (p < a.i || (p === a.i && b[3] < y)) continue;
+        if (!best || p < best.p || (p === best.p && b[1] < best.y)) best = { id, p, y: b[1] };
+        break;
+      }
+    }
+    const there = best && cmp.places[from === "main" ? "cmp" : "main"].get(best.id);
+    if (there) {
+      // Keep the segment the same distance below the top on both sides.
+      const dp = dstPages[there[0][0]];
+      const gap = best.p === a.i ? (best.y - y) / sp.height : 0;
+      target = { i: there[0][0], f: (there[0][1][1] - dp.y0) / dp.height - gap };
+    } else {
+      const pos = (a.i + a.f) / srcPages.length * dstPages.length;
+      target = { i: Math.min(dstPages.length - 1, Math.floor(pos)), f: pos % 1 };
+    }
+  }
+  const el = dst.querySelector(`${dstSel}[data-${dstAttr}="${target.i}"]`);
+  if (!el) return;
+  const delta = el.getBoundingClientRect().top - dst.getBoundingClientRect().top + target.f * el.getBoundingClientRect().height;
+  if (Math.abs(delta) < 1 && dst.scrollLeft === src.scrollLeft) return;
+  cmp.quiet[from === "main" ? "cmp" : "main"] = performance.now() + 120; // (its own scroll event is not synced back)
+  dst.scrollTop += delta;
+  dst.scrollLeft = src.scrollLeft;
+}
+
+function initCompare() {
+  $("#viewCompare").addEventListener("click", () => setCompare(!cmp.on));
+  for (const [id, side] of [["#pages", "main"], ["#pagesCmp", "cmp"]]) {
+    let raf = 0;
+    $(id).addEventListener("scroll", () => {
+      if (!cmp.on || performance.now() < cmp.quiet[side]) return;
+      if (!raf) raf = requestAnimationFrame(() => { raf = 0; syncCmp(side); });
+    }, { passive: true });
+  }
+  $("#pagesCmp").addEventListener("click", (e) => {
+    const box = e.target.closest(".cbox");
+    if (box) setActive(Number(box.dataset.id), { scrollList: true, scrollViewer: true, focus: true });
+    else clearActive();
+  });
 }
 
 // Start-up (runs after ui.js, markup.js and tools.js have defined everything).

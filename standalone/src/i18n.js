@@ -10,8 +10,8 @@ const I18N = {
     "help.btnTitle": "So funktioniert es",
     "top.new": "Andere Datei öffnen",
 
-    "upload.title": "PDF, EPUB oder FB2 hier ablegen oder <u>Datei auswählen</u>",
-    "upload.sub": "Der Text wird extrahiert; Bilder, Zeichnungen und Layout bleiben unverändert. E-Books (EPUB, FB2) behalten Formatierung, Bilder und Fußnoten.",
+    "upload.title": "PDF, Word, PowerPoint, Excel, EPUB oder FB2 hier ablegen oder <u>Datei auswählen</u>",
+    "upload.sub": "Der Text wird extrahiert; Bilder, Zeichnungen und Layout bleiben unverändert. Word-, PowerPoint- und Excel-Dateien sowie E-Books (EPUB, FB2) behalten Formatierung, Bilder und Fußnoten.",
     "upload.engine": "PDF-Engine wird geladen (ca. 4 MB, nur beim ersten Mal)…",
     "upload.privacy": "Alles läuft in Ihrem Browser. Ihre Datei wird nirgendwo hochgeladen.",
     "how.1.title": "1 · Extrahieren",
@@ -23,6 +23,8 @@ const I18N = {
 
     "view.original": "Original",
     "view.translated": "Übersetzung",
+    "view.compare": "Vergleich",
+    "view.compareTitle": "Original und Übersetzung nebeneinander, synchron scrollend",
     "view.boxes": "Segmente anzeigen",
     "zoom.out": "Verkleinern",
     "zoom.in": "Vergrößern (oder Strg + Mausrad)",
@@ -109,9 +111,9 @@ const I18N = {
     "build.fontsNote": "Die eingebauten Schriften decken Lateinisch, Griechisch, Kyrillisch, Chinesisch, Japanisch und Koreanisch ab. Für andere Schriftsysteme laden Sie eine passende Schrift. Rechts-nach-links- und komplexe Schriften (Arabisch, Hebräisch, indische Schriften, Thai) werden nicht korrekt gesetzt.",
 
     "help.title": "Hilfe",
-    "help.step1": "<b>Extrahieren:</b> PDF, EPUB oder FB2 öffnen. Jeder Absatz, jede Beschriftung und Tabellenzelle wird zu einem nummerierten Segment; ein Klick auf einen Rahmen auf der Seite springt dorthin. Felder nur mit Zahlen oder Datum werden nicht übersetzt.",
+    "help.step1": "<b>Extrahieren:</b> PDF, Word (DOCX), PowerPoint (PPTX), Excel (XLSX), EPUB oder FB2 öffnen. Jeder Absatz, jede Beschriftung und Tabellenzelle wird zu einem nummerierten Segment; ein Klick auf einen Rahmen auf der Seite springt dorthin. Felder nur mit Zahlen oder Datum werden nicht übersetzt.",
     "help.step2": "<b>Übersetzen:</b> in die Felder tippen, oder unter <b>KI</b> einen Prompt für eine KI kopieren (bzw. ein Übersetzungstool nutzen) und die Antwort unter <b>Importieren</b> einfügen.",
-    "help.step3": "<b>Erstellen:</b> <b>PDF erstellen</b> schreibt alle Übersetzungen in die PDF. Um später ein Segment zu korrigieren, ändern Sie es und klicken auf <b>⟳ in PDF übernehmen</b> (oder <kbd>Strg</kbd>+<kbd>S</kbd>). Nur diese Seite wird neu erstellt. Bei E-Books (EPUB, FB2) wird das Buch neu gesetzt und im selben Format heruntergeladen; Markierungen wie &lt;1&gt;…&lt;/1&gt; stehen für Kursiv, Fett, Links und Fußnoten.",
+    "help.step3": "<b>Erstellen:</b> <b>PDF erstellen</b> schreibt alle Übersetzungen in die PDF. Um später ein Segment zu korrigieren, ändern Sie es und klicken auf <b>⟳ in PDF übernehmen</b> (oder <kbd>Strg</kbd>+<kbd>S</kbd>). Nur diese Seite wird neu erstellt. Word-, PowerPoint- und Excel-Dateien sowie E-Books (EPUB, FB2) werden im selben Format heruntergeladen, mit allen Formatierungen; Markierungen wie &lt;1&gt;…&lt;/1&gt; stehen für Kursiv, Fett, Links und Fußnoten.",
     "help.shortcuts": "Tastenkürzel im Übersetzungsfeld: <kbd>Strg</kbd>+<kbd>Enter</kbd> nächstes Segment · <kbd>Alt</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> vorheriges/nächstes · <kbd>Strg</kbd>+<kbd>S</kbd> Segment in PDF übernehmen · <kbd>Strg</kbd> + Mausrad zoomen.",
     "ai.title": "Mit KI übersetzen (ChatGPT, Claude, Gemini…)",
     "ai.targetPh": "z. B. Englisch",
@@ -138,7 +140,7 @@ const I18N = {
     "ai.tooLong": " Das ist viel für eine KI-Antwort, die abgeschnitten werden könnte: übersetzen Sie wenige Seiten auf einmal (Feld „Seiten“) und importieren Sie jede Antwort; Importe werden ergänzt.",
     "ai.pasteHere": "[Segmente hier einfügen]",
 
-    "msg.chooseFile": "Bitte wählen Sie eine PDF-, EPUB- oder FB2-Datei.",
+    "msg.chooseFile": "Bitte wählen Sie eine PDF-, Word-, PowerPoint-, Excel-, EPUB- oder FB2-Datei.",
     "msg.loadingEngine": "PDF-Engine wird geladen…",
     "msg.opening": "Wird geöffnet…",
     "find.title": "Suchen und ersetzen (Strg+F, Strg+H)",
@@ -164,7 +166,7 @@ const I18N = {
     "hist.replaceAll": "{n}× ersetzt",
     "nav.rotate": "Diese Seite um 90° drehen (mit Umschalt: gegen den Uhrzeigersinn). Wird in die PDF übernommen.",
     "hist.rotate": "Seite gedreht",
-    "tb.bilingualTitle": "Zweisprachig herunterladen – PDF: Original und Übersetzung auf einer Seite oder abwechselnde Seiten; E-Book: jeder Absatz im Original, gefolgt von der Übersetzung",
+    "tb.bilingualTitle": "Zweisprachig herunterladen – PDF: Original und Übersetzung auf einer Seite oder abwechselnde Seiten; Word, PowerPoint, Excel, E-Book: jeder Absatz im Original, gefolgt von der Übersetzung",
     "bi.title": "Zweisprachig herunterladen",
     "bi.side": "Auf einer Seite nebeneinander",
     "bi.sideHint": "Gleiche Seitenzahl wie das Original, jede Seite doppelt so groß: Hochformat-Seiten nebeneinander (Original links), Querformat-Seiten übereinander (Original oben). Markierungen werden in die Seiten gezeichnet, Links entfallen.",
@@ -225,11 +227,12 @@ const I18N = {
     "ocrlang.fin": "Finnisch",
     "ocrlang.chi_sim": "Chinesisch (Kurzzeichen)",
     "ocrlang.chi_tra": "Chinesisch (Langzeichen)",
-    "msg.readingBook": "E-Book wird gelesen und gesetzt…",
+    "msg.readingBook": "Dokument wird gelesen und gesetzt…",
     "msg.updating": "Wird aktualisiert…",
     "meta.notShown": "nicht im Fließtext (Metadaten / Inhaltsverzeichnis)",
     "build.bookText": "Die Übersetzungen ersetzen den Text in den Kapiteldateien. Formatierung (kursiv, fett, Links), Bilder, Fußnoten, Inhaltsverzeichnis und Stylesheets bleiben erhalten. Markierungen wie &lt;1&gt;…&lt;/1&gt; in den Segmenten stehen für diese Formatierung; fehlen sie in einer Übersetzung, wird der Text ohne sie eingesetzt, Bilder und Fußnotenverweise bleiben trotzdem erhalten.",
-    "build.bookLang": "Sprache des übersetzten Buchs (Code, z. B. uk, en, de; leer = unverändert)",
+    "build.bookLang": "Sprache der Übersetzung (Code, z. B. uk, en, de; leer = unverändert)",
+    "build.officeText": "Die Übersetzungen ersetzen den Text in der Datei. Formatierung, Bilder, Tabellen, Formeln, Felder und Notizen bleiben erhalten. Markierungen wie &lt;1&gt;…&lt;/1&gt; stehen für Text mit eigener Formatierung (fett, kursiv, Farbe, Links); &lt;2/&gt; für ein Feld, einen Tabulator oder einen Fußnotenverweis. Die Vorschau zeigt nur den Text, nicht das genaue Layout.",
     "msg.extracting": "Text wird extrahiert… Seite {i} von {n}",
     "msg.openFailed": "Diese Datei konnte nicht geöffnet werden: {err}",
     "msg.password": "Passwortgeschützte PDFs werden nicht unterstützt.",
@@ -309,8 +312,8 @@ const I18N = {
     "help.btnTitle": "How it works",
     "top.new": "Open another file",
 
-    "upload.title": "Drop a PDF, EPUB or FB2 here or <u>choose a file</u>",
-    "upload.sub": "The text is extracted; pictures, drawings and layout stay as they are. E-books (EPUB, FB2) keep their formatting, images and footnotes.",
+    "upload.title": "Drop a PDF, Word, PowerPoint, Excel, EPUB or FB2 file here or <u>choose a file</u>",
+    "upload.sub": "The text is extracted; pictures, drawings and layout stay as they are. Word, PowerPoint and Excel files and e-books (EPUB, FB2) keep their formatting, images and footnotes.",
     "upload.engine": "Loading the PDF engine (about 4 MB, the first time only)…",
     "upload.privacy": "Everything runs in your browser. Your file is never uploaded.",
     "how.1.title": "1 · Extract",
@@ -322,6 +325,8 @@ const I18N = {
 
     "view.original": "Original",
     "view.translated": "Translated",
+    "view.compare": "Compare",
+    "view.compareTitle": "Original and translation side by side, scrolling together",
     "view.boxes": "Show segments",
     "zoom.out": "Zoom out",
     "zoom.in": "Zoom in (or Ctrl + mouse wheel)",
@@ -408,9 +413,9 @@ const I18N = {
     "build.fontsNote": "Built-in fonts cover Latin, Greek, Cyrillic, Chinese, Japanese and Korean. For other alphabets, upload a font that supports them. Right-to-left and complex scripts (Arabic, Hebrew, Indic, Thai) are not shaped correctly.",
 
     "help.title": "Help",
-    "help.step1": "<b>Extract:</b> open a PDF, EPUB or FB2. Each paragraph, label and table cell becomes a numbered segment; click a box on the page to jump to it. Fields with only numbers or dates are not translated.",
+    "help.step1": "<b>Extract:</b> open a PDF, Word (DOCX), PowerPoint (PPTX), Excel (XLSX), EPUB or FB2 file. Each paragraph, label and table cell becomes a numbered segment; click a box on the page to jump to it. Fields with only numbers or dates are not translated.",
     "help.step2": "<b>Translate:</b> type in the boxes, or copy a prompt for an AI under <b>AI</b> (or use a translation tool) and paste its answer into <b>Import</b>.",
-    "help.step3": "<b>Rebuild:</b> <b>Build PDF</b> writes every translation into the PDF. To fix one segment afterwards, edit it and press <b>⟳ update PDF</b> on its card (or <kbd>Ctrl</kbd>+<kbd>S</kbd>). Only that page is redone. E-books (EPUB, FB2) are laid out again and downloaded in the same format; markers such as &lt;1&gt;…&lt;/1&gt; stand for italics, bold, links and footnotes.",
+    "help.step3": "<b>Rebuild:</b> <b>Build PDF</b> writes every translation into the PDF. To fix one segment afterwards, edit it and press <b>⟳ update PDF</b> on its card (or <kbd>Ctrl</kbd>+<kbd>S</kbd>). Only that page is redone. Word, PowerPoint and Excel files and e-books (EPUB, FB2) are downloaded in the same format, with all their formatting; markers such as &lt;1&gt;…&lt;/1&gt; stand for italics, bold, links and footnotes.",
     "help.shortcuts": "Shortcuts in a translation box: <kbd>Ctrl</kbd>+<kbd>Enter</kbd> next segment · <kbd>Alt</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> previous/next · <kbd>Ctrl</kbd>+<kbd>S</kbd> update this segment in the PDF · <kbd>Ctrl</kbd> + mouse wheel to zoom.",
     "ai.title": "Translate with AI (ChatGPT, Claude, Gemini…)",
     "ai.targetPh": "e.g. English",
@@ -437,7 +442,7 @@ const I18N = {
     "ai.tooLong": " That is a lot for one AI answer, which may be cut off: translate a few pages at a time (Pages field) and import each answer; imports add up.",
     "ai.pasteHere": "[paste the segments here]",
 
-    "msg.chooseFile": "Please choose a PDF, EPUB or FB2 file.",
+    "msg.chooseFile": "Please choose a PDF, Word, PowerPoint, Excel, EPUB or FB2 file.",
     "msg.loadingEngine": "Loading the PDF engine…",
     "msg.opening": "Opening…",
     "find.title": "Find and replace (Ctrl+F, Ctrl+H)",
@@ -463,7 +468,7 @@ const I18N = {
     "hist.replaceAll": "{n}× replaced",
     "nav.rotate": "Turn this page by 90° (with Shift: counter-clockwise). Applied to the PDF.",
     "hist.rotate": "page turned",
-    "tb.bilingualTitle": "Download both languages – PDF: original and translation on one page, or alternating pages; e-book: each paragraph in the original, followed by its translation",
+    "tb.bilingualTitle": "Download both languages – PDF: original and translation on one page, or alternating pages; Word, PowerPoint, Excel, e-book: each paragraph in the original, followed by its translation",
     "bi.title": "Download both languages",
     "bi.side": "Side by side on one page",
     "bi.sideHint": "Same number of pages as the original, each twice as large: portrait pages side by side (original on the left), landscape pages one above the other (original on top). Markups are drawn into the pages; links are not kept.",
@@ -524,11 +529,12 @@ const I18N = {
     "ocrlang.fin": "Finnish",
     "ocrlang.chi_sim": "Chinese (simplified)",
     "ocrlang.chi_tra": "Chinese (traditional)",
-    "msg.readingBook": "Reading and laying out the e-book…",
+    "msg.readingBook": "Reading and laying out the document…",
     "msg.updating": "Updating…",
     "meta.notShown": "not in the running text (metadata / table of contents)",
     "build.bookText": "The translations replace the text in the chapter files. Formatting (italic, bold, links), images, footnotes, the table of contents and style sheets are kept. Markers such as &lt;1&gt;…&lt;/1&gt; in the segments stand for that formatting; if a translation leaves them out, its text is used without them, and images and footnote references are still kept.",
-    "build.bookLang": "Language of the translated book (code, e.g. uk, en, de; empty = unchanged)",
+    "build.bookLang": "Language of the translation (code, e.g. uk, en, de; empty = unchanged)",
+    "build.officeText": "The translations replace the text in the file. Formatting, images, tables, formulas, fields and notes are kept. Markers such as &lt;1&gt;…&lt;/1&gt; stand for text with its own formatting (bold, italic, colour, links); &lt;2/&gt; for a field, a tab or a footnote reference. The preview shows the text, not the exact layout.",
     "msg.extracting": "Extracting text… page {i} of {n}",
     "msg.openFailed": "Could not open this file: {err}",
     "msg.password": "Password-protected PDFs are not supported.",
@@ -632,6 +638,17 @@ const AI_PROMPT = {
     context: (c) => `Kontext: Das Dokument ist ${c}. Verwende die Fachsprache dieses Gebiets.`,
     glossary: "Verwende für die folgenden Begriffe diese Übersetzungen:",
     segments: "Segmente:",
+    officeRules: [
+      "Die Segmente stammen aus einem Office-Dokument (Word, PowerPoint oder Excel). Jede Übersetzung ersetzt den Originaltext an derselben Stelle der Datei. Halte dich strikt an diese Regeln:",
+      "",
+      "1. Jedes Segment beginnt mit einer Markierungszeile wie [[12]]. Übernimm jede Markierung exakt, in einer eigenen Zeile und in derselben Reihenfolge. Füge keine Segmente hinzu, lass keine weg, führe keine zusammen, teile keine und nummeriere nicht neu.",
+      "2. Schreibe die Übersetzung jedes Segments direkt unter seine Markierung. Gib jedes Segment zurück, auch solche, die keine Übersetzung brauchen: diese unverändert übernehmen.",
+      "3. Ein Segment ist ein Absatz, eine Überschrift, ein Listenpunkt, ein Textfeld einer Folie oder eine Tabellen- bzw. Tabellenkalkulationszelle. Übersetze es als Ganzes; Zellen und Folientexte sind oft Stichworte: knapp und so, wie man sie in der Zielsprache schreibt.",
+      "4. Markierungen wie <1>…</1> stehen für Text mit eigener Formatierung (fett, kursiv, Farbe, Links); <2/> steht für ein Feld, einen Tabulator oder einen Fußnotenverweis. Behalte jede Markierung mit derselben Nummer bei: setze <1> und </1> um die entsprechenden Wörter der Übersetzung und lass <2/> an der passenden Stelle stehen.",
+      "5. Behalte Satzzeichen-Konventionen der Zielsprache bei (z. B. Anführungszeichen). Zahlen, URLs und Codes nicht ändern.",
+      "6. Zeilenumbrüche innerhalb eines Segments nur dort, wo auch das Original welche hat.",
+      "7. Antworte nur mit den übersetzten Segmenten im exakt gleichen [[n]]-Format, als reiner Text: keine Einleitung, keine Kommentare, kein Markdown, kein Codeblock.",
+    ],
     part: (k, total, a, b) => `Dies ist Teil ${k} von ${total} des Dokuments (Segmente [[${a}]] bis [[${b}]]). Die Nummerierung setzt die vorherigen Teile fort: übernimm die Nummern genau so und beginne nicht wieder bei 1.`,
   },
   en: {
@@ -663,6 +680,17 @@ const AI_PROMPT = {
     context: (c) => `Context: the document is ${c}. Use the terminology of that field.`,
     glossary: "Use these translations for the following terms:",
     segments: "Segments:",
+    officeRules: [
+      "The segments were extracted from an Office document (Word, PowerPoint or Excel). Each translation replaces the original text at the same place in the file. Follow these rules strictly:",
+      "",
+      "1. Every segment starts with a marker line like [[12]]. Copy every marker exactly, on its own line, in the same order. Do not add, remove, merge, split or renumber segments.",
+      "2. Put the translation of each segment directly under its marker. Return every segment, also those that need no translation: copy them unchanged.",
+      "3. A segment is a paragraph, heading, list item, text on a slide, or a table or spreadsheet cell. Translate it as a whole; cells and slide texts are often short phrases: keep them brief, as they are written in the target language.",
+      "4. Markers such as <1>…</1> stand for text with its own formatting (bold, italic, colour, links); <2/> stands for a field, a tab or a footnote reference. Keep every marker with the same number: put <1> and </1> around the corresponding words of the translation, and keep <2/> at the matching place.",
+      "5. Use the punctuation conventions of the target language (e.g. quotation marks). Do not change numbers, URLs or codes.",
+      "6. Keep line breaks inside a segment only where the original has them.",
+      "7. Reply with the translated segments only, in exactly the same [[n]] format, as plain text: no introduction, no comments, no Markdown, no code block.",
+    ],
     part: (k, total, a, b) => `This is part ${k} of ${total} of the document (segments [[${a}]] to [[${b}]]). The numbering continues from the previous parts: keep the numbers exactly as they are and do not restart at 1.`,
   },
 };
@@ -672,7 +700,7 @@ let LANG = "de";
 try { LANG = localStorage.getItem(LANG_KEY) || "de"; } catch (_) { /* storage blocked */ }
 if (!I18N[LANG]) LANG = "de";
 
-/** Format of the open document ("PDF", "EPUB", "FB2"), for {fmt} in the texts. */
+/** Format of the open document ("PDF", "EPUB", "FB2", "DOCX", …), for {fmt} in the texts. */
 let DOC_FMT = "PDF";
 
 /** Translate a key, filling {placeholders} from vars. */

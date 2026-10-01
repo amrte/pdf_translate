@@ -37,7 +37,14 @@ const state = {
 
 /** The open document is an e-book (EPUB/FB2) rather than a PDF. */
 const isBook = () => Boolean(state.doc && state.doc.kind && state.doc.kind !== "pdf");
-const FORMAT_LABEL = { pdf: "PDF", epub: "EPUB", fb2: "FB2" };
+const FORMAT_LABEL = { pdf: "PDF", epub: "EPUB", fb2: "FB2", docx: "DOCX", pptx: "PPTX", xlsx: "XLSX" };
+const isOffice = () => Boolean(state.doc && ["docx", "pptx", "xlsx"].includes(state.doc.kind));
+const MIME = {
+  pdf: "application/pdf", epub: "application/epub+zip", fb2: "application/x-fictionbook+xml",
+  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+};
 /** Pages shown in the viewer: the translated e-book has its own page count. */
 const viewPages = () => (state.variant === "translated" && state.outView ? state.outView.pages : state.doc.pages);
 
@@ -171,7 +178,7 @@ function saveBlob(blob, filename) {
   setTimeout(() => URL.revokeObjectURL(url), 5000);
 }
 
-const stem = () => (state.doc.name || "document.pdf").replace(/\.(pdf|epub|fb2|fbz|fb2\.zip|zip)$/i, "") || "document";
+const stem = () => (state.doc.name || "document.pdf").replace(/\.(pdf|epub|fb2|fbz|fb2\.zip|zip|docx|pptx|xlsx)$/i, "") || "document";
 const escapeHtml = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 
 async function sha256(bytes) {
@@ -224,7 +231,7 @@ async function idbGet() {
 
 async function openPdf(file) {
   if (!file) return;
-  if (!/\.(pdf|epub|fb2|fbz|zip)$/i.test(file.name) && !/pdf|epub|fictionbook/i.test(file.type)) {
+  if (!/\.(pdf|epub|fb2|fbz|zip|docx|pptx|xlsx)$/i.test(file.name) && !/pdf|epub|fictionbook|officedocument/i.test(file.type)) {
     toast(t("msg.chooseFile"), "error");
     return;
   }
@@ -316,6 +323,7 @@ function openDocument(doc, bytes) {
   disposeOutput();
   state.doc = doc;
   state.srcBytes = bytes;
+  setCompare(false);
   state.variant = "original";
   state.activeId = null;
   state.shrunk = new Set();
@@ -333,6 +341,7 @@ function openDocument(doc, bytes) {
   $("#docName").textContent = doc.name;
   $("#docName").title = doc.name;
   document.body.classList.toggle("is-book", isBook());
+  document.body.classList.toggle("is-office", isOffice());
   setDocFormat(FORMAT_LABEL[doc.kind || "pdf"]);
   document.title = `${doc.name} · PDF Translate`;
 
@@ -401,6 +410,7 @@ async function clearAllTranslations() {
   state.buildNo++;
   pool.workers[0]?.call("resetOutput").catch(() => {});
   setBuilt(false);
+  setCompare(false);
   if (state.variant === "translated") setVariant("original");
   refreshCards();
   recordTranslations(backup, Object.fromEntries(Object.keys(backup).map((id) => [id, ""])), t("hist.clear"));
@@ -444,7 +454,7 @@ function closeDocument() {
   $("#btnNew").hidden = true;
   $("#docName").textContent = "";
   document.title = "PDF Translate";
-  document.body.classList.remove("is-book");
+  document.body.classList.remove("is-book", "is-office");
   setDocFormat("PDF");
   updateSteps();
 }
@@ -590,6 +600,7 @@ function renderPages() {
   }
   wrap.querySelectorAll(".page").forEach((el) => observer.observe(el));
   $("#zoomLabel").textContent = `${Math.round(state.zoom * 100)}%`;
+  refreshCmp(true);
 }
 
 let segsByPage = new Map(), boxesByPage = new Map();
@@ -623,6 +634,7 @@ function refreshImages() {
   renderQueue = [];
   for (const i of visiblePages) queueRender(i);
   $("#zoomLabel").textContent = `${Math.round(state.zoom * 100)}%`;
+  refreshCmp();
 }
 
 function setVariant(variant) {
@@ -660,6 +672,7 @@ function setZoom(z, anchor) {
   for (const p of pages) sizePage(p);
   box.scrollLeft = el.offsetLeft + fx * el.offsetWidth - ax;
   box.scrollTop = el.offsetTop + fy * el.offsetHeight - ay;
+  if (cmp.on) { $("#pagesCmp").querySelectorAll(".cpage").forEach(sizeCmpPage); syncCmp("main"); }
   $("#zoomLabel").textContent = `${Math.round(z * 100)}%`;
   clearTimeout(zoomRenderTimer);
   zoomRenderTimer = setTimeout(refreshImages, 180);
@@ -911,6 +924,7 @@ function setActive(id, { scrollList = false, scrollViewer = false, focus = false
   ensureBoxes(boxPage(s));
   const box = document.querySelector(`.box[data-id="${id}"]`);
   document.querySelectorAll(`.box[data-id="${id}"]`).forEach((b) => b.classList.add("active"));
+  cmpMarkActive(id);
   showHandles(id);
   if (scrollViewer && box) box.scrollIntoView({ block: "center", inline: "center", behavior: "smooth" });
   if (focus) vl.rendered.get(id)?.querySelector("textarea").focus({ preventScroll: true });
@@ -922,6 +936,7 @@ function clearActive() {
   vl.rendered.get(state.activeId)?.classList.remove("active");
   document.querySelectorAll(`.box[data-id="${state.activeId}"]`).forEach((b) => b.classList.remove("active"));
   state.activeId = null;
+  cmpMarkActive(null);
   showHandles(null);
   const focused = document.activeElement;
   if (focused && focused.closest && focused.closest(".seg")) focused.blur();
@@ -1030,6 +1045,7 @@ function importPasted() {
 
 function setBuilt(built) {
   $("#viewTranslated").disabled = !built;
+  $("#viewCompare").disabled = !built;
   updateDownloadButton();
   updateProgress();
 }
@@ -1044,7 +1060,7 @@ async function downloadOutput() {
       state.outDirty = false;
     }
     const kind = state.doc.kind || "pdf";
-    const type = { pdf: "application/pdf", epub: "application/epub+zip", fb2: "application/x-fictionbook+xml" }[kind];
+    const type = MIME[kind];
     saveBlob(new Blob([state.outBytes], { type }), `${stem()}.translated.${kind}`);
   } catch (err) {
     toast(t("msg.saveFailed", { err: err.message || err }), "error");
@@ -1073,7 +1089,7 @@ async function downloadBilingual(layout = "pages") {
     const bytes = kind === "pdf"
       ? await pool.workers[0].call("saveBilingual", { markups: state.markups, rotations: state.rotations, layout })
       : await pool.workers[0].call("saveBilingual", { segments: state.doc.segments, translations: state.applied, opts: buildOptions() });
-    const type = { pdf: "application/pdf", epub: "application/epub+zip", fb2: "application/x-fictionbook+xml" }[kind];
+    const type = MIME[kind];
     saveBlob(new Blob([bytes], { type }), `${stem()}.bilingual.${kind}`);
   } catch (err) {
     toast(t("msg.saveFailed", { err: err.message || err }), "error");
@@ -1121,7 +1137,7 @@ function applyField(id) {
         if (el) { el.classList.toggle("shrunk", state.shrunk.has(x.id)); el.classList.toggle("pending", isPending(x.id)); }
       }
       setBuilt(true);
-      if (state.variant !== "translated") setVariant("translated"); else queueRender(s.page);
+      if (cmp.on) { cmp.places.cmp = cmpPlaces("cmp"); cmpQueue(s.page); } else if (state.variant !== "translated") setVariant("translated"); else queueRender(s.page);
       ensureBoxes(s.page);
       document.querySelector(`.box[data-id="${id}"]`)?.scrollIntoView({ block: "nearest", behavior: "smooth" });
       if (stats.missing) toast(t("msg.fontMissing", { n: stats.missing, chars: stats.missingChars }), "error");
@@ -1144,7 +1160,7 @@ async function applyBook(id) {
     state.buildNo++;
     for (const [x, el] of vl.rendered) el.classList.toggle("pending", isPending(x));
     setBuilt(true);
-    if (state.variant !== "translated") setVariant("translated"); else renderPages();
+    if (cmp.on) refreshCmp(true); else if (state.variant !== "translated") setVariant("translated"); else renderPages();
     const page = boxPage(segById(id));
     ensureBoxes(page);
     const box = document.querySelector(`.box[data-id="${id}"]`);
@@ -1193,8 +1209,11 @@ async function doBuild() {
       el.classList.toggle("pending", isPending(id));
     }
     setBuilt(true);
-    if (isBook() && state.variant === "translated") { state.variant = "original"; } // force the page list to be rebuilt
-    setVariant("translated");
+    if (cmp.on) refreshCmp(true);
+    else {
+      if (isBook() && state.variant === "translated") { state.variant = "original"; } // force the page list to be rebuilt
+      setVariant("translated");
+    }
     const secs = ((performance.now() - started) / 1000).toFixed(1);
     let msg = t("msg.built", { n: stats.replaced, secs, mb: (bytes.length / 1048576).toFixed(1) });
     if (stats.shrunk.length) msg += t("msg.shrunk", { n: stats.shrunk.length });
@@ -1246,8 +1265,8 @@ function init() {
     if (file && /\.pdf$/i.test(file.name) && !document.querySelector("dialog[open]")) openPdf(file);
   });
 
-  $("#viewOriginal").addEventListener("click", () => setVariant("original"));
-  $("#viewTranslated").addEventListener("click", () => setVariant("translated"));
+  $("#viewOriginal").addEventListener("click", () => { setCompare(false); setVariant("original"); });
+  $("#viewTranslated").addEventListener("click", () => { setCompare(false); setVariant("translated"); });
   $("#zoomIn").addEventListener("click", () => setZoom(state.zoom * 1.25));
   $("#zoomOut").addEventListener("click", () => setZoom(state.zoom / 1.25));
   $("#zoomFit").addEventListener("click", fitWidth);
@@ -1407,7 +1426,7 @@ function aiPromptText(part) {
   const target = $("#aiTarget").value.trim() || P.target;
   const context = $("#aiContext").value.trim();
   const glossary = $("#aiGlossary").value.trim();
-  const lines = [P.intro(target), "", ...(isBook() ? P.bookRules : P.rules)];
+  const lines = [P.intro(target), "", ...(isOffice() ? P.officeRules : isBook() ? P.bookRules : P.rules)];
   if (context) lines.push("", P.context(context.replace(/\.$/, "")));
   if (glossary) lines.push("", P.glossary, ...glossary.split(/\n/).map((l) => l.trim()).filter(Boolean).map((l) => `- ${l}`));
   if (part && part.total > 1) lines.push("", P.part(part.k, part.total, part.a, part.b));

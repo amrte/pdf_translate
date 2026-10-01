@@ -38,6 +38,15 @@ title and the table of contents become segments. Inline formatting is kept as nu
 into the book's own XHTML / FictionBook files, so images, styles, links and footnotes are kept
 unchanged, and you download a new `.epub` / `.fb2`. The viewer shows the book laid out as pages.
 
+**Word, PowerPoint and Excel:** `.docx`, `.pptx` and `.xlsx` files are translated the same way.
+Paragraphs, headings, list items, table cells, text boxes, headers, footers, footnotes, slide texts,
+speaker notes and spreadsheet text cells become segments; text with its own formatting (bold,
+italic, colour, links) is marked `<1>…</1>`, fields, tabs and footnote references `<2/>`. The
+translations are written back into the file's own XML, so styles, images, charts, formulas and
+numbers stay as they are, and you download a new file in the same format. The viewer shows a simple
+preview of the text (the document as one flow, one page per slide, one page per sheet), not the
+exact Office layout.
+
 Extra features in the standalone version:
 
 * **⟳ update PDF** on a segment card (or <kbd>Ctrl</kbd>+<kbd>S</kbd> in its text box) writes that one
@@ -58,9 +67,11 @@ Extra features in the standalone version:
   italic and colour can be set per field (**Aa** on a card).
 * Pages can be turned by 90° (↻ in the page toolbar).
 * Find and replace in translations (and find in the original): 🔍, Ctrl+F / Ctrl+H.
+* **Compare** view: original and translation side by side, scrolling together (page by page for a
+  PDF, by matching paragraphs for e-books and Office files); a click on a field selects it.
 * Bilingual download: a PDF with original and translation on one double-size page (portrait pages
-  side by side, landscape pages one above the other) or on alternating pages; an EPUB / FB2 with
-  each paragraph followed by its translation.
+  side by side, landscape pages one above the other) or on alternating pages; an EPUB / FB2 / DOCX /
+  PPTX with each paragraph followed by its translation; an XLSX with both in each cell.
 * Password protection is removed (restrictions automatically, an open password after you enter it).
 * **OCR** for scanned pages (English, German, French, Ukrainian, Finnish, Chinese) with Tesseract.js,
   loaded on demand from cdn.jsdelivr.net; the translation is set on a patch of the paper colour.

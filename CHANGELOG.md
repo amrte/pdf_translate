@@ -4,6 +4,22 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.15
+
+- **Word, PowerPoint and Excel** (`.docx`, `.pptx`, `.xlsx`): open them like a PDF or e-book.
+  Paragraphs, headings, list items, table cells, text boxes, headers, footers, footnotes, slide
+  texts, speaker notes and the text cells of every sheet become segments. Text with its own
+  formatting (bold, italic, colour, links) is marked `<1>…</1>`; fields (page numbers,
+  references), tabs and footnote references `<2/>`. **Build** writes the translations back into the
+  file, keeping styles, images, charts, formulas and numbers, and the download is a file in the
+  same format. The bilingual download repeats each paragraph with its translation (Excel: both in
+  the cell). The viewer shows a simple preview of the text: the document as one flow, one page per
+  slide, one page per sheet. The AI prompt has rules for Office documents.
+- **Compare view**: the new **Compare** button next to Original / Translated shows the original and
+  the translation side by side. Both sides scroll together: page by page for a PDF, by matching
+  paragraphs for e-books and Office documents (their translated pages differ). A click on a field
+  on either side selects its segment; zoom applies to both sides.
+
 ## 1.14
 
 - **Both languages on one page**: the bilingual download of a PDF now asks for the layout.
