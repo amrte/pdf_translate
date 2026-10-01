@@ -426,6 +426,20 @@ function goToPage(i) {
   updatePageNav();
 }
 
+/* ------------------------------------------------------------ full screen */
+
+/** Show only the PDF view, in browser full screen when allowed. */
+async function toggleFullscreen(force) {
+  const on = force !== undefined ? force : !document.body.classList.contains("viewer-only");
+  document.body.classList.toggle("viewer-only", on);
+  $("#btnFullscreen").title = t(on ? "view.exitFullscreen" : "view.fullscreen");
+  try {
+    if (on && !document.fullscreenElement) await document.documentElement.requestFullscreen();
+    else if (!on && document.fullscreenElement) await document.exitFullscreen();
+  } catch (_) { /* full screen not allowed (e.g. in a frame): the view-only layout still applies */ }
+  requestAnimationFrame(() => { refreshImages(); updatePageNav(); });
+}
+
 /* ------------------------------------------------------------ keyboard */
 
 function isTyping(e) {
@@ -448,6 +462,7 @@ function onKeyDown(e) {
   else if (k === "end") { e.preventDefault(); goToPage(state.doc.pages.length - 1); }
   else if ((k === "delete" || k === "backspace") && mk.selected !== null) { e.preventDefault(); deleteMarkup(mk.selected); }
   else if (k === "escape") { if (mk.draft) { const p = mk.draft.page; mk.draft = null; renderMarkups(p); } setTool("select"); select(null); }
+  else if (k === "f" && !e.shiftKey) toggleFullscreen();
   else if (TOOL_KEYS[k] && !e.shiftKey) setTool(TOOL_KEYS[k]);
 }
 
@@ -514,4 +529,9 @@ function initMarkup() {
   let raf = 0;
   pages.addEventListener("scroll", () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; updatePageNav(); }); }, { passive: true });
   document.addEventListener("keydown", onKeyDown);
+  $("#btnFullscreen").addEventListener("click", () => toggleFullscreen());
+  // Leaving browser full screen (Esc) also leaves the PDF-only view.
+  document.addEventListener("fullscreenchange", () => {
+    if (!document.fullscreenElement && document.body.classList.contains("viewer-only")) toggleFullscreen(false);
+  });
 }

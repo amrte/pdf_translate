@@ -44,6 +44,9 @@ Extra features in the standalone version:
 * Markup tools (rectangle, ellipse, highlighter, pen, arrow, text note, whiteout, eraser) with
   colours and line widths; saved into the downloaded PDF as standard annotations.
 * Page turning (‹ / ›, page field, Page Up / Page Down / Home / End) and undo / redo (Ctrl+Z / Ctrl+Y).
+* AI prompt split into parts (default 1000 fields per part) for very large documents; numbering
+  continues across parts.
+* Full-screen PDF view (button or F).
 * Fields with no letters (numbers, amounts, dates such as `30.09.2026`, times, `-`) need no
   translation. They are left out of exports, Copy, the AI prompt and the progress count, keep
   their original text, and appear under the "Numbers only (kept)" filter.

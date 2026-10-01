@@ -1226,7 +1226,16 @@ function aiSegments() {
   return state.doc.segments.filter((s) => !s.skip && s.page >= from && s.page <= to && (!$("#aiOnlyTodo").checked || !hasTr(s.id)));
 }
 
-function aiPromptText() {
+/** The selected segments split into parts of "Fields per part" (numbers stay global). */
+function aiParts() {
+  const segs = aiSegments();
+  const size = Math.max(20, Number($("#aiPartSize").value) || 1000);
+  const parts = [];
+  for (let i = 0; i < segs.length; i += size) parts.push(segs.slice(i, i + size));
+  return parts;
+}
+
+function aiPromptText(part) {
   const P = AI_PROMPT[LANG] || AI_PROMPT.en;
   const target = $("#aiTarget").value.trim() || P.target;
   const context = $("#aiContext").value.trim();
@@ -1234,18 +1243,40 @@ function aiPromptText() {
   const lines = [P.intro(target), "", ...P.rules];
   if (context) lines.push("", P.context(context.replace(/\.$/, "")));
   if (glossary) lines.push("", P.glossary, ...glossary.split(/\n/).map((l) => l.trim()).filter(Boolean).map((l) => `- ${l}`));
+  if (part && part.total > 1) lines.push("", P.part(part.k, part.total, part.a, part.b));
   lines.push("", P.segments);
   return lines.join("\n");
 }
 
+const aiCopied = new Set(); // parts already copied; kept until the selection of fields changes
+let aiSelection = "";
+
 function refreshAiPrompt() {
-  if (!state.doc) return;
-  const segs = aiSegments();
+  if (!state.doc) { $("#aiPrompt").value = aiPromptText(); $("#aiParts").innerHTML = ""; return; }
+  const parts = aiParts();
+  const segs = parts.flat();
+  const selection = JSON.stringify([state.doc.id, parts.map((p) => [p[0].id, p.length])]);
+  if (selection !== aiSelection) { aiCopied.clear(); aiSelection = selection; }
   const chars = segs.reduce((n, s) => n + s.text.length, 0);
-  $("#aiPrompt").value = aiPromptText();
-  let msg = t("ai.stats", { n: segs.length, chars: chars.toLocaleString(LANG) });
-  if (chars > 20000) msg += t("ai.tooLong");
+  $("#aiPrompt").value = aiPromptText(parts.length > 1 ? { k: 1, total: parts.length, a: parts[0][0].id, b: parts[0][parts[0].length - 1].id } : null);
+  let msg = t("ai.stats2", { n: segs.length, chars: chars.toLocaleString(LANG), parts: parts.length });
+  const sizes = parts.map((p) => p.reduce((n, s) => n + s.text.length, 0));
+  const long = sizes.findIndex((c) => c > 40000);
+  if (long >= 0) msg += t("ai.partLong", { k: long + 1, chars: sizes[long].toLocaleString(LANG) });
   $("#aiStats").textContent = msg;
+  $("#aiParts").innerHTML = parts.map((p, i) =>
+    `<button type="button" class="btn${aiCopied.has(i) ? " copied" : i === 0 || aiCopied.has(i - 1) ? " primary" : ""}" data-part="${i}">${aiCopied.has(i) ? "✓ " : ""}${escapeHtml(t("ai.partBtn", { k: i + 1, total: parts.length, a: p[0].id, b: p[p.length - 1].id, n: p.length }))}</button>`).join("");
+}
+
+function copyAiPart(i) {
+  if (!state.doc) { toast(t("msg.openFirst"), "error"); return; }
+  const parts = aiParts();
+  const p = parts[i];
+  if (!p) { toast(t("msg.noSelection"), "error"); return; }
+  const info = { k: i + 1, total: parts.length, a: p[0].id, b: p[p.length - 1].id };
+  copyText(`${aiPromptText(info)}\n\n${Engine.exportTxt(p)}`, t("ai.partCopied", { k: i + 1, total: parts.length, n: p.length }));
+  aiCopied.add(i);
+  refreshAiPrompt();
 }
 
 async function copyText(text, okMessage) {
@@ -1273,16 +1304,15 @@ function openHelp(focusAi) {
 function initHelp() {
   $("#btnHelp").addEventListener("click", () => openHelp(false));
   $("#btnAi").addEventListener("click", () => openHelp(true));
-  for (const id of ["#aiTarget", "#aiFrom", "#aiTo", "#aiOnlyTodo", "#aiContext", "#aiGlossary"]) {
+  for (const id of ["#aiTarget", "#aiFrom", "#aiTo", "#aiOnlyTodo", "#aiContext", "#aiGlossary", "#aiPartSize"]) {
     $(id).addEventListener("input", refreshAiPrompt);
   }
-  $("#aiCopyPrompt").addEventListener("click", () => copyText(`${aiPromptText()}\n\n${t("ai.pasteHere")}`, t("msg.promptCopied")));
-  $("#aiCopyAll").addEventListener("click", () => {
-    if (!state.doc) { toast(t("msg.openFirst"), "error"); return; }
-    const segs = aiSegments();
-    if (!segs.length) { toast(t("msg.noSelection"), "error"); return; }
-    copyText(`${aiPromptText()}\n\n${Engine.exportTxt(segs)}`, t("msg.promptAllCopied", { n: segs.length }));
+  $("#aiParts").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-part]");
+    if (b) copyAiPart(Number(b.dataset.part));
   });
+  $("#aiCopyPrompt").addEventListener("click", () => copyText(`${aiPromptText()}\n\n${t("ai.pasteHere")}`, t("msg.promptCopied")));
+
 }
 
 initHelp();

@@ -219,13 +219,18 @@ function pageBlocks(page, bounds, seps) {
  * columns never are, and neither is a line whose first word would still have fitted at the
  * end of `prev`: then the break was intentional (label/value columns, lists, addresses).
  */
-function continuesParagraph(prev, next, pageLines, seps, marginsByRot, blockLines) {
+function continuesParagraph(prev, next, pageLines, seps, marginsByRot, blockLines, nested = false) {
   const rot = prev.rotation;
   const a = localBox(prev.bbox, rot), b = localBox(next.bbox, rot);
   const size = Math.max(prev.size, next.size);
   if (b[0] >= a[2] - 0.5 * size || a[0] >= b[2] - 0.5 * size) return false; // no horizontal overlap
-  if (/[-\u00ad\u2010\u2011]$/.test(prev.text.trim())) return true; // hyphenated word
+  const pt = prev.text.trim(), nt = next.text.trim();
+  if (/[-\u00ad\u2010\u2011]$/.test(pt)) return true; // hyphenated word
+  if (/^[-/]\S/.test(nt) && /[\p{L}\p{N}]$/u.test(pt)) return true; // "…versicherung" + "-bund.de"
   if (/:\s*$/.test(prev.text)) return false; // a form label ("Prüfer:") is complete
+  if (LABEL_START_RE.test(nt)) return false; // next starts with its own label ("Postanschrift: …")
+  if (URLISH_RE.test(nt) || URLISH_RE.test(pt)) return false; // web / e-mail addresses stand alone
+  if (!/\p{L}/u.test(pt) && !/\p{L}/u.test(nt)) return false; // rows of numbers, dates, amounts
   // Table/form rows: when both lines have text right before them on their own baseline,
   // they belong together only if those left neighbours do too (the left column of a
   // two-column page continues; a column of row labels does not).
@@ -240,8 +245,25 @@ function continuesParagraph(prev, next, pageLines, seps, marginsByRot, blockLine
     }
     return best;
   };
-  const lp = leftOf(prev), ln = leftOf(next);
-  if (lp && ln && lp !== ln && !continuesParagraph(lp, ln, pageLines, seps, marginsByRot, pageLines)) return false;
+  // (Neighbours are only compared one level deep, so the check cannot go back and forth.)
+  const lp = nested ? null : leftOf(prev), ln = nested ? null : leftOf(next);
+  if (lp && ln && lp !== ln && !continuesParagraph(lp, ln, pageLines, seps, marginsByRot, pageLines, true)) return false;
+  // The same from the other side: rows with a value to the right ("Telefon   030/ 865-0").
+  const rightOf = (l) => {
+    const lb = localBox(l.bbox, rot);
+    const m0 = lb[1] + 0.25 * (lb[3] - lb[1]), m1 = lb[3] - 0.25 * (lb[3] - lb[1]);
+    let best = null, bestX = Infinity;
+    for (const o of pageLines) {
+      if (o === l || o.rotation !== rot) continue;
+      const ob = localBox(o.bbox, rot);
+      if (ob[0] >= lb[2] - 0.5 && ob[1] < m1 && ob[3] > m0 && ob[0] < bestX) { best = o; bestX = ob[0]; }
+    }
+    return best;
+  };
+  const rp = nested ? null : rightOf(prev), rn = nested ? null : rightOf(next);
+  if (rp && rn && rp !== rn && !continuesParagraph(rp, rn, pageLines, seps, marginsByRot, pageLines, true)) return false;
+  // A short line with a value to its right after a line without one starts a new row.
+  if (rn && !rp && b[2] - b[0] < 0.5 * (a[2] - a[0])) return false;
   if (b[0] > a[0] + 0.6 * size) return true; // indented continuation (or centred): no test
   // How far could `prev` have run on? Up to the next text or vertical rule on its line, or the
   // right margin of the page's text.
@@ -269,7 +291,31 @@ function continuesParagraph(prev, next, pageLines, seps, marginsByRot, blockLine
   const words = next.text.trim().split(/\s+/);
   const chars = Math.max(1, next.text.trim().length);
   const firstWord = (words[0].length / chars) * (b[2] - b[0]);
-  return a[2] + 0.3 * size + firstWord > limit - 0.3 * size;
+  // The word width is estimated from the line's average character width, so only call the
+  // break intentional when there was clearly room left for that word.
+  return a[2] + 0.3 * size + 1.15 * firstWord > limit - 1.2 * size;
+}
+
+const LABEL_START_RE = /^[^\s:]{1,30}(?:\s[^\s:]{1,20}){0,2}:(?:\s|$)/u;
+const URLISH_RE = /^(?:(?:https?:\/\/|www\.)\S+|[^\s@]+@[^\s@]+\.[^\s@]+)$/i;
+
+/**
+ * A paragraph's box must not cover other text: its translation is reflowed inside that box and
+ * would be drawn over it. A lead-in on the first line ("Hinweis:" in bold) is allowed; the
+ * layout then starts the first line after it.
+ */
+function groupBoxIsFree(group, line, pageLines) {
+  let u = line.bbox;
+  for (const l of group) u = union(u, l.bbox);
+  for (const o of pageLines) {
+    if (o === line || o.rotation !== line.rotation || group.includes(o)) continue;
+    const h = o.bbox[3] - o.bbox[1];
+    const core = [o.bbox[0] + 1, o.bbox[1] + 0.3 * h, o.bbox[2] - 1, o.bbox[3] - 0.3 * h];
+    if (core[0] >= u[2] || core[2] <= u[0] || core[1] >= u[3] || core[3] <= u[1]) continue;
+    if (sameBaseline(o, group[0]) && o.bbox[2] <= group[0].bbox[0] + 1) continue; // lead-in
+    return false;
+  }
+  return true;
 }
 
 /** Can `line` be appended to a group whose last line is `prev`? */
@@ -344,6 +390,7 @@ function joinLines(parts) {
     if (!text) text = part;
     else if (text.endsWith("-") && text.length > 1 && /\p{L}/u.test(text[text.length - 2]) && /^\p{Ll}/u.test(part)) text = text.slice(0, -1) + part;
     else if (text.endsWith("-") && /^[/\-]/.test(part)) text += part; // "Serien-" + "/Modellnummer:"
+    else if (/^[-/]\S/.test(part) && /[\p{L}\p{N}]$/u.test(text)) text += part; // URL broken before "-bund.de"
     else text += " " + part;
   }
   return text;
@@ -506,7 +553,7 @@ async function extractPages(doc, pageList, onProgress) {
         let target = null;
         for (let gi = groups.length - 1; gi >= Math.max(0, groups.length - 16) && !target; gi--) {
           const g = groups[gi];
-          if (joins(g[g.length - 1], line, pageLines, seps, marginsByRot, lines)) target = g;
+          if (joins(g[g.length - 1], line, pageLines, seps, marginsByRot, lines) && groupBoxIsFree(g, line, pageLines)) target = g;
         }
         if (target) target.push(line); else groups.push([line]);
       }
@@ -927,18 +974,19 @@ function tokenize(text, fk, chain) {
 }
 
 /** Greedy line breaking; widths are in em (font size 1). */
-function wrap(tok, width) {
+function wrap(tok, width, indent = 0) {
   const lines = [];
+  const avail = () => (lines.length ? width : width - indent); // the first line may be indented
   for (const tokens of tok.paras) {
     let line = { tokens: [], w: 0, last: false };
     const push = () => { lines.push(line); line = { tokens: [], w: 0, last: false }; };
     for (let t of tokens) {
       const sw = line.tokens.length && t.sp ? tok.spaceAdv : 0;
-      if (line.tokens.length && line.w + sw + t.w > width) push();
-      if (!line.tokens.length && t.w > width) { // break an over-long word by characters
+      if (line.tokens.length && line.w + sw + t.w > avail()) push();
+      if (!line.tokens.length && t.w > avail()) { // break an over-long word by characters
         let piece = { sp: false, glyphs: [], w: 0 };
         for (const g of t.glyphs) {
-          if (piece.glyphs.length && piece.w + g.adv > width) { line.tokens.push(piece); line.w = piece.w; push(); piece = { sp: false, glyphs: [], w: 0 }; }
+          if (piece.glyphs.length && piece.w + g.adv > avail()) { line.tokens.push(piece); line.w = piece.w; push(); piece = { sp: false, glyphs: [], w: 0 }; }
           piece.glyphs.push(g); piece.w += g.adv;
         }
         t = piece;
@@ -1006,6 +1054,9 @@ function layoutSegment(seg, text, fk, bounds, obs, opts, used, stats) {
   const b1 = Math.max(...across);
   if (obs && seg.lines === 1) [a0, a1] = expandedSpan(seg, bounds, obs);
   const ob = seg.origin[0] * n[0] + seg.origin[1] * n[1];
+  // First-line indent (paragraph indent, or a lead-in such as "Hinweis:" before the text).
+  const oa = seg.origin[0] * d[0] + seg.origin[1] * d[1];
+  const indent = seg.lines > 1 && (seg.align === "left" || seg.align === "justify") && oa - a0 > 0.5 ? oa - a0 : 0;
   const s0 = seg.size, L0 = lineHeight(seg);
   const top = ob - 0.85 * s0;
   const H = Math.max(b1, ob + 0.2 * s0) + 0.15 * s0 - top;
@@ -1015,7 +1066,7 @@ function layoutSegment(seg, text, fk, bounds, obs, opts, used, stats) {
   /** Largest scale (<= 1) at which the text fits a box of width W, and its lines. */
   const fitWidth = (W) => {
     const fits = (k) => {
-      const lines = wrap(tok, W / (s0 * k));
+      const lines = wrap(tok, W / (s0 * k), indent / (s0 * k));
       return (lines.length - 1) * L0 * k + 1.05 * s0 * k <= H + 0.01 ? lines : null;
     };
     const lines = fits(1);
@@ -1030,7 +1081,7 @@ function layoutSegment(seg, text, fk, bounds, obs, opts, used, stats) {
       }
       return { k: bestK, lines: best || fits(lo) };
     };
-    return search(Math.max(opts.minScale || 0, 0.02)) || search(0.02) || { k: 0.02, lines: wrap(tok, W / (s0 * 0.02)) };
+    return search(Math.max(opts.minScale || 0, 0.02)) || search(0.02) || { k: 0.02, lines: wrap(tok, W / (s0 * 0.02), indent / (s0 * 0.02)) };
   };
   let W = (a1 - a0) * 1.01;
   let { k, lines } = fitWidth(W);
@@ -1051,8 +1102,9 @@ function layoutSegment(seg, text, fk, bounds, obs, opts, used, stats) {
   let curFont = null;
   lines.forEach((line, i) => {
     const b = base1 + i * L;
-    const lw = line.w * s, spare = W - lw;
-    let a = a0, extra = 0;
+    const ind = i === 0 ? indent : 0;
+    const lw = line.w * s, spare = W - ind - lw;
+    let a = a0 + ind, extra = 0;
     if (seg.align === "right") a = a0 + spare;
     else if (seg.align === "center") a = a0 + spare / 2;
     else if (seg.align === "justify" && !line.last) {

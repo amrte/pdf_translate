@@ -355,3 +355,20 @@ kbd { font: 11.5px ui-monospace, monospace; border: 1px solid var(--border); bor
 }
 @container (max-width: 560px) { .boxes-check span { display: none; } }
 .viewer-pane { container-type: inline-size; }
+
+/* ---------- v1.03: full screen, wider help/AI window, AI parts, new logo ---------- */
+body.viewer-only .topbar, body.viewer-only .editor-pane { display: none; }
+body.viewer-only .work-view { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
+body.viewer-only .viewer-pane { border: 0; }
+#btnFullscreen .fs-off { display: none; }
+body.viewer-only #btnFullscreen .fs-on { display: none; }
+body.viewer-only #btnFullscreen .fs-off { display: inline; }
+#btnFullscreen { display: inline-grid; place-items: center; }
+.modal.xwide { width: min(1080px, calc(100% - 32px)); }
+.modal.xwide #aiPrompt { min-height: 220px; }
+.ai-parts-head { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+.ai-parts { display: flex; flex-wrap: wrap; gap: 6px; }
+.ai-parts .btn { height: auto; min-height: 28px; padding: 4px 10px; white-space: normal; text-align: left; }
+.ai-parts .btn.copied { color: var(--success); border-color: var(--success); background: var(--success-soft); }
+.logo { background: none; width: 26px; height: 26px; }
+.logo svg { width: 26px; height: 26px; display: block; }

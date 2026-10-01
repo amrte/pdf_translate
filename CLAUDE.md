@@ -14,7 +14,7 @@
 - `standalone/src/` – sources of the single-file app: `template.html`, `style.css`,
   `i18n.js` (German default + English; every UI text goes through `t()` / `data-i18n`),
   `engine.js` (MuPDF WASM: extraction, layout, rebuild; also runs inside Web Workers),
-  `ui.js` (interface), `markup.js` (markup tools, page navigation, undo/redo), `main.js`
+  `icon.svg` (app icon; the template embeds it as favicon and logo), `ui.js` (interface), `markup.js` (markup tools, page navigation, undo/redo), `main.js`
   (start-up). `standalone/pdf-translate.html` is generated – do not edit it by hand.
 - `app.py`, `pdf_engine.py`, `static/` – the older server version (Flask + PyMuPDF).
 - `tests/` – pytest suite for the server version: `python -m pytest -q`.
