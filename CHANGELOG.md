@@ -4,6 +4,12 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.20
+
+- **Start page**: the drop zone is the main element again, on top and in the middle (compact); the
+  workflow is below it. The workflow cards no longer have coloured frames. The page still fits one
+  screen from about 1280 × 700.
+
 ## 1.19
 
 - **Start page fits one screen** (e.g. a 13" laptop, from about 1280 × 700): on wide windows the drop
