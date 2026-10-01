@@ -53,7 +53,12 @@ Extra features in the standalone version:
 * Page turning (‹ / ›, page field, Page Up / Page Down / Home / End) and undo / redo (Ctrl+Z / Ctrl+Y).
 * AI prompt split into parts (default 1000 fields per part) for very large documents; numbering
   continues across parts.
-* Full-screen PDF view (button or F).
+* Full-screen PDF view (button or F), full screen for the whole app, fit width / fit page.
+* Fields can be moved and resized on the page (drag the box / its handles); size, font, bold,
+  italic and colour can be set per field (**Aa** on a card).
+* Password protection is removed (restrictions automatically, an open password after you enter it).
+* **OCR** for scanned pages (English, German, French, Ukrainian, Finnish, Chinese) with Tesseract.js,
+  loaded on demand from cdn.jsdelivr.net; the translation is set on a patch of the paper colour.
 * Fields with no letters (numbers, amounts, dates such as `30.09.2026`, times, `-`) need no
   translation. They are left out of exports, Copy, the AI prompt and the progress count, keep
   their original text, and appear under the "Numbers only (kept)" filter.
@@ -131,7 +136,7 @@ Built-in fonts cover Latin, Cyrillic, Greek, CJK, Arabic, Hebrew, Devanagari, Th
 
 ## Limitations
 
-* Scanned PDFs (text that is only an image) have no extractable text, so run OCR first.
+* Scanned PDFs: use the OCR button in the standalone version (the server version needs OCR beforehand).
 * Each segment gets one main style: the style used for most of its characters. In the
   standalone version, words in another style (bold, italic, colour, size) keep that style where
   the same word appears in the translation (names, romanisations, symbols, codes); other mixed

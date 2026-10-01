@@ -4,6 +4,29 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.08
+
+- **Full screen for the whole app**: new button in the top bar (the existing button in the page
+  toolbar still shows the pages only).
+- **Fit page**: new zoom button that fits the whole page into the view (next to "fit width").
+- **Move and resize fields on the page**: drag a segment's box to move its translation; select it
+  and drag one of the eight handles to resize it. The original text is still removed from its old
+  place. On the translated PDF the change is applied at once; the boxes there appear when you
+  point at them. Moved boxes are dashed. Undo / redo work.
+- **Size, font and colour per field**: the new **Aa** button on a card opens size (pt), font
+  (as original / sans-serif / serif / monospace / your own font file), bold, italic, text colour
+  and a reset button (↺) that also undoes moving and resizing.
+- **Password-protected PDFs**: restrictions (no copying, no editing) are removed automatically. A PDF
+  that needs a password to open asks for it once; afterwards the protection is removed. The
+  translated PDF has no password. (Unknown passwords are not guessed.)
+- **OCR for scanned PDFs**: new **OCR** button (and an offer when a PDF has pages without text).
+  Languages: English, German, French, Ukrainian, Finnish, Chinese (simplified and traditional),
+  in any combination. It runs in the browser with Tesseract; the engine and language data are
+  downloaded the first time. Recognised text becomes normal segments (paragraphs, table cells,
+  bullets, headings with size, bold and colour); when the PDF is built, each translation is set
+  on a patch of the paper colour over the original text. Results are kept for the next session.
+  Choose "All pages" to also recognise text inside pictures of normal PDFs.
+
 ## 1.07
 
 PDF layout fixes for tables and formulas (technical and school books):

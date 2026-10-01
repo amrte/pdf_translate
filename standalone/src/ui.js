@@ -31,6 +31,7 @@ const state = {
   shrunk: new Set(),
   markups: [],        // drawings on the pages (see markup.js)
   outView: null,      // e-books: {pages, boxes} of the laid-out translated book
+  overrides: {},      // id -> the user's box, size, font, colour for that field (see tools.js)
 };
 
 /** The open document is an e-book (EPUB/FB2) rather than a PDF. */
@@ -152,9 +153,12 @@ function toast(message, kind = "", action = null) {
   setTimeout(() => el.remove(), action ? 12000 : kind === "error" ? 8000 : 4500);
 }
 
-function busy(text) {
+/** Show a busy overlay with `text` (hidden when empty); `onCancel` adds a Cancel button. */
+function busy(text, onCancel = null) {
   $("#busyText").textContent = text || "";
   $("#busy").hidden = !text;
+  $("#busyCancel").hidden = !onCancel;
+  $("#busyCancel").onclick = onCancel;
 }
 
 function saveBlob(blob, filename) {
@@ -254,12 +258,26 @@ async function extractAll(pageCount, onProgress) {
   return { pages, segments: raw };
 }
 
-async function loadBytes(bytes, name, remember) {
+async function loadBytes(bytes, name, remember, knownId = null) {
   setLoading(t("msg.loadingEngine"));
   try {
     await pool.start();
-    const id = await sha256(bytes);
+    // (an unlocked PDF keeps the id of the protected file, so its translations are found again)
+    const id = knownId || await sha256(bytes);
     const kind = Engine.detectKind(bytes, name);
+    if (kind === "pdf") {
+      // Password protection is removed: restrictions at once, an open password after asking.
+      let password = "";
+      for (;;) {
+        const u = await pool.workers[0].call("unlock", { bytes, password });
+        if (u.status === "plain") break;
+        if (u.status === "unlocked") { bytes = u.bytes; toast(t("msg.unlocked"), "ok"); break; }
+        setLoading("");
+        password = await askPassword(name, u.status === "wrong");
+        if (password === null) return;
+        setLoading(t("msg.opening"));
+      }
+    }
     // More workers for bigger documents, fewer for huge files (each worker holds a copy).
     // An e-book is read in one worker; the others only draw its pages.
     const mb = bytes.length / 1048576;
@@ -272,8 +290,10 @@ async function loadBytes(bytes, name, remember) {
       ? await extractAll(pageCount, (i, n) => setLoading(t("msg.extracting", { i, n })))
       : (setLoading(t("msg.readingBook")), await pool.workers[0].call("extractBook"));
     console.info(`Extracted ${segments.length} segments from ${pageCount} pages in ${Math.round(performance.now() - started)} ms using ${pool.workers.length} worker(s)`);
-    if (remember) idbPut({ name, bytes });
-    openDocument({ id, name, kind, pages, segments }, bytes);
+    if (remember) idbPut({ name, bytes, id });
+    const restored = kind === "pdf" ? await restoreOcr(id, segments, pages) : { segments, ocr: null };
+    openDocument({ id, name, kind, pages, segments: restored.segments, ocr: restored.ocr }, bytes);
+    suggestOcr();
   } catch (err) {
     console.error(err);
     toast(/password/i.test(err.message) ? t("msg.password") : t("msg.openFailed", { err: err.message || err }), "error");
@@ -315,6 +335,7 @@ function openDocument(doc, bytes) {
   setDocFormat(FORMAT_LABEL[doc.kind || "pdf"]);
   document.title = `${doc.name} · PDF Translate`;
 
+  loadOverrides();
   fillPageFilter();
   $("#search").value = "";
   $("#filterStatus").value = "all";
@@ -329,7 +350,7 @@ function openDocument(doc, bytes) {
   updateProgress();
   const unknown = doc.segments.reduce((n, s) => n + (s.text.match(/\ufffd/g) || []).length, 0);
   if (unknown) toast(t("msg.unknownChars", { n: unknown }), "error");
-  if (!doc.segments.length) {
+  if (!doc.segments.length && (isBook() || !scannedPages().length)) { // (scans: OCR is offered instead)
     toast(t("msg.noText"), "error");
   }
 }
@@ -539,7 +560,7 @@ function renderPages() {
     if (!segsByPage.has(s.page)) segsByPage.set(s.page, []);
     segsByPage.get(s.page).push(s);
     // E-books: where each text is in the laid-out original or translated book (if found).
-    const boxes = state.variant === "translated" && state.outView ? state.outView.boxes[s.id] : s.boxes || (s.bbox && [[s.page, s.bbox]]);
+    const boxes = state.variant === "translated" && state.outView ? state.outView.boxes[s.id] : s.boxes || (s.bbox && [[s.page, shownBox(s)]]);
     for (const [page, bbox] of boxes || []) addBox(page, s, bbox);
   }
   wrap.querySelectorAll(".page").forEach((el) => observer.observe(el));
@@ -560,8 +581,9 @@ function ensureBoxes(i) {
   const page = viewPages()[i];
   const html = (boxesByPage.get(i) || []).map(([s, bbox]) => {
     const [x0, y0, x1, y1] = bbox;
-    const cls = "box" + (hasTr(s.id) ? " done" : "") + (s.skip ? " skip" : "") + (s.id === state.activeId ? " active" : "");
-    return `<div class="${cls}" data-id="${s.id}" title="#${s.id}" style="left:${((x0 - page.x0) / page.width) * 100}%;top:${((y0 - page.y0) / page.height) * 100}%;width:${((x1 - x0) / page.width) * 100}%;height:${((y1 - y0) / page.height) * 100}%"></div>`;
+    const active = s.id === state.activeId, custom = !isBook() && state.overrides[s.id] && state.overrides[s.id].bbox;
+    const cls = "box" + (hasTr(s.id) ? " done" : "") + (s.skip ? " skip" : "") + (active ? " active" : "") + (custom ? " custom" : "");
+    return `<div class="${cls}" data-id="${s.id}" title="#${s.id}" style="left:${((x0 - page.x0) / page.width) * 100}%;top:${((y0 - page.y0) / page.height) * 100}%;width:${((x1 - x0) / page.width) * 100}%;height:${((y1 - y0) / page.height) * 100}%">${active && !isBook() ? HANDLES : ""}</div>`;
   }).join("");
   el.insertAdjacentHTML("beforeend", html);
   renderMarkups(i);
@@ -636,6 +658,7 @@ function segMeta(s) {
   const page = t("meta.page", { n: s.page + 1 });
   if (s.skip) return `${page} · ${t(s.formula ? "meta.formula" : "meta.numbers")}`;
   if (isBook()) return s.hidden ? `${t("meta.notShown")} · ${s.tag}` : `${page} · ${s.tag}`;
+  if (s.ocr) return `${page} · OCR · ${Math.round(s.size * 10) / 10}pt${s.bold ? " " + t("meta.bold") : ""}`;
   const style = [s.bold && t("meta.bold"), s.italic && t("meta.italic")].filter(Boolean).join(" ");
   const rot = s.rotation ? ` · ${t("meta.rotated", { deg: s.rotation })}` : "";
   return `${page} · ${Math.round(s.size * 10) / 10}pt${style ? " " + style : ""} · ${t("meta." + s.align)}${rot}`;
@@ -782,8 +805,10 @@ function makeCard(id) {
       <span class="seg-meta" data-shrunk="${escapeHtml(t("meta.shrunk"))}">${escapeHtml(segMeta(s))}</span>
       <button type="button" class="mini" data-act="copy" title="${escapeHtml(t("card.copyTitle"))}">${t("card.copy")}</button>
       <button type="button" class="mini" data-act="same" title="${escapeHtml(t("card.keepTitle"))}">${t("card.keep")}</button>
+      ${isBook() || s.skip ? "" : `<button type="button" class="mini${state.overrides[id] ? " on" : ""}" data-act="style" title="${escapeHtml(t("card.styleTitle"))}">Aa</button>`}
       <button type="button" class="mini apply" data-act="apply" title="${escapeHtml(t("card.applyTitle"))}">${t("card.apply")}</button>
     </div>
+    ${styleOpen.has(id) && !isBook() ? stylePanelHtml(s) : ""}
     <div class="seg-src">${escapeHtml(s.text)}</div>
     <textarea rows="1" spellcheck="true" placeholder="${escapeHtml(t("card.placeholder"))}"></textarea>`;
   el.querySelector("textarea").value = state.translations[id] || "";
@@ -860,6 +885,7 @@ function setActive(id, { scrollList = false, scrollViewer = false, focus = false
   ensureBoxes(boxPage(s));
   const box = document.querySelector(`.box[data-id="${id}"]`);
   document.querySelectorAll(`.box[data-id="${id}"]`).forEach((b) => b.classList.add("active"));
+  showHandles(id);
   if (scrollViewer && box) box.scrollIntoView({ block: "center", inline: "center", behavior: "smooth" });
   if (focus) vl.rendered.get(id)?.querySelector("textarea").focus({ preventScroll: true });
 }
@@ -1015,7 +1041,7 @@ function applyField(id) {
     for (const x of segs) if ((state.applied[x.id] || "").trim()) translations[x.id] = state.applied[x.id];
     try {
       const stats = await pool.workers[0].call("updatePage", {
-        page: s.page, segments: segs, translations, pageInfo: state.doc.pages[s.page], opts: buildOptions(),
+        page: s.page, segments: segs.map(effSeg), translations, pageInfo: state.doc.pages[s.page], opts: buildOptions(),
       });
       state.hasOutput = true;
       state.outDirty = true;
@@ -1081,7 +1107,7 @@ async function doBuild() {
     const translations = {};
     for (const [id, t] of Object.entries(state.translations)) if (segIndex.has(Number(id)) && t.trim()) translations[id] = t;
     const result = await pool.workers[0].call("build", {
-      segments: state.doc.segments,
+      segments: state.doc.segments.map(effSeg),
       translations,
       pages: state.doc.pages,
       opts: buildOptions(),
@@ -1209,6 +1235,9 @@ function init() {
       recordTranslations({ [id]: before }, { [id]: ta.value }, t("hist.translation"));
     } else if (act === "apply") {
       applyField(id);
+    } else if (act === "style") {
+      if (styleOpen.has(id)) styleOpen.delete(id); else styleOpen.add(id);
+      refreshStylePanel(id);
     } else if (e.target.classList.contains("seg-src")) {
       setActive(id, { scrollViewer: true, focus: true });
     }
@@ -1280,7 +1309,7 @@ function init() {
   updateSteps();
   if (last) {
     idbGet().then((saved) => {
-      if (saved && saved.bytes) loadBytes(saved.bytes, saved.name, false);
+      if (saved && saved.bytes) loadBytes(saved.bytes, saved.name, false, saved.id);
     });
   }
 }

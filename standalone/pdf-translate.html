@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="PDF Translate 1.07">
+  <meta name="generator" content="PDF Translate 1.08">
   <title>PDF Translate</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Cdefs%3E%3ClinearGradient id=%22g%22 x1=%220%22 y1=%220%22 x2=%221%22 y2=%221%22%3E%3Cstop offset=%220%22 stop-color=%22#4a6cf7%22/%3E%3Cstop offset=%221%22 stop-color=%22#2440b3%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=%2232%22 height=%2232%22 rx=%227%22 fill=%22url%28#g%29%22/%3E%3Cpath d=%22M8 4.5h9.5l6 6V23a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V6.5a2 2 0 0 1 2-2z%22 fill=%22#fff%22/%3E%3Cpath d=%22M17.5 4.5v4.8a1.2 1.2 0 0 0 1.2 1.2h4.8z%22 fill=%22#c7d2fe%22/%3E%3Crect x=%229%22 y=%2213%22 width=%229%22 height=%221.7%22 rx=%22.85%22 fill=%22#9aabf0%22/%3E%3Crect x=%229%22 y=%2216.6%22 width=%2211%22 height=%221.7%22 rx=%22.85%22 fill=%22#9aabf0%22/%3E%3Crect x=%229%22 y=%2220.2%22 width=%226%22 height=%221.7%22 rx=%22.85%22 fill=%22#9aabf0%22/%3E%3Ccircle cx=%2224%22 cy=%2224%22 r=%227%22 fill=%22#f59e0b%22 stroke=%22#fff%22 stroke-width=%221.6%22/%3E%3Cpath d=%22M20.4 21.7h4.6M27.6 26.3H23%22 fill=%22none%22 stroke=%22#fff%22 stroke-width=%221.6%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M24.6 19.4l3.5 2.3-3.5 2.3zM23.4 24l-3.5 2.3 3.5 2.3z%22 fill=%22#fff%22/%3E%3C/svg%3E">
   <style>
@@ -160,7 +160,9 @@ code { font-size: 12.5px; background: var(--surface-2); border: 1px solid var(--
 .page .box:hover { background: rgba(49, 88, 212, .16); }
 .page .box.active { border: 2px solid #f0a020; background: rgba(240, 160, 32, .18); z-index: 2; }
 .pages.no-boxes .box:not(.active) { display: none; }
-.pages.translated .box { display: none; }
+/* On the translation, boxes stay invisible until pointed at or selected (to move a field there). */
+.pages.translated .box:not(.active):not(:hover) { border-color: transparent !important; background: transparent !important; }
+.pages.translated .box.active { background: transparent; }
 
 /* ---------- editor ---------- */
 .progress-row { display: flex; align-items: center; gap: 10px; padding: 10px 14px 0; color: var(--muted); font-size: 13px; }
@@ -307,6 +309,10 @@ kbd { font: 11.5px ui-monospace, monospace; border: 1px solid var(--border); bor
 .help-version { margin-top: 4px; }
 /* Narrow editor pane: icon-only secondary buttons (their titles explain them). */
 .editor-pane { container-type: inline-size; }
+@container (max-width: 780px) { /* the OCR and Copy buttons go icon-only first */
+  .pane-toolbar #btnOcr span, .pane-toolbar #btnCopy span { display: none; }
+  .pane-toolbar #btnOcr, .pane-toolbar #btnCopy { padding: 0 7px; }
+}
 @container (max-width: 640px) {
   .pane-toolbar #btnExport span, .pane-toolbar #btnCopy span, .pane-toolbar #btnAi span, .pane-toolbar #btnImport span { display: none; }
   .pane-toolbar #btnExport, .pane-toolbar #btnCopy, .pane-toolbar #btnAi, .pane-toolbar #btnImport { padding: 0 7px; }
@@ -386,6 +392,26 @@ body.viewer-only #btnFullscreen .fs-off { display: inline; }
 body:not(.is-book) .book-only, body.is-book .pdf-only { display: none !important; }
 body.is-book .tool-rail { display: none; }
 
+/* ---- v1.08: fields you can move and resize, field style, OCR, passwords ---- */
+.box { cursor: grab; }
+body.box-dragging, body.box-dragging .box { cursor: grabbing !important; user-select: none; }
+.box.custom { border-style: dashed; }
+.box .rh { position: absolute; width: 9px; height: 9px; background: #fff; border: 1.5px solid var(--accent, #3158d4); border-radius: 2px; z-index: 3; }
+.rh-nw { left: -5px; top: -5px; cursor: nwse-resize; } .rh-se { right: -5px; bottom: -5px; cursor: nwse-resize; }
+.rh-ne { right: -5px; top: -5px; cursor: nesw-resize; } .rh-sw { left: -5px; bottom: -5px; cursor: nesw-resize; }
+.rh-n { left: calc(50% - 5px); top: -5px; cursor: ns-resize; } .rh-s { left: calc(50% - 5px); bottom: -5px; cursor: ns-resize; }
+.rh-e { right: -5px; top: calc(50% - 5px); cursor: ew-resize; } .rh-w { left: -5px; top: calc(50% - 5px); cursor: ew-resize; }
+.mini.on { background: var(--accent-soft, #e8edff); border-color: var(--accent, #3158d4); color: var(--accent, #3158d4); }
+.seg-style { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 6px 10px; border-bottom: 1px solid var(--border); background: var(--surface-2); font-size: 12px; }
+.seg-style input[type="number"] { width: 64px; }
+.seg-style select { max-width: 150px; }
+.seg-style input[type="color"] { width: 30px; height: 24px; padding: 0 2px; border: 1px solid var(--border); border-radius: 5px; background: none; }
+.seg-style .st-hint { flex-basis: 100%; }
+.busy-box #busyCancel { margin-left: 12px; }
+.ocr-langs { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 2px 12px; margin-top: 4px; }
+.error-text { color: var(--danger, #c62828); font-weight: 600; }
+.top-fs.on { color: var(--accent, #3158d4); }
+
   </style>
 </head>
 <body>
@@ -393,7 +419,7 @@ body.is-book .tool-rail { display: none; }
   <div class="brand">
     <span class="logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><defs><linearGradient id="logoGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4a6cf7"/><stop offset="1" stop-color="#2440b3"/></linearGradient></defs><rect width="32" height="32" rx="7" fill="url(#logoGrad)"/><path d="M8 4.5h9.5l6 6V23a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V6.5a2 2 0 0 1 2-2z" fill="#fff"/><path d="M17.5 4.5v4.8a1.2 1.2 0 0 0 1.2 1.2h4.8z" fill="#c7d2fe"/><rect x="9" y="13" width="9" height="1.7" rx=".85" fill="#9aabf0"/><rect x="9" y="16.6" width="11" height="1.7" rx=".85" fill="#9aabf0"/><rect x="9" y="20.2" width="6" height="1.7" rx=".85" fill="#9aabf0"/><circle cx="24" cy="24" r="7" fill="#f59e0b" stroke="#fff" stroke-width="1.6"/><path d="M20.4 21.7h4.6M27.6 26.3H23" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/><path d="M24.6 19.4l3.5 2.3-3.5 2.3zM23.4 24l-3.5 2.3 3.5 2.3z" fill="#fff"/></svg></span>
     <span>PDF Translate</span>
-    <span class="version" id="appVersion">v1.07</span>
+    <span class="version" id="appVersion">v1.08</span>
   </div>
   <ol class="steps" id="steps">
     <li data-step="1"><span>1</span> <i data-i18n="step.extract">Extract text</i></li>
@@ -406,6 +432,7 @@ body.is-book .tool-rail { display: none; }
       <button type="button" data-lang="de" title="Deutsch">DE</button>
       <button type="button" data-lang="en" title="English">EN</button>
     </div>
+    <button class="icon-btn top-fs" id="btnAppFullscreen" data-i18n-title="top.fullscreen"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9V3h6M21 9V3h-6M3 15v6h6M21 15v6h-6"/><rect x="8" y="8" width="8" height="8" rx="1"/></svg></button>
     <button class="btn ghost" id="btnHelp" data-i18n-title="help.btnTitle" data-i18n="help.btn">? Help</button>
     <button class="btn ghost" id="btnNew" hidden data-i18n="top.new">Open another PDF</button>
   </div>
@@ -451,6 +478,7 @@ body.is-book .tool-rail { display: none; }
       <span class="zoom-label" id="zoomLabel">100%</span>
       <button class="icon-btn" id="zoomIn" data-i18n-title="zoom.in">+</button>
       <button class="icon-btn" id="zoomFit" data-i18n-title="zoom.fit">⤢</button>
+      <button class="icon-btn" id="zoomPage" data-i18n-title="zoom.page"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3" width="12" height="18" rx="1.5"/><path d="M10 8h4M10 12h4M10 16h2"/></svg></button>
       <button class="icon-btn" id="btnFullscreen" data-i18n-title="view.fullscreen">
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path class="fs-on" d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/><path class="fs-off" d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg>
       </button>
@@ -506,6 +534,10 @@ body.is-book .tool-rail { display: none; }
       <button class="btn" id="btnImport" data-i18n-title="tb.importTitle">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 15V3m0 0L8 7m4-4 4 4M5 21h14"/></svg>
         <span data-i18n="tb.import">Import</span>
+      </button>
+      <button class="btn pdf-only" id="btnOcr" data-i18n-title="tb.ocrTitle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/><path d="M8 9h8M8 12h8M8 15h5"/></svg>
+        <span data-i18n="tb.ocr">OCR</span>
       </button>
       <div class="spacer"></div>
       <button class="btn primary" id="btnBuild">
@@ -649,7 +681,7 @@ body.is-book .tool-rail { display: none; }
     <p class="muted small" id="aiStats"></p>
     <div class="ai-parts-head"><b data-i18n="ai.parts">Copy prompt + text</b> <span class="muted small" data-i18n="ai.partsHint"></span></div>
     <div class="ai-parts" id="aiParts"></div>
-    <p class="muted small help-version">PDF Translate v1.07</p>
+    <p class="muted small help-version">PDF Translate v1.08</p>
     <div class="modal-actions">
       <button value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
       <button type="button" class="btn" id="aiCopyPrompt" data-i18n="ai.copyPrompt">Copy prompt only</button>
@@ -658,7 +690,43 @@ body.is-book .tool-rail { display: none; }
 </dialog>
 
 <div class="toast-stack" id="toasts"></div>
-<div class="busy" id="busy" hidden><div class="busy-box"><div class="spinner"></div><span id="busyText"></span></div></div>
+<div class="busy" id="busy" hidden><div class="busy-box"><div class="spinner"></div><span id="busyText"></span><button type="button" class="btn ghost" id="busyCancel" hidden data-i18n="common.cancel">Cancel</button></div></div>
+
+<!-- Password dialog -->
+<dialog id="pwDialog" class="modal">
+  <form method="dialog">
+    <h2 data-i18n="pw.title">Password-protected PDF</h2>
+    <p class="muted"><b id="pwName"></b></p>
+    <p class="muted" data-i18n="pw.text"></p>
+    <p class="error-text" id="pwWrong" hidden data-i18n="pw.wrong"></p>
+    <label class="field"><span data-i18n="pw.label">Password</span> <input type="password" id="pwInput" autocomplete="off"></label>
+    <div class="modal-actions">
+      <button value="cancel" class="btn ghost" data-i18n="common.cancel">Cancel</button>
+      <button value="ok" class="btn primary" data-i18n="pw.ok">Open</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- OCR dialog -->
+<dialog id="ocrDialog" class="modal">
+  <form method="dialog">
+    <h2 data-i18n="ocr.title">Text recognition (OCR)</h2>
+    <p class="muted" data-i18n="ocr.text"></p>
+    <div class="field"><span data-i18n="ocr.langs">Languages in the document</span><div class="ocr-langs" id="ocrLangs"></div></div>
+    <div class="field"><span data-i18n="ocr.pages">Pages</span>
+      <label class="check"><input type="radio" name="ocrPages" id="ocrPagesEmpty" checked> <span data-i18n="ocr.pagesEmpty"></span> <span class="muted" id="ocrScanCount"></span></label>
+      <label class="check"><input type="radio" name="ocrPages" id="ocrPagesAll"> <span data-i18n="ocr.pagesAll"></span></label>
+    </div>
+    <label class="field"><span data-i18n="ocr.family">Font of the translation</span>
+      <select id="ocrFamily"><option value="serif" data-i18n="st.serif"></option><option value="sans-serif" data-i18n="st.sans"></option></select>
+    </label>
+    <p class="muted small" data-i18n="ocr.note"></p>
+    <div class="modal-actions">
+      <button value="cancel" class="btn ghost" data-i18n="common.cancel">Cancel</button>
+      <button value="ok" class="btn primary" id="ocrGo" data-i18n="ocr.start">Recognise</button>
+    </div>
+  </form>
+</dialog>
 
 <script>
 // Translations of the interface (German is the default language)
@@ -805,6 +873,61 @@ const I18N = {
     "msg.chooseFile": "Bitte wählen Sie eine PDF-, EPUB- oder FB2-Datei.",
     "msg.loadingEngine": "PDF-Engine wird geladen…",
     "msg.opening": "Wird geöffnet…",
+    "top.fullscreen": "Vollbild: ganze App (Esc beendet)",
+    "zoom.page": "Ganze Seite einpassen",
+    "tb.ocr": "OCR",
+    "tb.ocrTitle": "Texterkennung für gescannte Seiten und Text in Bildern",
+    "card.styleTitle": "Größe, Schrift, Fett/Kursiv und Farbe dieses Feldes. Den Rahmen auf der Seite ziehen verschiebt das Feld, die Griffe ändern seine Größe.",
+    "st.size": "Größe",
+    "st.sizeTitle": "Schriftgröße der Übersetzung in pt (leer = wie Original)",
+    "st.font": "Schrift",
+    "st.fontOrig": "Schrift wie Original",
+    "st.sans": "Serifenlos",
+    "st.serif": "Mit Serifen",
+    "st.mono": "Festbreite",
+    "st.custom": "Eigene Schriftdatei",
+    "st.bold": "Fett",
+    "st.italic": "Kursiv",
+    "st.color": "Textfarbe",
+    "st.resetTitle": "Feld zurücksetzen: Position, Größe, Schrift und Farbe wie im Original",
+    "st.hint": "Auf der Seite: Rahmen ziehen = verschieben, an den Griffen ziehen = Größe ändern.",
+    "hist.field": "Feldformat",
+    "hist.fieldReset": "Feld zurückgesetzt",
+    "hist.move": "Feld verschoben",
+    "hist.resize": "Feldgröße geändert",
+    "msg.noFullscreen": "Vollbild ist hier nicht erlaubt.",
+    "msg.unlocked": "Passwortschutz und Einschränkungen der PDF wurden entfernt.",
+    "pw.title": "Passwortgeschützte PDF",
+    "pw.text": "Diese PDF lässt sich nur mit Passwort öffnen. Nach der Eingabe wird der Schutz entfernt; die übersetzte PDF hat kein Passwort.",
+    "pw.wrong": "Falsches Passwort – bitte erneut versuchen.",
+    "pw.label": "Passwort",
+    "pw.ok": "Öffnen",
+    "ocr.title": "Texterkennung (OCR)",
+    "ocr.text": "Erkennt Text in gescannten Seiten und in Bildern. Er wird wie anderer Text übersetzt; beim Erstellen wird die Übersetzung auf eine Fläche in Papierfarbe über den Originaltext gesetzt.",
+    "ocr.langs": "Sprachen im Dokument",
+    "ocr.pages": "Seiten",
+    "ocr.pagesEmpty": "Nur Seiten ohne Text",
+    "ocr.pagesAll": "Alle Seiten (auch Text in Bildern)",
+    "ocr.scanCount": "({n} gefunden)",
+    "ocr.family": "Schrift der Übersetzung",
+    "ocr.note": "Beim ersten Mal werden die Texterkennung (ca. 3 MB) und die Sprachdaten (je 1–4 MB) aus dem Internet geladen. Die Erkennung läuft in Ihrem Browser, etwa 2–5 s pro Seite.",
+    "ocr.start": "Erkennen",
+    "ocr.loading": "Texterkennung wird geladen…",
+    "ocr.page": "Texterkennung… Seite {i} von {n}",
+    "ocr.done": "Texterkennung fertig: {n} Segmente auf {p} Seite(n).",
+    "ocr.cancelled": "Texterkennung abgebrochen; {n} Segmente übernommen.",
+    "ocr.none": "Keine Seiten ohne Text gefunden. Wählen Sie „Alle Seiten“, um Text in Bildern zu erkennen.",
+    "ocr.failed": "Texterkennung fehlgeschlagen: {err}",
+    "ocr.suggest": "{n} Seite(n) ohne auswählbaren Text (gescannt?).",
+    "ocr.suggestAction": "Texterkennung…",
+    "ocr.noLang": "Bitte mindestens eine Sprache wählen.",
+    "ocrlang.eng": "Englisch",
+    "ocrlang.deu": "Deutsch",
+    "ocrlang.fra": "Französisch",
+    "ocrlang.ukr": "Ukrainisch",
+    "ocrlang.fin": "Finnisch",
+    "ocrlang.chi_sim": "Chinesisch (Kurzzeichen)",
+    "ocrlang.chi_tra": "Chinesisch (Langzeichen)",
     "msg.readingBook": "E-Book wird gelesen und gesetzt…",
     "msg.updating": "Wird aktualisiert…",
     "meta.notShown": "nicht im Fließtext (Metadaten / Inhaltsverzeichnis)",
@@ -1020,6 +1143,61 @@ const I18N = {
     "msg.chooseFile": "Please choose a PDF, EPUB or FB2 file.",
     "msg.loadingEngine": "Loading the PDF engine…",
     "msg.opening": "Opening…",
+    "top.fullscreen": "Full screen: whole app (Esc to leave)",
+    "zoom.page": "Fit the whole page",
+    "tb.ocr": "OCR",
+    "tb.ocrTitle": "Text recognition for scanned pages and text in pictures",
+    "card.styleTitle": "Size, font, bold/italic and colour of this field. Drag its box on the page to move it; drag the handles to resize it.",
+    "st.size": "Size",
+    "st.sizeTitle": "Font size of the translation in pt (empty = as in the original)",
+    "st.font": "Font",
+    "st.fontOrig": "Font as in the original",
+    "st.sans": "Sans-serif",
+    "st.serif": "Serif",
+    "st.mono": "Monospace",
+    "st.custom": "My own font file",
+    "st.bold": "Bold",
+    "st.italic": "Italic",
+    "st.color": "Text colour",
+    "st.resetTitle": "Reset the field: position, size, font and colour as in the original",
+    "st.hint": "On the page: drag the box to move it, drag the handles to resize it.",
+    "hist.field": "field format",
+    "hist.fieldReset": "field reset",
+    "hist.move": "field moved",
+    "hist.resize": "field resized",
+    "msg.noFullscreen": "Full screen is not allowed here.",
+    "msg.unlocked": "The PDF's password protection and restrictions were removed.",
+    "pw.title": "Password-protected PDF",
+    "pw.text": "This PDF needs a password to open. Once it is entered, the protection is removed; the translated PDF has no password.",
+    "pw.wrong": "Wrong password – please try again.",
+    "pw.label": "Password",
+    "pw.ok": "Open",
+    "ocr.title": "Text recognition (OCR)",
+    "ocr.text": "Recognises text in scanned pages and in pictures. It is translated like other text; when the PDF is built, the translation is set on a patch of the paper colour over the original text.",
+    "ocr.langs": "Languages in the document",
+    "ocr.pages": "Pages",
+    "ocr.pagesEmpty": "Only pages without text",
+    "ocr.pagesAll": "All pages (also text in pictures)",
+    "ocr.scanCount": "({n} found)",
+    "ocr.family": "Font of the translation",
+    "ocr.note": "The first time, the OCR engine (about 3 MB) and the language data (1–4 MB each) are downloaded. Recognition runs in your browser, about 2–5 s per page.",
+    "ocr.start": "Recognise",
+    "ocr.loading": "Loading text recognition…",
+    "ocr.page": "Recognising text… page {i} of {n}",
+    "ocr.done": "Text recognition finished: {n} segments on {p} page(s).",
+    "ocr.cancelled": "Text recognition cancelled; {n} segments kept.",
+    "ocr.none": "No pages without text found. Choose “All pages” to recognise text in pictures.",
+    "ocr.failed": "Text recognition failed: {err}",
+    "ocr.suggest": "{n} page(s) without selectable text (scanned?).",
+    "ocr.suggestAction": "Recognise text…",
+    "ocr.noLang": "Please choose at least one language.",
+    "ocrlang.eng": "English",
+    "ocrlang.deu": "German",
+    "ocrlang.fra": "French",
+    "ocrlang.ukr": "Ukrainian",
+    "ocrlang.fin": "Finnish",
+    "ocrlang.chi_sim": "Chinese (simplified)",
+    "ocrlang.chi_tra": "Chinese (traditional)",
     "msg.readingBook": "Reading and laying out the e-book…",
     "msg.updating": "Updating…",
     "meta.notShown": "not in the running text (metadata / table of contents)",
@@ -1469,7 +1647,7 @@ function continuesParagraph(prev, next, pageLines, seps, marginsByRot, blockLine
   if (/:\s*$/.test(prev.text)) return false; // a form label ("Prüfer:") is complete
   if (LABEL_START_RE.test(nt)) return false; // next starts with its own label ("Postanschrift: …")
   if (URLISH_RE.test(nt) || URLISH_RE.test(pt)) return false; // web / e-mail addresses stand alone
-  if (!/\p{L}/u.test(pt) && !/\p{L}/u.test(nt)) return false; // rows of numbers, dates, amounts
+  if (!/\p{L}{2}/u.test(pt) && !/\p{L}{2}/u.test(nt)) return false; // rows of numbers, dates, amounts ("4.2 M")
   // Table/form rows: when both lines have text right before them on their own baseline,
   // they belong together only if those left neighbours do too (the left column of a
   // two-column page continues; a column of row labels does not).
@@ -1627,14 +1805,15 @@ function lineStyle(line) {
     for (const [k, v] of m) if (v > bw) { best = k; bw = v; }
     return sum && bw >= 0.75 * sum ? best : null;
   };
-  line.style = { color: top(color, total), family: latin >= 3 ? top(family, latin) : null };
+  line.style = { color: top(color, total), family: latin >= 3 ? top(family, latin) : null, bg: line.spans[0].bg || null };
   return line.style;
 }
 
 /** A heading in one colour or typeface followed by a line in another is not one paragraph. */
 function styleBreak(prev, line) {
   const a = lineStyle(prev), b = lineStyle(line);
-  return (a.color && b.color && a.color !== b.color) || (a.family && b.family && a.family !== b.family);
+  return (a.color && b.color && a.color !== b.color) || (a.family && b.family && a.family !== b.family)
+    || (a.bg && b.bg && a.bg !== b.bg); // scanned text on another background (a grey table head)
 }
 
 /** Form labels ("Prüfer:" in bold, then the value in regular) become their own segments. */
@@ -1793,7 +1972,7 @@ function spansText(spans, rot) {
   for (let i = 1; i < spans.length; i++) {
     const prev = spans[i - 1], cur = spans[i];
     const t = scriptText(cur, ref, rot);
-    if (t === cur.text && !text.endsWith(" ") && !cur.text.startsWith(" ") && gapOf(prev, cur, rot) > 0.15 * Math.min(prev.size, cur.size)) text += " ";
+    if (t === cur.text && !cur.ocr && !text.endsWith(" ") && !cur.text.startsWith(" ") && gapOf(prev, cur, rot) > 0.15 * Math.min(prev.size, cur.size)) text += " ";
     text += t;
   }
   return text;
@@ -1912,6 +2091,13 @@ function buildSegment(group, pageNo, bounds, id, marginsByRot, pageLines, shaped
   }
   const align = guessAlign(lines, rotation, bounds, marginsByRot[rotation], pageLines);
   const color = dominant(spans, (s) => s.color);
+  // Text recognised by OCR is part of a picture: the translation is drawn on a patch of the
+  // paper colour over each original line instead of removing text.
+  const ocr = spans[0].ocr ? {
+    ocr: true, bg: dominant(spans, (s) => s.bg),
+    // (little padding at the sides, so that table borders next to the text are not painted over)
+    cover: lines.map((l) => { const b = l.bbox, h = b[3] - b[1]; return [b[0] - 0.04 * h, b[1] - 0.12 * h, b[2] + 0.04 * h, b[3] + 0.12 * h].map(round2); }),
+  } : null;
   const formula = isFormula(text, spans);
   const marks = inlineMarks(spans, info, color, size);
   const prefix = stylePrefix(spans, info, color);
@@ -1936,7 +2122,8 @@ function buildSegment(group, pageNo, bounds, id, marginsByRot, pageLines, shaped
     bold: info.bold, italic: info.italic, family: familyFor(info),
     align,
     origin: lines[0].origin.map(round2),
-    redact: spans.filter((s) => s.text.trim()).map((s) => redactRect(s, rotation).map(round2)),
+    redact: ocr ? [] : spans.filter((s) => s.text.trim()).map((s) => redactRect(s, rotation).map(round2)),
+    ...(ocr || {}),
   };
 }
 
@@ -1973,8 +2160,22 @@ async function extractPages(doc, pageList, onProgress) {
     const graphics = pageGraphics(page);
     const { seps } = graphics;
     const protect = []; // text we never extract (skewed lines) must survive merged redactions
+    segments.push(...segmentPage(pageBlocks(page, bounds, seps), p, bounds, seps, protect));
+    pages[p] = { width, height, x0: bounds[0], y0: bounds[1], protect: protect.map((r) => r.map(round2)), graphics };
+    free(page);
+    done++;
+    if (onProgress) onProgress(done, pageList.length);
+    if (done % 4 === 0) await tick();
+  }
+  return { pages, segments };
+}
+
+/** Segments of one page from its text blocks (MuPDF's, or lines recognised by OCR). */
+function segmentPage(rawBlocks, p, bounds, seps, protect) {
+  const segments = [];
+  {
     const rowBlocks = [];
-    for (const block of pageBlocks(page, bounds, seps)) {
+    for (const block of rawBlocks) {
       const rows = [];
       for (const line of block.lines) {
         const rot = rotationOf(line.dir);
@@ -2027,13 +2228,8 @@ async function extractPages(doc, pageList, onProgress) {
         if (seg) segments.push(seg);
       }
     }
-    pages[p] = { width, height, x0: bounds[0], y0: bounds[1], protect: protect.map((r) => r.map(round2)), graphics };
-    free(page);
-    done++;
-    if (onProgress) onProgress(done, pageList.length);
-    if (done % 4 === 0) await tick();
   }
-  return { pages, segments };
+  return segments;
 }
 
 /** Extract every page of a PDF (single-threaded; the UI uses a worker pool instead). */
@@ -2379,10 +2575,13 @@ class FontKit {
     return e;
   }
   chain(seg, text) {
-    const family = this.opts.fontMode === "auto" || this.opts.fontMode === "custom" ? seg.family : this.opts.fontMode;
+    // seg.font_choice: a font chosen for this field ("sans-serif", "serif", "monospace", "custom")
+    const choice = seg.font_choice;
+    const family = choice && choice !== "custom" ? choice
+      : this.opts.fontMode === "auto" || this.opts.fontMode === "custom" ? seg.family : this.opts.fontMode;
     const v = (seg.bold ? 1 : 0) + (seg.italic ? 2 : 0);
     const chain = [];
-    if (this.opts.fontMode === "custom" && this.opts.customFont) chain.push("custom");
+    if ((choice === "custom" || (!choice && this.opts.fontMode === "custom")) && this.opts.customFont) chain.push("custom");
     chain.push(BASE_FONTS[family][v], "Symbol", "ZapfDingbats");
     let cjk = this.opts.cjk || "zh-Hans";
     if (/[぀-ヿ]/.test(text)) cjk = "ja";
@@ -2607,7 +2806,7 @@ function layoutSegment(seg, text, fk, bounds, obs, opts, used, stats, leadEnd = 
   const along = corners.map(([x, y]) => x * d[0] + y * d[1]), across = corners.map(([x, y]) => x * n[0] + y * n[1]);
   let a0 = Math.min(...along), a1 = Math.max(...along);
   const b1 = Math.max(...across);
-  if (obs && seg.lines === 1) [a0, a1] = expandedSpan(seg, bounds, obs);
+  if (obs && seg.lines === 1 && !seg.fixed) [a0, a1] = expandedSpan(seg, bounds, obs); // a box the user drew is kept
   const ob = seg.origin[0] * n[0] + seg.origin[1] * n[1];
   // First-line indent (paragraph indent, or a lead-in such as "Hinweis:" before the text).
   const oa = seg.origin[0] * d[0] + seg.origin[1] * d[1];
@@ -2680,7 +2879,7 @@ function layoutSegment(seg, text, fk, bounds, obs, opts, used, stats, leadEnd = 
   };
   let W = (a1 - a0) * 1.01;
   let { k, lines } = fitWidth(W);
-  if (k < 1 && obs && seg.lines > 1) {
+  if (k < 1 && obs && seg.lines > 1 && !seg.fixed) {
     // A wrapped paragraph or table cell may widen a little into free space before shrinking.
     const [e0, e1] = expandedSpan(seg, bounds, obs, 1.0 * seg.size);
     const grow = Math.min(e1 - e0, (a1 - a0) * 1.3) - (a1 - a0);
@@ -2693,7 +2892,6 @@ function layoutSegment(seg, text, fk, bounds, obs, opts, used, stats, leadEnd = 
   if (k < 1) stats.shrunk.push({ id: seg.id, scale: Math.round(k * 100) / 100 });
   const s = s0 * k, L = L0 * k;
   const base1 = seg.lines === 1 && lines.length === 1 ? ob - (s0 - s) * 0.3 : top + 0.85 * s;
-  const rg = (hex) => `${hex.slice(1).match(/../g).map((h) => fmt(parseInt(h, 16) / 255)).join(" ")} rg`;
   const ops = [`BT ${rg(seg.color)}`];
   let curFont = null, curColor = seg.color;
   lines.forEach((line, i) => {
@@ -2785,6 +2983,8 @@ function redactionRects(todo, keep) {
   return rects;
 }
 
+const rg = (hex) => `${hex.slice(1).match(/../g).map((h) => fmt(parseInt(h, 16) / 255)).join(" ")} rg`;
+
 /**
  * The end of a translated lead-in just before `seg` on its first baseline ("Grammatik:" before
  * "Das Adverb …"), plus the original gap, when the translation reaches past seg's first line start.
@@ -2809,7 +3009,7 @@ function translatePage(doc, index, fk, segs, translations, pageInfo, opts, stats
   const todo = [], keep = [...((pageInfo && pageInfo.protect) || [])];
   for (const s of segs) {
     if ((translations[s.id] || "").trim()) todo.push(s);
-    else keep.push(s.bbox);
+    else keep.push(s.orig_bbox || s.bbox); // (a moved box still protects the text where it is)
   }
   stats.untranslated += segs.length - todo.length;
   if (!todo.length) return;
@@ -2821,13 +3021,16 @@ function translatePage(doc, index, fk, segs, translations, pageInfo, opts, stats
   page.applyRedactions(false, 0, 0, 0); // keep images, keep line art, remove text
   const used = new Set();
   const laid = []; // where the lines of translations laid out so far end, for lead-ins
-  const content = todo.map((seg) => {
+  // Patches of paper colour over scanned (OCR) text come first, under all translations.
+  const covers = todo.filter((seg) => seg.cover).map((seg) =>
+    `q ${rg(seg.bg || "#ffffff")} ${seg.cover.map(([x0, y0, x1, y1]) => `${fmt(x0)} ${fmt(y0)} ${fmt(x1 - x0)} ${fmt(y1 - y0)} re`).join(" ")} f Q`);
+  const content = covers.concat(todo.map((seg) => {
     const ends = [];
-    const ops = layoutSegment(seg, translations[seg.id], fk, bounds, obs, opts, used, stats, leadInEnd(seg, laid), ends);
+    const ops = layoutSegment(seg, translations[seg.id], fk, bounds, obs, opts, used, stats, seg.fixed ? null : leadInEnd(seg, laid), ends);
     const right = localBox(seg.bbox, seg.rotation)[2];
     for (const [a, b] of ends) laid.push({ rot: seg.rotation, end: a, base: b, right });
     return ops;
-  }).join("\n");
+  })).join("\n");
   appendContent(doc, page, content, used);
   stats.replaced += todo.length;
   free(page);
@@ -2975,10 +3178,233 @@ function renderPNG(doc, index, zoom) {
 
 const Engine = {
   init: initEngine, extract: extractDocument, extractPages, build: buildTranslated, renderPNG,
-  detectKind, openBook, saveBook, extractBook, openLaidOut, mapTranslated,
+  detectKind, openBook, saveBook, extractBook, openLaidOut, mapTranslated, ocrToBlocks, sampleColors, refineOcr,
   open: (bytes) => M.Document.openDocument(bytes, "application/pdf"),
   exportTxt, exportCsv, exportJson, exportXliff, exportDocx, parseImport, parseMarkedText,
 };
+
+/**
+ * Password protection: a PDF that only restricts editing or copying (an owner password) opens
+ * without a password; one that needs a password to open is unlocked with the user's password.
+ * Either way an unencrypted copy is returned, so the translation has no protection either.
+ * {status: "plain" | "unlocked" | "password" | "wrong", bytes}
+ */
+function unlockPdf(bytes, password) {
+  const doc = M.Document.openDocument(bytes.slice(), "application/pdf");
+  try {
+    if (doc.needsPassword()) {
+      if (!password) return { status: "password" };
+      if (!doc.authenticatePassword(password)) return { status: "wrong" };
+    }
+    const pdf = doc.asPDF ? doc.asPDF() : doc;
+    if (!pdf.getTrailer || pdf.getTrailer().get("Encrypt").isNull()) return { status: "plain" };
+    const buf = pdf.saveToBuffer("encrypt=none");
+    const out = buf.asUint8Array().slice();
+    free(buf);
+    return { status: "unlocked", bytes: out };
+  } finally {
+    free(doc);
+  }
+}
+
+/**
+ * Lines recognised by OCR, as text blocks like MuPDF's: [{lines: [{words: [{text, bbox, size,
+ * base}], color, bg}]}] (page coordinates) -> blocks of lines of word spans.
+ */
+function ocrBlocks(blocks, family = "serif") {
+  const fonts = [false, true].map((bold) => ({ name: bold ? "OCR-Bold" : "OCR", bold, italic: false, family, hinted: true, ws: 0, wn: 0 }));
+  return blocks.map((b) => ({
+    lines: b.lines.map((l) => {
+      const font = fonts[l.bold ? 1 : 0];
+      const gaps = [];
+      const spans = l.words.map((w, i) => {
+        const prev = l.words[i - 1];
+        const gap = prev ? w.bbox[0] - prev.bbox[2] : 0;
+        if (prev) gaps.push(gap / l.size);
+        // (no spaces between Chinese / Japanese characters, which Tesseract returns one by one)
+        const space = i && !(CJK_RE.test(prev.text.slice(-1)) && CJK_RE.test(w.text[0]));
+        return { key: font.name, text: (space ? " " : "") + w.text, bbox: w.bbox, origin: [w.bbox[0], l.base], size: l.size, font,
+          color: l.color, bg: l.bg, ocr: true, gapBefore: gap > 0.4 * l.size ? gap : 0 };
+      });
+      return { dir: [1, 0], spans, gaps };
+    }),
+  }));
+}
+
+/**
+ * Ink and paper colour of a box of a page image ({width, height, data: RGBA}): the mean of the
+ * darkest tenth and of the lightest half of its pixels; and how much of the box is ink.
+ */
+function sampleColors(img, box) {
+  const [x0, y0, x1, y1] = box.map(Math.round);
+  const px = [];
+  const step = Math.max(1, Math.round(Math.sqrt(((x1 - x0) * (y1 - y0)) / 6000)));
+  for (let y = Math.max(0, y0); y < Math.min(img.height, y1); y += step) {
+    for (let x = Math.max(0, x0); x < Math.min(img.width, x1); x += step) {
+      const i = (y * img.width + x) * 4, d = img.data;
+      px.push([0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2], d[i], d[i + 1], d[i + 2]]);
+    }
+  }
+  if (!px.length) return { fg: "#000000", bg: "#ffffff", ink: 0 };
+  px.sort((a, b) => a[0] - b[0]);
+  const lo = px[Math.floor(px.length * 0.05)][0], hi = px[Math.floor(px.length * 0.75)][0], mid = (lo + hi) / 2;
+  let dark = 0;
+  for (const p of px) if (p[0] < mid) dark++;
+  const mean = (list) => {
+    const m = [0, 0, 0];
+    for (const p of list) { m[0] += p[1]; m[1] += p[2]; m[2] += p[3]; }
+    return "#" + m.map((v) => Math.round(v / list.length).toString(16).padStart(2, "0")).join("");
+  };
+  // ink: share of dark pixels, about 1.5 times higher for bold text than for regular text
+  return { fg: mean(px.slice(0, Math.max(1, Math.ceil(px.length * 0.1)))), bg: mean(px.slice(Math.floor(px.length * 0.5))), ink: dark / px.length };
+}
+
+/**
+ * Sparse-text mode finds text everywhere (table cells too) but sometimes breaks a line into
+ * garbled pieces ("5] ) 加 /NJZE 几 ?" for "1) 三加六是几？"). Rows of text Tesseract is unsure of
+ * are read again as single lines with `readLine(rectangle)`, and kept if that reading is better.
+ * Returns Tesseract-like data: {blocks: [{paragraphs: [{lines}]}]}.
+ */
+async function refineOcr(data, readLine, maxRows = 40) {
+  const lines = [];
+  for (const b of data.blocks || []) for (const p of b.paragraphs || []) for (const l of p.lines || []) lines.push(l);
+  const conf = (ls) => {
+    let sum = 0, n = 0;
+    for (const l of ls) for (const w of l.words || []) { const k = w.text.trim().length; sum += w.confidence * k; n += k; }
+    return n ? sum / n : 0;
+  };
+  const vOverlap = (a, b) => (Math.min(a.y1, b.y1) - Math.max(a.y0, b.y0)) / Math.max(1, Math.min(a.y1 - a.y0, b.y1 - b.y0));
+  const hGap = (a, b) => Math.max(a.x0, b.x0) - Math.min(a.x1, b.x1);
+  const grow = (a, b) => ({ x0: Math.min(a.x0, b.x0), y0: Math.min(a.y0, b.y0), x1: Math.max(a.x1, b.x1), y1: Math.max(a.y1, b.y1) });
+  const rows = [];
+  for (const l of lines) {
+    if (conf([l]) >= 70) continue;
+    const h = l.bbox.y1 - l.bbox.y0;
+    const row = rows.find((r) => vOverlap(r.box, l.bbox) > 0.5 && hGap(r.box, l.bbox) < 3 * h);
+    if (row) { row.lines.push(l); row.box = grow(row.box, l.bbox); } else rows.push({ lines: [l], box: { ...l.bbox } });
+  }
+  // Good pieces of the same text line belong to the row as well.
+  for (const r of rows) {
+    for (const l of lines) {
+      const h = r.box.y1 - r.box.y0;
+      if (!r.lines.includes(l) && vOverlap(r.box, l.bbox) > 0.5 && hGap(r.box, l.bbox) < 1.5 * h) { r.lines.push(l); r.box = grow(r.box, l.bbox); }
+    }
+  }
+  const replace = new Map(); // first line of a row -> its new lines; other lines of the row -> []
+  for (const r of rows.slice(0, maxRows)) {
+    const h = r.box.y1 - r.box.y0, pad = Math.round(0.35 * h);
+    const rect = { left: Math.max(0, r.box.x0 - pad), top: Math.max(0, r.box.y0 - pad), width: r.box.x1 - r.box.x0 + 2 * pad, height: h + 2 * pad };
+    let fresh = [];
+    try {
+      const res = await readLine(rect);
+      for (const b of res.blocks || []) for (const p of b.paragraphs || []) for (const l of p.lines || []) if ((l.words || []).length) fresh.push(l);
+    } catch (_) { fresh = []; }
+    if (!fresh.length || conf(fresh) <= conf(r.lines) + 5) continue;
+    const order = r.lines.slice().sort((a, b) => lines.indexOf(a) - lines.indexOf(b));
+    if (order.some((l) => replace.has(l))) continue;
+    replace.set(order[0], fresh);
+    for (const l of order.slice(1)) replace.set(l, []);
+  }
+  const out = [];
+  for (const l of lines) out.push(...(replace.has(l) ? replace.get(l) : [l]));
+  return { blocks: [{ paragraphs: [{ lines: out }] }] };
+}
+
+/**
+ * Tesseract's result for a page image rendered at `zoom` (sparse-text mode: every piece of text,
+ * table cells too) -> {blocks: one block of lines for ocrBlocks, seps: table borders}, in page
+ * coordinates. The engine groups
+ * the lines into paragraphs, cells and labels as it does for PDF text. `colors(box)` gives the
+ * ink and paper colour of a box of the image.
+ */
+function ocrToBlocks(data, zoom, origin, colors) {
+  const lines = [];
+  const pt = (v, o) => round2(v / zoom + o);
+  // Colours measured line by line vary a little; near ones are made equal, so that the lines of
+  // one paragraph keep one colour (a colour change starts a new segment).
+  const palette = [];
+  const snap = (hex, tol) => { // (paper colours must stay close: a patch shows on grey table heads)
+    const c = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+    for (const p of palette) if (p.tol === tol && Math.hypot(p.c[0] - c[0], p.c[1] - c[1], p.c[2] - c[2]) < tol) return p.hex;
+    palette.push({ c, hex, tol });
+    return hex;
+  };
+  const seps = []; // table borders that Tesseract read as | [ ] (column separators)
+  const border = (bb) => { const x = (bb.x0 + bb.x1) / 2; seps.push([pt(x, origin[0]) - 0.25, pt(bb.y0, origin[1]), pt(x, origin[0]) + 0.25, pt(bb.y1, origin[1])]); };
+  for (const block of data.blocks || []) {
+    for (const para of block.paragraphs || []) {
+      for (const line of para.lines || []) {
+        const b = line.bbox, h = b.y1 - b.y0;
+        // Border marks read as part of a word ("[3.1", "|Strong") are cut off, box included.
+        let words = (line.words || []).map((w) => {
+          const sym = (w.symbols || []).filter((c) => c.text.trim());
+          let a = 0, z = sym.length;
+          while (a < z - 1 && /^[|[\]{}]$/.test(sym[a].text)) border(sym[a++].bbox);
+          while (z > a + 1 && /^[|[\]{}]$/.test(sym[z - 1].text)) border(sym[--z].bbox);
+          if (!sym.length || (a === 0 && z === sym.length)) return { ...w, text: w.text.trim() };
+          const keep = sym.slice(a, z);
+          return { ...w, text: keep.map((c) => c.text).join(""),
+            bbox: { x0: Math.min(...keep.map((c) => c.bbox.x0)), y0: Math.min(...keep.map((c) => c.bbox.y0)), x1: Math.max(...keep.map((c) => c.bbox.x1)), y1: Math.max(...keep.map((c) => c.bbox.y1)) } };
+        });
+        // A small sign at the start of a line followed by text is a bullet (often read as + * e o).
+        if (words.length > 1 && /^[+*•·°oe»>◦▪■□●○-]$/.test(words[0].text) && words[0].bbox.y1 - words[0].bbox.y0 < 0.7 * h) {
+          words[0] = { ...words[0], text: "•", confidence: 99 };
+        }
+        // Table borders and specks read as | [ ] _ - … are dropped unless Tesseract is sure.
+        for (const w of words) if (/^[|[\]{}]+$/.test(w.text)) border(w.bbox);
+        words = words.filter((w) => w.text && !/^[|[\]{}]+$/.test(w.text) && (!/^[_\-–—=~.,:;'"`^°*+]+$/.test(w.text) || w.confidence >= 80));
+        const good = words.filter((w) => w.confidence >= 60).length;
+        words = words.filter((w) => w.confidence >= 30 || (good && /\p{L}/u.test(w.text)));
+        if (!words.some((w) => /[\p{L}\p{N}]/u.test(w.text))) continue;
+        let rowH = line.rowAttributes && line.rowAttributes.row_height > 0 ? line.rowAttributes.row_height : h;
+        const bl = line.baseline && line.baseline.has_baseline !== false ? (line.baseline.y0 + line.baseline.y1) / 2 : b.y1 - 0.2 * h;
+        // Table borders read as part of a line make its row height far too big: then the size
+        // comes from the height of capitals, digits and ascenders above the baseline (~0.72 em).
+        const tall = words.filter((w) => /[\p{Lu}\p{N}bdfhklt]/u.test(w.text) && !/^[|[\]{}]/.test(w.text));
+        if (tall.length) {
+          const tops = tall.map((w) => w.bbox.y0).sort((x, y) => x - y);
+          const cap = (bl - tops[tops.length >> 1]) / 0.7; // (median: one bad word must not decide)
+          if (cap > 0 && (rowH > 1.25 * cap || rowH < 0.8 * cap)) rowH = cap;
+        }
+        const { fg, bg } = colors([b.x0, b.y0, b.x1, b.y1]);
+        // Ink is measured in the band from cap height to the baseline of each word, so that lines
+        // with and without descenders compare fairly.
+        let ink = 0, wsum = 0;
+        for (const w of words) {
+          const wd = w.bbox.x1 - w.bbox.x0;
+          ink += colors([w.bbox.x0, bl - 0.62 * rowH, w.bbox.x1, bl]).ink * wd;
+          wsum += wd;
+        }
+        ink /= wsum || 1;
+        lines.push({
+          size: round2(Math.max(4, Math.min(rowH, 1.6 * h)) / zoom), base: pt(bl, origin[1]), color: snap(fg, 48), bg: snap(bg, 18), ink,
+          words: words.map((w) => ({ text: w.text, bbox: [pt(w.bbox.x0, origin[0]), pt(w.bbox.y0, origin[1]), pt(w.bbox.x1, origin[0]), pt(w.bbox.y1, origin[1])] })),
+        });
+      }
+    }
+  }
+  // Sizes measured line by line vary too: lines on one baseline get their median size, and
+  // sizes within 12 % of each other the same value.
+  for (const l of lines) {
+    const row = lines.filter((o) => Math.abs(o.base - l.base) < 0.3 * Math.min(o.size, l.size)).map((o) => o.size).sort((a, b) => a - b);
+    l.rowSize = row[(row.length - 1) >> 1];
+  }
+  const sizes = [];
+  for (const l of lines) {
+    const near = sizes.find((v) => Math.abs(v - l.rowSize) <= 0.12 * v);
+    l.size = near || l.rowSize;
+    if (!near) sizes.push(l.rowSize);
+    delete l.rowSize;
+  }
+  // Specks read as text come out tiny next to the page's text.
+  const sorted = lines.map((l) => l.size).sort((a, b) => a - b), median = sorted[sorted.length >> 1];
+  for (let i = lines.length - 1; i >= 0; i--) if (lines[i].size < 0.45 * median) lines.splice(i, 1);
+  // Bold lines have clearly more ink (in the cap-height band) than the page's usual text.
+  const inks = lines.filter((l) => l.words.length > 1).map((l) => l.ink).sort((a, b) => a - b);
+  const usual = inks.length ? inks[inks.length >> 1] : 0;
+  for (const l of lines) { l.bold = usual > 0 && l.ink > 1.2 * usual; delete l.ink; }
+  return { blocks: lines.length ? [{ lines }] : [], seps };
+}
 
 // ---------------------------------------------------------- worker protocol
 /**
@@ -3008,6 +3434,14 @@ function createHandler() {
       return { result: W.doc.countPages() };
     }
     if (cmd === "extract") return { result: await extractPages(W.doc, args.pages, progress) };
+    if (cmd === "unlock") return { result: unlockPdf(args.bytes, args.password) };
+    if (cmd === "ocrPage") {
+      const page = W.doc.loadPage(args.page);
+      const bounds = page.getBounds();
+      const seps = pageGraphics(page).seps.concat(args.seps || []);
+      free(page);
+      return { result: segmentPage(ocrBlocks(args.lines, args.family), args.page, bounds, seps, []) };
+    }
     if (cmd === "extractBook") {
       const { book, pages, segments } = await extractBook(W.bytes, W.kind, W.doc);
       W.book = book;
@@ -3743,6 +4177,7 @@ const state = {
   shrunk: new Set(),
   markups: [],        // drawings on the pages (see markup.js)
   outView: null,      // e-books: {pages, boxes} of the laid-out translated book
+  overrides: {},      // id -> the user's box, size, font, colour for that field (see tools.js)
 };
 
 /** The open document is an e-book (EPUB/FB2) rather than a PDF. */
@@ -3864,9 +4299,12 @@ function toast(message, kind = "", action = null) {
   setTimeout(() => el.remove(), action ? 12000 : kind === "error" ? 8000 : 4500);
 }
 
-function busy(text) {
+/** Show a busy overlay with `text` (hidden when empty); `onCancel` adds a Cancel button. */
+function busy(text, onCancel = null) {
   $("#busyText").textContent = text || "";
   $("#busy").hidden = !text;
+  $("#busyCancel").hidden = !onCancel;
+  $("#busyCancel").onclick = onCancel;
 }
 
 function saveBlob(blob, filename) {
@@ -3966,12 +4404,26 @@ async function extractAll(pageCount, onProgress) {
   return { pages, segments: raw };
 }
 
-async function loadBytes(bytes, name, remember) {
+async function loadBytes(bytes, name, remember, knownId = null) {
   setLoading(t("msg.loadingEngine"));
   try {
     await pool.start();
-    const id = await sha256(bytes);
+    // (an unlocked PDF keeps the id of the protected file, so its translations are found again)
+    const id = knownId || await sha256(bytes);
     const kind = Engine.detectKind(bytes, name);
+    if (kind === "pdf") {
+      // Password protection is removed: restrictions at once, an open password after asking.
+      let password = "";
+      for (;;) {
+        const u = await pool.workers[0].call("unlock", { bytes, password });
+        if (u.status === "plain") break;
+        if (u.status === "unlocked") { bytes = u.bytes; toast(t("msg.unlocked"), "ok"); break; }
+        setLoading("");
+        password = await askPassword(name, u.status === "wrong");
+        if (password === null) return;
+        setLoading(t("msg.opening"));
+      }
+    }
     // More workers for bigger documents, fewer for huge files (each worker holds a copy).
     // An e-book is read in one worker; the others only draw its pages.
     const mb = bytes.length / 1048576;
@@ -3984,8 +4436,10 @@ async function loadBytes(bytes, name, remember) {
       ? await extractAll(pageCount, (i, n) => setLoading(t("msg.extracting", { i, n })))
       : (setLoading(t("msg.readingBook")), await pool.workers[0].call("extractBook"));
     console.info(`Extracted ${segments.length} segments from ${pageCount} pages in ${Math.round(performance.now() - started)} ms using ${pool.workers.length} worker(s)`);
-    if (remember) idbPut({ name, bytes });
-    openDocument({ id, name, kind, pages, segments }, bytes);
+    if (remember) idbPut({ name, bytes, id });
+    const restored = kind === "pdf" ? await restoreOcr(id, segments, pages) : { segments, ocr: null };
+    openDocument({ id, name, kind, pages, segments: restored.segments, ocr: restored.ocr }, bytes);
+    suggestOcr();
   } catch (err) {
     console.error(err);
     toast(/password/i.test(err.message) ? t("msg.password") : t("msg.openFailed", { err: err.message || err }), "error");
@@ -4027,6 +4481,7 @@ function openDocument(doc, bytes) {
   setDocFormat(FORMAT_LABEL[doc.kind || "pdf"]);
   document.title = `${doc.name} · PDF Translate`;
 
+  loadOverrides();
   fillPageFilter();
   $("#search").value = "";
   $("#filterStatus").value = "all";
@@ -4041,7 +4496,7 @@ function openDocument(doc, bytes) {
   updateProgress();
   const unknown = doc.segments.reduce((n, s) => n + (s.text.match(/\ufffd/g) || []).length, 0);
   if (unknown) toast(t("msg.unknownChars", { n: unknown }), "error");
-  if (!doc.segments.length) {
+  if (!doc.segments.length && (isBook() || !scannedPages().length)) { // (scans: OCR is offered instead)
     toast(t("msg.noText"), "error");
   }
 }
@@ -4251,7 +4706,7 @@ function renderPages() {
     if (!segsByPage.has(s.page)) segsByPage.set(s.page, []);
     segsByPage.get(s.page).push(s);
     // E-books: where each text is in the laid-out original or translated book (if found).
-    const boxes = state.variant === "translated" && state.outView ? state.outView.boxes[s.id] : s.boxes || (s.bbox && [[s.page, s.bbox]]);
+    const boxes = state.variant === "translated" && state.outView ? state.outView.boxes[s.id] : s.boxes || (s.bbox && [[s.page, shownBox(s)]]);
     for (const [page, bbox] of boxes || []) addBox(page, s, bbox);
   }
   wrap.querySelectorAll(".page").forEach((el) => observer.observe(el));
@@ -4272,8 +4727,9 @@ function ensureBoxes(i) {
   const page = viewPages()[i];
   const html = (boxesByPage.get(i) || []).map(([s, bbox]) => {
     const [x0, y0, x1, y1] = bbox;
-    const cls = "box" + (hasTr(s.id) ? " done" : "") + (s.skip ? " skip" : "") + (s.id === state.activeId ? " active" : "");
-    return `<div class="${cls}" data-id="${s.id}" title="#${s.id}" style="left:${((x0 - page.x0) / page.width) * 100}%;top:${((y0 - page.y0) / page.height) * 100}%;width:${((x1 - x0) / page.width) * 100}%;height:${((y1 - y0) / page.height) * 100}%"></div>`;
+    const active = s.id === state.activeId, custom = !isBook() && state.overrides[s.id] && state.overrides[s.id].bbox;
+    const cls = "box" + (hasTr(s.id) ? " done" : "") + (s.skip ? " skip" : "") + (active ? " active" : "") + (custom ? " custom" : "");
+    return `<div class="${cls}" data-id="${s.id}" title="#${s.id}" style="left:${((x0 - page.x0) / page.width) * 100}%;top:${((y0 - page.y0) / page.height) * 100}%;width:${((x1 - x0) / page.width) * 100}%;height:${((y1 - y0) / page.height) * 100}%">${active && !isBook() ? HANDLES : ""}</div>`;
   }).join("");
   el.insertAdjacentHTML("beforeend", html);
   renderMarkups(i);
@@ -4348,6 +4804,7 @@ function segMeta(s) {
   const page = t("meta.page", { n: s.page + 1 });
   if (s.skip) return `${page} · ${t(s.formula ? "meta.formula" : "meta.numbers")}`;
   if (isBook()) return s.hidden ? `${t("meta.notShown")} · ${s.tag}` : `${page} · ${s.tag}`;
+  if (s.ocr) return `${page} · OCR · ${Math.round(s.size * 10) / 10}pt${s.bold ? " " + t("meta.bold") : ""}`;
   const style = [s.bold && t("meta.bold"), s.italic && t("meta.italic")].filter(Boolean).join(" ");
   const rot = s.rotation ? ` · ${t("meta.rotated", { deg: s.rotation })}` : "";
   return `${page} · ${Math.round(s.size * 10) / 10}pt${style ? " " + style : ""} · ${t("meta." + s.align)}${rot}`;
@@ -4494,8 +4951,10 @@ function makeCard(id) {
       <span class="seg-meta" data-shrunk="${escapeHtml(t("meta.shrunk"))}">${escapeHtml(segMeta(s))}</span>
       <button type="button" class="mini" data-act="copy" title="${escapeHtml(t("card.copyTitle"))}">${t("card.copy")}</button>
       <button type="button" class="mini" data-act="same" title="${escapeHtml(t("card.keepTitle"))}">${t("card.keep")}</button>
+      ${isBook() || s.skip ? "" : `<button type="button" class="mini${state.overrides[id] ? " on" : ""}" data-act="style" title="${escapeHtml(t("card.styleTitle"))}">Aa</button>`}
       <button type="button" class="mini apply" data-act="apply" title="${escapeHtml(t("card.applyTitle"))}">${t("card.apply")}</button>
     </div>
+    ${styleOpen.has(id) && !isBook() ? stylePanelHtml(s) : ""}
     <div class="seg-src">${escapeHtml(s.text)}</div>
     <textarea rows="1" spellcheck="true" placeholder="${escapeHtml(t("card.placeholder"))}"></textarea>`;
   el.querySelector("textarea").value = state.translations[id] || "";
@@ -4572,6 +5031,7 @@ function setActive(id, { scrollList = false, scrollViewer = false, focus = false
   ensureBoxes(boxPage(s));
   const box = document.querySelector(`.box[data-id="${id}"]`);
   document.querySelectorAll(`.box[data-id="${id}"]`).forEach((b) => b.classList.add("active"));
+  showHandles(id);
   if (scrollViewer && box) box.scrollIntoView({ block: "center", inline: "center", behavior: "smooth" });
   if (focus) vl.rendered.get(id)?.querySelector("textarea").focus({ preventScroll: true });
 }
@@ -4727,7 +5187,7 @@ function applyField(id) {
     for (const x of segs) if ((state.applied[x.id] || "").trim()) translations[x.id] = state.applied[x.id];
     try {
       const stats = await pool.workers[0].call("updatePage", {
-        page: s.page, segments: segs, translations, pageInfo: state.doc.pages[s.page], opts: buildOptions(),
+        page: s.page, segments: segs.map(effSeg), translations, pageInfo: state.doc.pages[s.page], opts: buildOptions(),
       });
       state.hasOutput = true;
       state.outDirty = true;
@@ -4793,7 +5253,7 @@ async function doBuild() {
     const translations = {};
     for (const [id, t] of Object.entries(state.translations)) if (segIndex.has(Number(id)) && t.trim()) translations[id] = t;
     const result = await pool.workers[0].call("build", {
-      segments: state.doc.segments,
+      segments: state.doc.segments.map(effSeg),
       translations,
       pages: state.doc.pages,
       opts: buildOptions(),
@@ -4921,6 +5381,9 @@ function init() {
       recordTranslations({ [id]: before }, { [id]: ta.value }, t("hist.translation"));
     } else if (act === "apply") {
       applyField(id);
+    } else if (act === "style") {
+      if (styleOpen.has(id)) styleOpen.delete(id); else styleOpen.add(id);
+      refreshStylePanel(id);
     } else if (e.target.classList.contains("seg-src")) {
       setActive(id, { scrollViewer: true, focus: true });
     }
@@ -4992,7 +5455,7 @@ function init() {
   updateSteps();
   if (last) {
     idbGet().then((saved) => {
-      if (saved && saved.bytes) loadBytes(saved.bytes, saved.name, false);
+      if (saved && saved.bytes) loadBytes(saved.bytes, saved.name, false, saved.id);
     });
   }
 }
@@ -5636,10 +6099,489 @@ function initMarkup() {
   });
 }
 
-// Start-up (runs after ui.js and markup.js have defined everything).
+// ======================================================================
+// Field layout and style (move and resize boxes on the page; size, font, colour per field),
+// full screen for the whole app, fit page, password-protected PDFs, and OCR for scanned pages.
+// ======================================================================
+
+/* ------------------------------------------------------ per-field overrides */
+
+// state.overrides: segment id -> {bbox, size, font, bold, italic, color}, stored per document.
+const ovKey = (id) => `pdftr:ov:${id}`;
+
+function loadOverrides() {
+  try { state.overrides = isBook() ? {} : JSON.parse(localStorage.getItem(ovKey(state.doc.id)) || "{}"); } catch (_) { state.overrides = {}; }
+}
+
+function saveOverrides() {
+  try { localStorage.setItem(ovKey(state.doc.id), JSON.stringify(state.overrides)); } catch (_) { /* storage blocked */ }
+}
+
+const ROT_DIR = { 0: [1, 0], 90: [0, -1], 180: [-1, 0], 270: [0, 1] };
+
+/** The box shown for a segment: the user's box when the field was moved or resized. */
+const shownBox = (s) => (state.overrides[s.id] && state.overrides[s.id].bbox) || s.bbox;
+
+/** A segment as the rebuild lays it out: with the user's box, size, font, style and colour. */
+function effSeg(s) {
+  const o = state.overrides && state.overrides[s.id];
+  if (!o || isBook()) return s;
+  const e = { ...s };
+  const [ox0, oy0, ox1, oy1] = s.bbox;
+  if (o.bbox) {
+    const [x0, y0, x1, y1] = o.bbox;
+    const dx = x0 - ox0, dy = y0 - oy0;
+    const sameSize = Math.abs((x1 - x0) - (ox1 - ox0)) < 0.5 && Math.abs((y1 - y0) - (oy1 - oy0)) < 0.5;
+    e.orig_bbox = s.bbox; // the original text there is still removed (and kept, if untranslated)
+    e.bbox = o.bbox;
+    e.origin = [s.origin[0] + dx, s.origin[1] + dy];
+    e.fixed = true; // laid out in exactly this box
+    if (s.rows && sameSize) {
+      const d = ROT_DIR[s.rotation], n = [-d[1], d[0]];
+      const da = dx * d[0] + dy * d[1], db = dx * n[0] + dy * n[1];
+      e.rows = s.rows.map(([a, b]) => [a + da, b + db]);
+    } else delete e.rows;
+  }
+  if (o.size && o.size > 0) {
+    const k = o.size / s.size;
+    e.size = o.size;
+    if (s.line_pitch) e.line_pitch = s.line_pitch * k;
+    if (!o.bbox && s.rotation === 0 && k > 1) {
+      // Bigger text gets a box that is taller by the same factor (downwards).
+      e.bbox = [ox0, oy0, ox1, oy0 + (oy1 - oy0) * k];
+      e.origin = [s.origin[0], oy0 + (s.origin[1] - oy0) * k];
+      e.orig_bbox = s.bbox;
+    }
+  }
+  if (o.font) e.font_choice = o.font;
+  if (o.bold !== undefined) e.bold = o.bold;
+  if (o.italic !== undefined) e.italic = o.italic;
+  if (o.color) e.color = o.color;
+  return e;
+}
+
+/** Change a field's overrides (undoable); null values remove a setting. */
+function setOverride(id, patch, label) {
+  const before = state.overrides[id] ? clone(state.overrides[id]) : null;
+  const next = patch === null ? {} : { ...(state.overrides[id] || {}), ...patch };
+  for (const k of Object.keys(next)) if (next[k] === null || next[k] === undefined || next[k] === "") delete next[k];
+  const after = Object.keys(next).length ? next : null;
+  if (JSON.stringify(before) === JSON.stringify(after)) return;
+  applyOverride(id, after);
+  pushHistory({ label: label || t("hist.field"), undo: () => applyOverride(id, before), redo: () => applyOverride(id, after) });
+}
+
+function applyOverride(id, value) {
+  if (value) state.overrides[id] = clone(value); else delete state.overrides[id];
+  saveOverrides();
+  refreshBox(id);
+  refreshStylePanel(id);
+  scheduleApply(id);
+}
+
+// With a translated PDF open, a changed field is written into it right away.
+const applyTimers = new Map();
+function scheduleApply(id) {
+  if (!state.hasOutput || !hasTr(id)) return;
+  clearTimeout(applyTimers.get(id));
+  applyTimers.set(id, setTimeout(() => { applyTimers.delete(id); applyField(id); }, 250));
+}
+
+/** Position of a box element on its page, from a box in page coordinates. */
+function placeBox(el, bbox, page) {
+  const [x0, y0, x1, y1] = bbox;
+  el.style.left = `${((x0 - page.x0) / page.width) * 100}%`;
+  el.style.top = `${((y0 - page.y0) / page.height) * 100}%`;
+  el.style.width = `${((x1 - x0) / page.width) * 100}%`;
+  el.style.height = `${((y1 - y0) / page.height) * 100}%`;
+}
+
+function refreshBox(id) {
+  const s = segById(id);
+  if (!s || isBook()) return;
+  document.querySelectorAll(`.box[data-id="${id}"]`).forEach((el) => {
+    const page = viewPages()[Number(el.closest(".page").dataset.page)];
+    placeBox(el, shownBox(s), page);
+    el.classList.toggle("custom", Boolean(state.overrides[id] && state.overrides[id].bbox));
+  });
+}
+
+const HANDLES = ["nw", "n", "ne", "e", "se", "s", "sw", "w"].map((h) => `<span class="rh rh-${h}" data-h="${h}"></span>`).join("");
+
+/** Resize handles on the selected box (PDFs only). */
+function showHandles(id) {
+  document.querySelectorAll(".box .rh").forEach((h) => h.remove());
+  if (isBook() || id === null || id === undefined) return;
+  document.querySelectorAll(`.box[data-id="${id}"]`).forEach((el) => el.insertAdjacentHTML("beforeend", HANDLES));
+}
+
+/* ----------------------------------------------- moving and resizing boxes */
+
+const boxDrag = { cur: null, justDragged: false };
+
+function pagePoint(pageEl, e) {
+  const p = viewPages()[Number(pageEl.dataset.page)], r = pageEl.getBoundingClientRect();
+  return [p.x0 + ((e.clientX - r.left) / r.width) * p.width, p.y0 + ((e.clientY - r.top) / r.height) * p.height];
+}
+
+function onBoxDown(e) {
+  if (e.button !== 0 || !state.doc || isBook() || mk.tool !== "select") return;
+  const box = e.target.closest(".box");
+  if (!box) return;
+  const pageEl = box.closest(".page"), id = Number(box.dataset.id), s = segById(id);
+  if (!s) return;
+  boxDrag.cur = { id, box, pageEl, handle: e.target.dataset.h || null, start: pagePoint(pageEl, e), orig: shownBox(s).slice(), moved: false };
+  if (boxDrag.cur.handle) { e.preventDefault(); e.stopPropagation(); }
+}
+
+function onBoxMove(e) {
+  const d = boxDrag.cur;
+  if (!d) return;
+  const pt = pagePoint(d.pageEl, e);
+  const dx = pt[0] - d.start[0], dy = pt[1] - d.start[1];
+  const page = viewPages()[Number(d.pageEl.dataset.page)];
+  if (!d.moved) {
+    const scale = d.pageEl.getBoundingClientRect().width / page.width; // screen px per point
+    if (Math.hypot(dx, dy) * scale < 4) return;
+    d.moved = true;
+    document.body.classList.add("box-dragging");
+  }
+  e.preventDefault();
+  let [x0, y0, x1, y1] = d.orig;
+  const h = d.handle, min = 4;
+  if (!h) { x0 += dx; x1 += dx; y0 += dy; y1 += dy; } else {
+    if (h.includes("w")) x0 = Math.min(x1 - min, x0 + dx);
+    if (h.includes("e")) x1 = Math.max(x0 + min, x1 + dx);
+    if (h.includes("n")) y0 = Math.min(y1 - min, y0 + dy);
+    if (h.includes("s")) y1 = Math.max(y0 + min, y1 + dy);
+  }
+  d.bbox = [x0, y0, x1, y1].map((v) => Math.round(v * 100) / 100);
+  placeBox(d.box, d.bbox, page);
+}
+
+function onBoxUp() {
+  const d = boxDrag.cur;
+  boxDrag.cur = null;
+  if (!d || !d.moved) return;
+  document.body.classList.remove("box-dragging");
+  boxDrag.justDragged = true; // the click that follows must not count as a click on the box
+  setTimeout(() => { boxDrag.justDragged = false; }, 300);
+  const s = segById(d.id);
+  const same = d.bbox.every((v, i) => Math.abs(v - s.bbox[i]) < 0.3);
+  setOverride(d.id, { bbox: same ? null : d.bbox }, t(d.handle ? "hist.resize" : "hist.move"));
+  if (state.activeId !== d.id) setActive(d.id, { scrollList: true });
+}
+
+/* ------------------------------------------------------ style of one field */
+
+const styleOpen = new Set(); // cards whose style panel is open
+
+function stylePanelHtml(s) {
+  const o = state.overrides[s.id] || {};
+  const bold = o.bold !== undefined ? o.bold : s.bold, italic = o.italic !== undefined ? o.italic : s.italic;
+  const fonts = [["", "st.fontOrig"], ["sans-serif", "st.sans"], ["serif", "st.serif"], ["monospace", "st.mono"]];
+  if (state.customFont || o.font === "custom") fonts.push(["custom", "st.custom"]);
+  return `<div class="seg-style">
+    <label title="${escapeHtml(t("st.sizeTitle"))}">${t("st.size")} <input type="number" data-st="size" min="2" max="400" step="0.5" value="${o.size || ""}" placeholder="${Math.round(s.size * 10) / 10}"></label>
+    <select data-st="font" title="${escapeHtml(t("st.font"))}">${fonts.map(([v, k]) => `<option value="${v}"${(o.font || "") === v ? " selected" : ""}>${escapeHtml(t(k))}</option>`).join("")}</select>
+    <button type="button" class="mini toggle${bold ? " on" : ""}" data-st="bold" title="${escapeHtml(t("st.bold"))}"><b>B</b></button>
+    <button type="button" class="mini toggle${italic ? " on" : ""}" data-st="italic" title="${escapeHtml(t("st.italic"))}"><i>I</i></button>
+    <input type="color" data-st="color" value="${o.color || s.color || "#000000"}" title="${escapeHtml(t("st.color"))}">
+    <button type="button" class="mini" data-st="reset" title="${escapeHtml(t("st.resetTitle"))}">↺</button>
+    <span class="muted small st-hint">${escapeHtml(t("st.hint"))}</span>
+  </div>`;
+}
+
+/** Add or update the style panel of a card that is open. */
+function refreshStylePanel(id) {
+  const card = vl.rendered.get(id);
+  if (!card) return;
+  card.querySelector(".seg-style")?.remove();
+  card.querySelector('[data-act="style"]')?.classList.toggle("on", Boolean(state.overrides[id]));
+  if (styleOpen.has(id)) card.querySelector(".seg-src").insertAdjacentHTML("beforebegin", stylePanelHtml(segById(id)));
+}
+
+function onStyleInput(e) {
+  const el = e.target.closest("[data-st]");
+  if (!el) return;
+  const id = Number(el.closest(".seg").dataset.id), s = segById(id);
+  const st = el.dataset.st;
+  if (st === "size") {
+    const v = Number(el.value);
+    setOverride(id, { size: v > 0 && Math.abs(v - s.size) > 0.01 ? v : null }, t("hist.field"));
+  } else if (st === "font") setOverride(id, { font: el.value || null }, t("hist.field"));
+  else if (st === "color") setOverride(id, { color: el.value.toLowerCase() === s.color ? null : el.value.toLowerCase() }, t("hist.field"));
+}
+
+function onStyleClick(e) {
+  const el = e.target.closest("[data-st]");
+  if (!el || el.tagName !== "BUTTON") return;
+  const id = Number(el.closest(".seg").dataset.id), s = segById(id), o = state.overrides[id] || {};
+  const st = el.dataset.st;
+  if (st === "bold" || st === "italic") {
+    const cur = o[st] !== undefined ? o[st] : s[st];
+    setOverride(id, { [st]: !cur === Boolean(s[st]) ? null : !cur }, t("hist.field"));
+  } else if (st === "reset") setOverride(id, null, t("hist.fieldReset"));
+}
+
+/* ------------------------------------------------- full screen and fit page */
+
+function toggleAppFullscreen() {
+  document.body.classList.remove("viewer-only");
+  if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  else document.documentElement.requestFullscreen().catch(() => toast(t("msg.noFullscreen"), "error"));
+}
+
+/** Zoom so that the whole current page is visible. */
+function fitPage() {
+  if (!state.doc) return;
+  const box = $("#pages"), i = currentPageIndex(), p = viewPages()[i];
+  const zw = (box.clientWidth - 48) / (p.width * 1.25), zh = (box.clientHeight - 44) / (p.height * 1.25);
+  setZoom(Math.min(zw, zh));
+  requestAnimationFrame(() => goToPage(i));
+}
+
+/* ------------------------------------------------------ password dialog */
+
+/** Ask for the password of a protected PDF; null if the user cancels. */
+function askPassword(name, wrong) {
+  return new Promise((resolve) => {
+    const dlg = $("#pwDialog");
+    $("#pwName").textContent = name;
+    $("#pwWrong").hidden = !wrong;
+    $("#pwInput").value = "";
+    dlg.onclose = () => resolve(dlg.returnValue === "ok" ? $("#pwInput").value : null);
+    dlg.showModal();
+    $("#pwInput").focus();
+  });
+}
+
+/* --------------------------------------------------------------------- OCR */
+
+const OCR_LIB = "https://cdn.jsdelivr.net/npm/tesseract.js@6.0.1/dist/tesseract.esm.min.js";
+const OCR_WORKER = "https://cdn.jsdelivr.net/npm/tesseract.js@6.0.1/dist/worker.min.js";
+const OCR_CORE = "https://cdn.jsdelivr.net/npm/tesseract.js-core@6.0.0";
+const OCR_LANG_PATH = ""; // "" = the language data on jsDelivr (@tesseract.js-data/<lang>)
+const OCR_LANGS = ["eng", "deu", "fra", "ukr", "fin", "chi_sim", "chi_tra"];
+const LS_OCR = "pdftr:ocr-options";
+
+function idbSet(key, value) {
+  return idb().then((db) => new Promise((resolve) => {
+    const tx = db.transaction("files", "readwrite");
+    tx.objectStore("files").put(value, key);
+    tx.oncomplete = resolve; tx.onerror = resolve;
+  })).catch(() => {});
+}
+
+function idbGetKey(key) {
+  return idb().then((db) => new Promise((resolve) => {
+    const req = db.transaction("files").objectStore("files").get(key);
+    req.onsuccess = () => resolve(req.result || null);
+    req.onerror = () => resolve(null);
+  })).catch(() => null);
+}
+
+/** Pages with no text but a picture covering much of the page (scans). */
+function scannedPages() {
+  const has = new Set(state.doc.segments.map((s) => s.page));
+  return state.doc.pages.map((p, i) => i).filter((i) => {
+    if (has.has(i)) return false;
+    const p = state.doc.pages[i], area = p.width * p.height;
+    return ((p.graphics && p.graphics.containers) || []).some((c) => (c[2] - c[0]) * (c[3] - c[1]) > 0.3 * area);
+  });
+}
+
+/**
+ * Segments of the document with the OCR results merged in: on each page, the text segments
+ * first, then the recognised ones. `ocr` is {page: {segs, seps}}. Ids are numbered anew.
+ */
+function mergeOcr(base, ocr, pages) {
+  const byPage = new Map();
+  const add = (p, s) => { if (!byPage.has(p)) byPage.set(p, []); byPage.get(p).push(s); };
+  for (const s of base) add(s.page, s);
+  for (const [p, r] of Object.entries(ocr || {})) {
+    for (const s of r.segs) add(Number(p), s);
+    const g = pages[p] && pages[p].graphics;
+    if (g) { g.baseSeps = g.baseSeps || g.seps; g.seps = g.baseSeps.concat(r.seps || []); }
+  }
+  const out = [];
+  for (const p of [...byPage.keys()].sort((a, b) => a - b)) out.push(...byPage.get(p));
+  return out;
+}
+
+function openOcrDialog() {
+  if (!state.doc || isBook()) return;
+  let saved = {};
+  try { saved = JSON.parse(localStorage.getItem(LS_OCR) || "{}"); } catch (_) { /* default */ }
+  const langs = saved.langs || (LANG === "de" ? ["deu", "eng"] : ["eng"]);
+  $("#ocrLangs").innerHTML = OCR_LANGS.map((l) =>
+    `<label class="check"><input type="checkbox" value="${l}"${langs.includes(l) ? " checked" : ""}> ${escapeHtml(t("ocrlang." + l))}</label>`).join("");
+  const scans = scannedPages().length;
+  $("#ocrPagesEmpty").checked = scans > 0;
+  $("#ocrPagesAll").checked = scans === 0;
+  $("#ocrScanCount").textContent = t("ocr.scanCount", { n: scans });
+  $("#ocrFamily").value = saved.family || "serif";
+  $("#ocrDialog").showModal();
+}
+
+let ocrCancel = false;
+
+async function startOcr() {
+  const langs = [...document.querySelectorAll("#ocrLangs input:checked")].map((i) => i.value);
+  if (!langs.length) { toast(t("ocr.noLang"), "error"); return; }
+  const family = $("#ocrFamily").value;
+  try { localStorage.setItem(LS_OCR, JSON.stringify({ langs, family })); } catch (_) { /* fine */ }
+  const pages = $("#ocrPagesEmpty").checked ? scannedPages() : state.doc.pages.map((p, i) => i);
+  if (!pages.length) { toast(t("ocr.none")); return; }
+  ocrCancel = false;
+  const doc = state.doc;
+  let worker = null;
+  try {
+    busy(t("ocr.loading"), () => { ocrCancel = true; });
+    const T = await import(OCR_LIB);
+    const createWorker = T.createWorker || (T.default && T.default.createWorker);
+    worker = await createWorker(langs.join("+"), 1, {
+      workerPath: OCR_WORKER, corePath: OCR_CORE, workerBlobURL: true, ...(OCR_LANG_PATH ? { langPath: OCR_LANG_PATH } : {}),
+    });
+    await worker.setParameters({ tessedit_pageseg_mode: "11" }); // sparse text: table cells and labels too
+    const results = {};
+    for (const [k, p] of pages.entries()) {
+      if (ocrCancel || state.doc !== doc) break;
+      busy(t("ocr.page", { i: k + 1, n: pages.length }), () => { ocrCancel = true; });
+      const page = doc.pages[p];
+      const zoom = Math.min(3, 3600 / Math.max(page.width, page.height));
+      const buf = await pool.workers[0].call("render", { page: p, zoom, variant: "original" });
+      const blob = new Blob([buf], { type: "image/png" });
+      const first = (await worker.recognize(blob, {}, { blocks: true })).data;
+      // Rows Tesseract was unsure of are read again as single lines.
+      await worker.setParameters({ tessedit_pageseg_mode: "7" });
+      const data = await Engine.refineOcr(first, async (rectangle) => (await worker.recognize(blob, { rectangle }, { blocks: true })).data);
+      await worker.setParameters({ tessedit_pageseg_mode: "11" });
+      const img = await imageDataOf(blob);
+      const { blocks, seps } = Engine.ocrToBlocks(data, zoom, [page.x0, page.y0], (box) => Engine.sampleColors(img, box));
+      let segs = blocks.length ? await pool.workers[0].call("ocrPage", { page: p, lines: blocks, seps, family }) : [];
+      // On a page that has a text layer, only text that is not there yet (e.g. in pictures) is added.
+      const text = doc.segments.filter((s) => s.page === p && !s.ocr).map((s) => s.bbox);
+      segs = segs.filter((s) => !text.some((b) => overlapShare(s.bbox, b) > 0.3));
+      results[p] = { segs, seps };
+    }
+    if (state.doc !== doc) return;
+    const added = addOcrResults(results);
+    toast(ocrCancel ? t("ocr.cancelled", { n: added }) : t("ocr.done", { n: added, p: Object.keys(results).length }), "ok");
+  } catch (err) {
+    console.error(err);
+    toast(t("ocr.failed", { err: err.message || err }), "error");
+  } finally {
+    if (worker) worker.terminate().catch(() => {});
+    busy("");
+  }
+}
+
+/** Share of box a that overlaps box b. */
+function overlapShare(a, b) {
+  const w = Math.min(a[2], b[2]) - Math.max(a[0], b[0]), h = Math.min(a[3], b[3]) - Math.max(a[1], b[1]);
+  return w > 0 && h > 0 ? (w * h) / Math.max(1e-6, (a[2] - a[0]) * (a[3] - a[1])) : 0;
+}
+
+async function imageDataOf(blob) {
+  const bmp = await createImageBitmap(blob);
+  const canvas = typeof OffscreenCanvas !== "undefined" ? new OffscreenCanvas(bmp.width, bmp.height)
+    : Object.assign(document.createElement("canvas"), { width: bmp.width, height: bmp.height });
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  ctx.drawImage(bmp, 0, 0);
+  bmp.close && bmp.close();
+  return ctx.getImageData(0, 0, canvas.width, canvas.height);
+}
+
+/**
+ * Add recognised segments to the document. Segments are numbered in page order again, so the
+ * translations, field settings and the translated PDF are carried over to the new numbers.
+ */
+function addOcrResults(results) {
+  const doc = state.doc;
+  const ocr = { ...(doc.ocr || {}) };
+  let added = 0;
+  for (const [p, r] of Object.entries(results)) {
+    ocr[p] = { segs: r.segs.map((s) => ({ ...s, page: Number(p), ocr: true })), seps: r.seps };
+    added += r.segs.length;
+  }
+  const oldId = new Map(doc.segments.map((s) => [s, s.id]));
+  const base = doc.segments.filter((s) => !s.ocr);
+  // Earlier OCR results of other pages are the same objects, so their translations follow.
+  const merged = mergeOcr(base, ocr, doc.pages);
+  const remap = new Map();
+  merged.forEach((s, i) => { if (oldId.has(s)) remap.set(oldId.get(s), i + 1); s.id = i + 1; });
+  const move = (obj) => {
+    const out = {};
+    for (const [k, v] of Object.entries(obj || {})) if (remap.has(Number(k))) out[remap.get(Number(k))] = v;
+    return out;
+  };
+  state.translations = move(state.translations);
+  state.overrides = move(state.overrides);
+  doc.segments = merged;
+  doc.ocr = ocr;
+  idbSet(`ocr:${doc.id}`, ocr);
+  persist();
+  saveOverrides();
+  // The translated PDF used the old numbers: it is built again on the next Build.
+  disposeOutput();
+  pool.workers[0].call("resetOutput").catch(() => {});
+  state.shrunk = new Set();
+  segIndex.clear();
+  for (const s of doc.segments) segIndex.set(s.id, s);
+  resetHistory();
+  renderPages();
+  vl.reset();
+  applyFilter();
+  setBuilt(false);
+  setVariant("original");
+  updateProgress();
+  return added;
+}
+
+/** On opening a document: OCR results from an earlier session. */
+async function restoreOcr(id, segments, pages) {
+  const ocr = await idbGetKey(`ocr:${id}`);
+  if (!ocr || !Object.keys(ocr).length) return { segments, ocr: null };
+  const merged = mergeOcr(segments, ocr, pages);
+  merged.forEach((s, i) => { s.id = i + 1; });
+  return { segments: merged, ocr };
+}
+
+/** After opening a PDF: offer OCR for pages that are scans. */
+function suggestOcr() {
+  if (!state.doc || isBook() || state.doc.ocr) return;
+  const n = scannedPages().length;
+  if (n) toast(t("ocr.suggest", { n }), "", { label: t("ocr.suggestAction"), run: openOcrDialog });
+}
+
+/* ------------------------------------------------------------------- setup */
+
+function initTools() {
+  const pages = $("#pages");
+  pages.addEventListener("pointerdown", onBoxDown);
+  window.addEventListener("pointermove", onBoxMove);
+  window.addEventListener("pointerup", onBoxUp);
+  pages.addEventListener("click", (e) => {
+    if (boxDrag.justDragged) { boxDrag.justDragged = false; e.stopPropagation(); e.preventDefault(); }
+  }, true);
+  const list = $("#segments");
+  list.addEventListener("change", onStyleInput);
+  list.addEventListener("click", onStyleClick);
+  $("#btnAppFullscreen").addEventListener("click", toggleAppFullscreen);
+  document.addEventListener("fullscreenchange", () => {
+    $("#btnAppFullscreen").classList.toggle("on", Boolean(document.fullscreenElement) && !document.body.classList.contains("viewer-only"));
+  });
+  $("#zoomPage").addEventListener("click", fitPage);
+  $("#btnOcr").addEventListener("click", openOcrDialog);
+  $("#ocrGo").addEventListener("click", (e) => { e.preventDefault(); $("#ocrDialog").close(); startOcr(); });
+}
+
+// Start-up (runs after ui.js, markup.js and tools.js have defined everything).
 document.querySelectorAll(".lang-switch button").forEach((b) => b.addEventListener("click", () => setLanguage(b.dataset.lang)));
 document.addEventListener("languagechange", onLanguageChange);
 initMarkup();
+initTools();
 init();
 
 </script>

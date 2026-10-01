@@ -261,7 +261,7 @@ function continuesParagraph(prev, next, pageLines, seps, marginsByRot, blockLine
   if (/:\s*$/.test(prev.text)) return false; // a form label ("Prüfer:") is complete
   if (LABEL_START_RE.test(nt)) return false; // next starts with its own label ("Postanschrift: …")
   if (URLISH_RE.test(nt) || URLISH_RE.test(pt)) return false; // web / e-mail addresses stand alone
-  if (!/\p{L}/u.test(pt) && !/\p{L}/u.test(nt)) return false; // rows of numbers, dates, amounts
+  if (!/\p{L}{2}/u.test(pt) && !/\p{L}{2}/u.test(nt)) return false; // rows of numbers, dates, amounts ("4.2 M")
   // Table/form rows: when both lines have text right before them on their own baseline,
   // they belong together only if those left neighbours do too (the left column of a
   // two-column page continues; a column of row labels does not).
@@ -419,14 +419,15 @@ function lineStyle(line) {
     for (const [k, v] of m) if (v > bw) { best = k; bw = v; }
     return sum && bw >= 0.75 * sum ? best : null;
   };
-  line.style = { color: top(color, total), family: latin >= 3 ? top(family, latin) : null };
+  line.style = { color: top(color, total), family: latin >= 3 ? top(family, latin) : null, bg: line.spans[0].bg || null };
   return line.style;
 }
 
 /** A heading in one colour or typeface followed by a line in another is not one paragraph. */
 function styleBreak(prev, line) {
   const a = lineStyle(prev), b = lineStyle(line);
-  return (a.color && b.color && a.color !== b.color) || (a.family && b.family && a.family !== b.family);
+  return (a.color && b.color && a.color !== b.color) || (a.family && b.family && a.family !== b.family)
+    || (a.bg && b.bg && a.bg !== b.bg); // scanned text on another background (a grey table head)
 }
 
 /** Form labels ("Prüfer:" in bold, then the value in regular) become their own segments. */
@@ -585,7 +586,7 @@ function spansText(spans, rot) {
   for (let i = 1; i < spans.length; i++) {
     const prev = spans[i - 1], cur = spans[i];
     const t = scriptText(cur, ref, rot);
-    if (t === cur.text && !text.endsWith(" ") && !cur.text.startsWith(" ") && gapOf(prev, cur, rot) > 0.15 * Math.min(prev.size, cur.size)) text += " ";
+    if (t === cur.text && !cur.ocr && !text.endsWith(" ") && !cur.text.startsWith(" ") && gapOf(prev, cur, rot) > 0.15 * Math.min(prev.size, cur.size)) text += " ";
     text += t;
   }
   return text;
@@ -704,6 +705,13 @@ function buildSegment(group, pageNo, bounds, id, marginsByRot, pageLines, shaped
   }
   const align = guessAlign(lines, rotation, bounds, marginsByRot[rotation], pageLines);
   const color = dominant(spans, (s) => s.color);
+  // Text recognised by OCR is part of a picture: the translation is drawn on a patch of the
+  // paper colour over each original line instead of removing text.
+  const ocr = spans[0].ocr ? {
+    ocr: true, bg: dominant(spans, (s) => s.bg),
+    // (little padding at the sides, so that table borders next to the text are not painted over)
+    cover: lines.map((l) => { const b = l.bbox, h = b[3] - b[1]; return [b[0] - 0.04 * h, b[1] - 0.12 * h, b[2] + 0.04 * h, b[3] + 0.12 * h].map(round2); }),
+  } : null;
   const formula = isFormula(text, spans);
   const marks = inlineMarks(spans, info, color, size);
   const prefix = stylePrefix(spans, info, color);
@@ -728,7 +736,8 @@ function buildSegment(group, pageNo, bounds, id, marginsByRot, pageLines, shaped
     bold: info.bold, italic: info.italic, family: familyFor(info),
     align,
     origin: lines[0].origin.map(round2),
-    redact: spans.filter((s) => s.text.trim()).map((s) => redactRect(s, rotation).map(round2)),
+    redact: ocr ? [] : spans.filter((s) => s.text.trim()).map((s) => redactRect(s, rotation).map(round2)),
+    ...(ocr || {}),
   };
 }
 
@@ -765,8 +774,22 @@ async function extractPages(doc, pageList, onProgress) {
     const graphics = pageGraphics(page);
     const { seps } = graphics;
     const protect = []; // text we never extract (skewed lines) must survive merged redactions
+    segments.push(...segmentPage(pageBlocks(page, bounds, seps), p, bounds, seps, protect));
+    pages[p] = { width, height, x0: bounds[0], y0: bounds[1], protect: protect.map((r) => r.map(round2)), graphics };
+    free(page);
+    done++;
+    if (onProgress) onProgress(done, pageList.length);
+    if (done % 4 === 0) await tick();
+  }
+  return { pages, segments };
+}
+
+/** Segments of one page from its text blocks (MuPDF's, or lines recognised by OCR). */
+function segmentPage(rawBlocks, p, bounds, seps, protect) {
+  const segments = [];
+  {
     const rowBlocks = [];
-    for (const block of pageBlocks(page, bounds, seps)) {
+    for (const block of rawBlocks) {
       const rows = [];
       for (const line of block.lines) {
         const rot = rotationOf(line.dir);
@@ -819,13 +842,8 @@ async function extractPages(doc, pageList, onProgress) {
         if (seg) segments.push(seg);
       }
     }
-    pages[p] = { width, height, x0: bounds[0], y0: bounds[1], protect: protect.map((r) => r.map(round2)), graphics };
-    free(page);
-    done++;
-    if (onProgress) onProgress(done, pageList.length);
-    if (done % 4 === 0) await tick();
   }
-  return { pages, segments };
+  return segments;
 }
 
 /** Extract every page of a PDF (single-threaded; the UI uses a worker pool instead). */
@@ -1171,10 +1189,13 @@ class FontKit {
     return e;
   }
   chain(seg, text) {
-    const family = this.opts.fontMode === "auto" || this.opts.fontMode === "custom" ? seg.family : this.opts.fontMode;
+    // seg.font_choice: a font chosen for this field ("sans-serif", "serif", "monospace", "custom")
+    const choice = seg.font_choice;
+    const family = choice && choice !== "custom" ? choice
+      : this.opts.fontMode === "auto" || this.opts.fontMode === "custom" ? seg.family : this.opts.fontMode;
     const v = (seg.bold ? 1 : 0) + (seg.italic ? 2 : 0);
     const chain = [];
-    if (this.opts.fontMode === "custom" && this.opts.customFont) chain.push("custom");
+    if ((choice === "custom" || (!choice && this.opts.fontMode === "custom")) && this.opts.customFont) chain.push("custom");
     chain.push(BASE_FONTS[family][v], "Symbol", "ZapfDingbats");
     let cjk = this.opts.cjk || "zh-Hans";
     if (/[぀-ヿ]/.test(text)) cjk = "ja";
@@ -1399,7 +1420,7 @@ function layoutSegment(seg, text, fk, bounds, obs, opts, used, stats, leadEnd = 
   const along = corners.map(([x, y]) => x * d[0] + y * d[1]), across = corners.map(([x, y]) => x * n[0] + y * n[1]);
   let a0 = Math.min(...along), a1 = Math.max(...along);
   const b1 = Math.max(...across);
-  if (obs && seg.lines === 1) [a0, a1] = expandedSpan(seg, bounds, obs);
+  if (obs && seg.lines === 1 && !seg.fixed) [a0, a1] = expandedSpan(seg, bounds, obs); // a box the user drew is kept
   const ob = seg.origin[0] * n[0] + seg.origin[1] * n[1];
   // First-line indent (paragraph indent, or a lead-in such as "Hinweis:" before the text).
   const oa = seg.origin[0] * d[0] + seg.origin[1] * d[1];
@@ -1472,7 +1493,7 @@ function layoutSegment(seg, text, fk, bounds, obs, opts, used, stats, leadEnd = 
   };
   let W = (a1 - a0) * 1.01;
   let { k, lines } = fitWidth(W);
-  if (k < 1 && obs && seg.lines > 1) {
+  if (k < 1 && obs && seg.lines > 1 && !seg.fixed) {
     // A wrapped paragraph or table cell may widen a little into free space before shrinking.
     const [e0, e1] = expandedSpan(seg, bounds, obs, 1.0 * seg.size);
     const grow = Math.min(e1 - e0, (a1 - a0) * 1.3) - (a1 - a0);
@@ -1485,7 +1506,6 @@ function layoutSegment(seg, text, fk, bounds, obs, opts, used, stats, leadEnd = 
   if (k < 1) stats.shrunk.push({ id: seg.id, scale: Math.round(k * 100) / 100 });
   const s = s0 * k, L = L0 * k;
   const base1 = seg.lines === 1 && lines.length === 1 ? ob - (s0 - s) * 0.3 : top + 0.85 * s;
-  const rg = (hex) => `${hex.slice(1).match(/../g).map((h) => fmt(parseInt(h, 16) / 255)).join(" ")} rg`;
   const ops = [`BT ${rg(seg.color)}`];
   let curFont = null, curColor = seg.color;
   lines.forEach((line, i) => {
@@ -1577,6 +1597,8 @@ function redactionRects(todo, keep) {
   return rects;
 }
 
+const rg = (hex) => `${hex.slice(1).match(/../g).map((h) => fmt(parseInt(h, 16) / 255)).join(" ")} rg`;
+
 /**
  * The end of a translated lead-in just before `seg` on its first baseline ("Grammatik:" before
  * "Das Adverb …"), plus the original gap, when the translation reaches past seg's first line start.
@@ -1601,7 +1623,7 @@ function translatePage(doc, index, fk, segs, translations, pageInfo, opts, stats
   const todo = [], keep = [...((pageInfo && pageInfo.protect) || [])];
   for (const s of segs) {
     if ((translations[s.id] || "").trim()) todo.push(s);
-    else keep.push(s.bbox);
+    else keep.push(s.orig_bbox || s.bbox); // (a moved box still protects the text where it is)
   }
   stats.untranslated += segs.length - todo.length;
   if (!todo.length) return;
@@ -1613,13 +1635,16 @@ function translatePage(doc, index, fk, segs, translations, pageInfo, opts, stats
   page.applyRedactions(false, 0, 0, 0); // keep images, keep line art, remove text
   const used = new Set();
   const laid = []; // where the lines of translations laid out so far end, for lead-ins
-  const content = todo.map((seg) => {
+  // Patches of paper colour over scanned (OCR) text come first, under all translations.
+  const covers = todo.filter((seg) => seg.cover).map((seg) =>
+    `q ${rg(seg.bg || "#ffffff")} ${seg.cover.map(([x0, y0, x1, y1]) => `${fmt(x0)} ${fmt(y0)} ${fmt(x1 - x0)} ${fmt(y1 - y0)} re`).join(" ")} f Q`);
+  const content = covers.concat(todo.map((seg) => {
     const ends = [];
-    const ops = layoutSegment(seg, translations[seg.id], fk, bounds, obs, opts, used, stats, leadInEnd(seg, laid), ends);
+    const ops = layoutSegment(seg, translations[seg.id], fk, bounds, obs, opts, used, stats, seg.fixed ? null : leadInEnd(seg, laid), ends);
     const right = localBox(seg.bbox, seg.rotation)[2];
     for (const [a, b] of ends) laid.push({ rot: seg.rotation, end: a, base: b, right });
     return ops;
-  }).join("\n");
+  })).join("\n");
   appendContent(doc, page, content, used);
   stats.replaced += todo.length;
   free(page);
@@ -1767,10 +1792,233 @@ function renderPNG(doc, index, zoom) {
 
 const Engine = {
   init: initEngine, extract: extractDocument, extractPages, build: buildTranslated, renderPNG,
-  detectKind, openBook, saveBook, extractBook, openLaidOut, mapTranslated,
+  detectKind, openBook, saveBook, extractBook, openLaidOut, mapTranslated, ocrToBlocks, sampleColors, refineOcr,
   open: (bytes) => M.Document.openDocument(bytes, "application/pdf"),
   exportTxt, exportCsv, exportJson, exportXliff, exportDocx, parseImport, parseMarkedText,
 };
+
+/**
+ * Password protection: a PDF that only restricts editing or copying (an owner password) opens
+ * without a password; one that needs a password to open is unlocked with the user's password.
+ * Either way an unencrypted copy is returned, so the translation has no protection either.
+ * {status: "plain" | "unlocked" | "password" | "wrong", bytes}
+ */
+function unlockPdf(bytes, password) {
+  const doc = M.Document.openDocument(bytes.slice(), "application/pdf");
+  try {
+    if (doc.needsPassword()) {
+      if (!password) return { status: "password" };
+      if (!doc.authenticatePassword(password)) return { status: "wrong" };
+    }
+    const pdf = doc.asPDF ? doc.asPDF() : doc;
+    if (!pdf.getTrailer || pdf.getTrailer().get("Encrypt").isNull()) return { status: "plain" };
+    const buf = pdf.saveToBuffer("encrypt=none");
+    const out = buf.asUint8Array().slice();
+    free(buf);
+    return { status: "unlocked", bytes: out };
+  } finally {
+    free(doc);
+  }
+}
+
+/**
+ * Lines recognised by OCR, as text blocks like MuPDF's: [{lines: [{words: [{text, bbox, size,
+ * base}], color, bg}]}] (page coordinates) -> blocks of lines of word spans.
+ */
+function ocrBlocks(blocks, family = "serif") {
+  const fonts = [false, true].map((bold) => ({ name: bold ? "OCR-Bold" : "OCR", bold, italic: false, family, hinted: true, ws: 0, wn: 0 }));
+  return blocks.map((b) => ({
+    lines: b.lines.map((l) => {
+      const font = fonts[l.bold ? 1 : 0];
+      const gaps = [];
+      const spans = l.words.map((w, i) => {
+        const prev = l.words[i - 1];
+        const gap = prev ? w.bbox[0] - prev.bbox[2] : 0;
+        if (prev) gaps.push(gap / l.size);
+        // (no spaces between Chinese / Japanese characters, which Tesseract returns one by one)
+        const space = i && !(CJK_RE.test(prev.text.slice(-1)) && CJK_RE.test(w.text[0]));
+        return { key: font.name, text: (space ? " " : "") + w.text, bbox: w.bbox, origin: [w.bbox[0], l.base], size: l.size, font,
+          color: l.color, bg: l.bg, ocr: true, gapBefore: gap > 0.4 * l.size ? gap : 0 };
+      });
+      return { dir: [1, 0], spans, gaps };
+    }),
+  }));
+}
+
+/**
+ * Ink and paper colour of a box of a page image ({width, height, data: RGBA}): the mean of the
+ * darkest tenth and of the lightest half of its pixels; and how much of the box is ink.
+ */
+function sampleColors(img, box) {
+  const [x0, y0, x1, y1] = box.map(Math.round);
+  const px = [];
+  const step = Math.max(1, Math.round(Math.sqrt(((x1 - x0) * (y1 - y0)) / 6000)));
+  for (let y = Math.max(0, y0); y < Math.min(img.height, y1); y += step) {
+    for (let x = Math.max(0, x0); x < Math.min(img.width, x1); x += step) {
+      const i = (y * img.width + x) * 4, d = img.data;
+      px.push([0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2], d[i], d[i + 1], d[i + 2]]);
+    }
+  }
+  if (!px.length) return { fg: "#000000", bg: "#ffffff", ink: 0 };
+  px.sort((a, b) => a[0] - b[0]);
+  const lo = px[Math.floor(px.length * 0.05)][0], hi = px[Math.floor(px.length * 0.75)][0], mid = (lo + hi) / 2;
+  let dark = 0;
+  for (const p of px) if (p[0] < mid) dark++;
+  const mean = (list) => {
+    const m = [0, 0, 0];
+    for (const p of list) { m[0] += p[1]; m[1] += p[2]; m[2] += p[3]; }
+    return "#" + m.map((v) => Math.round(v / list.length).toString(16).padStart(2, "0")).join("");
+  };
+  // ink: share of dark pixels, about 1.5 times higher for bold text than for regular text
+  return { fg: mean(px.slice(0, Math.max(1, Math.ceil(px.length * 0.1)))), bg: mean(px.slice(Math.floor(px.length * 0.5))), ink: dark / px.length };
+}
+
+/**
+ * Sparse-text mode finds text everywhere (table cells too) but sometimes breaks a line into
+ * garbled pieces ("5] ) 加 /NJZE 几 ?" for "1) 三加六是几？"). Rows of text Tesseract is unsure of
+ * are read again as single lines with `readLine(rectangle)`, and kept if that reading is better.
+ * Returns Tesseract-like data: {blocks: [{paragraphs: [{lines}]}]}.
+ */
+async function refineOcr(data, readLine, maxRows = 40) {
+  const lines = [];
+  for (const b of data.blocks || []) for (const p of b.paragraphs || []) for (const l of p.lines || []) lines.push(l);
+  const conf = (ls) => {
+    let sum = 0, n = 0;
+    for (const l of ls) for (const w of l.words || []) { const k = w.text.trim().length; sum += w.confidence * k; n += k; }
+    return n ? sum / n : 0;
+  };
+  const vOverlap = (a, b) => (Math.min(a.y1, b.y1) - Math.max(a.y0, b.y0)) / Math.max(1, Math.min(a.y1 - a.y0, b.y1 - b.y0));
+  const hGap = (a, b) => Math.max(a.x0, b.x0) - Math.min(a.x1, b.x1);
+  const grow = (a, b) => ({ x0: Math.min(a.x0, b.x0), y0: Math.min(a.y0, b.y0), x1: Math.max(a.x1, b.x1), y1: Math.max(a.y1, b.y1) });
+  const rows = [];
+  for (const l of lines) {
+    if (conf([l]) >= 70) continue;
+    const h = l.bbox.y1 - l.bbox.y0;
+    const row = rows.find((r) => vOverlap(r.box, l.bbox) > 0.5 && hGap(r.box, l.bbox) < 3 * h);
+    if (row) { row.lines.push(l); row.box = grow(row.box, l.bbox); } else rows.push({ lines: [l], box: { ...l.bbox } });
+  }
+  // Good pieces of the same text line belong to the row as well.
+  for (const r of rows) {
+    for (const l of lines) {
+      const h = r.box.y1 - r.box.y0;
+      if (!r.lines.includes(l) && vOverlap(r.box, l.bbox) > 0.5 && hGap(r.box, l.bbox) < 1.5 * h) { r.lines.push(l); r.box = grow(r.box, l.bbox); }
+    }
+  }
+  const replace = new Map(); // first line of a row -> its new lines; other lines of the row -> []
+  for (const r of rows.slice(0, maxRows)) {
+    const h = r.box.y1 - r.box.y0, pad = Math.round(0.35 * h);
+    const rect = { left: Math.max(0, r.box.x0 - pad), top: Math.max(0, r.box.y0 - pad), width: r.box.x1 - r.box.x0 + 2 * pad, height: h + 2 * pad };
+    let fresh = [];
+    try {
+      const res = await readLine(rect);
+      for (const b of res.blocks || []) for (const p of b.paragraphs || []) for (const l of p.lines || []) if ((l.words || []).length) fresh.push(l);
+    } catch (_) { fresh = []; }
+    if (!fresh.length || conf(fresh) <= conf(r.lines) + 5) continue;
+    const order = r.lines.slice().sort((a, b) => lines.indexOf(a) - lines.indexOf(b));
+    if (order.some((l) => replace.has(l))) continue;
+    replace.set(order[0], fresh);
+    for (const l of order.slice(1)) replace.set(l, []);
+  }
+  const out = [];
+  for (const l of lines) out.push(...(replace.has(l) ? replace.get(l) : [l]));
+  return { blocks: [{ paragraphs: [{ lines: out }] }] };
+}
+
+/**
+ * Tesseract's result for a page image rendered at `zoom` (sparse-text mode: every piece of text,
+ * table cells too) -> {blocks: one block of lines for ocrBlocks, seps: table borders}, in page
+ * coordinates. The engine groups
+ * the lines into paragraphs, cells and labels as it does for PDF text. `colors(box)` gives the
+ * ink and paper colour of a box of the image.
+ */
+function ocrToBlocks(data, zoom, origin, colors) {
+  const lines = [];
+  const pt = (v, o) => round2(v / zoom + o);
+  // Colours measured line by line vary a little; near ones are made equal, so that the lines of
+  // one paragraph keep one colour (a colour change starts a new segment).
+  const palette = [];
+  const snap = (hex, tol) => { // (paper colours must stay close: a patch shows on grey table heads)
+    const c = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+    for (const p of palette) if (p.tol === tol && Math.hypot(p.c[0] - c[0], p.c[1] - c[1], p.c[2] - c[2]) < tol) return p.hex;
+    palette.push({ c, hex, tol });
+    return hex;
+  };
+  const seps = []; // table borders that Tesseract read as | [ ] (column separators)
+  const border = (bb) => { const x = (bb.x0 + bb.x1) / 2; seps.push([pt(x, origin[0]) - 0.25, pt(bb.y0, origin[1]), pt(x, origin[0]) + 0.25, pt(bb.y1, origin[1])]); };
+  for (const block of data.blocks || []) {
+    for (const para of block.paragraphs || []) {
+      for (const line of para.lines || []) {
+        const b = line.bbox, h = b.y1 - b.y0;
+        // Border marks read as part of a word ("[3.1", "|Strong") are cut off, box included.
+        let words = (line.words || []).map((w) => {
+          const sym = (w.symbols || []).filter((c) => c.text.trim());
+          let a = 0, z = sym.length;
+          while (a < z - 1 && /^[|[\]{}]$/.test(sym[a].text)) border(sym[a++].bbox);
+          while (z > a + 1 && /^[|[\]{}]$/.test(sym[z - 1].text)) border(sym[--z].bbox);
+          if (!sym.length || (a === 0 && z === sym.length)) return { ...w, text: w.text.trim() };
+          const keep = sym.slice(a, z);
+          return { ...w, text: keep.map((c) => c.text).join(""),
+            bbox: { x0: Math.min(...keep.map((c) => c.bbox.x0)), y0: Math.min(...keep.map((c) => c.bbox.y0)), x1: Math.max(...keep.map((c) => c.bbox.x1)), y1: Math.max(...keep.map((c) => c.bbox.y1)) } };
+        });
+        // A small sign at the start of a line followed by text is a bullet (often read as + * e o).
+        if (words.length > 1 && /^[+*•·°oe»>◦▪■□●○-]$/.test(words[0].text) && words[0].bbox.y1 - words[0].bbox.y0 < 0.7 * h) {
+          words[0] = { ...words[0], text: "•", confidence: 99 };
+        }
+        // Table borders and specks read as | [ ] _ - … are dropped unless Tesseract is sure.
+        for (const w of words) if (/^[|[\]{}]+$/.test(w.text)) border(w.bbox);
+        words = words.filter((w) => w.text && !/^[|[\]{}]+$/.test(w.text) && (!/^[_\-–—=~.,:;'"`^°*+]+$/.test(w.text) || w.confidence >= 80));
+        const good = words.filter((w) => w.confidence >= 60).length;
+        words = words.filter((w) => w.confidence >= 30 || (good && /\p{L}/u.test(w.text)));
+        if (!words.some((w) => /[\p{L}\p{N}]/u.test(w.text))) continue;
+        let rowH = line.rowAttributes && line.rowAttributes.row_height > 0 ? line.rowAttributes.row_height : h;
+        const bl = line.baseline && line.baseline.has_baseline !== false ? (line.baseline.y0 + line.baseline.y1) / 2 : b.y1 - 0.2 * h;
+        // Table borders read as part of a line make its row height far too big: then the size
+        // comes from the height of capitals, digits and ascenders above the baseline (~0.72 em).
+        const tall = words.filter((w) => /[\p{Lu}\p{N}bdfhklt]/u.test(w.text) && !/^[|[\]{}]/.test(w.text));
+        if (tall.length) {
+          const tops = tall.map((w) => w.bbox.y0).sort((x, y) => x - y);
+          const cap = (bl - tops[tops.length >> 1]) / 0.7; // (median: one bad word must not decide)
+          if (cap > 0 && (rowH > 1.25 * cap || rowH < 0.8 * cap)) rowH = cap;
+        }
+        const { fg, bg } = colors([b.x0, b.y0, b.x1, b.y1]);
+        // Ink is measured in the band from cap height to the baseline of each word, so that lines
+        // with and without descenders compare fairly.
+        let ink = 0, wsum = 0;
+        for (const w of words) {
+          const wd = w.bbox.x1 - w.bbox.x0;
+          ink += colors([w.bbox.x0, bl - 0.62 * rowH, w.bbox.x1, bl]).ink * wd;
+          wsum += wd;
+        }
+        ink /= wsum || 1;
+        lines.push({
+          size: round2(Math.max(4, Math.min(rowH, 1.6 * h)) / zoom), base: pt(bl, origin[1]), color: snap(fg, 48), bg: snap(bg, 18), ink,
+          words: words.map((w) => ({ text: w.text, bbox: [pt(w.bbox.x0, origin[0]), pt(w.bbox.y0, origin[1]), pt(w.bbox.x1, origin[0]), pt(w.bbox.y1, origin[1])] })),
+        });
+      }
+    }
+  }
+  // Sizes measured line by line vary too: lines on one baseline get their median size, and
+  // sizes within 12 % of each other the same value.
+  for (const l of lines) {
+    const row = lines.filter((o) => Math.abs(o.base - l.base) < 0.3 * Math.min(o.size, l.size)).map((o) => o.size).sort((a, b) => a - b);
+    l.rowSize = row[(row.length - 1) >> 1];
+  }
+  const sizes = [];
+  for (const l of lines) {
+    const near = sizes.find((v) => Math.abs(v - l.rowSize) <= 0.12 * v);
+    l.size = near || l.rowSize;
+    if (!near) sizes.push(l.rowSize);
+    delete l.rowSize;
+  }
+  // Specks read as text come out tiny next to the page's text.
+  const sorted = lines.map((l) => l.size).sort((a, b) => a - b), median = sorted[sorted.length >> 1];
+  for (let i = lines.length - 1; i >= 0; i--) if (lines[i].size < 0.45 * median) lines.splice(i, 1);
+  // Bold lines have clearly more ink (in the cap-height band) than the page's usual text.
+  const inks = lines.filter((l) => l.words.length > 1).map((l) => l.ink).sort((a, b) => a - b);
+  const usual = inks.length ? inks[inks.length >> 1] : 0;
+  for (const l of lines) { l.bold = usual > 0 && l.ink > 1.2 * usual; delete l.ink; }
+  return { blocks: lines.length ? [{ lines }] : [], seps };
+}
 
 // ---------------------------------------------------------- worker protocol
 /**
@@ -1800,6 +2048,14 @@ function createHandler() {
       return { result: W.doc.countPages() };
     }
     if (cmd === "extract") return { result: await extractPages(W.doc, args.pages, progress) };
+    if (cmd === "unlock") return { result: unlockPdf(args.bytes, args.password) };
+    if (cmd === "ocrPage") {
+      const page = W.doc.loadPage(args.page);
+      const bounds = page.getBounds();
+      const seps = pageGraphics(page).seps.concat(args.seps || []);
+      free(page);
+      return { result: segmentPage(ocrBlocks(args.lines, args.family), args.page, bounds, seps, []) };
+    }
     if (cmd === "extractBook") {
       const { book, pages, segments } = await extractBook(W.bytes, W.kind, W.doc);
       W.book = book;

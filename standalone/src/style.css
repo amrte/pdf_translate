@@ -151,7 +151,9 @@ code { font-size: 12.5px; background: var(--surface-2); border: 1px solid var(--
 .page .box:hover { background: rgba(49, 88, 212, .16); }
 .page .box.active { border: 2px solid #f0a020; background: rgba(240, 160, 32, .18); z-index: 2; }
 .pages.no-boxes .box:not(.active) { display: none; }
-.pages.translated .box { display: none; }
+/* On the translation, boxes stay invisible until pointed at or selected (to move a field there). */
+.pages.translated .box:not(.active):not(:hover) { border-color: transparent !important; background: transparent !important; }
+.pages.translated .box.active { background: transparent; }
 
 /* ---------- editor ---------- */
 .progress-row { display: flex; align-items: center; gap: 10px; padding: 10px 14px 0; color: var(--muted); font-size: 13px; }
@@ -298,6 +300,10 @@ kbd { font: 11.5px ui-monospace, monospace; border: 1px solid var(--border); bor
 .help-version { margin-top: 4px; }
 /* Narrow editor pane: icon-only secondary buttons (their titles explain them). */
 .editor-pane { container-type: inline-size; }
+@container (max-width: 780px) { /* the OCR and Copy buttons go icon-only first */
+  .pane-toolbar #btnOcr span, .pane-toolbar #btnCopy span { display: none; }
+  .pane-toolbar #btnOcr, .pane-toolbar #btnCopy { padding: 0 7px; }
+}
 @container (max-width: 640px) {
   .pane-toolbar #btnExport span, .pane-toolbar #btnCopy span, .pane-toolbar #btnAi span, .pane-toolbar #btnImport span { display: none; }
   .pane-toolbar #btnExport, .pane-toolbar #btnCopy, .pane-toolbar #btnAi, .pane-toolbar #btnImport { padding: 0 7px; }
@@ -376,3 +382,23 @@ body.viewer-only #btnFullscreen .fs-off { display: inline; }
 /* ---- v1.06: e-books (EPUB / FB2) ---- */
 body:not(.is-book) .book-only, body.is-book .pdf-only { display: none !important; }
 body.is-book .tool-rail { display: none; }
+
+/* ---- v1.08: fields you can move and resize, field style, OCR, passwords ---- */
+.box { cursor: grab; }
+body.box-dragging, body.box-dragging .box { cursor: grabbing !important; user-select: none; }
+.box.custom { border-style: dashed; }
+.box .rh { position: absolute; width: 9px; height: 9px; background: #fff; border: 1.5px solid var(--accent, #3158d4); border-radius: 2px; z-index: 3; }
+.rh-nw { left: -5px; top: -5px; cursor: nwse-resize; } .rh-se { right: -5px; bottom: -5px; cursor: nwse-resize; }
+.rh-ne { right: -5px; top: -5px; cursor: nesw-resize; } .rh-sw { left: -5px; bottom: -5px; cursor: nesw-resize; }
+.rh-n { left: calc(50% - 5px); top: -5px; cursor: ns-resize; } .rh-s { left: calc(50% - 5px); bottom: -5px; cursor: ns-resize; }
+.rh-e { right: -5px; top: calc(50% - 5px); cursor: ew-resize; } .rh-w { left: -5px; top: calc(50% - 5px); cursor: ew-resize; }
+.mini.on { background: var(--accent-soft, #e8edff); border-color: var(--accent, #3158d4); color: var(--accent, #3158d4); }
+.seg-style { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 6px 10px; border-bottom: 1px solid var(--border); background: var(--surface-2); font-size: 12px; }
+.seg-style input[type="number"] { width: 64px; }
+.seg-style select { max-width: 150px; }
+.seg-style input[type="color"] { width: 30px; height: 24px; padding: 0 2px; border: 1px solid var(--border); border-radius: 5px; background: none; }
+.seg-style .st-hint { flex-basis: 100%; }
+.busy-box #busyCancel { margin-left: 12px; }
+.ocr-langs { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 2px 12px; margin-top: 4px; }
+.error-text { color: var(--danger, #c62828); font-weight: 600; }
+.top-fs.on { color: var(--accent, #3158d4); }
