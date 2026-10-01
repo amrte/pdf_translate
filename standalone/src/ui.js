@@ -896,7 +896,9 @@ function updateSteps(any) {
 
 function applyFilter() {
   if (!state.doc) return;
-  const q = $("#search").value.trim().toLowerCase();
+  // (the search field: the same text and options as the highlighted matches)
+  const re = findRegex(), scope = $("#findScope").value;
+  const hit = (text) => { re.lastIndex = 0; return re.test(text); };
   const status = $("#filterStatus").value;
   const page = $("#filterPage").value === "all" ? null : Number($("#filterPage").value);
   const ids = [];
@@ -904,7 +906,7 @@ function applyFilter() {
     if (page !== null && s.page !== page) continue;
     if (status === "numbers" ? !s.skip : s.skip) continue; // numbers-only segments have their own filter
     if ((status === "todo" || status === "done") && (status === "done") !== hasTr(s.id)) continue;
-    if (q && !s.text.toLowerCase().includes(q) && !(state.translations[s.id] || "").toLowerCase().includes(q)) continue;
+    if (re && !((scope !== "tr" && hit(s.text)) || (scope !== "src" && hit(state.translations[s.id] || "")))) continue;
     ids.push(s.id);
   }
   $("#segments").classList.toggle("is-empty", !ids.length);
@@ -922,6 +924,7 @@ function setActive(id, { scrollList = false, scrollViewer = false, focus = false
     if (!vl.pos.has(id)) {
       $("#search").value = ""; $("#filterStatus").value = segById(id).skip ? "numbers" : "all"; $("#filterPage").value = "all";
       applyFilter();
+      refreshFind(); // (the search no longer applies)
     }
     if (scrollList) vl.scrollTo(id);
   }
@@ -1357,7 +1360,7 @@ function init() {
     if (next !== undefined) setActive(next, { scrollList: true, scrollViewer: true, focus: true });
   });
   let searchTimer = null;
-  $("#search").addEventListener("input", () => { clearTimeout(searchTimer); searchTimer = setTimeout(applyFilter, 150); });
+  $("#search").addEventListener("input", () => { clearTimeout(searchTimer); searchTimer = setTimeout(searchChanged, 150); });
   $("#filterStatus").addEventListener("change", applyFilter);
   $("#filterPage").addEventListener("change", (e) => {
     applyFilter();

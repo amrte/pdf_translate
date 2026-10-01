@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="PDF Translate 1.20">
+  <meta name="generator" content="PDF Translate 1.21">
   <title>PDF Translate</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Cdefs%3E%3ClinearGradient id=%22g%22 x1=%220%22 y1=%220%22 x2=%221%22 y2=%221%22%3E%3Cstop offset=%220%22 stop-color=%22#4a6cf7%22/%3E%3Cstop offset=%221%22 stop-color=%22#2440b3%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=%2232%22 height=%2232%22 rx=%227%22 fill=%22url%28#g%29%22/%3E%3Cpath d=%22M8 4.5h9.5l6 6V23a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V6.5a2 2 0 0 1 2-2z%22 fill=%22#fff%22/%3E%3Cpath d=%22M17.5 4.5v4.8a1.2 1.2 0 0 0 1.2 1.2h4.8z%22 fill=%22#c7d2fe%22/%3E%3Crect x=%229%22 y=%2213%22 width=%229%22 height=%221.7%22 rx=%22.85%22 fill=%22#9aabf0%22/%3E%3Crect x=%229%22 y=%2216.6%22 width=%2211%22 height=%221.7%22 rx=%22.85%22 fill=%22#9aabf0%22/%3E%3Crect x=%229%22 y=%2220.2%22 width=%226%22 height=%221.7%22 rx=%22.85%22 fill=%22#9aabf0%22/%3E%3Ccircle cx=%2224%22 cy=%2224%22 r=%227%22 fill=%22#f59e0b%22 stroke=%22#fff%22 stroke-width=%221.6%22/%3E%3Cpath d=%22M20.4 21.7h4.6M27.6 26.3H23%22 fill=%22none%22 stroke=%22#fff%22 stroke-width=%221.6%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M24.6 19.4l3.5 2.3-3.5 2.3zM23.4 24l-3.5 2.3 3.5 2.3z%22 fill=%22#fff%22/%3E%3C/svg%3E">
   <style>
@@ -246,7 +246,7 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); ou
   .work-view { grid-template-columns: minmax(0, 1fr) !important; grid-template-rows: 45% 55%; }
   .splitter { display: none; }
   .pane-toolbar, .filter-row { flex-wrap: wrap; }
-  .filter-row input { flex-basis: 100%; }
+  .filter-row .search-box { flex-basis: 100%; }
   .pages { padding: 22px 12px; }
   .viewer-pane { border-right: 0; border-bottom: 1px solid var(--border); }
   .steps { display: none; }
@@ -375,7 +375,7 @@ p.help-part, button.ai-part { display: block; }
   font-family: Helvetica, Arial, sans-serif; line-height: 1.2; background: rgba(255, 255, 255, .92);
   border: 1.5px dashed var(--accent); border-radius: 3px; outline: none;
 }
-@container (max-width: 880px) { .boxes-check span { display: none; } } /* (the checkbox keeps its tooltip) */
+@container (max-width: 680px) { .boxes-check span { display: none; } } /* (the checkbox keeps its tooltip) */
 .viewer-pane { container-type: inline-size; }
 
 /* ---------- v1.03: full screen, wider help/AI window, AI parts, new logo ---------- */
@@ -430,7 +430,7 @@ body.box-dragging, body.box-dragging .box { cursor: grabbing !important; user-se
 .find-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .find-row input[type="search"], .find-row input[type="text"] { flex: 1; min-width: 140px; }
 .find-row .check { font-size: 12.5px; }
-#findText.no-match { border-color: var(--danger, #c62828); background: rgba(198, 40, 40, .06); }
+#search.no-match { border-color: var(--danger, #c62828); background: rgba(198, 40, 40, .06); }
 .find-count { min-width: 64px; text-align: right; }
 #findReplaceToggle.on, #btnFind.on { color: var(--accent); border-color: var(--accent); }
 mark.find { background: #ffe066; color: inherit; border-radius: 2px; padding: 0; }
@@ -542,6 +542,25 @@ body.splitting .pages, body.splitting iframe { pointer-events: none; }
   .upload-view .wf { width: min(1400px, 100%); gap: 10px; }
 }
 
+/* ---------- v1.21: one search field (filter + find + replace) ---------- */
+.search-box { flex: 1; min-width: 0; display: flex; align-items: center; gap: 4px; }
+.search-box #search { flex: 1; min-width: 80px; }
+.search-box .icon-btn { width: 24px; height: 26px; font-size: 15px; flex: none; }
+.search-box .icon-btn:disabled { opacity: .35; }
+.search-box .find-count { min-width: 0; white-space: nowrap; }
+.search-box .find-count:empty { display: none; }
+.search-box #findPrev, .search-box #findNext { display: none; }
+.search-box:has(#search:not(:placeholder-shown)) #findPrev, .search-box:has(#search:not(:placeholder-shown)) #findNext { display: inline-block; }
+#findReplaceToggle.on, #btnFind.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+.find-close { margin-left: auto; }
+/* The viewer tool bar gets more compact as the page view narrows, and wraps rather than cutting off buttons. */
+@container (max-width: 780px) {
+  .viewer-pane .pane-toolbar { gap: 4px; }
+  .viewer-pane .seg-toggle button { padding: 2px 7px; }
+}
+@container (max-width: 720px) { .viewer-pane .zoom-label { display: none; } }
+@container (max-width: 620px) { .viewer-pane .pane-toolbar { flex-wrap: wrap; row-gap: 4px; } }
+
   </style>
 </head>
 <body>
@@ -549,7 +568,7 @@ body.splitting .pages, body.splitting iframe { pointer-events: none; }
   <div class="brand">
     <span class="logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><defs><linearGradient id="logoGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4a6cf7"/><stop offset="1" stop-color="#2440b3"/></linearGradient></defs><rect width="32" height="32" rx="7" fill="url(#logoGrad)"/><path d="M8 4.5h9.5l6 6V23a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V6.5a2 2 0 0 1 2-2z" fill="#fff"/><path d="M17.5 4.5v4.8a1.2 1.2 0 0 0 1.2 1.2h4.8z" fill="#c7d2fe"/><rect x="9" y="13" width="9" height="1.7" rx=".85" fill="#9aabf0"/><rect x="9" y="16.6" width="11" height="1.7" rx=".85" fill="#9aabf0"/><rect x="9" y="20.2" width="6" height="1.7" rx=".85" fill="#9aabf0"/><circle cx="24" cy="24" r="7" fill="#f59e0b" stroke="#fff" stroke-width="1.6"/><path d="M20.4 21.7h4.6M27.6 26.3H23" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/><path d="M24.6 19.4l3.5 2.3-3.5 2.3zM23.4 24l-3.5 2.3 3.5 2.3z" fill="#fff"/></svg></span>
     <span>PDF Translate</span>
-    <span class="version" id="appVersion">v1.20</span>
+    <span class="version" id="appVersion">v1.21</span>
   </div>
   <ol class="steps" id="steps">
     <li data-step="1"><span>1</span> <i data-i18n="step.extract">Extract text</i></li>
@@ -731,32 +750,14 @@ body.splitting .pages, body.splitting iframe { pointer-events: none; }
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v6M14 11v6"/></svg>
       </button>
     </div>
-    <div class="find-bar" id="findBar" hidden>
-      <div class="find-row">
-        <input type="search" id="findText" data-i18n-placeholder="find.placeholder" autocomplete="off">
+    <div class="filter-row">
+      <div class="search-box">
+        <input type="search" id="search" data-i18n-placeholder="filter.search" autocomplete="off">
         <span class="muted small find-count" id="findCount"></span>
         <button type="button" class="icon-btn" id="findPrev" data-i18n-title="find.prev">‹</button>
         <button type="button" class="icon-btn" id="findNext" data-i18n-title="find.next">›</button>
         <button type="button" class="icon-btn" id="findReplaceToggle" data-i18n-title="find.replaceToggle">⇄</button>
-        <button type="button" class="icon-btn" id="findClose" data-i18n-title="find.close">×</button>
       </div>
-      <div class="find-row">
-        <select id="findScope">
-          <option value="tr" data-i18n="find.scopeTr">In translations</option>
-          <option value="src" data-i18n="find.scopeSrc">In the original</option>
-          <option value="both" data-i18n="find.scopeBoth">In both</option>
-        </select>
-        <label class="check"><input type="checkbox" id="findCase"> <span data-i18n="find.case">Match case</span></label>
-        <label class="check"><input type="checkbox" id="findWord"> <span data-i18n="find.word">Whole word</span></label>
-      </div>
-      <div class="find-row" id="replaceRow" hidden>
-        <input type="text" id="replaceText" data-i18n-placeholder="find.replacePlaceholder" autocomplete="off">
-        <button type="button" class="btn" id="replaceOne" data-i18n="find.replace" data-i18n-title="find.replaceTitle">Replace</button>
-        <button type="button" class="btn" id="replaceAll" data-i18n="find.replaceAll" data-i18n-title="find.replaceAllTitle">Replace all</button>
-      </div>
-    </div>
-    <div class="filter-row">
-      <input type="search" id="search" data-i18n-placeholder="filter.search">
       <select id="filterStatus">
         <option value="all" data-i18n="filter.all">All</option>
         <option value="todo" data-i18n="filter.todo">Untranslated</option>
@@ -764,6 +765,23 @@ body.splitting .pages, body.splitting iframe { pointer-events: none; }
         <option value="numbers" data-i18n="filter.numbers">Numbers only (kept)</option>
       </select>
       <select id="filterPage"><option value="all" data-i18n="filter.allPages">All pages</option></select>
+    </div>
+    <div class="find-bar" id="findBar" hidden>
+      <div class="find-row">
+        <select id="findScope">
+          <option value="both" data-i18n="find.scopeBoth" selected>In both</option>
+          <option value="tr" data-i18n="find.scopeTr">In translations</option>
+          <option value="src" data-i18n="find.scopeSrc">In the original</option>
+        </select>
+        <label class="check"><input type="checkbox" id="findCase"> <span data-i18n="find.case">Match case</span></label>
+        <label class="check"><input type="checkbox" id="findWord"> <span data-i18n="find.word">Whole word</span></label>
+        <button type="button" class="icon-btn find-close" id="findClose" data-i18n-title="find.close">×</button>
+      </div>
+      <div class="find-row" id="replaceRow">
+        <input type="text" id="replaceText" data-i18n-placeholder="find.replacePlaceholder" autocomplete="off">
+        <button type="button" class="btn" id="replaceOne" data-i18n="find.replace" data-i18n-title="find.replaceTitle">Replace</button>
+        <button type="button" class="btn" id="replaceAll" data-i18n="find.replaceAll" data-i18n-title="find.replaceAllTitle">Replace all</button>
+      </div>
     </div>
     <div class="segments" id="segments"></div>
   </section>
@@ -901,7 +919,7 @@ body.splitting .pages, body.splitting iframe { pointer-events: none; }
     <div class="ai-parts-head"><b data-i18n="ai.parts">Copy prompt + text</b> <span class="muted small" data-i18n="ai.partsHint"></span></div>
     <div class="ai-parts" id="aiParts"></div>
     </div>
-    <p class="muted small help-version help-part">PDF Translate v1.20</p>
+    <p class="muted small help-version help-part">PDF Translate v1.21</p>
     <div class="modal-actions">
       <button value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
       <button type="button" class="btn ai-part" id="aiCopyPrompt" data-i18n="ai.copyPrompt">Copy prompt only</button>
@@ -995,7 +1013,7 @@ const I18N = {
     "tool.unfold": "Werkzeugleiste ausklappen",
     "layout.splitter": "Ziehen: Breite von Seitenansicht und Feldern ändern · Doppelklick: zurücksetzen",
     "view.compareTitle": "Original und Übersetzung nebeneinander, synchron scrollend",
-    "view.boxes": "Segmente anzeigen",
+    "view.boxes": "Felder",
     "zoom.out": "Verkleinern",
     "zoom.in": "Vergrößern (oder Strg + Mausrad)",
     "zoom.fit": "An Seitenbreite anpassen",
@@ -1014,7 +1032,7 @@ const I18N = {
     "tb.downloadTitle": "Übersetzte {fmt}-Datei herunterladen",
 
     "progress": "{done} / {total} übersetzt",
-    "filter.search": "Original oder Übersetzung suchen…",
+    "filter.search": "Suchen (Strg+F)…",
     "filter.all": "Alle",
     "filter.todo": "Nicht übersetzt",
     "filter.done": "Übersetzt",
@@ -1110,12 +1128,11 @@ const I18N = {
     "msg.chooseFile": "Bitte wählen Sie eine PDF-, Word-, PowerPoint-, Excel-, EPUB- oder FB2-Datei.",
     "msg.loadingEngine": "PDF-Engine wird geladen…",
     "msg.opening": "Wird geöffnet…",
-    "find.title": "Suchen und ersetzen (Strg+F, Strg+H)",
-    "find.placeholder": "Suchen…",
+    "find.title": "Suchoptionen und Ersetzen (Strg+F sucht, Strg+H ersetzt)",
     "find.prev": "Vorheriger Treffer (Umschalt+Enter, Umschalt+F3)",
     "find.next": "Nächster Treffer (Enter, F3)",
-    "find.replaceToggle": "Ersetzen ein-/ausblenden (Strg+H)",
-    "find.close": "Suche schließen (Esc)",
+    "find.replaceToggle": "Suchoptionen und Ersetzen (Strg+H)",
+    "find.close": "Optionen und Ersetzen schließen",
     "find.scopeTr": "In Übersetzungen",
     "find.scopeSrc": "Im Original",
     "find.scopeBoth": "In beiden",
@@ -1313,7 +1330,7 @@ const I18N = {
     "tool.unfold": "Unfold the tool bar",
     "layout.splitter": "Drag: change the width of the page view and the fields · double-click: reset",
     "view.compareTitle": "Original and translation side by side, scrolling together",
-    "view.boxes": "Show segments",
+    "view.boxes": "Fields",
     "zoom.out": "Zoom out",
     "zoom.in": "Zoom in (or Ctrl + mouse wheel)",
     "zoom.fit": "Fit page width",
@@ -1332,7 +1349,7 @@ const I18N = {
     "tb.downloadTitle": "Download the translated {fmt}",
 
     "progress": "{done} / {total} translated",
-    "filter.search": "Search source or translation…",
+    "filter.search": "Search (Ctrl+F)…",
     "filter.all": "All",
     "filter.todo": "Untranslated",
     "filter.done": "Translated",
@@ -1428,12 +1445,11 @@ const I18N = {
     "msg.chooseFile": "Please choose a PDF, Word, PowerPoint, Excel, EPUB or FB2 file.",
     "msg.loadingEngine": "Loading the PDF engine…",
     "msg.opening": "Opening…",
-    "find.title": "Find and replace (Ctrl+F, Ctrl+H)",
-    "find.placeholder": "Find…",
+    "find.title": "Search options and replace (Ctrl+F finds, Ctrl+H replaces)",
     "find.prev": "Previous match (Shift+Enter, Shift+F3)",
     "find.next": "Next match (Enter, F3)",
-    "find.replaceToggle": "Show / hide replace (Ctrl+H)",
-    "find.close": "Close (Esc)",
+    "find.replaceToggle": "Search options and replace (Ctrl+H)",
+    "find.close": "Close options and replace",
     "find.scopeTr": "In translations",
     "find.scopeSrc": "In the original",
     "find.scopeBoth": "In both",
@@ -6257,7 +6273,9 @@ function updateSteps(any) {
 
 function applyFilter() {
   if (!state.doc) return;
-  const q = $("#search").value.trim().toLowerCase();
+  // (the search field: the same text and options as the highlighted matches)
+  const re = findRegex(), scope = $("#findScope").value;
+  const hit = (text) => { re.lastIndex = 0; return re.test(text); };
   const status = $("#filterStatus").value;
   const page = $("#filterPage").value === "all" ? null : Number($("#filterPage").value);
   const ids = [];
@@ -6265,7 +6283,7 @@ function applyFilter() {
     if (page !== null && s.page !== page) continue;
     if (status === "numbers" ? !s.skip : s.skip) continue; // numbers-only segments have their own filter
     if ((status === "todo" || status === "done") && (status === "done") !== hasTr(s.id)) continue;
-    if (q && !s.text.toLowerCase().includes(q) && !(state.translations[s.id] || "").toLowerCase().includes(q)) continue;
+    if (re && !((scope !== "tr" && hit(s.text)) || (scope !== "src" && hit(state.translations[s.id] || "")))) continue;
     ids.push(s.id);
   }
   $("#segments").classList.toggle("is-empty", !ids.length);
@@ -6283,6 +6301,7 @@ function setActive(id, { scrollList = false, scrollViewer = false, focus = false
     if (!vl.pos.has(id)) {
       $("#search").value = ""; $("#filterStatus").value = segById(id).skip ? "numbers" : "all"; $("#filterPage").value = "all";
       applyFilter();
+      refreshFind(); // (the search no longer applies)
     }
     if (scrollList) vl.scrollTo(id);
   }
@@ -6718,7 +6737,7 @@ function init() {
     if (next !== undefined) setActive(next, { scrollList: true, scrollViewer: true, focus: true });
   });
   let searchTimer = null;
-  $("#search").addEventListener("input", () => { clearTimeout(searchTimer); searchTimer = setTimeout(applyFilter, 150); });
+  $("#search").addEventListener("input", () => { clearTimeout(searchTimer); searchTimer = setTimeout(searchChanged, 150); });
   $("#filterStatus").addEventListener("change", applyFilter);
   $("#filterPage").addEventListener("change", (e) => {
     applyFilter();
@@ -7957,12 +7976,13 @@ function suggestOcr() {
 
 /* ------------------------------------------------------- find and replace */
 
-// Matches are {id, where: "src" | "tr", index, length}, in document order. They are highlighted
-// in the cards: in the source text with <mark>, in the translation box with a layer behind it.
+// One search field above the list: it filters the cards and highlights its matches, which are
+// {id, where: "src" | "tr", index, length}, in document order (in the source text with <mark>, in
+// the translation box with a layer behind it). ⇄ opens the options and replace.
 const find = { open: false, matches: [], cur: -1, timer: 0 };
 
 function findRegex() {
-  const q = $("#findText").value;
+  const q = $("#search").value;
   if (!q) return null;
   let src = q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   if ($("#findWord").checked) src = `(?<![\\p{L}\\p{N}_])${src}(?![\\p{L}\\p{N}_])`;
@@ -7983,7 +8003,14 @@ function collectMatches() {
 
 /** Search again (after typing, an option change or an edit), keeping the position if possible. */
 function refreshFind() {
-  if (!find.open) return;
+  const was = find.open;
+  find.open = Boolean($("#search").value) && Boolean(state.doc);
+  if (!find.open) {
+    find.matches = []; find.cur = -1;
+    updateFindCount();
+    if (was) for (const [id, el] of vl.rendered) decorateCard(el, id);
+    return;
+  }
   const prev = find.matches[find.cur];
   find.matches = collectMatches();
   find.cur = prev ? find.matches.findIndex((m) => m.id === prev.id && m.where === prev.where && m.index >= prev.index) : -1;
@@ -7994,8 +8021,9 @@ function refreshFind() {
 
 function updateFindCount() {
   const n = find.matches.length;
-  $("#findCount").textContent = !$("#findText").value ? "" : n ? t("find.count", { i: find.cur >= 0 ? find.cur + 1 : 0, n }) : t("find.none");
-  $("#findText").classList.toggle("no-match", Boolean($("#findText").value) && !n);
+  $("#findCount").textContent = !$("#search").value ? "" : n ? t("find.count", { i: find.cur >= 0 ? find.cur + 1 : 0, n }) : t("find.none");
+  $("#search").classList.toggle("no-match", Boolean($("#search").value) && !n);
+  $("#findPrev").disabled = $("#findNext").disabled = !n;
   const tr = find.matches.some((m) => m.where === "tr");
   $("#replaceOne").disabled = !tr;
   $("#replaceAll").disabled = !tr;
@@ -8040,34 +8068,36 @@ function decorateCard(el, id) {
   back.scrollTop = ta.scrollTop;
 }
 
+/** Put the cursor into the search field (Ctrl+F); `replace` also opens options and replace (Ctrl+H). */
 function openFind(replace) {
   if (!state.doc) return;
-  find.open = true;
-  $("#findBar").hidden = false;
-  $("#btnFind").classList.add("on");
-  if (replace !== undefined) setReplaceMode(replace);
+  if (replace) setReplaceMode(true);
   // A word selected in a translation box becomes the search text.
   const sel = document.activeElement && document.activeElement.tagName === "TEXTAREA"
     ? document.activeElement.value.slice(document.activeElement.selectionStart, document.activeElement.selectionEnd) : "";
-  if (sel && !sel.includes("\n")) $("#findText").value = sel;
-  $("#findText").focus();
-  $("#findText").select();
+  if (sel && !sel.includes("\n")) { $("#search").value = sel; searchChanged(); }
+  $("#search").focus();
+  $("#search").select();
+}
+
+/** Clear the search: all cards again, no highlights, options and replace closed. */
+function closeFind() {
+  $("#search").value = "";
+  setReplaceMode(false);
+  searchChanged();
+}
+
+/** After the search text or an option changed: filter the list and mark the matches. */
+function searchChanged() {
+  find.cur = -1;
+  applyFilter();
   refreshFind();
 }
 
-function closeFind() {
-  find.open = false;
-  find.matches = [];
-  find.cur = -1;
-  $("#findBar").hidden = true;
-  $("#btnFind").classList.remove("on");
-  for (const [id, el] of vl.rendered) decorateCard(el, id);
-}
-
 function setReplaceMode(on) {
-  $("#replaceRow").hidden = !on;
+  $("#findBar").hidden = !on;
   $("#findReplaceToggle").classList.toggle("on", on);
-  if (on && $("#findScope").value === "src") $("#findScope").value = "tr"; // (only translations are replaced)
+  $("#btnFind").classList.toggle("on", on);
 }
 
 /** Go to the next (dir 1) or previous (dir -1) match: its card is shown and highlighted. */
@@ -8076,7 +8106,7 @@ function gotoMatch(dir) {
   if (!n) return;
   find.cur = find.cur < 0 ? (dir > 0 ? 0 : n - 1) : (find.cur + dir + n) % n;
   const m = find.matches[find.cur];
-  if (!vl.pos.has(m.id)) { $("#search").value = ""; $("#filterStatus").value = "all"; $("#filterPage").value = "all"; applyFilter(); }
+  if (!vl.pos.has(m.id)) { $("#filterStatus").value = "all"; $("#filterPage").value = "all"; applyFilter(); }
   setActive(m.id, { scrollList: true, scrollViewer: true });
   updateFindCount();
   requestAnimationFrame(() => {
@@ -8154,7 +8184,7 @@ function onFindKey(e) {
   } else if (k === "f3" && find.open) {
     e.preventDefault();
     gotoMatch(e.shiftKey ? -1 : 1);
-  } else if (k === "escape" && find.open && e.target.closest && e.target.closest("#findBar")) {
+  } else if (k === "escape" && e.target.closest && e.target.closest("#findBar, .search-box") && ($("#search").value || !$("#findBar").hidden)) {
     closeFind();
   }
 }
@@ -8187,14 +8217,12 @@ function initTools() {
     try { localStorage.setItem("pdftr:bi-layout", layout); } catch (_) { /* storage blocked */ }
     downloadBilingual(layout);
   });
-  $("#btnFind").addEventListener("click", () => (find.open ? closeFind() : openFind()));
-  $("#findClose").addEventListener("click", closeFind);
-  $("#findReplaceToggle").addEventListener("click", () => setReplaceMode($("#replaceRow").hidden));
-  $("#findText").addEventListener("input", () => { find.cur = -1; refreshFind(); });
-  $("#findText").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); gotoMatch(e.shiftKey ? -1 : 1); } });
+  $("#btnFind").addEventListener("click", () => { setReplaceMode($("#findBar").hidden); $("#search").focus(); });
+  $("#findClose").addEventListener("click", () => setReplaceMode(false));
+  $("#findReplaceToggle").addEventListener("click", () => setReplaceMode($("#findBar").hidden));
+  $("#search").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); gotoMatch(e.shiftKey ? -1 : 1); } });
   $("#replaceText").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); if (e.ctrlKey || e.metaKey) replaceAll(); else replaceOne(); } });
-  for (const id of ["#findScope", "#findCase", "#findWord"]) $(id).addEventListener("change", () => { find.cur = -1; refreshFind(); });
-  $("#findScope").addEventListener("change", () => { if ($("#findScope").value === "src") setReplaceMode(false); });
+  for (const id of ["#findScope", "#findCase", "#findWord"]) $(id).addEventListener("change", searchChanged);
   $("#findPrev").addEventListener("click", () => gotoMatch(-1));
   $("#findNext").addEventListener("click", () => gotoMatch(1));
   $("#replaceOne").addEventListener("click", replaceOne);

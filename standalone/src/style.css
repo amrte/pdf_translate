@@ -237,7 +237,7 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); ou
   .work-view { grid-template-columns: minmax(0, 1fr) !important; grid-template-rows: 45% 55%; }
   .splitter { display: none; }
   .pane-toolbar, .filter-row { flex-wrap: wrap; }
-  .filter-row input { flex-basis: 100%; }
+  .filter-row .search-box { flex-basis: 100%; }
   .pages { padding: 22px 12px; }
   .viewer-pane { border-right: 0; border-bottom: 1px solid var(--border); }
   .steps { display: none; }
@@ -366,7 +366,7 @@ p.help-part, button.ai-part { display: block; }
   font-family: Helvetica, Arial, sans-serif; line-height: 1.2; background: rgba(255, 255, 255, .92);
   border: 1.5px dashed var(--accent); border-radius: 3px; outline: none;
 }
-@container (max-width: 880px) { .boxes-check span { display: none; } } /* (the checkbox keeps its tooltip) */
+@container (max-width: 680px) { .boxes-check span { display: none; } } /* (the checkbox keeps its tooltip) */
 .viewer-pane { container-type: inline-size; }
 
 /* ---------- v1.03: full screen, wider help/AI window, AI parts, new logo ---------- */
@@ -421,7 +421,7 @@ body.box-dragging, body.box-dragging .box { cursor: grabbing !important; user-se
 .find-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .find-row input[type="search"], .find-row input[type="text"] { flex: 1; min-width: 140px; }
 .find-row .check { font-size: 12.5px; }
-#findText.no-match { border-color: var(--danger, #c62828); background: rgba(198, 40, 40, .06); }
+#search.no-match { border-color: var(--danger, #c62828); background: rgba(198, 40, 40, .06); }
 .find-count { min-width: 64px; text-align: right; }
 #findReplaceToggle.on, #btnFind.on { color: var(--accent); border-color: var(--accent); }
 mark.find { background: #ffe066; color: inherit; border-radius: 2px; padding: 0; }
@@ -532,3 +532,22 @@ body.splitting .pages, body.splitting iframe { pointer-events: none; }
   .upload-view .dz-sub { max-width: 860px; justify-self: center; font-size: 13px; }
   .upload-view .wf { width: min(1400px, 100%); gap: 10px; }
 }
+
+/* ---------- v1.21: one search field (filter + find + replace) ---------- */
+.search-box { flex: 1; min-width: 0; display: flex; align-items: center; gap: 4px; }
+.search-box #search { flex: 1; min-width: 80px; }
+.search-box .icon-btn { width: 24px; height: 26px; font-size: 15px; flex: none; }
+.search-box .icon-btn:disabled { opacity: .35; }
+.search-box .find-count { min-width: 0; white-space: nowrap; }
+.search-box .find-count:empty { display: none; }
+.search-box #findPrev, .search-box #findNext { display: none; }
+.search-box:has(#search:not(:placeholder-shown)) #findPrev, .search-box:has(#search:not(:placeholder-shown)) #findNext { display: inline-block; }
+#findReplaceToggle.on, #btnFind.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+.find-close { margin-left: auto; }
+/* The viewer tool bar gets more compact as the page view narrows, and wraps rather than cutting off buttons. */
+@container (max-width: 780px) {
+  .viewer-pane .pane-toolbar { gap: 4px; }
+  .viewer-pane .seg-toggle button { padding: 2px 7px; }
+}
+@container (max-width: 720px) { .viewer-pane .zoom-label { display: none; } }
+@container (max-width: 620px) { .viewer-pane .pane-toolbar { flex-wrap: wrap; row-gap: 4px; } }

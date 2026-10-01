@@ -67,7 +67,8 @@ Extra features in the standalone version:
   italic and colour can be set per field (**Aa** on a card), also for numbers; formulas are
   scaled as drawn in the original.
 * Pages can be turned by 90° (↻ in the page toolbar).
-* Find and replace in translations (and find in the original): 🔍, Ctrl+F / Ctrl+H.
+* One search field above the list: filters the segments, highlights and steps through matches; ⇄ (or
+  Ctrl+H) adds options and replace in the translations.
 * **Compare** view: original and translation side by side, scrolling together (page by page for a
   PDF, by matching paragraphs for e-books and Office files); a click on a field selects it.
 * The start page and Help show the workflow in six steps with the app's own buttons; ✕ **Close**

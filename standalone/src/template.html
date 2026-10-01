@@ -197,32 +197,14 @@
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v6M14 11v6"/></svg>
       </button>
     </div>
-    <div class="find-bar" id="findBar" hidden>
-      <div class="find-row">
-        <input type="search" id="findText" data-i18n-placeholder="find.placeholder" autocomplete="off">
+    <div class="filter-row">
+      <div class="search-box">
+        <input type="search" id="search" data-i18n-placeholder="filter.search" autocomplete="off">
         <span class="muted small find-count" id="findCount"></span>
         <button type="button" class="icon-btn" id="findPrev" data-i18n-title="find.prev">‹</button>
         <button type="button" class="icon-btn" id="findNext" data-i18n-title="find.next">›</button>
         <button type="button" class="icon-btn" id="findReplaceToggle" data-i18n-title="find.replaceToggle">⇄</button>
-        <button type="button" class="icon-btn" id="findClose" data-i18n-title="find.close">×</button>
       </div>
-      <div class="find-row">
-        <select id="findScope">
-          <option value="tr" data-i18n="find.scopeTr">In translations</option>
-          <option value="src" data-i18n="find.scopeSrc">In the original</option>
-          <option value="both" data-i18n="find.scopeBoth">In both</option>
-        </select>
-        <label class="check"><input type="checkbox" id="findCase"> <span data-i18n="find.case">Match case</span></label>
-        <label class="check"><input type="checkbox" id="findWord"> <span data-i18n="find.word">Whole word</span></label>
-      </div>
-      <div class="find-row" id="replaceRow" hidden>
-        <input type="text" id="replaceText" data-i18n-placeholder="find.replacePlaceholder" autocomplete="off">
-        <button type="button" class="btn" id="replaceOne" data-i18n="find.replace" data-i18n-title="find.replaceTitle">Replace</button>
-        <button type="button" class="btn" id="replaceAll" data-i18n="find.replaceAll" data-i18n-title="find.replaceAllTitle">Replace all</button>
-      </div>
-    </div>
-    <div class="filter-row">
-      <input type="search" id="search" data-i18n-placeholder="filter.search">
       <select id="filterStatus">
         <option value="all" data-i18n="filter.all">All</option>
         <option value="todo" data-i18n="filter.todo">Untranslated</option>
@@ -230,6 +212,23 @@
         <option value="numbers" data-i18n="filter.numbers">Numbers only (kept)</option>
       </select>
       <select id="filterPage"><option value="all" data-i18n="filter.allPages">All pages</option></select>
+    </div>
+    <div class="find-bar" id="findBar" hidden>
+      <div class="find-row">
+        <select id="findScope">
+          <option value="both" data-i18n="find.scopeBoth" selected>In both</option>
+          <option value="tr" data-i18n="find.scopeTr">In translations</option>
+          <option value="src" data-i18n="find.scopeSrc">In the original</option>
+        </select>
+        <label class="check"><input type="checkbox" id="findCase"> <span data-i18n="find.case">Match case</span></label>
+        <label class="check"><input type="checkbox" id="findWord"> <span data-i18n="find.word">Whole word</span></label>
+        <button type="button" class="icon-btn find-close" id="findClose" data-i18n-title="find.close">×</button>
+      </div>
+      <div class="find-row" id="replaceRow">
+        <input type="text" id="replaceText" data-i18n-placeholder="find.replacePlaceholder" autocomplete="off">
+        <button type="button" class="btn" id="replaceOne" data-i18n="find.replace" data-i18n-title="find.replaceTitle">Replace</button>
+        <button type="button" class="btn" id="replaceAll" data-i18n="find.replaceAll" data-i18n-title="find.replaceAllTitle">Replace all</button>
+      </div>
     </div>
     <div class="segments" id="segments"></div>
   </section>

@@ -4,6 +4,17 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.21
+
+- **One search field**: the field above the list now does everything. Typing filters the list to the
+  segments with a match and highlights the matches; the number of matches and ‹ › (or Enter /
+  Shift+Enter, F3) step through them. **⇄** next to it (or 🔍, Ctrl+H) opens the options (in both /
+  in translations / in the original, match case, whole word) and replace. Ctrl+F puts the cursor in
+  the field; Esc clears it. The separate find bar is gone.
+- **"Segmente anzeigen" is now "Felder"** ("Fields").
+- The tool bar above the pages no longer runs past the edge when the page view is narrow: it gets
+  more compact and finally wraps onto a second line.
+
 ## 1.20
 
 - **Start page**: the drop zone is the main element again, on top and in the middle (compact); the

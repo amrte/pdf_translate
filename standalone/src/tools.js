@@ -521,12 +521,13 @@ function suggestOcr() {
 
 /* ------------------------------------------------------- find and replace */
 
-// Matches are {id, where: "src" | "tr", index, length}, in document order. They are highlighted
-// in the cards: in the source text with <mark>, in the translation box with a layer behind it.
+// One search field above the list: it filters the cards and highlights its matches, which are
+// {id, where: "src" | "tr", index, length}, in document order (in the source text with <mark>, in
+// the translation box with a layer behind it). ⇄ opens the options and replace.
 const find = { open: false, matches: [], cur: -1, timer: 0 };
 
 function findRegex() {
-  const q = $("#findText").value;
+  const q = $("#search").value;
   if (!q) return null;
   let src = q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   if ($("#findWord").checked) src = `(?<![\\p{L}\\p{N}_])${src}(?![\\p{L}\\p{N}_])`;
@@ -547,7 +548,14 @@ function collectMatches() {
 
 /** Search again (after typing, an option change or an edit), keeping the position if possible. */
 function refreshFind() {
-  if (!find.open) return;
+  const was = find.open;
+  find.open = Boolean($("#search").value) && Boolean(state.doc);
+  if (!find.open) {
+    find.matches = []; find.cur = -1;
+    updateFindCount();
+    if (was) for (const [id, el] of vl.rendered) decorateCard(el, id);
+    return;
+  }
   const prev = find.matches[find.cur];
   find.matches = collectMatches();
   find.cur = prev ? find.matches.findIndex((m) => m.id === prev.id && m.where === prev.where && m.index >= prev.index) : -1;
@@ -558,8 +566,9 @@ function refreshFind() {
 
 function updateFindCount() {
   const n = find.matches.length;
-  $("#findCount").textContent = !$("#findText").value ? "" : n ? t("find.count", { i: find.cur >= 0 ? find.cur + 1 : 0, n }) : t("find.none");
-  $("#findText").classList.toggle("no-match", Boolean($("#findText").value) && !n);
+  $("#findCount").textContent = !$("#search").value ? "" : n ? t("find.count", { i: find.cur >= 0 ? find.cur + 1 : 0, n }) : t("find.none");
+  $("#search").classList.toggle("no-match", Boolean($("#search").value) && !n);
+  $("#findPrev").disabled = $("#findNext").disabled = !n;
   const tr = find.matches.some((m) => m.where === "tr");
   $("#replaceOne").disabled = !tr;
   $("#replaceAll").disabled = !tr;
@@ -604,34 +613,36 @@ function decorateCard(el, id) {
   back.scrollTop = ta.scrollTop;
 }
 
+/** Put the cursor into the search field (Ctrl+F); `replace` also opens options and replace (Ctrl+H). */
 function openFind(replace) {
   if (!state.doc) return;
-  find.open = true;
-  $("#findBar").hidden = false;
-  $("#btnFind").classList.add("on");
-  if (replace !== undefined) setReplaceMode(replace);
+  if (replace) setReplaceMode(true);
   // A word selected in a translation box becomes the search text.
   const sel = document.activeElement && document.activeElement.tagName === "TEXTAREA"
     ? document.activeElement.value.slice(document.activeElement.selectionStart, document.activeElement.selectionEnd) : "";
-  if (sel && !sel.includes("\n")) $("#findText").value = sel;
-  $("#findText").focus();
-  $("#findText").select();
+  if (sel && !sel.includes("\n")) { $("#search").value = sel; searchChanged(); }
+  $("#search").focus();
+  $("#search").select();
+}
+
+/** Clear the search: all cards again, no highlights, options and replace closed. */
+function closeFind() {
+  $("#search").value = "";
+  setReplaceMode(false);
+  searchChanged();
+}
+
+/** After the search text or an option changed: filter the list and mark the matches. */
+function searchChanged() {
+  find.cur = -1;
+  applyFilter();
   refreshFind();
 }
 
-function closeFind() {
-  find.open = false;
-  find.matches = [];
-  find.cur = -1;
-  $("#findBar").hidden = true;
-  $("#btnFind").classList.remove("on");
-  for (const [id, el] of vl.rendered) decorateCard(el, id);
-}
-
 function setReplaceMode(on) {
-  $("#replaceRow").hidden = !on;
+  $("#findBar").hidden = !on;
   $("#findReplaceToggle").classList.toggle("on", on);
-  if (on && $("#findScope").value === "src") $("#findScope").value = "tr"; // (only translations are replaced)
+  $("#btnFind").classList.toggle("on", on);
 }
 
 /** Go to the next (dir 1) or previous (dir -1) match: its card is shown and highlighted. */
@@ -640,7 +651,7 @@ function gotoMatch(dir) {
   if (!n) return;
   find.cur = find.cur < 0 ? (dir > 0 ? 0 : n - 1) : (find.cur + dir + n) % n;
   const m = find.matches[find.cur];
-  if (!vl.pos.has(m.id)) { $("#search").value = ""; $("#filterStatus").value = "all"; $("#filterPage").value = "all"; applyFilter(); }
+  if (!vl.pos.has(m.id)) { $("#filterStatus").value = "all"; $("#filterPage").value = "all"; applyFilter(); }
   setActive(m.id, { scrollList: true, scrollViewer: true });
   updateFindCount();
   requestAnimationFrame(() => {
@@ -718,7 +729,7 @@ function onFindKey(e) {
   } else if (k === "f3" && find.open) {
     e.preventDefault();
     gotoMatch(e.shiftKey ? -1 : 1);
-  } else if (k === "escape" && find.open && e.target.closest && e.target.closest("#findBar")) {
+  } else if (k === "escape" && e.target.closest && e.target.closest("#findBar, .search-box") && ($("#search").value || !$("#findBar").hidden)) {
     closeFind();
   }
 }
@@ -751,14 +762,12 @@ function initTools() {
     try { localStorage.setItem("pdftr:bi-layout", layout); } catch (_) { /* storage blocked */ }
     downloadBilingual(layout);
   });
-  $("#btnFind").addEventListener("click", () => (find.open ? closeFind() : openFind()));
-  $("#findClose").addEventListener("click", closeFind);
-  $("#findReplaceToggle").addEventListener("click", () => setReplaceMode($("#replaceRow").hidden));
-  $("#findText").addEventListener("input", () => { find.cur = -1; refreshFind(); });
-  $("#findText").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); gotoMatch(e.shiftKey ? -1 : 1); } });
+  $("#btnFind").addEventListener("click", () => { setReplaceMode($("#findBar").hidden); $("#search").focus(); });
+  $("#findClose").addEventListener("click", () => setReplaceMode(false));
+  $("#findReplaceToggle").addEventListener("click", () => setReplaceMode($("#findBar").hidden));
+  $("#search").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); gotoMatch(e.shiftKey ? -1 : 1); } });
   $("#replaceText").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); if (e.ctrlKey || e.metaKey) replaceAll(); else replaceOne(); } });
-  for (const id of ["#findScope", "#findCase", "#findWord"]) $(id).addEventListener("change", () => { find.cur = -1; refreshFind(); });
-  $("#findScope").addEventListener("change", () => { if ($("#findScope").value === "src") setReplaceMode(false); });
+  for (const id of ["#findScope", "#findCase", "#findWord"]) $(id).addEventListener("change", searchChanged);
   $("#findPrev").addEventListener("click", () => gotoMatch(-1));
   $("#findNext").addEventListener("click", () => gotoMatch(1));
   $("#replaceOne").addEventListener("click", replaceOne);
