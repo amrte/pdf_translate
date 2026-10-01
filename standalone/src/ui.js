@@ -1054,15 +1054,24 @@ async function downloadOutput() {
 }
 
 /**
- * Both languages in one file: a PDF with the original on the odd and the translation on the
- * even pages; an e-book with each paragraph followed by its translation.
+ * Both languages in one file: a PDF with original and translation on one sheet ("side") or on
+ * alternating pages ("pages"); an e-book with each paragraph followed by its translation.
  */
-async function downloadBilingual() {
+function askBilingual() {
+  if ((state.doc.kind || "pdf") !== "pdf") { downloadBilingual(); return; }
+  let layout = "side";
+  try { layout = localStorage.getItem("pdftr:bi-layout") || "side"; } catch (_) { /* storage blocked */ }
+  const radio = document.querySelector(`input[name="biLayout"][value="${layout}"]`);
+  if (radio) radio.checked = true;
+  $("#biDialog").showModal();
+}
+
+async function downloadBilingual(layout = "pages") {
   try {
     busy(t("msg.saving"));
     const kind = state.doc.kind || "pdf";
     const bytes = kind === "pdf"
-      ? await pool.workers[0].call("saveBilingual", { markups: state.markups, rotations: state.rotations })
+      ? await pool.workers[0].call("saveBilingual", { markups: state.markups, rotations: state.rotations, layout })
       : await pool.workers[0].call("saveBilingual", { segments: state.doc.segments, translations: state.applied, opts: buildOptions() });
     const type = { pdf: "application/pdf", epub: "application/epub+zip", fb2: "application/x-fictionbook+xml" }[kind];
     saveBlob(new Blob([bytes], { type }), `${stem()}.bilingual.${kind}`);

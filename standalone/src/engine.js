@@ -2151,6 +2151,63 @@ function bilingualPdf(W, markups, rotations) {
   }
 }
 
+/**
+ * Original and translation on one sheet, as many pages as the original: portrait pages side by
+ * side (original left), landscape pages one above the other (original on top). Markups and other
+ * annotations are drawn into the pages; links are not kept.
+ */
+function sideBySidePdf(W, markups, rotations) {
+  const translated = M.Document.openDocument(savePdf(W, markups, rotations), "application/pdf");
+  const original = M.Document.openDocument(W.bytes.slice(), "application/pdf");
+  rotatePages(original, rotations);
+  const out = new M.PDFDocument();
+  try {
+    original.bake(); translated.bake();
+    const fromOriginal = out.newGraftMap(), fromTranslated = out.newGraftMap();
+    // A page as a form XObject, turned upright with its lower left corner at 0,0.
+    const asForm = (map, src, i) => {
+      const page = src.findPage(i);
+      const box = page.getInheritable("CropBox").isArray() ? page.getInheritable("CropBox") : page.getInheritable("MediaBox");
+      const r = box.isArray() ? [0, 1, 2, 3].map((k) => box.get(k).asNumber()) : [0, 0, 612, 792];
+      const [x0, y0, x1, y1] = [Math.min(r[0], r[2]), Math.min(r[1], r[3]), Math.max(r[0], r[2]), Math.max(r[1], r[3])];
+      const rot = page.getInheritable("Rotate");
+      const deg = ((((rot.isNull() ? 0 : rot.asNumber()) % 360) + 360) % 360);
+      const matrix = { 0: [1, 0, 0, 1, -x0, -y0], 90: [0, -1, 1, 0, -y0, x1], 180: [-1, 0, 0, -1, x1, y1], 270: [0, 1, -1, 0, y1, -x0] }[deg] || [1, 0, 0, 1, -x0, -y0];
+      const turned = deg === 90 || deg === 270;
+      const w = turned ? y1 - y0 : x1 - x0, h = turned ? x1 - x0 : y1 - y0;
+      const contents = page.get("Contents"), parts = [];
+      const read = (o) => { if (o.isStream()) { const b = o.readStream(); parts.push(b.asUint8Array().slice(), new Uint8Array([10])); free(b); } };
+      if (contents.isArray()) for (let k = 0; k < contents.length; k++) read(contents.get(k)); else read(contents);
+      const data = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));
+      parts.reduce((at, p) => (data.set(p, at), at + p.length), 0);
+      const res = page.getInheritable("Resources");
+      const form = out.addStream(data, {
+        Type: "XObject", Subtype: "Form", BBox: [x0, y0, x1, y1], Matrix: matrix,
+        Resources: res.isNull() ? {} : map.graftObject(res),
+      });
+      return { form, w, h };
+    };
+    const num = (v) => String(Math.round(v * 1000) / 1000);
+    for (let i = 0; i < original.countPages(); i++) {
+      const a = asForm(fromOriginal, original, i);
+      const b = i < translated.countPages() ? asForm(fromTranslated, translated, i) : a;
+      const portrait = a.w <= a.h;
+      const W2 = portrait ? a.w + b.w : Math.max(a.w, b.w), H2 = portrait ? Math.max(a.h, b.h) : a.h + b.h;
+      // Original: left (top aligned) or on top; translation: right or below.
+      const pa = portrait ? [0, H2 - a.h] : [0, b.h], pb = portrait ? [a.w, H2 - b.h] : [0, 0];
+      const content = `q 1 0 0 1 ${num(pa[0])} ${num(pa[1])} cm /Orig Do Q\nq 1 0 0 1 ${num(pb[0])} ${num(pb[1])} cm /Tran Do Q\n`;
+      const page = out.addPage([0, 0, W2, H2], 0, { XObject: { Orig: a.form, Tran: b.form } }, content);
+      out.insertPage(-1, page);
+    }
+    const buf = out.saveToBuffer("garbage,compress");
+    const bytes = buf.asUint8Array().slice();
+    free(buf);
+    return bytes;
+  } finally {
+    free(out); free(original); free(translated);
+  }
+}
+
 // ---------------------------------------------------------- worker protocol
 /**
  * Request handler shared by the Web Worker and the in-page fallback. It keeps an open copy of
@@ -2234,7 +2291,7 @@ function createHandler() {
       return { result: bytes, transfer: [bytes.buffer] };
     }
     if (cmd === "saveBilingual") {
-      const bytes = bilingualPdf(W, args.markups || [], args.rotations || {});
+      const bytes = (args.layout === "side" ? sideBySidePdf : bilingualPdf)(W, args.markups || [], args.rotations || {});
       return { result: bytes, transfer: [bytes.buffer] };
     }
     if (cmd === "resetOutput") {

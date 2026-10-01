@@ -4,6 +4,17 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.14
+
+- **Both languages on one page**: the bilingual download of a PDF now asks for the layout.
+  *Side by side on one page* keeps the number of pages of the original and makes each page twice as
+  large: portrait pages show the original on the left and the translation on the right, landscape
+  pages the original on top and the translation below. Turned and cropped pages are placed as they
+  are shown. *Alternating pages* is the earlier layout (odd pages original, even pages translated).
+- **Font size arrows**: the size field (**Aa**) now shows the current size, so the up and down
+  arrows start from it. Before, it was empty and jumped back to empty when the arrows reached the
+  original size, so they could not go past it.
+
 ## 1.13
 
 - **Font size of a field (Aa)**: the size field lost the cursor after the first digit, so sizes of

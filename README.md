@@ -58,8 +58,9 @@ Extra features in the standalone version:
   italic and colour can be set per field (**Aa** on a card).
 * Pages can be turned by 90° (↻ in the page toolbar).
 * Find and replace in translations (and find in the original): 🔍, Ctrl+F / Ctrl+H.
-* Bilingual download: a PDF with the original on odd and the translation on even pages; an EPUB /
-  FB2 with each paragraph followed by its translation.
+* Bilingual download: a PDF with original and translation on one double-size page (portrait pages
+  side by side, landscape pages one above the other) or on alternating pages; an EPUB / FB2 with
+  each paragraph followed by its translation.
 * Password protection is removed (restrictions automatically, an open password after you enter it).
 * **OCR** for scanned pages (English, German, French, Ukrainian, Finnish, Chinese) with Tesseract.js,
   loaded on demand from cdn.jsdelivr.net; the translation is set on a patch of the paper colour.

@@ -196,7 +196,7 @@ function stylePanelHtml(s) {
   const fonts = [["", "st.fontOrig"], ["sans-serif", "st.sans"], ["serif", "st.serif"], ["monospace", "st.mono"]];
   if (state.customFont || o.font === "custom") fonts.push(["custom", "st.custom"]);
   return `<div class="seg-style">
-    <label title="${escapeHtml(t("st.sizeTitle"))}">${t("st.size")} <input type="number" data-st="size" min="0.5" step="any" value="${o.size || ""}" placeholder="${Math.round(s.size * 10) / 10}"></label>
+    <label title="${escapeHtml(t("st.sizeTitle"))}">${t("st.size")} <input type="number" data-st="size" min="0.5" step="any" value="${o.size || Math.round(s.size * 10) / 10}"></label>
     <select data-st="font" title="${escapeHtml(t("st.font"))}">${fonts.map(([v, k]) => `<option value="${v}"${(o.font || "") === v ? " selected" : ""}>${escapeHtml(t(k))}</option>`).join("")}</select>
     <button type="button" class="mini toggle${bold ? " on" : ""}" data-st="bold" title="${escapeHtml(t("st.bold"))}"><b>B</b></button>
     <button type="button" class="mini toggle${italic ? " on" : ""}" data-st="italic" title="${escapeHtml(t("st.italic"))}"><i>I</i></button>
@@ -234,7 +234,8 @@ function onStyleInput(e) {
   const st = el.dataset.st;
   if (st === "size") {
     const v = Number(el.value);
-    setOverride(id, { size: v > 0 && Math.abs(v - s.size) > 0.01 ? v : null }, t("hist.field"), "size");
+    // The field shows the original size rounded to 0.1 pt; that value means "as in the original".
+    setOverride(id, { size: v > 0 && Math.abs(v - Math.round(s.size * 10) / 10) > 0.001 ? v : null }, t("hist.field"), "size");
   } else if (st === "font") setOverride(id, { font: el.value || null }, t("hist.field"));
   else if (st === "color") setOverride(id, { color: el.value.toLowerCase() === s.color ? null : el.value.toLowerCase() }, t("hist.field"), "color");
 }
@@ -731,7 +732,13 @@ function initTools() {
   });
   $("#zoomPage").addEventListener("click", fitPage);
   $("#pageRotate").addEventListener("click", rotateCurrentPage);
-  $("#btnDownloadBi").addEventListener("click", (e) => { e.preventDefault(); downloadBilingual(); });
+  $("#btnDownloadBi").addEventListener("click", (e) => { e.preventDefault(); askBilingual(); });
+  $("#biDialog").addEventListener("close", () => {
+    if ($("#biDialog").returnValue !== "ok") return;
+    const layout = document.querySelector('input[name="biLayout"]:checked').value;
+    try { localStorage.setItem("pdftr:bi-layout", layout); } catch (_) { /* storage blocked */ }
+    downloadBilingual(layout);
+  });
   $("#btnFind").addEventListener("click", () => (find.open ? closeFind() : openFind()));
   $("#findClose").addEventListener("click", closeFind);
   $("#findReplaceToggle").addEventListener("click", () => setReplaceMode($("#replaceRow").hidden));

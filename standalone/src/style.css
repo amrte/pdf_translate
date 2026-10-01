@@ -315,7 +315,7 @@ p.help-part, button.ai-part { display: block; }
   .pane-toolbar #btnOcr span, .pane-toolbar #btnCopy span { display: none; }
   .pane-toolbar #btnOcr, .pane-toolbar #btnCopy { padding: 0 7px; }
 }
-@container (max-width: 640px) {
+@container (max-width: 720px) {
   .pane-toolbar #btnExport span, .pane-toolbar #btnCopy span, .pane-toolbar #btnAi span, .pane-toolbar #btnImport span { display: none; }
   .pane-toolbar #btnExport, .pane-toolbar #btnCopy, .pane-toolbar #btnAi, .pane-toolbar #btnImport { padding: 0 7px; }
 }

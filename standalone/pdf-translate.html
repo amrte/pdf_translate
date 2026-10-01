@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="PDF Translate 1.13">
+  <meta name="generator" content="PDF Translate 1.14">
   <title>PDF Translate</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Cdefs%3E%3ClinearGradient id=%22g%22 x1=%220%22 y1=%220%22 x2=%221%22 y2=%221%22%3E%3Cstop offset=%220%22 stop-color=%22#4a6cf7%22/%3E%3Cstop offset=%221%22 stop-color=%22#2440b3%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=%2232%22 height=%2232%22 rx=%227%22 fill=%22url%28#g%29%22/%3E%3Cpath d=%22M8 4.5h9.5l6 6V23a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V6.5a2 2 0 0 1 2-2z%22 fill=%22#fff%22/%3E%3Cpath d=%22M17.5 4.5v4.8a1.2 1.2 0 0 0 1.2 1.2h4.8z%22 fill=%22#c7d2fe%22/%3E%3Crect x=%229%22 y=%2213%22 width=%229%22 height=%221.7%22 rx=%22.85%22 fill=%22#9aabf0%22/%3E%3Crect x=%229%22 y=%2216.6%22 width=%2211%22 height=%221.7%22 rx=%22.85%22 fill=%22#9aabf0%22/%3E%3Crect x=%229%22 y=%2220.2%22 width=%226%22 height=%221.7%22 rx=%22.85%22 fill=%22#9aabf0%22/%3E%3Ccircle cx=%2224%22 cy=%2224%22 r=%227%22 fill=%22#f59e0b%22 stroke=%22#fff%22 stroke-width=%221.6%22/%3E%3Cpath d=%22M20.4 21.7h4.6M27.6 26.3H23%22 fill=%22none%22 stroke=%22#fff%22 stroke-width=%221.6%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M24.6 19.4l3.5 2.3-3.5 2.3zM23.4 24l-3.5 2.3 3.5 2.3z%22 fill=%22#fff%22/%3E%3C/svg%3E">
   <style>
@@ -324,7 +324,7 @@ p.help-part, button.ai-part { display: block; }
   .pane-toolbar #btnOcr span, .pane-toolbar #btnCopy span { display: none; }
   .pane-toolbar #btnOcr, .pane-toolbar #btnCopy { padding: 0 7px; }
 }
-@container (max-width: 640px) {
+@container (max-width: 720px) {
   .pane-toolbar #btnExport span, .pane-toolbar #btnCopy span, .pane-toolbar #btnAi span, .pane-toolbar #btnImport span { display: none; }
   .pane-toolbar #btnExport, .pane-toolbar #btnCopy, .pane-toolbar #btnAi, .pane-toolbar #btnImport { padding: 0 7px; }
 }
@@ -451,7 +451,7 @@ mark.find.cur { background: #ff9f1c; box-shadow: 0 0 0 1px #e07b00; }
   <div class="brand">
     <span class="logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><defs><linearGradient id="logoGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4a6cf7"/><stop offset="1" stop-color="#2440b3"/></linearGradient></defs><rect width="32" height="32" rx="7" fill="url(#logoGrad)"/><path d="M8 4.5h9.5l6 6V23a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V6.5a2 2 0 0 1 2-2z" fill="#fff"/><path d="M17.5 4.5v4.8a1.2 1.2 0 0 0 1.2 1.2h4.8z" fill="#c7d2fe"/><rect x="9" y="13" width="9" height="1.7" rx=".85" fill="#9aabf0"/><rect x="9" y="16.6" width="11" height="1.7" rx=".85" fill="#9aabf0"/><rect x="9" y="20.2" width="6" height="1.7" rx=".85" fill="#9aabf0"/><circle cx="24" cy="24" r="7" fill="#f59e0b" stroke="#fff" stroke-width="1.6"/><path d="M20.4 21.7h4.6M27.6 26.3H23" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/><path d="M24.6 19.4l3.5 2.3-3.5 2.3zM23.4 24l-3.5 2.3 3.5 2.3z" fill="#fff"/></svg></span>
     <span>PDF Translate</span>
-    <span class="version" id="appVersion">v1.13</span>
+    <span class="version" id="appVersion">v1.14</span>
   </div>
   <ol class="steps" id="steps">
     <li data-step="1"><span>1</span> <i data-i18n="step.extract">Extract text</i></li>
@@ -656,6 +656,23 @@ mark.find.cur { background: #ff9f1c; box-shadow: 0 0 0 1px #e07b00; }
   </form>
 </dialog>
 
+<!-- Bilingual PDF dialog -->
+<dialog id="biDialog" class="modal">
+  <form method="dialog">
+    <h2 data-i18n="bi.title">Download both languages</h2>
+    <div class="formats">
+      <label class="format"><input type="radio" name="biLayout" value="side" checked>
+        <b data-i18n="bi.side">Side by side on one page</b><span data-i18n="bi.sideHint"></span></label>
+      <label class="format"><input type="radio" name="biLayout" value="pages">
+        <b data-i18n="bi.pages">Alternating pages</b><span data-i18n="bi.pagesHint"></span></label>
+    </div>
+    <div class="modal-actions">
+      <button value="cancel" class="btn ghost" data-i18n="common.cancel">Cancel</button>
+      <button value="ok" class="btn primary" data-i18n="common.download">Download</button>
+    </div>
+  </form>
+</dialog>
+
 <!-- Import dialog -->
 <dialog id="importDialog" class="modal wide">
   <form method="dialog">
@@ -746,7 +763,7 @@ mark.find.cur { background: #ff9f1c; box-shadow: 0 0 0 1px #e07b00; }
     <div class="ai-parts-head"><b data-i18n="ai.parts">Copy prompt + text</b> <span class="muted small" data-i18n="ai.partsHint"></span></div>
     <div class="ai-parts" id="aiParts"></div>
     </div>
-    <p class="muted small help-version help-part">PDF Translate v1.13</p>
+    <p class="muted small help-version help-part">PDF Translate v1.14</p>
     <div class="modal-actions">
       <button value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
       <button type="button" class="btn ai-part" id="aiCopyPrompt" data-i18n="ai.copyPrompt">Copy prompt only</button>
@@ -961,14 +978,19 @@ const I18N = {
     "hist.replaceAll": "{n}× ersetzt",
     "nav.rotate": "Diese Seite um 90° drehen (mit Umschalt: gegen den Uhrzeigersinn). Wird in die PDF übernommen.",
     "hist.rotate": "Seite gedreht",
-    "tb.bilingualTitle": "Zweisprachig herunterladen – PDF: ungerade Seiten im Original, gerade Seiten übersetzt; E-Book: jeder Absatz im Original, gefolgt von der Übersetzung",
+    "tb.bilingualTitle": "Zweisprachig herunterladen – PDF: Original und Übersetzung auf einer Seite oder abwechselnde Seiten; E-Book: jeder Absatz im Original, gefolgt von der Übersetzung",
+    "bi.title": "Zweisprachig herunterladen",
+    "bi.side": "Auf einer Seite nebeneinander",
+    "bi.sideHint": "Gleiche Seitenzahl wie das Original, jede Seite doppelt so groß: Hochformat-Seiten nebeneinander (Original links), Querformat-Seiten übereinander (Original oben). Markierungen werden in die Seiten gezeichnet, Links entfallen.",
+    "bi.pages": "Abwechselnde Seiten",
+    "bi.pagesHint": "Ungerade Seiten im Original, gerade Seiten übersetzt – doppelt so viele Seiten wie das Original.",
     "top.fullscreen": "Vollbild: ganze App (Esc beendet)",
     "zoom.page": "Ganze Seite einpassen",
     "tb.ocr": "OCR",
     "tb.ocrTitle": "Texterkennung für gescannte Seiten und Text in Bildern",
     "card.styleTitle": "Größe, Schrift, Fett/Kursiv und Farbe dieses Feldes. Den Rahmen auf der Seite ziehen verschiebt das Feld, die Griffe ändern seine Größe.",
     "st.size": "Größe",
-    "st.sizeTitle": "Schriftgröße der Übersetzung in pt (leer = wie Original). Diese Größe wird genau verwendet, auch wenn der Text dann über den Rahmen hinausläuft.",
+    "st.sizeTitle": "Schriftgröße der Übersetzung in pt. Diese Größe wird genau verwendet, auch wenn der Text dann über den Rahmen hinausläuft.",
     "st.font": "Schrift",
     "st.fontOrig": "Schrift wie Original",
     "st.sans": "Serifenlos",
@@ -1255,14 +1277,19 @@ const I18N = {
     "hist.replaceAll": "{n}× replaced",
     "nav.rotate": "Turn this page by 90° (with Shift: counter-clockwise). Applied to the PDF.",
     "hist.rotate": "page turned",
-    "tb.bilingualTitle": "Download both languages – PDF: odd pages original, even pages translated; e-book: each paragraph in the original, followed by its translation",
+    "tb.bilingualTitle": "Download both languages – PDF: original and translation on one page, or alternating pages; e-book: each paragraph in the original, followed by its translation",
+    "bi.title": "Download both languages",
+    "bi.side": "Side by side on one page",
+    "bi.sideHint": "Same number of pages as the original, each twice as large: portrait pages side by side (original on the left), landscape pages one above the other (original on top). Markups are drawn into the pages; links are not kept.",
+    "bi.pages": "Alternating pages",
+    "bi.pagesHint": "Odd pages in the original, even pages translated – twice as many pages as the original.",
     "top.fullscreen": "Full screen: whole app (Esc to leave)",
     "zoom.page": "Fit the whole page",
     "tb.ocr": "OCR",
     "tb.ocrTitle": "Text recognition for scanned pages and text in pictures",
     "card.styleTitle": "Size, font, bold/italic and colour of this field. Drag its box on the page to move it; drag the handles to resize it.",
     "st.size": "Size",
-    "st.sizeTitle": "Font size of the translation in pt (empty = as in the original). This size is used exactly, even if the text then runs past the box.",
+    "st.sizeTitle": "Font size of the translation in pt. This size is used exactly, even if the text then runs past the box.",
     "st.font": "Font",
     "st.fontOrig": "Font as in the original",
     "st.sans": "Sans-serif",
@@ -3650,6 +3677,63 @@ function bilingualPdf(W, markups, rotations) {
   }
 }
 
+/**
+ * Original and translation on one sheet, as many pages as the original: portrait pages side by
+ * side (original left), landscape pages one above the other (original on top). Markups and other
+ * annotations are drawn into the pages; links are not kept.
+ */
+function sideBySidePdf(W, markups, rotations) {
+  const translated = M.Document.openDocument(savePdf(W, markups, rotations), "application/pdf");
+  const original = M.Document.openDocument(W.bytes.slice(), "application/pdf");
+  rotatePages(original, rotations);
+  const out = new M.PDFDocument();
+  try {
+    original.bake(); translated.bake();
+    const fromOriginal = out.newGraftMap(), fromTranslated = out.newGraftMap();
+    // A page as a form XObject, turned upright with its lower left corner at 0,0.
+    const asForm = (map, src, i) => {
+      const page = src.findPage(i);
+      const box = page.getInheritable("CropBox").isArray() ? page.getInheritable("CropBox") : page.getInheritable("MediaBox");
+      const r = box.isArray() ? [0, 1, 2, 3].map((k) => box.get(k).asNumber()) : [0, 0, 612, 792];
+      const [x0, y0, x1, y1] = [Math.min(r[0], r[2]), Math.min(r[1], r[3]), Math.max(r[0], r[2]), Math.max(r[1], r[3])];
+      const rot = page.getInheritable("Rotate");
+      const deg = ((((rot.isNull() ? 0 : rot.asNumber()) % 360) + 360) % 360);
+      const matrix = { 0: [1, 0, 0, 1, -x0, -y0], 90: [0, -1, 1, 0, -y0, x1], 180: [-1, 0, 0, -1, x1, y1], 270: [0, 1, -1, 0, y1, -x0] }[deg] || [1, 0, 0, 1, -x0, -y0];
+      const turned = deg === 90 || deg === 270;
+      const w = turned ? y1 - y0 : x1 - x0, h = turned ? x1 - x0 : y1 - y0;
+      const contents = page.get("Contents"), parts = [];
+      const read = (o) => { if (o.isStream()) { const b = o.readStream(); parts.push(b.asUint8Array().slice(), new Uint8Array([10])); free(b); } };
+      if (contents.isArray()) for (let k = 0; k < contents.length; k++) read(contents.get(k)); else read(contents);
+      const data = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));
+      parts.reduce((at, p) => (data.set(p, at), at + p.length), 0);
+      const res = page.getInheritable("Resources");
+      const form = out.addStream(data, {
+        Type: "XObject", Subtype: "Form", BBox: [x0, y0, x1, y1], Matrix: matrix,
+        Resources: res.isNull() ? {} : map.graftObject(res),
+      });
+      return { form, w, h };
+    };
+    const num = (v) => String(Math.round(v * 1000) / 1000);
+    for (let i = 0; i < original.countPages(); i++) {
+      const a = asForm(fromOriginal, original, i);
+      const b = i < translated.countPages() ? asForm(fromTranslated, translated, i) : a;
+      const portrait = a.w <= a.h;
+      const W2 = portrait ? a.w + b.w : Math.max(a.w, b.w), H2 = portrait ? Math.max(a.h, b.h) : a.h + b.h;
+      // Original: left (top aligned) or on top; translation: right or below.
+      const pa = portrait ? [0, H2 - a.h] : [0, b.h], pb = portrait ? [a.w, H2 - b.h] : [0, 0];
+      const content = `q 1 0 0 1 ${num(pa[0])} ${num(pa[1])} cm /Orig Do Q\nq 1 0 0 1 ${num(pb[0])} ${num(pb[1])} cm /Tran Do Q\n`;
+      const page = out.addPage([0, 0, W2, H2], 0, { XObject: { Orig: a.form, Tran: b.form } }, content);
+      out.insertPage(-1, page);
+    }
+    const buf = out.saveToBuffer("garbage,compress");
+    const bytes = buf.asUint8Array().slice();
+    free(buf);
+    return bytes;
+  } finally {
+    free(out); free(original); free(translated);
+  }
+}
+
 // ---------------------------------------------------------- worker protocol
 /**
  * Request handler shared by the Web Worker and the in-page fallback. It keeps an open copy of
@@ -3733,7 +3817,7 @@ function createHandler() {
       return { result: bytes, transfer: [bytes.buffer] };
     }
     if (cmd === "saveBilingual") {
-      const bytes = bilingualPdf(W, args.markups || [], args.rotations || {});
+      const bytes = (args.layout === "side" ? sideBySidePdf : bilingualPdf)(W, args.markups || [], args.rotations || {});
       return { result: bytes, transfer: [bytes.buffer] };
     }
     if (cmd === "resetOutput") {
@@ -5471,15 +5555,24 @@ async function downloadOutput() {
 }
 
 /**
- * Both languages in one file: a PDF with the original on the odd and the translation on the
- * even pages; an e-book with each paragraph followed by its translation.
+ * Both languages in one file: a PDF with original and translation on one sheet ("side") or on
+ * alternating pages ("pages"); an e-book with each paragraph followed by its translation.
  */
-async function downloadBilingual() {
+function askBilingual() {
+  if ((state.doc.kind || "pdf") !== "pdf") { downloadBilingual(); return; }
+  let layout = "side";
+  try { layout = localStorage.getItem("pdftr:bi-layout") || "side"; } catch (_) { /* storage blocked */ }
+  const radio = document.querySelector(`input[name="biLayout"][value="${layout}"]`);
+  if (radio) radio.checked = true;
+  $("#biDialog").showModal();
+}
+
+async function downloadBilingual(layout = "pages") {
   try {
     busy(t("msg.saving"));
     const kind = state.doc.kind || "pdf";
     const bytes = kind === "pdf"
-      ? await pool.workers[0].call("saveBilingual", { markups: state.markups, rotations: state.rotations })
+      ? await pool.workers[0].call("saveBilingual", { markups: state.markups, rotations: state.rotations, layout })
       : await pool.workers[0].call("saveBilingual", { segments: state.doc.segments, translations: state.applied, opts: buildOptions() });
     const type = { pdf: "application/pdf", epub: "application/epub+zip", fb2: "application/x-fictionbook+xml" }[kind];
     saveBlob(new Blob([bytes], { type }), `${stem()}.bilingual.${kind}`);
@@ -6648,7 +6741,7 @@ function stylePanelHtml(s) {
   const fonts = [["", "st.fontOrig"], ["sans-serif", "st.sans"], ["serif", "st.serif"], ["monospace", "st.mono"]];
   if (state.customFont || o.font === "custom") fonts.push(["custom", "st.custom"]);
   return `<div class="seg-style">
-    <label title="${escapeHtml(t("st.sizeTitle"))}">${t("st.size")} <input type="number" data-st="size" min="0.5" step="any" value="${o.size || ""}" placeholder="${Math.round(s.size * 10) / 10}"></label>
+    <label title="${escapeHtml(t("st.sizeTitle"))}">${t("st.size")} <input type="number" data-st="size" min="0.5" step="any" value="${o.size || Math.round(s.size * 10) / 10}"></label>
     <select data-st="font" title="${escapeHtml(t("st.font"))}">${fonts.map(([v, k]) => `<option value="${v}"${(o.font || "") === v ? " selected" : ""}>${escapeHtml(t(k))}</option>`).join("")}</select>
     <button type="button" class="mini toggle${bold ? " on" : ""}" data-st="bold" title="${escapeHtml(t("st.bold"))}"><b>B</b></button>
     <button type="button" class="mini toggle${italic ? " on" : ""}" data-st="italic" title="${escapeHtml(t("st.italic"))}"><i>I</i></button>
@@ -6686,7 +6779,8 @@ function onStyleInput(e) {
   const st = el.dataset.st;
   if (st === "size") {
     const v = Number(el.value);
-    setOverride(id, { size: v > 0 && Math.abs(v - s.size) > 0.01 ? v : null }, t("hist.field"), "size");
+    // The field shows the original size rounded to 0.1 pt; that value means "as in the original".
+    setOverride(id, { size: v > 0 && Math.abs(v - Math.round(s.size * 10) / 10) > 0.001 ? v : null }, t("hist.field"), "size");
   } else if (st === "font") setOverride(id, { font: el.value || null }, t("hist.field"));
   else if (st === "color") setOverride(id, { color: el.value.toLowerCase() === s.color ? null : el.value.toLowerCase() }, t("hist.field"), "color");
 }
@@ -7183,7 +7277,13 @@ function initTools() {
   });
   $("#zoomPage").addEventListener("click", fitPage);
   $("#pageRotate").addEventListener("click", rotateCurrentPage);
-  $("#btnDownloadBi").addEventListener("click", (e) => { e.preventDefault(); downloadBilingual(); });
+  $("#btnDownloadBi").addEventListener("click", (e) => { e.preventDefault(); askBilingual(); });
+  $("#biDialog").addEventListener("close", () => {
+    if ($("#biDialog").returnValue !== "ok") return;
+    const layout = document.querySelector('input[name="biLayout"]:checked').value;
+    try { localStorage.setItem("pdftr:bi-layout", layout); } catch (_) { /* storage blocked */ }
+    downloadBilingual(layout);
+  });
   $("#btnFind").addEventListener("click", () => (find.open ? closeFind() : openFind()));
   $("#findClose").addEventListener("click", closeFind);
   $("#findReplaceToggle").addEventListener("click", () => setReplaceMode($("#replaceRow").hidden));

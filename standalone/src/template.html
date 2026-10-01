@@ -220,6 +220,23 @@
   </form>
 </dialog>
 
+<!-- Bilingual PDF dialog -->
+<dialog id="biDialog" class="modal">
+  <form method="dialog">
+    <h2 data-i18n="bi.title">Download both languages</h2>
+    <div class="formats">
+      <label class="format"><input type="radio" name="biLayout" value="side" checked>
+        <b data-i18n="bi.side">Side by side on one page</b><span data-i18n="bi.sideHint"></span></label>
+      <label class="format"><input type="radio" name="biLayout" value="pages">
+        <b data-i18n="bi.pages">Alternating pages</b><span data-i18n="bi.pagesHint"></span></label>
+    </div>
+    <div class="modal-actions">
+      <button value="cancel" class="btn ghost" data-i18n="common.cancel">Cancel</button>
+      <button value="ok" class="btn primary" data-i18n="common.download">Download</button>
+    </div>
+  </form>
+</dialog>
+
 <!-- Import dialog -->
 <dialog id="importDialog" class="modal wide">
   <form method="dialog">
