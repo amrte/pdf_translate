@@ -250,6 +250,12 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); ou
 .engine-status { font-size: 12.5px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
 .engine-status.error { color: var(--danger); font-weight: 600; }
 .privacy { font-size: 12.5px; color: var(--success); font-weight: 600; }
+/* virtualised segment list */
+.segments { position: relative; overflow-anchor: none; }
+.vl-inner { position: relative; }
+.vl-inner .seg { position: absolute; top: 0; left: 0; right: 0; margin: 0; contain: layout style; }
+.segments.is-empty::after { content: attr(data-empty); display: block; color: var(--muted); text-align: center; padding: 40px 10px; }
+.page img:not([src]) { visibility: hidden; }
 </style>
 </head>
 <body>
@@ -438,7 +444,7 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); ou
 <div class="toast-stack" id="toasts"></div>
 <div class="busy" id="busy" hidden><div class="busy-box"><div class="spinner"></div><span id="busyText">Working…</span></div></div>
 
-<script type="module">
+<script type="text/plain" id="engine-src">
 // ======================================================================
 // PDF engine: extraction, exchange formats and rebuild (runs on MuPDF WASM)
 // ======================================================================
@@ -511,7 +517,10 @@ function familyOf(low, serif, mono) {
 }
 
 const fontInfoCache = new Map();
+const fontPtrCache = new Map();
 function fontInfo(font) {
+  const cached = fontPtrCache.get(font.pointer);
+  if (cached) return cached;
   const raw = font.getName();
   let info = fontInfoCache.get(raw);
   if (!info) {
@@ -525,6 +534,7 @@ function fontInfo(font) {
     };
     fontInfoCache.set(raw, info);
   }
+  fontPtrCache.set(font.pointer, info);
   return info;
 }
 
@@ -586,6 +596,8 @@ function divided(a, b, seps, horizontal = true) {
 
 // --------------------------------------------------------------- extraction
 
+const colorCache = new Map();
+
 function pageBlocks(page, bounds, seps) {
   const st = page.toStructuredText("preserve-whitespace");
   const blocks = [];
@@ -600,13 +612,17 @@ function pageBlocks(page, bounds, seps) {
       span = null; lastInk = null; sawSpace = false;
     },
     onChar(c, origin, font, size, quad, color) {
-      if (!line) return;
-      const qb = quadBox(quad);
+      if (!line) { free(font); return; }
+      const qb = [Math.min(quad[0], quad[2], quad[4], quad[6]), Math.min(quad[1], quad[3], quad[5], quad[7]),
+        Math.max(quad[0], quad[2], quad[4], quad[6]), Math.max(quad[1], quad[3], quad[5], quad[7])];
       if (qb[2] < bounds[0] || qb[0] > bounds[2] || qb[3] < bounds[1] || qb[1] > bounds[3]) return; // off-page
-      const blank = !c.trim();
+      const blank = c === " " || !c.trim();
       const info = fontInfo(font);
-      const col = colorHex(color);
-      const key = `${info.name}|${size.toFixed(2)}|${col}`;
+      free(font); // release the per-character wrapper right away instead of waiting for GC
+      const ck = color.length === 3 ? ((color[0] * 255) << 16) + ((color[1] * 255) << 8) + (color[2] * 255 | 0) : color.join(",");
+      let col = colorCache.get(ck);
+      if (!col) { col = colorHex(color); colorCache.set(ck, col); }
+      const key = `${info.name}|${Math.round(size * 100)}|${col}`;
       // Start a new span on a style change, and where a table border or a wide gap separates
       // this glyph from the previous one (MuPDF fills such gaps with synthetic spaces).
       let split = !span || span.key !== key;
@@ -776,24 +792,30 @@ function buildSegment(group, pageNo, bounds, id, marginsByRot) {
   };
 }
 
-/** Extract translatable segments from every page. */
-async function extractDocument(bytes, onProgress) {
-  const doc = M.Document.openDocument(bytes, "application/pdf");
-  if (doc.needsPassword && doc.needsPassword()) { free(doc); throw new Error("Password-protected PDFs are not supported."); }
-  const pages = [], segments = [];
-  const n = doc.countPages();
-  for (let p = 0; p < n; p++) {
+/**
+ * Extract translatable segments from the given pages of an open document.
+ * Returns page info (size, protected text boxes, vector graphics for the rebuild) and
+ * segments with page-local ids; the caller numbers them across the whole document.
+ */
+async function extractPages(doc, pageList, onProgress) {
+  const pages = {}, segments = [];
+  let done = 0;
+  for (const p of pageList) {
     const page = doc.loadPage(p);
     const bounds = page.getBounds();
     const width = bounds[2] - bounds[0], height = bounds[3] - bounds[1];
-    pages.push({ width, height, x0: bounds[0], y0: bounds[1] });
-    const { seps } = pageGraphics(page);
+    const graphics = pageGraphics(page);
+    const { seps } = graphics;
+    const protect = []; // text we never extract (skewed lines) must survive merged redactions
     const blocks = [];
     for (const block of pageBlocks(page, bounds, seps)) {
       const lines = [];
       for (const line of block.lines) {
         const rot = rotationOf(line.dir);
-        if (rot === null) continue;
+        if (rot === null) {
+          for (const sp of line.spans) protect.push(sp.bbox);
+          continue;
+        }
         const chunks = chunksOf(line, rot, seps);
         for (const chunk of chunks) {
           const text = spansText(chunk, rot);
@@ -810,6 +832,7 @@ async function extractDocument(bytes, onProgress) {
       const boxes = blocks.flat().filter((l) => l.rotation === rot).map((l) => localBox(l.bbox, rot));
       if (boxes.length) marginsByRot[rot] = [Math.min(...boxes.map((b) => b[0])), Math.max(...boxes.map((b) => b[2]))];
     }
+    let local = 0;
     for (const lines of blocks) {
       const groups = [];
       for (const line of lines) {
@@ -831,16 +854,31 @@ async function extractDocument(bytes, onProgress) {
         else cur.push(line);
       }
       for (const g of groups) {
-        const seg = buildSegment(g, p, bounds, segments.length + 1, marginsByRot);
+        const seg = buildSegment(g, p, bounds, ++local, marginsByRot);
         if (seg) segments.push(seg);
       }
     }
+    pages[p] = { width, height, x0: bounds[0], y0: bounds[1], protect: protect.map((r) => r.map(round2)), graphics };
     free(page);
-    if (onProgress) onProgress(p + 1, n);
-    await tick();
+    done++;
+    if (onProgress) onProgress(done, pageList.length);
+    if (done % 4 === 0) await tick();
   }
-  free(doc);
   return { pages, segments };
+}
+
+/** Extract every page of a PDF (single-threaded; the UI uses a worker pool instead). */
+async function extractDocument(bytes, onProgress) {
+  const doc = M.Document.openDocument(bytes, "application/pdf");
+  try {
+    if (doc.needsPassword && doc.needsPassword()) throw new Error("Password-protected PDFs are not supported.");
+    const n = doc.countPages();
+    const { pages, segments } = await extractPages(doc, [...Array(n).keys()], onProgress);
+    segments.forEach((s, i) => { s.id = i + 1; });
+    return { pages: [...Array(n).keys()].map((i) => pages[i]), segments };
+  } finally {
+    free(doc);
+  }
 }
 
 // --------------------------------------------------------- exchange formats
@@ -1199,8 +1237,8 @@ function lineHeight(seg) {
   return Math.max(seg.line_pitch || 1.15 * seg.size, seg.size);
 }
 
-function obstaclesFor(page, segs) {
-  const { seps, containers } = pageGraphics(page);
+function obstaclesFor(graphics, segs) {
+  const { seps, containers } = graphics;
   const edges = segs.map((s) => s.bbox).concat(seps);
   for (const c of containers) edges.push([c[0], c[1], c[0], c[3]], [c[2], c[1], c[2], c[3]], [c[0], c[1], c[2], c[1]], [c[0], c[3], c[2], c[3]]);
   return { edges, containers };
@@ -1265,7 +1303,7 @@ function layoutSegment(seg, text, fk, bounds, obs, opts, used, stats) {
     const search = (lo) => {
       let hi = 1, best = null, bestK = lo;
       if (!fits(lo)) return null;
-      for (let i = 0; i < 18; i++) {
+      for (let i = 0; i < 10; i++) {
         const mid = (lo + hi) / 2;
         const ok = fits(mid);
         if (ok) { best = ok; bestK = mid; lo = mid; } else hi = mid;
@@ -1335,12 +1373,41 @@ function appendContent(doc, page, content, used) {
   pobj.put("Contents", arr);
 }
 
+const overlaps = (a, b, pad = 1) => a[0] < b[2] + pad && b[0] < a[2] + pad && a[1] < b[3] + pad && b[1] < a[3] + pad;
+
+/**
+ * As few redaction rectangles as possible. MuPDF tests every character against every
+ * redaction, so one rectangle per text run is slow on big pages. Segments being replaced are
+ * merged into larger rectangles as long as no text we keep (untranslated segments, skewed
+ * text) would be touched; otherwise the thin per-run bands are used.
+ */
+function redactionRects(todo, keep) {
+  const rects = [], cores = [];
+  for (const seg of todo) {
+    let core = null;
+    for (const r of seg.redact) core = union(core, r);
+    if (!core) continue;
+    if (keep.some((k) => overlaps(core, k))) rects.push(...seg.redact);
+    else cores.push(core);
+  }
+  cores.sort((a, b) => a[1] - b[1] || a[0] - b[0]);
+  let cur = null;
+  for (const c of cores) {
+    if (!cur) { cur = c.slice(); continue; }
+    const u = union(cur, c);
+    if (keep.some((k) => overlaps(u, k))) { rects.push(cur); cur = c.slice(); } else cur = u;
+  }
+  if (cur) rects.push(cur);
+  return rects;
+}
+
 /**
  * Build the translated PDF. Only segments with a translation are touched: their glyphs are
  * removed with text-only redactions (images and vector art stay) and the translation is
  * typeset into the same box with the original size, colour, style, alignment and rotation.
+ * `pages` is the page info from extraction (protected text and vector graphics per page).
  */
-async function buildTranslated(bytes, segments, translations, opts, onProgress) {
+async function buildTranslated(bytes, segments, translations, pages, opts, onProgress) {
   const doc = M.Document.openDocument(bytes, "application/pdf");
   const fk = new FontKit(doc, opts);
   const stats = { replaced: 0, untranslated: 0, shrunk: [], missing: 0 };
@@ -1351,18 +1418,18 @@ async function buildTranslated(bytes, segments, translations, opts, onProgress) 
   }
   let done = 0;
   for (const [pno, segs] of byPage) {
-    const todo = segs.filter((s) => (translations[s.id] || "").trim());
+    const todo = [], keep = [...((pages[pno] && pages[pno].protect) || [])];
+    for (const s of segs) {
+      if ((translations[s.id] || "").trim()) todo.push(s);
+      else keep.push(s.bbox);
+    }
     stats.untranslated += segs.length - todo.length;
     if (todo.length) {
       const page = doc.loadPage(pno);
       const bounds = page.getBounds();
-      const obs = opts.expand ? obstaclesFor(page, segs) : null;
-      for (const seg of todo) {
-        for (const r of seg.redact) {
-          const annot = page.createAnnotation("Redact");
-          annot.setRect(r);
-        }
-      }
+      let obs = null;
+      if (opts.expand) obs = obstaclesFor((pages[pno] && pages[pno].graphics) || pageGraphics(page), segs);
+      for (const r of redactionRects(todo, keep)) page.createAnnotation("Redact").setRect(r);
       page.applyRedactions(false, 0, 0, 0); // keep images, keep line art, remove text
       const used = new Set();
       const content = todo.map((seg) => layoutSegment(seg, translations[seg.id], fk, bounds, obs, opts, used, stats)).join("\n");
@@ -1372,7 +1439,7 @@ async function buildTranslated(bytes, segments, translations, opts, onProgress) 
     }
     done++;
     if (onProgress) onProgress(done, byPage.size);
-    await tick();
+    if (done % 4 === 0) await tick();
   }
   stats.missing = fk.missing;
   doc.subsetFonts();
@@ -1383,37 +1450,104 @@ async function buildTranslated(bytes, segments, translations, opts, onProgress) 
   return { bytes: out, stats };
 }
 
-/** Render a page to a PNG blob. */
-function renderPage(doc, index, zoom) {
+/** Render a page to PNG bytes (a copy, safe to transfer). */
+function renderPNG(doc, index, zoom) {
   const page = doc.loadPage(index);
   const pix = page.toPixmap(M.Matrix.scale(zoom, zoom), M.ColorSpace.DeviceRGB, false, true);
-  const png = pix.asPNG();
-  const blob = new Blob([png], { type: "image/png" });
+  const png = pix.asPNG().slice();
   free(pix);
   free(page);
-  return blob;
+  return png;
 }
 
 const Engine = {
-  init: initEngine, extract: extractDocument, build: buildTranslated, render: renderPage,
+  init: initEngine, extract: extractDocument, extractPages, build: buildTranslated, renderPNG,
   open: (bytes) => M.Document.openDocument(bytes, "application/pdf"),
   exportTxt, exportCsv, exportJson, exportXliff, exportDocx, parseImport, parseMarkedText,
 };
 
+// ---------------------------------------------------------- worker protocol
+/**
+ * Request handler shared by the Web Worker and the in-page fallback. It keeps an open copy of
+ * the original PDF (for extraction and rendering) and of the latest translated PDF (preview).
+ */
+function createHandler() {
+  const W = { doc: null, bytes: null, out: null };
+  return async function handle(cmd, args = {}, progress = () => {}) {
+    if (cmd === "init") {
+      await initEngine();
+      return { result: true };
+    }
+    if (cmd === "open") {
+      free(W.doc); free(W.out); W.out = null;
+      W.bytes = args.bytes;
+      W.doc = M.Document.openDocument(args.bytes.slice(), "application/pdf");
+      if (W.doc.needsPassword && W.doc.needsPassword()) throw new Error("Password-protected PDFs are not supported.");
+      return { result: W.doc.countPages() };
+    }
+    if (cmd === "extract") return { result: await extractPages(W.doc, args.pages, progress) };
+    if (cmd === "render") {
+      const doc = args.variant === "translated" ? W.out : W.doc;
+      if (!doc) throw new Error("No document is open.");
+      const png = renderPNG(doc, args.page, args.zoom);
+      return { result: png.buffer, transfer: [png.buffer] };
+    }
+    if (cmd === "setOutput") {
+      free(W.out);
+      W.out = args.bytes ? M.Document.openDocument(args.bytes, "application/pdf") : null;
+      return { result: true };
+    }
+    if (cmd === "build") {
+      const result = await buildTranslated(W.bytes.slice(), args.segments, args.translations, args.pages, args.opts, progress);
+      return { result, transfer: [result.bytes.buffer] };
+    }
+    if (cmd === "close") {
+      free(W.doc); free(W.out);
+      W.doc = W.out = W.bytes = null;
+      return { result: true };
+    }
+    throw new Error(`Unknown command ${cmd}`);
+  };
+}
+
+// Inside a Web Worker: serve {id, cmd, args} -> {id, result} | {id, error} | {id, progress}.
+if (typeof WorkerGlobalScope !== "undefined" && self instanceof WorkerGlobalScope) {
+  const handle = createHandler();
+  self.onmessage = async (e) => {
+    const { id, cmd, args } = e.data;
+    try {
+      const { result, transfer } = await handle(cmd, args, (done, total) => self.postMessage({ id, progress: [done, total] }));
+      self.postMessage({ id, result }, transfer || []);
+    } catch (err) {
+      self.postMessage({ id, error: String((err && err.message) || err) });
+    }
+  };
+}
+
+</script>
+<script type="module">
 // ======================================================================
-// User interface
+// User interface. The PDF engine runs in a pool of Web Workers so the page stays responsive;
+// the segment list is virtualised so documents with thousands of segments stay fast.
 // ======================================================================
+const ENGINE_SRC = document.getElementById("engine-src").textContent;
+const { Engine, createHandler } = await import(URL.createObjectURL(new Blob(
+  [ENGINE_SRC, "\nexport { Engine, createHandler };\n"], { type: "text/javascript" })));
+// Workers are classic scripts (module workers are refused on file:// pages); the engine
+// loads MuPDF with a dynamic import(), which classic workers support.
+const WORKER_URL = URL.createObjectURL(new Blob([ENGINE_SRC], { type: "text/javascript" }));
+
 const $ = (sel) => document.querySelector(sel);
 const LS_LAST = "pdftr:last";
 const lsKey = (id) => `pdftr:tr:${id}`;
+const GAP = 10; // px between segment cards
 
 const state = {
   doc: null,          // {id, name, pages, segments}
   srcBytes: null,     // original PDF
-  srcDoc: null,       // MuPDF document for rendering the original
   outBytes: null,     // translated PDF
-  outDoc: null,
   outUrl: null,
+  buildNo: 0,
   translations: {},
   variant: "original",
   zoom: 1,
@@ -1422,16 +1556,101 @@ const state = {
   shrunk: new Set(),
 };
 
-let engineReady = null;
-function ensureEngine() {
-  if (!engineReady) {
-    engineReady = Engine.init().catch((err) => {
-      engineReady = null;
-      throw new Error("Could not load the PDF engine from the internet. Check your connection and reload the page. " + (err.message || ""));
+/* --------------------------------------------------------------- workers */
+
+class LocalWorker { // fallback when module workers are unavailable: same protocol, in the page
+  constructor() { this.handle = createHandler(); this.load = 0; }
+  async call(cmd, args, transfer, onProgress) {
+    this.load++;
+    try { return (await this.handle(cmd, args, onProgress)).result; } finally { this.load--; }
+  }
+}
+
+class RemoteWorker {
+  constructor(url) {
+    this.w = new Worker(url, { name: "pdf-engine" });
+    this.pending = new Map();
+    this.seq = 0;
+    this.load = 0;
+    this.w.onmessage = (e) => {
+      const { id, result, error, progress } = e.data;
+      const p = this.pending.get(id);
+      if (!p) return;
+      if (progress) { if (p.onProgress) p.onProgress(...progress); return; }
+      this.pending.delete(id);
+      this.load--;
+      if (error) p.reject(new Error(error)); else p.resolve(result);
+    };
+    this.w.onerror = (e) => {
+      e.preventDefault();
+      const err = new Error(e.message || "The PDF engine worker failed to start.");
+      for (const p of this.pending.values()) p.reject(err);
+      this.pending.clear();
+      this.load = 0;
+      this.dead = true;
+    };
+  }
+  call(cmd, args = {}, transfer = [], onProgress = null) {
+    if (this.dead) return Promise.reject(new Error("The PDF engine worker stopped."));
+    return new Promise((resolve, reject) => {
+      const id = ++this.seq;
+      this.pending.set(id, { resolve, reject, onProgress });
+      this.load++;
+      this.w.postMessage({ id, cmd, args }, transfer);
     });
   }
-  return engineReady;
+  terminate() { this.w.terminate(); }
 }
+
+const pool = {
+  workers: [],
+  local: false,
+  ready: null,
+  maxSize: Math.max(1, Math.min(4, (navigator.hardwareConcurrency || 2) - 1)),
+  spawn() {
+    let w;
+    if (!this.local) {
+      try { w = new RemoteWorker(WORKER_URL); } catch (_) { this.local = true; }
+    }
+    if (this.local) w = new LocalWorker();
+    w.ready = w.call("init");
+    this.workers.push(w);
+    return w;
+  },
+  /** Start the first worker; fall back to the page itself if module workers fail. */
+  start() {
+    if (!this.ready) {
+      const first = this.spawn();
+      this.ready = first.ready.catch(async (err) => {
+        if (this.local) throw err;
+        console.warn("Worker failed, running the engine in the page instead:", err);
+        first.terminate && first.terminate();
+        this.workers = [];
+        this.local = true;
+        this.maxSize = 1;
+        const w = this.spawn();
+        await w.ready;
+      }).catch((err) => {
+        this.ready = null;
+        throw new Error("Could not load the PDF engine from the internet. Check your connection and reload the page. " + (err.message || ""));
+      });
+    }
+    return this.ready;
+  },
+  async ensure(n) {
+    await this.start();
+    n = Math.min(n, this.local ? 1 : this.maxSize);
+    while (this.workers.length < n) this.spawn();
+    const results = await Promise.allSettled(this.workers.map((w) => w.ready));
+    this.workers = this.workers.filter((w, i) => results[i].status === "fulfilled");
+    if (!this.workers.length) throw new Error("The PDF engine could not start.");
+  },
+  leastBusy(exclude) {
+    const list = this.workers.filter((w) => w !== exclude);
+    return (list.length ? list : this.workers).reduce((a, b) => (b.load < a.load ? b : a));
+  },
+  all(cmd, argsFn) { return Promise.all(this.workers.map((w) => w.call(cmd, argsFn ? argsFn() : {}))); },
+};
 
 /* ------------------------------------------------------------------ utils */
 
@@ -1440,6 +1659,7 @@ function toast(message, kind = "") {
   el.className = `toast ${kind}`;
   el.textContent = message;
   $("#toasts").appendChild(el);
+  while ($("#toasts").children.length > 4) $("#toasts").firstChild.remove();
   setTimeout(() => el.remove(), kind === "error" ? 8000 : 4500);
 }
 
@@ -1458,6 +1678,7 @@ function saveBlob(blob, filename) {
 }
 
 const stem = () => (state.doc.name || "document.pdf").replace(/\.pdf$/i, "") || "document";
+const escapeHtml = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 
 async function sha256(bytes) {
   const hash = await crypto.subtle.digest("SHA-256", bytes);
@@ -1469,7 +1690,7 @@ function persist() {
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => {
     try { localStorage.setItem(lsKey(state.doc.id), JSON.stringify(state.translations)); } catch (_) { /* quota / private mode */ }
-  }, 300);
+  }, 400);
 }
 
 const hasTr = (id) => Boolean((state.translations[id] || "").trim());
@@ -1518,44 +1739,71 @@ async function openPdf(file) {
   $("#fileInput").value = "";
 }
 
+function setLoading(text) {
+  $("#uploadProgress").hidden = !text;
+  $("#uploadProgressText").textContent = text || "";
+  if (state.doc && text) busy(text); else if (!text) busy("");
+}
+
+/** Extract all pages, spreading chunks of pages over the worker pool. */
+async function extractAll(pageCount, onProgress) {
+  const size = Math.max(2, Math.min(12, Math.ceil(pageCount / (pool.workers.length * 6))));
+  const chunks = [];
+  for (let p = 0; p < pageCount; p += size) chunks.push(Array.from({ length: Math.min(size, pageCount - p) }, (_, i) => p + i));
+  const pages = new Array(pageCount), raw = [];
+  let done = 0;
+  await Promise.all(pool.workers.map(async (w) => {
+    while (chunks.length) {
+      const chunk = chunks.shift();
+      const r = await w.call("extract", { pages: chunk }, [], () => onProgress(++done, pageCount));
+      for (const [p, info] of Object.entries(r.pages)) pages[p] = info;
+      raw.push(...r.segments);
+    }
+  }));
+  raw.sort((a, b) => a.page - b.page || a.id - b.id);
+  raw.forEach((s, i) => { s.id = i + 1; });
+  return { pages, segments: raw };
+}
+
 async function loadBytes(bytes, name, remember) {
-  $("#uploadProgress").hidden = false;
-  $("#uploadProgressText").textContent = "Loading the PDF engine…";
+  setLoading("Loading the PDF engine…");
   try {
-    await ensureEngine();
-    $("#uploadProgressText").textContent = "Extracting text…";
+    await pool.start();
     const id = await sha256(bytes);
-    const { pages, segments } = await Engine.extract(bytes.slice(), (i, n) => {
-      $("#uploadProgressText").textContent = `Extracting text… page ${i} of ${n}`;
-    });
+    // More workers for bigger documents, fewer for huge files (each worker holds a copy).
+    const mb = bytes.length / 1048576;
+    await pool.ensure(mb > 150 ? 1 : mb > 60 ? 2 : pool.maxSize);
+    setLoading("Opening…");
+    const counts = await pool.all("open", () => ({ bytes }));
+    const pageCount = counts[0];
+    const started = performance.now();
+    const { pages, segments } = await extractAll(pageCount, (i, n) => setLoading(`Extracting text… page ${i} of ${n}`));
+    console.info(`Extracted ${segments.length} segments from ${pageCount} pages in ${Math.round(performance.now() - started)} ms using ${pool.workers.length} worker(s)`);
     if (remember) idbPut({ name, bytes });
     openDocument({ id, name, pages, segments }, bytes);
   } catch (err) {
     console.error(err);
     toast(/password/i.test(err.message) ? err.message : `Could not open this PDF: ${err.message || err}`, "error");
   } finally {
-    $("#uploadProgress").hidden = true;
+    setLoading("");
   }
 }
 
-function disposeDocs() {
-  for (const key of ["srcDoc", "outDoc"]) {
-    try { state[key] && state[key].destroy && state[key].destroy(); } catch (_) { /* ignore */ }
-    state[key] = null;
-  }
+function disposeOutput() {
   if (state.outUrl) URL.revokeObjectURL(state.outUrl);
   state.outUrl = null;
   state.outBytes = null;
 }
 
 function openDocument(doc, bytes) {
-  disposeDocs();
+  disposeOutput();
   state.doc = doc;
   state.srcBytes = bytes;
-  state.srcDoc = Engine.open(bytes.slice());
   state.variant = "original";
   state.activeId = null;
   state.shrunk = new Set();
+  segIndex.clear();
+  for (const s of doc.segments) segIndex.set(s.id, s);
   try {
     state.translations = JSON.parse(localStorage.getItem(lsKey(doc.id)) || "{}");
     localStorage.setItem(LS_LAST, doc.id);
@@ -1571,10 +1819,13 @@ function openDocument(doc, bytes) {
 
   $("#filterPage").innerHTML = '<option value="all">All pages</option>' +
     doc.pages.map((_, i) => `<option value="${i}">Page ${i + 1}</option>`).join("");
+  $("#search").value = "";
+  $("#filterStatus").value = "all";
 
   state.zoom = fitZoom();
   renderPages();
-  renderSegments();
+  vl.reset();
+  applyFilter();
   setBuilt(false);
   setVariant("original");
   updateProgress();
@@ -1584,9 +1835,14 @@ function openDocument(doc, bytes) {
 }
 
 function closeDocument() {
-  disposeDocs();
+  disposeOutput();
   state.doc = null;
   try { localStorage.removeItem(LS_LAST); } catch (_) { /* ignore */ }
+  pool.all("close").catch(() => {});
+  observer.disconnect();
+  clearImageCache();
+  $("#pages").innerHTML = "";
+  vl.reset();
   $("#workView").hidden = true;
   $("#uploadView").hidden = false;
   $("#btnNew").hidden = true;
@@ -1607,104 +1863,128 @@ function fitZoom() {
 const pageCssWidth = (page) => Math.round(page.width * 1.25 * state.zoom);
 
 function renderZoom(page) {
-  const px = pageCssWidth(page) * (window.devicePixelRatio || 1);
+  const px = pageCssWidth(page) * Math.min(2, window.devicePixelRatio || 1);
   return Math.min(4, Math.max(0.5, Math.ceil((px / page.width) * 4) / 4));
 }
 
-// Pages are rendered lazily, one at a time, when they scroll into view.
-const imgCache = new Map(); // `${variant}:${page}:${zoom}` -> object URL
+// Page images are rendered by the workers, only for pages near the viewport, and kept in a
+// small LRU cache so memory stays bounded on long documents.
+const IMG_CACHE_MAX = 60;
+const imgCache = new Map(); // key -> object URL (insertion order = LRU order)
+const visiblePages = new Set();
 let renderQueue = [];
-let rendering = false;
+let inflight = 0;
+
 const observer = new IntersectionObserver((entries) => {
-  for (const e of entries) if (e.isIntersecting) queueRender(Number(e.target.dataset.page));
-}, { root: null, rootMargin: "600px 0px" });
+  for (const e of entries) {
+    const i = Number(e.target.dataset.page);
+    if (e.isIntersecting) {
+      visiblePages.add(i);
+      ensureBoxes(i);
+      queueRender(i);
+    } else {
+      visiblePages.delete(i);
+    }
+  }
+}, { root: $("#pages"), rootMargin: "800px 0px" });
+
+const imgKey = (i) => `${state.variant}:${state.variant === "translated" ? state.buildNo : 0}:${i}:${renderZoom(state.doc.pages[i])}`;
 
 function queueRender(i) {
+  const el = document.querySelector(`.page[data-page="${i}"]`);
+  if (!el) return;
+  const key = imgKey(i);
+  const img = el.querySelector("img");
+  if (img.dataset.key === key) return;
+  const url = imgCache.get(key);
+  if (url) {
+    imgCache.delete(key); imgCache.set(key, url); // refresh LRU position
+    img.src = url; img.dataset.key = key;
+    return;
+  }
   if (!renderQueue.includes(i)) renderQueue.push(i);
   pump();
 }
 
-async function pump() {
-  if (rendering) return;
-  rendering = true;
-  while (renderQueue.length && state.doc) {
+function pump() {
+  const max = Math.max(1, pool.workers.length);
+  while (inflight < max && renderQueue.length && state.doc) {
+    // Render what is on screen first, nearest pages first.
+    renderQueue = renderQueue.filter((i) => visiblePages.has(i));
+    if (!renderQueue.length) break;
     const i = renderQueue.shift();
-    const el = document.querySelector(`.page[data-page="${i}"]`);
-    if (!el) continue;
-    const variant = state.variant;
-    const doc = variant === "translated" ? state.outDoc : state.srcDoc;
-    if (!doc) continue;
-    const zoom = renderZoom(state.doc.pages[i]);
-    const key = `${variant}:${variant === "translated" ? state.buildNo : 0}:${i}:${zoom}`;
-    let url = imgCache.get(key);
-    if (!url) {
-      try {
-        url = URL.createObjectURL(Engine.render(doc, i, zoom));
+    const key = imgKey(i);
+    const page = state.doc.pages[i];
+    const doc = state.doc;
+    inflight++;
+    pool.leastBusy(building ? pool.workers[0] : null)
+      .call("render", { page: i, zoom: renderZoom(page), variant: state.variant })
+      .then((buf) => {
+        if (state.doc !== doc) return;
+        const url = URL.createObjectURL(new Blob([buf], { type: "image/png" }));
         imgCache.set(key, url);
-      } catch (err) {
-        console.error(err);
-        continue;
-      }
-      await new Promise((r) => setTimeout(r, 0));
-    }
-    const img = el.querySelector("img");
-    if (img.dataset.key !== key) { img.src = url; img.dataset.key = key; }
+        while (imgCache.size > IMG_CACHE_MAX) {
+          const [oldKey, oldUrl] = imgCache.entries().next().value;
+          imgCache.delete(oldKey);
+          URL.revokeObjectURL(oldUrl);
+          const stale = document.querySelector(`.page img[data-key="${CSS.escape(oldKey)}"]`);
+          if (stale) { stale.removeAttribute("src"); delete stale.dataset.key; }
+        }
+        const img = document.querySelector(`.page[data-page="${i}"] img`);
+        if (img && imgKey(i) === key) { img.src = url; img.dataset.key = key; }
+      })
+      .catch((err) => console.warn("render failed", i, err))
+      .finally(() => { inflight--; pump(); });
   }
-  rendering = false;
 }
 
 function clearImageCache() {
   for (const url of imgCache.values()) URL.revokeObjectURL(url);
   imgCache.clear();
+  renderQueue = [];
 }
 
 function renderPages() {
   const wrap = $("#pages");
   observer.disconnect();
   clearImageCache();
-  wrap.innerHTML = "";
-  const byPage = new Map();
+  visiblePages.clear();
+  const html = state.doc.pages.map((page, i) =>
+    `<div class="page" data-page="${i}" style="width:${pageCssWidth(page)}px;aspect-ratio:${page.width} / ${page.height}">` +
+    `<span class="page-label">Page ${i + 1}</span><img alt="Page ${i + 1}"></div>`).join("");
+  wrap.innerHTML = html;
+  segsByPage = new Map();
   for (const s of state.doc.segments) {
-    if (!byPage.has(s.page)) byPage.set(s.page, []);
-    byPage.get(s.page).push(s);
+    if (!segsByPage.has(s.page)) segsByPage.set(s.page, []);
+    segsByPage.get(s.page).push(s);
   }
-  state.doc.pages.forEach((page, i) => {
-    const el = document.createElement("div");
-    el.className = "page";
-    el.dataset.page = i;
-    el.style.width = `${pageCssWidth(page)}px`;
-    el.style.aspectRatio = `${page.width} / ${page.height}`;
-    el.innerHTML = `<span class="page-label">Page ${i + 1}</span>`;
-    const img = document.createElement("img");
-    img.alt = `Page ${i + 1}`;
-    el.appendChild(img);
-    for (const s of byPage.get(i) || []) {
-      const box = document.createElement("div");
-      box.className = "box" + (hasTr(s.id) ? " done" : "");
-      box.dataset.id = s.id;
-      const [x0, y0, x1, y1] = s.bbox;
-      Object.assign(box.style, {
-        left: `${((x0 - page.x0) / page.width) * 100}%`, top: `${((y0 - page.y0) / page.height) * 100}%`,
-        width: `${((x1 - x0) / page.width) * 100}%`, height: `${((y1 - y0) / page.height) * 100}%`,
-      });
-      box.title = `#${s.id}: ${s.text.slice(0, 120)}`;
-      el.appendChild(box);
-    }
-    wrap.appendChild(el);
-    observer.observe(el);
-  });
+  wrap.querySelectorAll(".page").forEach((el) => observer.observe(el));
   $("#zoomLabel").textContent = `${Math.round(state.zoom * 100)}%`;
 }
 
+let segsByPage = new Map();
+/** Segment outlines are added to a page the first time it comes near the viewport. */
+function ensureBoxes(i) {
+  const el = document.querySelector(`.page[data-page="${i}"]`);
+  if (!el || el.dataset.boxes) return el;
+  el.dataset.boxes = "1";
+  const page = state.doc.pages[i];
+  const html = (segsByPage.get(i) || []).map((s) => {
+    const [x0, y0, x1, y1] = s.bbox;
+    const cls = "box" + (hasTr(s.id) ? " done" : "") + (s.id === state.activeId ? " active" : "");
+    return `<div class="${cls}" data-id="${s.id}" title="#${s.id}" style="left:${((x0 - page.x0) / page.width) * 100}%;top:${((y0 - page.y0) / page.height) * 100}%;width:${((x1 - x0) / page.width) * 100}%;height:${((y1 - y0) / page.height) * 100}%"></div>`;
+  }).join("");
+  el.insertAdjacentHTML("beforeend", html);
+  return el;
+}
+
 function refreshImages() {
-  renderQueue = [];
-  const view = $("#pages").getBoundingClientRect();
+  if (!state.doc) return;
   document.querySelectorAll(".page").forEach((el) => {
-    const i = Number(el.dataset.page);
-    el.style.width = `${pageCssWidth(state.doc.pages[i])}px`;
-    const r = el.getBoundingClientRect();
-    if (r.bottom > view.top - 600 && r.top < view.bottom + 600) queueRender(i);
+    el.style.width = `${pageCssWidth(state.doc.pages[Number(el.dataset.page)])}px`;
   });
+  renderQueue = [];
+  for (const i of visiblePages) queueRender(i);
   $("#zoomLabel").textContent = `${Math.round(state.zoom * 100)}%`;
 }
 
@@ -1724,7 +2004,10 @@ function setZoom(z) {
   pages.scrollTop = ratio * pages.scrollHeight;
 }
 
-/* -------------------------------------------------------------- editor */
+/* ------------------------------------------------- virtualised segment list */
+
+const segIndex = new Map();
+const segById = (id) => segIndex.get(Number(id));
 
 function segMeta(s) {
   const style = [s.bold && "bold", s.italic && "italic"].filter(Boolean).join(" ");
@@ -1732,33 +2015,150 @@ function segMeta(s) {
   return `p.${s.page + 1} · ${Math.round(s.size * 10) / 10}pt${style ? " " + style : ""} · ${s.align}${rot}`;
 }
 
-function renderSegments() {
-  const list = $("#segments");
-  list.innerHTML = "";
-  const frag = document.createDocumentFragment();
-  for (const s of state.doc.segments) {
-    const card = document.createElement("div");
-    card.className = "seg" + (hasTr(s.id) ? " done" : "") + (state.shrunk.has(s.id) ? " shrunk" : "");
-    card.dataset.id = s.id;
-    card.innerHTML = `
-      <div class="seg-head">
-        <span class="seg-status"></span>
-        <span class="seg-id">#${s.id}</span>
-        <span class="seg-meta"></span>
-        <button type="button" class="mini" data-act="copy" title="Copy source text">copy</button>
-        <button type="button" class="mini" data-act="same" title="Keep the original text (use it as the translation)">keep</button>
-      </div>
-      <div class="seg-src"></div>
-      <textarea rows="1" spellcheck="true" placeholder="Translation…"></textarea>`;
-    card.querySelector(".seg-meta").textContent = segMeta(s);
-    card.querySelector(".seg-src").textContent = s.text;
-    card.querySelector("textarea").value = state.translations[s.id] || "";
-    frag.appendChild(card);
-  }
-  list.appendChild(frag);
-  if (!state.doc.segments.length) list.innerHTML = '<div class="empty">No text segments found in this PDF.</div>';
-  requestAnimationFrame(() => list.querySelectorAll("textarea").forEach(autoGrow));
-  applyFilter();
+/**
+ * Only the cards in (and near) the visible part of the list exist in the DOM. Heights of
+ * cards that have been shown are measured; the rest are estimated from their text length.
+ */
+const vl = {
+  ids: [],              // filtered segment ids, in order
+  pos: new Map(),       // id -> index in ids
+  heights: new Map(),   // id -> measured height incl. gap
+  offsets: [0],         // prefix sums of heights
+  rendered: new Map(),  // id -> element
+  dirty: true,
+  charsPerLine: 60,
+
+  el: () => $("#segments"),
+  inner: null,
+
+  reset() {
+    for (const el of this.rendered.values()) el.remove();
+    this.rendered.clear();
+    this.heights.clear();
+    this.ids = [];
+    this.pos.clear();
+    this.dirty = true;
+    if (!this.inner) {
+      this.inner = document.createElement("div");
+      this.inner.className = "vl-inner";
+      this.el().appendChild(this.inner);
+    }
+    this.inner.style.height = "0px";
+    this.el().scrollTop = 0;
+    this.charsPerLine = Math.max(20, Math.floor((this.el().clientWidth - 50) / 7.6));
+  },
+  setIds(ids) {
+    this.ids = ids;
+    this.pos = new Map(ids.map((id, i) => [id, i]));
+    this.dirty = true;
+    this.render();
+  },
+  estimate(id) {
+    const s = segById(id);
+    const lines = (t) => Math.max(1, Math.ceil((t || "").length / this.charsPerLine) + ((t || "").match(/\n/g) || []).length);
+    return 62 + lines(s.text) * 20 + Math.min(14, lines(state.translations[id])) * 20 + GAP;
+  },
+  height(id) { return this.heights.get(id) || this.estimate(id); },
+  layout() {
+    if (!this.dirty) return;
+    const off = new Array(this.ids.length + 1);
+    off[0] = 0;
+    for (let i = 0; i < this.ids.length; i++) off[i + 1] = off[i] + this.height(this.ids[i]);
+    this.offsets = off;
+    this.inner.style.height = `${off[off.length - 1]}px`;
+    this.dirty = false;
+  },
+  indexAt(y) { // first index whose bottom is below y
+    let lo = 0, hi = this.ids.length - 1;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      if (this.offsets[mid + 1] <= y) lo = mid + 1; else hi = mid;
+    }
+    return Math.max(0, lo);
+  },
+  render() {
+    if (!state.doc) return;
+    this.layout();
+    const box = this.el();
+    const top = box.scrollTop, bottom = top + box.clientHeight;
+    const start = this.ids.length ? this.indexAt(Math.max(0, top - 400)) : 0;
+    const end = this.ids.length ? Math.min(this.ids.length, this.indexAt(bottom + 400) + 1) : 0;
+    const want = new Set(this.ids.slice(start, end));
+    for (const [id, el] of this.rendered) {
+      if (!want.has(id) && !el.contains(document.activeElement)) { el.remove(); this.rendered.delete(id); ro.unobserve(el); }
+    }
+    const created = [];
+    for (let i = start; i < end; i++) {
+      const id = this.ids[i];
+      let el = this.rendered.get(id);
+      if (!el) {
+        el = makeCard(id);
+        this.rendered.set(id, el);
+        this.inner.appendChild(el);
+        created.push(el);
+      }
+      el.style.transform = `translateY(${this.offsets[i]}px)`;
+    }
+    for (const [id, el] of this.rendered) { // a focused card kept outside the window
+      if (!this.pos.has(id)) { el.remove(); this.rendered.delete(id); ro.unobserve(el); }
+      else if (!want.has(id)) el.style.transform = `translateY(${this.offsets[this.pos.get(id)]}px)`;
+    }
+    // Size new textareas in one pass (read after all writes), then watch the card sizes.
+    const tas = created.map((el) => el.querySelector("textarea"));
+    tas.forEach((ta) => { ta.style.height = "auto"; });
+    const hs = tas.map((ta) => ta.scrollHeight);
+    tas.forEach((ta, k) => { ta.style.height = `${Math.min(hs[k] + 2, 320)}px`; });
+    created.forEach((el) => ro.observe(el));
+  },
+  /** Re-measure after cards changed size, keeping the first visible card in place. */
+  remeasure(entries) {
+    const box = this.el();
+    const anchorIdx = this.ids.length ? this.indexAt(box.scrollTop) : 0;
+    const anchorId = this.ids[anchorIdx];
+    const delta = anchorId !== undefined ? box.scrollTop - this.offsets[anchorIdx] : 0;
+    let changed = false;
+    for (const e of entries) {
+      const id = Number(e.target.dataset.id);
+      if (!e.target.isConnected) continue;
+      const h = Math.round(e.target.offsetHeight) + GAP;
+      if (this.heights.get(id) !== h) { this.heights.set(id, h); changed = true; }
+    }
+    if (!changed) return;
+    this.dirty = true;
+    this.layout();
+    if (anchorId !== undefined && this.pos.has(anchorId)) box.scrollTop = this.offsets[this.pos.get(anchorId)] + delta;
+    this.render();
+  },
+  scrollTo(id) {
+    if (!this.pos.has(id)) return false;
+    this.layout();
+    const i = this.pos.get(id);
+    const box = this.el();
+    box.scrollTop = Math.max(0, this.offsets[i] - box.clientHeight / 2 + this.height(id) / 2);
+    this.render();
+    return true;
+  },
+};
+
+const ro = new ResizeObserver((entries) => vl.remeasure(entries));
+
+function makeCard(id) {
+  const s = segById(id);
+  const el = document.createElement("div");
+  el.className = "seg" + (hasTr(id) ? " done" : "") + (state.shrunk.has(id) ? " shrunk" : "") + (id === state.activeId ? " active" : "");
+  el.dataset.id = id;
+  el.innerHTML = `
+    <div class="seg-head">
+      <span class="seg-status"></span>
+      <span class="seg-id">#${id}</span>
+      <span class="seg-meta">${escapeHtml(segMeta(s))}</span>
+      <button type="button" class="mini" data-act="copy" title="Copy source text">copy</button>
+      <button type="button" class="mini" data-act="same" title="Keep the original text (use it as the translation)">keep</button>
+    </div>
+    <div class="seg-src">${escapeHtml(s.text)}</div>
+    <textarea rows="1" spellcheck="true" placeholder="Translation…"></textarea>`;
+  el.querySelector("textarea").value = state.translations[id] || "";
+  return el;
 }
 
 function autoGrow(ta) {
@@ -1768,23 +2168,23 @@ function autoGrow(ta) {
 
 function markDone(id) {
   const done = hasTr(id);
-  document.querySelector(`.seg[data-id="${id}"]`)?.classList.toggle("done", done);
+  vl.rendered.get(id)?.classList.toggle("done", done);
   document.querySelector(`.box[data-id="${id}"]`)?.classList.toggle("done", done);
 }
 
 function updateProgress() {
   const total = state.doc ? state.doc.segments.length : 0;
-  const done = state.doc ? state.doc.segments.filter((s) => hasTr(s.id)).length : 0;
+  let done = 0;
+  if (state.doc) for (const s of state.doc.segments) if (hasTr(s.id)) done++;
   $("#progressText").textContent = `${done} / ${total} translated`;
   $("#progressBar").style.width = total ? `${(done / total) * 100}%` : "0";
-  updateSteps();
+  updateSteps(done > 0);
 }
 
-function updateSteps() {
+function updateSteps(any) {
   const steps = [...document.querySelectorAll("#steps li")];
   steps.forEach((li) => li.classList.remove("active", "done"));
   if (!state.doc) { steps[0].classList.add("active"); return; }
-  const any = state.doc.segments.some((s) => hasTr(s.id));
   steps[0].classList.add("done");
   if (state.outBytes) {
     steps[1].classList.add("done");
@@ -1795,60 +2195,53 @@ function updateSteps() {
   }
 }
 
-const segIndex = new Map();
-function segById(id) {
-  if (segIndex.get("doc") !== state.doc) {
-    segIndex.clear();
-    segIndex.set("doc", state.doc);
-    for (const s of state.doc.segments) segIndex.set(s.id, s);
-  }
-  return segIndex.get(Number(id));
-}
-
 function applyFilter() {
+  if (!state.doc) return;
   const q = $("#search").value.trim().toLowerCase();
   const status = $("#filterStatus").value;
-  const page = $("#filterPage").value;
-  let shown = 0;
-  for (const card of document.querySelectorAll(".seg")) {
-    const id = Number(card.dataset.id);
-    const s = segById(id);
-    let ok = page === "all" || String(s.page) === page;
-    if (ok && status !== "all") ok = (status === "done") === hasTr(id);
-    if (ok && q) ok = s.text.toLowerCase().includes(q) || (state.translations[id] || "").toLowerCase().includes(q);
-    card.hidden = !ok;
-    if (ok) shown++;
+  const page = $("#filterPage").value === "all" ? null : Number($("#filterPage").value);
+  const ids = [];
+  for (const s of state.doc.segments) {
+    if (page !== null && s.page !== page) continue;
+    if (status !== "all" && (status === "done") !== hasTr(s.id)) continue;
+    if (q && !s.text.toLowerCase().includes(q) && !(state.translations[s.id] || "").toLowerCase().includes(q)) continue;
+    ids.push(s.id);
   }
-  let empty = $("#segments .empty.filter");
-  if (!shown && state.doc.segments.length) {
-    if (!empty) {
-      empty = Object.assign(document.createElement("div"), { className: "empty filter", textContent: "No segments match the filter." });
-      $("#segments").appendChild(empty);
-    }
-  } else if (empty) empty.remove();
+  $("#segments").classList.toggle("is-empty", !ids.length);
+  $("#segments").dataset.empty = state.doc.segments.length ? "No segments match the filter." : "No text segments found in this PDF.";
+  vl.setIds(ids);
 }
 
 function setActive(id, { scrollList = false, scrollViewer = false, focus = false } = {}) {
-  document.querySelectorAll(".seg.active, .box.active").forEach((el) => el.classList.remove("active"));
-  state.activeId = id;
-  const card = document.querySelector(`.seg[data-id="${id}"]`);
-  const box = document.querySelector(`.box[data-id="${id}"]`);
-  card?.classList.add("active");
-  box?.classList.add("active");
-  if (scrollList && card) {
-    if (card.hidden) { $("#search").value = ""; $("#filterStatus").value = "all"; $("#filterPage").value = "all"; applyFilter(); }
-    card.scrollIntoView({ block: "center", behavior: "smooth" });
+  if (state.activeId !== null) {
+    vl.rendered.get(state.activeId)?.classList.remove("active");
+    document.querySelector(`.box[data-id="${state.activeId}"]`)?.classList.remove("active");
   }
+  state.activeId = id;
+  if (scrollList || focus) {
+    if (!vl.pos.has(id)) {
+      $("#search").value = ""; $("#filterStatus").value = "all"; $("#filterPage").value = "all";
+      applyFilter();
+    }
+    if (scrollList) vl.scrollTo(id);
+  }
+  vl.rendered.get(id)?.classList.add("active");
+  const s = segById(id);
+  ensureBoxes(s.page);
+  const box = document.querySelector(`.box[data-id="${id}"]`);
+  box?.classList.add("active");
   if (scrollViewer && box) box.scrollIntoView({ block: "center", inline: "center", behavior: "smooth" });
-  if (focus && card) card.querySelector("textarea").focus({ preventScroll: true });
+  if (focus) vl.rendered.get(id)?.querySelector("textarea").focus({ preventScroll: true });
 }
 
+let progressTimer = null;
 function setTranslation(id, value) {
   if (value && value.trim()) state.translations[id] = value;
   else delete state.translations[id];
   markDone(id);
   persist();
-  updateProgress();
+  clearTimeout(progressTimer);
+  progressTimer = setTimeout(updateProgress, 150);
 }
 
 /* -------------------------------------------------------- export/import */
@@ -1883,24 +2276,31 @@ function doExport() {
 }
 
 function mergeImported(parsed) {
-  const known = new Set(state.doc.segments.map((s) => s.id));
   const ids = Object.keys(parsed).map(Number);
-  const matched = ids.filter((id) => known.has(id));
-  const unknown = ids.filter((id) => !known.has(id));
+  const matched = ids.filter((id) => segIndex.has(id));
+  const unknown = ids.length - matched.length;
   const overwrite = $("#importOverwrite").checked;
   let applied = 0;
   for (const id of matched) {
     if (!overwrite && hasTr(id)) continue;
     state.translations[id] = parsed[id];
+    vl.heights.delete(id);
     applied++;
   }
   persist();
-  renderSegments();
+  // Update what is on screen; everything else picks the new text up when it is shown.
+  for (const [id, el] of vl.rendered) {
+    const ta = el.querySelector("textarea");
+    if (ta.value !== (state.translations[id] || "")) { ta.value = state.translations[id] || ""; autoGrow(ta); }
+    el.classList.toggle("done", hasTr(id));
+  }
   document.querySelectorAll(".box").forEach((b) => b.classList.toggle("done", hasTr(b.dataset.id)));
+  vl.dirty = true;
+  applyFilter();
   updateProgress();
   let msg = `Imported ${applied} translation${applied === 1 ? "" : "s"}.`;
-  if (unknown.length) msg += ` ${unknown.length} unknown marker(s) ignored.`;
-  const missing = known.size - matched.length;
+  if (unknown) msg += ` ${unknown} unknown marker(s) ignored.`;
+  const missing = segIndex.size - matched.length;
   if (missing && matched.length) msg += ` ${missing} segment(s) had no translation in the file.`;
   toast(msg, applied ? "ok" : "error");
   if (!matched.length) toast("No [[n]] markers or segment ids were recognised. Keep the markers when translating.", "error");
@@ -1936,11 +2336,12 @@ function setBuilt(built) {
     dl.href = state.outUrl;
     dl.download = `${stem()}.translated.pdf`;
   }
-  updateSteps();
+  updateProgress();
 }
 
+let building = false;
 async function doBuild() {
-  const count = Object.keys(state.translations).filter(hasTr).length;
+  const count = Object.keys(state.translations).filter((id) => segIndex.has(Number(id)) && hasTr(id)).length;
   if (!count) {
     toast("There are no translations yet. Type, paste or import some first.", "error");
     return;
@@ -1951,26 +2352,34 @@ async function doBuild() {
     return;
   }
   busy(`Rebuilding PDF with ${count} translated segment${count === 1 ? "" : "s"}…`);
-  await new Promise((r) => setTimeout(r, 30));
+  building = true;
   try {
     const started = performance.now();
-    const { bytes, stats } = await Engine.build(state.srcBytes.slice(), state.doc.segments, state.translations, {
-      fontMode,
-      customFont: state.customFont && state.customFont.bytes,
-      expand: $("#optExpand").checked,
-      minScale: Number($("#minScale").value),
-    }, (i, n) => busy(`Rebuilding PDF… page ${i} of ${n}`));
+    const translations = {};
+    for (const [id, t] of Object.entries(state.translations)) if (segIndex.has(Number(id)) && t.trim()) translations[id] = t;
+    const { bytes, stats } = await pool.workers[0].call("build", {
+      segments: state.doc.segments,
+      translations,
+      pages: state.doc.pages,
+      opts: {
+        fontMode,
+        customFont: state.customFont && state.customFont.bytes,
+        expand: $("#optExpand").checked,
+        minScale: Number($("#minScale").value),
+      },
+    }, [], (i, n) => busy(`Rebuilding PDF… page ${i} of ${n}`));
+    busy("Preparing preview…");
     disposeOutput();
     state.outBytes = bytes;
-    state.outDoc = Engine.open(bytes.slice());
     state.outUrl = URL.createObjectURL(new Blob([bytes], { type: "application/pdf" }));
-    state.buildNo = (state.buildNo || 0) + 1;
+    await pool.all("setOutput", () => ({ bytes }));
+    state.buildNo++;
     state.shrunk = new Set(stats.shrunk.map((x) => x.id));
-    document.querySelectorAll(".seg").forEach((c) => c.classList.toggle("shrunk", state.shrunk.has(Number(c.dataset.id))));
+    for (const [id, el] of vl.rendered) el.classList.toggle("shrunk", state.shrunk.has(id));
     setBuilt(true);
     setVariant("translated");
     const secs = ((performance.now() - started) / 1000).toFixed(1);
-    let msg = `Done: ${stats.replaced} segments replaced in ${secs}s (${Math.round(bytes.length / 1024)} KB).`;
+    let msg = `Done: ${stats.replaced} segments replaced in ${secs}s (${(bytes.length / 1048576).toFixed(1)} MB).`;
     if (stats.shrunk.length) msg += ` ${stats.shrunk.length} had their text reduced to fit.`;
     toast(msg, "ok");
     if (stats.missing) {
@@ -1980,30 +2389,24 @@ async function doBuild() {
     console.error(err);
     toast(`Build failed: ${err.message || err}`, "error");
   } finally {
+    building = false;
     busy("");
+    pump();
   }
-}
-
-function disposeOutput() {
-  try { state.outDoc && state.outDoc.destroy && state.outDoc.destroy(); } catch (_) { /* ignore */ }
-  if (state.outUrl) URL.revokeObjectURL(state.outUrl);
-  state.outDoc = null;
-  state.outUrl = null;
 }
 
 async function chooseFont(file) {
   if (!file) return;
   const bytes = new Uint8Array(await file.arrayBuffer());
-  try {
-    await ensureEngine();
-    new M.Font("UserFont", bytes.slice()); // validate
-    state.customFont = { name: file.name, bytes };
-    $("#fontStatus").textContent = `Using ${file.name}`;
-  } catch (err) {
+  const sig = String.fromCharCode(...bytes.slice(0, 4));
+  if (!(sig === "OTTO" || sig === "true" || sig === "ttcf" || (bytes[0] === 0 && bytes[1] === 1 && bytes[2] === 0 && bytes[3] === 0))) {
     state.customFont = null;
-    $("#fontStatus").textContent = "This font file could not be read.";
-    toast("This font file could not be read.", "error");
+    $("#fontStatus").textContent = "This is not a TrueType/OpenType font file.";
+    toast("This is not a TrueType/OpenType font file.", "error");
+    return;
   }
+  state.customFont = { name: file.name, bytes };
+  $("#fontStatus").textContent = `Using ${file.name}`;
 }
 
 /* --------------------------------------------------------------- wiring */
@@ -2037,6 +2440,10 @@ function init() {
   });
 
   const list = $("#segments");
+  let scrollRaf = 0;
+  list.addEventListener("scroll", () => {
+    if (!scrollRaf) scrollRaf = requestAnimationFrame(() => { scrollRaf = 0; vl.render(); });
+  }, { passive: true });
   list.addEventListener("input", (e) => {
     if (e.target.tagName !== "TEXTAREA") return;
     setTranslation(Number(e.target.closest(".seg").dataset.id), e.target.value);
@@ -2068,14 +2475,12 @@ function init() {
     const up = e.altKey && e.key === "ArrowUp";
     if (!down && !up) return;
     e.preventDefault();
-    const cards = [...list.querySelectorAll(".seg:not([hidden])")];
-    const next = cards[cards.indexOf(e.target.closest(".seg")) + (down ? 1 : -1)];
-    if (next) {
-      next.querySelector("textarea").focus();
-      next.scrollIntoView({ block: "nearest", behavior: "smooth" });
-    }
+    const i = vl.pos.get(Number(e.target.closest(".seg").dataset.id));
+    const next = vl.ids[i + (down ? 1 : -1)];
+    if (next !== undefined) setActive(next, { scrollList: true, scrollViewer: true, focus: true });
   });
-  $("#search").addEventListener("input", applyFilter);
+  let searchTimer = null;
+  $("#search").addEventListener("input", () => { clearTimeout(searchTimer); searchTimer = setTimeout(applyFilter, 150); });
   $("#filterStatus").addEventListener("change", applyFilter);
   $("#filterPage").addEventListener("change", (e) => {
     applyFilter();
@@ -2099,10 +2504,19 @@ function init() {
   $("#fontFile").addEventListener("change", (e) => chooseFont(e.target.files[0]));
   $("#buildDialog").addEventListener("close", () => { if ($("#buildDialog").returnValue === "ok") doBuild(); });
 
-  window.addEventListener("resize", () => { if (state.doc) refreshImages(); });
+  let resizeTimer = null;
+  window.addEventListener("resize", () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      if (!state.doc) return;
+      refreshImages();
+      vl.charsPerLine = Math.max(20, Math.floor((vl.el().clientWidth - 50) / 7.6));
+      vl.heights.clear(); vl.dirty = true; vl.render();
+    }, 150);
+  });
 
-  // Start downloading the engine right away, and restore the last session.
-  ensureEngine().then(() => { $("#engineStatus").hidden = true; }).catch((err) => {
+  // Start the engine right away, and restore the last session.
+  pool.start().then(() => { $("#engineStatus").hidden = true; }).catch((err) => {
     $("#engineStatus").textContent = err.message;
     $("#engineStatus").classList.add("error");
   });

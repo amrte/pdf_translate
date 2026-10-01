@@ -20,6 +20,12 @@ runs locally on [MuPDF.js](https://www.npmjs.com/package/mupdf) (WebAssembly), s
 uploaded. The first time it runs, the browser downloads the MuPDF engine (about 4 MB) from
 cdn.jsdelivr.net. The last opened PDF and its translations are kept in the browser.
 
+It is built for large documents. The PDF engine runs in background workers (up to 4, sharing
+the extraction between them), so the page stays responsive. Only the visible part of the
+segment list and the pages near the viewport are drawn. Redactions are merged into as few
+rectangles as possible. As a reference point, a 615-page document with 20,000 segments opens
+in about 3.5 s and rebuilds in about 7 s in headless Chromium on 4 cores.
+
 How it differs from the server version: the built-in fonts cover Latin, Greek, Cyrillic,
 Chinese, Japanese and Korean. For other alphabets you can load your own font. Right-to-left and
 complex scripts (Arabic, Hebrew, Indic, Thai) are not shaped correctly in this version.
