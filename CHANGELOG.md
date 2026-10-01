@@ -4,6 +4,13 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.19
+
+- **Start page fits one screen** (e.g. a 13" laptop, from about 1280 × 700): on wide windows the drop
+  zone is on the left and the workflow on the right, in compact cards.
+- The overview is called **Der Arbeitsablauf / The workflow**, and its steps are no longer numbered
+  (the arrows show the order).
+
 ## 1.18
 
 - **Workflow overview** on the start page and in **Help**: the six steps (open, hand out, import,
