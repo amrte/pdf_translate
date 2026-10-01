@@ -30,7 +30,14 @@ const state = {
   customFont: null,   // {name, bytes}
   shrunk: new Set(),
   markups: [],        // drawings on the pages (see markup.js)
+  outView: null,      // e-books: {pages, boxes} of the laid-out translated book
 };
+
+/** The open document is an e-book (EPUB/FB2) rather than a PDF. */
+const isBook = () => Boolean(state.doc && state.doc.kind && state.doc.kind !== "pdf");
+const FORMAT_LABEL = { pdf: "PDF", epub: "EPUB", fb2: "FB2" };
+/** Pages shown in the viewer: the translated e-book has its own page count. */
+const viewPages = () => (state.variant === "translated" && state.outView ? state.outView.pages : state.doc.pages);
 
 /* --------------------------------------------------------------- workers */
 
@@ -159,7 +166,7 @@ function saveBlob(blob, filename) {
   setTimeout(() => URL.revokeObjectURL(url), 5000);
 }
 
-const stem = () => (state.doc.name || "document.pdf").replace(/\.pdf$/i, "") || "document";
+const stem = () => (state.doc.name || "document.pdf").replace(/\.(pdf|epub|fb2|fbz|fb2\.zip|zip)$/i, "") || "document";
 const escapeHtml = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 
 async function sha256(bytes) {
@@ -212,7 +219,7 @@ async function idbGet() {
 
 async function openPdf(file) {
   if (!file) return;
-  if (!/\.pdf$/i.test(file.name) && file.type !== "application/pdf") {
+  if (!/\.(pdf|epub|fb2|fbz|zip)$/i.test(file.name) && !/pdf|epub|fictionbook/i.test(file.type)) {
     toast(t("msg.chooseFile"), "error");
     return;
   }
@@ -252,17 +259,21 @@ async function loadBytes(bytes, name, remember) {
   try {
     await pool.start();
     const id = await sha256(bytes);
+    const kind = Engine.detectKind(bytes, name);
     // More workers for bigger documents, fewer for huge files (each worker holds a copy).
+    // An e-book is read in one worker; the others only draw its pages.
     const mb = bytes.length / 1048576;
-    await pool.ensure(mb > 150 ? 1 : mb > 60 ? 2 : pool.maxSize);
+    await pool.ensure(kind !== "pdf" ? 2 : mb > 150 ? 1 : mb > 60 ? 2 : pool.maxSize);
     setLoading(t("msg.opening"));
-    const counts = await pool.all("open", () => ({ bytes }));
+    const counts = await pool.all("open", () => ({ bytes, kind }));
     const pageCount = counts[0];
     const started = performance.now();
-    const { pages, segments } = await extractAll(pageCount, (i, n) => setLoading(t("msg.extracting", { i, n })));
+    const { pages, segments } = kind === "pdf"
+      ? await extractAll(pageCount, (i, n) => setLoading(t("msg.extracting", { i, n })))
+      : (setLoading(t("msg.readingBook")), await pool.workers[0].call("extractBook"));
     console.info(`Extracted ${segments.length} segments from ${pageCount} pages in ${Math.round(performance.now() - started)} ms using ${pool.workers.length} worker(s)`);
     if (remember) idbPut({ name, bytes });
-    openDocument({ id, name, pages, segments }, bytes);
+    openDocument({ id, name, kind, pages, segments }, bytes);
   } catch (err) {
     console.error(err);
     toast(/password/i.test(err.message) ? t("msg.password") : t("msg.openFailed", { err: err.message || err }), "error");
@@ -277,6 +288,7 @@ function disposeOutput() {
   state.outDirty = false;
   state.applied = {};
   state.pageVersion = new Map();
+  state.outView = null;
 }
 
 function openDocument(doc, bytes) {
@@ -299,6 +311,8 @@ function openDocument(doc, bytes) {
   $("#btnNew").hidden = false;
   $("#docName").textContent = doc.name;
   $("#docName").title = doc.name;
+  document.body.classList.toggle("is-book", isBook());
+  setDocFormat(FORMAT_LABEL[doc.kind || "pdf"]);
   document.title = `${doc.name} · PDF Translate`;
 
   fillPageFilter();
@@ -406,6 +420,8 @@ function closeDocument() {
   $("#btnNew").hidden = true;
   $("#docName").textContent = "";
   document.title = "PDF Translate";
+  document.body.classList.remove("is-book");
+  setDocFormat("PDF");
   updateSteps();
 }
 
@@ -446,7 +462,7 @@ const observer = new IntersectionObserver((entries) => {
   }
 }, { root: $("#pages"), rootMargin: "800px 0px" });
 
-const imgKey = (i) => `${state.variant}:${state.variant === "translated" ? `${state.buildNo}.${state.pageVersion.get(i) || 0}` : 0}:${i}:${renderZoom(state.doc.pages[i])}`;
+const imgKey = (i) => `${state.variant}:${state.variant === "translated" ? `${state.buildNo}.${state.pageVersion.get(i) || 0}` : 0}:${i}:${renderZoom(viewPages()[i])}`;
 
 function queueRender(i) {
   const el = document.querySelector(`.page[data-page="${i}"]`);
@@ -472,8 +488,9 @@ function pump() {
     if (!renderQueue.length) break;
     const i = renderQueue.shift();
     const key = imgKey(i);
-    const page = state.doc.pages[i];
+    const page = viewPages()[i];
     const doc = state.doc;
+    if (!page) continue;
     inflight++;
     // The editable translated PDF lives in worker 0; originals render on any idle worker.
     (state.variant === "translated" ? pool.workers[0] : pool.leastBusy(building ? pool.workers[0] : null))
@@ -508,28 +525,41 @@ function renderPages() {
   observer.disconnect();
   clearImageCache();
   visiblePages.clear();
-  const html = state.doc.pages.map((page, i) =>
+  const html = viewPages().map((page, i) =>
     `<div class="page" data-page="${i}" style="width:${pageCssWidth(page)}px;aspect-ratio:${page.width} / ${page.height}">` +
     `<span class="page-label">${t("page.n", { n: i + 1 })}</span><img alt=""></div>`).join("");
   wrap.innerHTML = html;
   segsByPage = new Map();
+  boxesByPage = new Map();
+  const addBox = (page, s, bbox) => {
+    if (!boxesByPage.has(page)) boxesByPage.set(page, []);
+    boxesByPage.get(page).push([s, bbox]);
+  };
   for (const s of state.doc.segments) {
     if (!segsByPage.has(s.page)) segsByPage.set(s.page, []);
     segsByPage.get(s.page).push(s);
+    // E-books: where each text is in the laid-out original or translated book (if found).
+    const boxes = state.variant === "translated" && state.outView ? state.outView.boxes[s.id] : s.boxes || (s.bbox && [[s.page, s.bbox]]);
+    for (const [page, bbox] of boxes || []) addBox(page, s, bbox);
   }
   wrap.querySelectorAll(".page").forEach((el) => observer.observe(el));
   $("#zoomLabel").textContent = `${Math.round(state.zoom * 100)}%`;
 }
 
-let segsByPage = new Map();
+let segsByPage = new Map(), boxesByPage = new Map();
+/** Page where a segment's box is in the current view (e-book texts may move when translated). */
+function boxPage(s) {
+  const boxes = state.variant === "translated" && state.outView ? state.outView.boxes[s.id] : null;
+  return boxes ? boxes[0][0] : s.page;
+}
 /** Segment outlines are added to a page the first time it comes near the viewport. */
 function ensureBoxes(i) {
   const el = document.querySelector(`.page[data-page="${i}"]`);
   if (!el || el.dataset.boxes) return el;
   el.dataset.boxes = "1";
-  const page = state.doc.pages[i];
-  const html = (segsByPage.get(i) || []).map((s) => {
-    const [x0, y0, x1, y1] = s.bbox;
+  const page = viewPages()[i];
+  const html = (boxesByPage.get(i) || []).map(([s, bbox]) => {
+    const [x0, y0, x1, y1] = bbox;
     const cls = "box" + (hasTr(s.id) ? " done" : "") + (s.skip ? " skip" : "") + (s.id === state.activeId ? " active" : "");
     return `<div class="${cls}" data-id="${s.id}" title="#${s.id}" style="left:${((x0 - page.x0) / page.width) * 100}%;top:${((y0 - page.y0) / page.height) * 100}%;width:${((x1 - x0) / page.width) * 100}%;height:${((y1 - y0) / page.height) * 100}%"></div>`;
   }).join("");
@@ -541,7 +571,7 @@ function ensureBoxes(i) {
 function refreshImages() {
   if (!state.doc) return;
   document.querySelectorAll(".page").forEach((el) => {
-    el.style.width = `${pageCssWidth(state.doc.pages[Number(el.dataset.page)])}px`;
+    el.style.width = `${pageCssWidth(viewPages()[Number(el.dataset.page)])}px`;
   });
   renderQueue = [];
   for (const i of visiblePages) queueRender(i);
@@ -549,7 +579,14 @@ function refreshImages() {
 }
 
 function setVariant(variant) {
+  // A translated e-book has its own pages: rebuild the page list, keeping the reading position.
+  const relayout = isBook() && variant !== state.variant;
+  const at = relayout ? currentPageIndex() / Math.max(1, viewPages().length) : 0;
   state.variant = variant;
+  if (relayout) {
+    renderPages();
+    goToPage(Math.round(at * viewPages().length));
+  }
   $("#viewOriginal").classList.toggle("active", variant === "original");
   $("#viewTranslated").classList.toggle("active", variant === "translated");
   $("#pages").classList.toggle("translated", variant === "translated");
@@ -573,7 +610,7 @@ function setZoom(z, anchor) {
   const el = pages.find((p) => p.offsetTop + p.offsetHeight + 11 >= cy) || pages[pages.length - 1];
   const fx = (cx - el.offsetLeft) / el.offsetWidth, fy = (cy - el.offsetTop) / el.offsetHeight;
   state.zoom = z;
-  for (const p of pages) p.style.width = `${pageCssWidth(state.doc.pages[Number(p.dataset.page)])}px`;
+  for (const p of pages) p.style.width = `${pageCssWidth(viewPages()[Number(p.dataset.page)])}px`;
   box.scrollLeft = el.offsetLeft + fx * el.offsetWidth - ax;
   box.scrollTop = el.offsetTop + fy * el.offsetHeight - ay;
   $("#zoomLabel").textContent = `${Math.round(z * 100)}%`;
@@ -598,6 +635,7 @@ const translatable = () => state.doc.segments.filter((s) => !s.skip);
 function segMeta(s) {
   const page = t("meta.page", { n: s.page + 1 });
   if (s.skip) return `${page} · ${t("meta.numbers")}`;
+  if (isBook()) return s.hidden ? `${t("meta.notShown")} · ${s.tag}` : `${page} · ${s.tag}`;
   const style = [s.bold && t("meta.bold"), s.italic && t("meta.italic")].filter(Boolean).join(" ");
   const rot = s.rotation ? ` · ${t("meta.rotated", { deg: s.rotation })}` : "";
   return `${page} · ${Math.round(s.size * 10) / 10}pt${style ? " " + style : ""} · ${t("meta." + s.align)}${rot}`;
@@ -761,7 +799,7 @@ function markDone(id) {
   const done = hasTr(id);
   vl.rendered.get(id)?.classList.toggle("done", done);
   vl.rendered.get(id)?.classList.toggle("pending", isPending(id));
-  document.querySelector(`.box[data-id="${id}"]`)?.classList.toggle("done", done);
+  document.querySelectorAll(`.box[data-id="${id}"]`).forEach((b) => b.classList.toggle("done", done));
 }
 
 function updateProgress() {
@@ -807,7 +845,7 @@ function applyFilter() {
 function setActive(id, { scrollList = false, scrollViewer = false, focus = false } = {}) {
   if (state.activeId !== null) {
     vl.rendered.get(state.activeId)?.classList.remove("active");
-    document.querySelector(`.box[data-id="${state.activeId}"]`)?.classList.remove("active");
+    document.querySelectorAll(`.box[data-id="${state.activeId}"]`).forEach((b) => b.classList.remove("active"));
   }
   state.activeId = id;
   if (scrollList || focus) {
@@ -819,9 +857,9 @@ function setActive(id, { scrollList = false, scrollViewer = false, focus = false
   }
   vl.rendered.get(id)?.classList.add("active");
   const s = segById(id);
-  ensureBoxes(s.page);
+  ensureBoxes(boxPage(s));
   const box = document.querySelector(`.box[data-id="${id}"]`);
-  box?.classList.add("active");
+  document.querySelectorAll(`.box[data-id="${id}"]`).forEach((b) => b.classList.add("active"));
   if (scrollViewer && box) box.scrollIntoView({ block: "center", inline: "center", behavior: "smooth" });
   if (focus) vl.rendered.get(id)?.querySelector("textarea").focus({ preventScroll: true });
 }
@@ -940,7 +978,9 @@ async function downloadOutput() {
       state.outBytes = await pool.workers[0].call("save", { markups: state.markups });
       state.outDirty = false;
     }
-    saveBlob(new Blob([state.outBytes], { type: "application/pdf" }), `${stem()}.translated.pdf`);
+    const kind = state.doc.kind || "pdf";
+    const type = { pdf: "application/pdf", epub: "application/epub+zip", fb2: "application/x-fictionbook+xml" }[kind];
+    saveBlob(new Blob([state.outBytes], { type }), `${stem()}.translated.${kind}`);
   } catch (err) {
     toast(t("msg.saveFailed", { err: err.message || err }), "error");
   } finally {
@@ -955,6 +995,7 @@ function buildOptions() {
     customFont: state.customFont && state.customFont.bytes,
     expand: $("#optExpand").checked,
     minScale: Number($("#minScale").value),
+    lang: isBook() ? $("#bookLang").value.trim() : "", // e-books: language code of the translation
   };
 }
 
@@ -968,6 +1009,7 @@ function applyField(id) {
     if (!state.doc || !segIndex.has(id)) return;
     const s = segById(id);
     if (hasTr(id)) state.applied[id] = state.translations[id]; else delete state.applied[id];
+    if (isBook()) { await applyBook(id); return; }
     const segs = segsByPage.get(s.page) || [];
     const translations = {};
     for (const x of segs) if ((state.applied[x.id] || "").trim()) translations[x.id] = state.applied[x.id];
@@ -996,6 +1038,30 @@ function applyField(id) {
   return applyChain;
 }
 
+/** E-books are rebuilt as a whole (in well under a second) with the applied translations. */
+async function applyBook(id) {
+  try {
+    busy(t("msg.updating"));
+    const { bytes, view } = await pool.workers[0].call("build", { segments: state.doc.segments, translations: state.applied, opts: buildOptions() });
+    state.outBytes = bytes;
+    state.outView = view;
+    state.hasOutput = true;
+    state.outDirty = false;
+    state.buildNo++;
+    for (const [x, el] of vl.rendered) el.classList.toggle("pending", isPending(x));
+    setBuilt(true);
+    if (state.variant !== "translated") setVariant("translated"); else renderPages();
+    const page = boxPage(segById(id));
+    ensureBoxes(page);
+    const box = document.querySelector(`.box[data-id="${id}"]`);
+    if (box) box.scrollIntoView({ block: "center", behavior: "smooth" }); else goToPage(page);
+  } catch (err) {
+    toast(t("msg.updateFailed", { err: err.message || err }), "error");
+  } finally {
+    busy("");
+  }
+}
+
 let building = false;
 async function doBuild() {
   const count = Object.keys(state.translations).filter((id) => segIndex.has(Number(id)) && hasTr(id)).length;
@@ -1004,7 +1070,7 @@ async function doBuild() {
     return;
   }
   const fontMode = $("#fontMode").value;
-  if (fontMode === "custom" && !state.customFont) {
+  if (fontMode === "custom" && !state.customFont && !isBook()) {
     toast(t("msg.chooseFont"), "error");
     return;
   }
@@ -1014,14 +1080,16 @@ async function doBuild() {
     const started = performance.now();
     const translations = {};
     for (const [id, t] of Object.entries(state.translations)) if (segIndex.has(Number(id)) && t.trim()) translations[id] = t;
-    const { bytes, stats } = await pool.workers[0].call("build", {
+    const result = await pool.workers[0].call("build", {
       segments: state.doc.segments,
       translations,
       pages: state.doc.pages,
       opts: buildOptions(),
     }, [], (i, n) => busy(t("msg.buildingPage", { i, n })));
+    const { bytes, stats } = result;
     disposeOutput();
     state.outBytes = bytes;
+    state.outView = result.view || null;
     state.hasOutput = true;
     state.applied = { ...translations };
     state.buildNo++;
@@ -1031,6 +1099,7 @@ async function doBuild() {
       el.classList.toggle("pending", isPending(id));
     }
     setBuilt(true);
+    if (isBook() && state.variant === "translated") { state.variant = "original"; } // force the page list to be rebuilt
     setVariant("translated");
     const secs = ((performance.now() - started) / 1000).toFixed(1);
     let msg = t("msg.built", { n: stats.replaced, secs, mb: (bytes.length / 1048576).toFixed(1) });
@@ -1240,7 +1309,7 @@ function aiPromptText(part) {
   const target = $("#aiTarget").value.trim() || P.target;
   const context = $("#aiContext").value.trim();
   const glossary = $("#aiGlossary").value.trim();
-  const lines = [P.intro(target), "", ...P.rules];
+  const lines = [P.intro(target), "", ...(isBook() ? P.bookRules : P.rules)];
   if (context) lines.push("", P.context(context.replace(/\.$/, "")));
   if (glossary) lines.push("", P.glossary, ...glossary.split(/\n/).map((l) => l.trim()).filter(Boolean).map((l) => `- ${l}`));
   if (part && part.total > 1) lines.push("", P.part(part.k, part.total, part.a, part.b));

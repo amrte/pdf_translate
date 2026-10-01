@@ -4,6 +4,26 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.06
+
+- **EPUB and FB2 e-books** can now be translated, as well as PDFs. Open an `.epub`, `.fb2` or zipped
+  FB2 (`.fb2.zip`, `.fbz`) the same way as a PDF.
+  - Every paragraph, heading, list item, table cell, line of verse, footnote, the book title and the
+    table of contents become segments. Export, Copy, Import, the AI prompt and the per-field
+    **⟳ update** button work as for PDFs.
+  - Inline formatting is shown as numbered markers: `<1>italic words</1>`, `<2/>` for an image or
+    a footnote reference. Keep them in the translation to keep the formatting. If a translator
+    drops them, the text is still used; images, anchors and footnote references are put back
+    anyway. A drop-cap first letter goes onto the first letter of the translation.
+  - **EPUB / FB2 erstellen** writes the translations into the book's own files: all other markup,
+    images, styles, links and footnotes stay exactly as they were. The result is downloaded in the
+    same format (`….translated.epub` / `.fb2`). Optionally the book's language code is set to the
+    target language.
+  - The viewer shows the book laid out as pages (original and translation), with a box for each
+    segment; click a box to jump to its segment.
+  - The AI prompt has rules for books (natural, complete translation; keep the `<n>` markers).
+  - Markup tools are for PDFs only and are hidden for e-books.
+
 ## 1.05
 
 - Fixed: **Help → Translate with AI**, field "Fields per part": the default 1000 (and any other

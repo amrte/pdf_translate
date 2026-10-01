@@ -15,7 +15,8 @@ def main() -> None:
     parts = {
         "STYLE": (SRC / "style.css").read_text("utf-8"),
         "I18N": (SRC / "i18n.js").read_text("utf-8").replace("{{VERSION}}", version),
-        "ENGINE": (SRC / "engine.js").read_text("utf-8"),
+        # The engine (PDF) and the e-book support run together in the workers.
+        "ENGINE": "\n".join((SRC / f).read_text("utf-8") for f in ("engine.js", "ebook.js")),
         # One module: interface, markup tools, then start-up.
         "UI": "\n".join((SRC / f).read_text("utf-8") for f in ("ui.js", "markup.js", "main.js")).replace("{{VERSION}}", version),
     }

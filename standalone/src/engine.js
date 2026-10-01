@@ -1670,6 +1670,7 @@ function renderPNG(doc, index, zoom) {
 
 const Engine = {
   init: initEngine, extract: extractDocument, extractPages, build: buildTranslated, renderPNG,
+  detectKind, openBook, saveBook, extractBook, openLaidOut, mapTranslated,
   open: (bytes) => M.Document.openDocument(bytes, "application/pdf"),
   exportTxt, exportCsv, exportJson, exportXliff, exportDocx, parseImport, parseMarkedText,
 };
@@ -1680,7 +1681,8 @@ const Engine = {
  * the original PDF (for extraction and rendering) and of the latest translated PDF (preview).
  */
 function createHandler() {
-  const W = { doc: null, bytes: null, edit: null }; // edit: the translated PDF, editable
+  // edit: the translated document (an editable PDF, or the laid-out translated e-book)
+  const W = { doc: null, bytes: null, edit: null, kind: "pdf", book: null, outBytes: null };
   return async function handle(cmd, args = {}, progress = () => {}) {
     if (cmd === "init") {
       await initEngine();
@@ -1689,16 +1691,38 @@ function createHandler() {
     if (cmd === "open") {
       free(W.doc); free(W.edit); W.edit = null;
       W.bytes = args.bytes;
+      W.kind = args.kind || "pdf";
+      W.book = null; W.outBytes = null;
+      if (W.kind !== "pdf") {
+        if (W.kind === "fb2") W.bytes = await unzipFb2(args.bytes); // .fb2.zip / .fbz
+        W.doc = openLaidOut(W.bytes.slice(), W.kind);
+        return { result: W.doc.countPages() };
+      }
       W.doc = M.Document.openDocument(args.bytes.slice(), "application/pdf");
       if (W.doc.needsPassword && W.doc.needsPassword()) throw new Error("Password-protected PDFs are not supported.");
       return { result: W.doc.countPages() };
     }
     if (cmd === "extract") return { result: await extractPages(W.doc, args.pages, progress) };
+    if (cmd === "extractBook") {
+      const { book, pages, segments } = await extractBook(W.bytes, W.kind, W.doc);
+      W.book = book;
+      return { result: { pages, segments } };
+    }
     if (cmd === "render") {
       const doc = args.variant === "translated" ? W.edit : W.doc;
       if (!doc) throw new Error("No document is open.");
       const png = renderPNG(doc, args.page, args.zoom);
       return { result: png.buffer, transfer: [png.buffer] };
+    }
+    if (cmd === "build" && W.kind !== "pdf") {
+      // E-book: write the translations into the book's files, then lay it out for the preview.
+      if (!W.book) W.book = (await openBook(W.bytes, W.kind)).book;
+      const result = await saveBook(W.book, W.bytes, args.segments, args.translations, args.opts || {});
+      W.outBytes = result.bytes.slice();
+      free(W.edit);
+      W.edit = openLaidOut(result.bytes.slice(), W.kind);
+      result.view = mapTranslated(W.edit, args.segments, args.translations);
+      return { result, transfer: [result.bytes.buffer] };
     }
     if (cmd === "build") {
       const result = await buildTranslated(W.bytes.slice(), args.segments, args.translations, args.pages, args.opts, progress);
@@ -1709,6 +1733,11 @@ function createHandler() {
     if (cmd === "updatePage") {
       if (!W.edit) W.edit = M.Document.openDocument(W.bytes.slice(), "application/pdf");
       return { result: updatePage(W.edit, W.doc, args.page, args.segments, args.translations, args.pageInfo, args.opts) };
+    }
+    if (cmd === "save" && W.kind !== "pdf") {
+      if (!W.outBytes) throw new Error("Nothing to save yet.");
+      const bytes = W.outBytes.slice();
+      return { result: bytes, transfer: [bytes.buffer] };
     }
     if (cmd === "save") {
       // The translated PDF (or the original if nothing was translated) plus markups. Markups
@@ -1731,12 +1760,12 @@ function createHandler() {
     }
     if (cmd === "resetOutput") {
       free(W.edit);
-      W.edit = null;
+      W.edit = null; W.outBytes = null;
       return { result: true };
     }
     if (cmd === "close") {
       free(W.doc); free(W.edit);
-      W.doc = W.edit = W.bytes = null;
+      W.doc = W.edit = W.bytes = W.book = W.outBytes = null;
       return { result: true };
     }
     throw new Error(`Unknown command ${cmd}`);

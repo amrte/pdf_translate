@@ -78,7 +78,7 @@ function recordTranslations(before, after, label) {
 /* ---------------------------------------------------------------- storage */
 
 function loadMarkups() {
-  try { state.markups = JSON.parse(localStorage.getItem(mkKey(state.doc.id)) || "[]"); } catch (_) { state.markups = []; }
+  try { state.markups = isBook() ? [] : JSON.parse(localStorage.getItem(mkKey(state.doc.id)) || "[]"); } catch (_) { state.markups = []; }
   mk.seq = state.markups.reduce((n, m) => Math.max(n, m.id), 0) + 1;
   mk.selected = null;
 }
@@ -239,7 +239,7 @@ function deleteMarkup(id) {
 }
 
 function onPointerDown(e) {
-  if (e.button !== 0 || !state.doc) return;
+  if (e.button !== 0 || !state.doc || isBook()) return; // markups are PDF annotations
   const pageEl = e.target.closest(".page");
   if (!pageEl) return;
   const i = Number(pageEl.dataset.page);
@@ -410,7 +410,7 @@ function currentPageIndex() {
 
 function updatePageNav() {
   if (!state.doc) return;
-  const n = state.doc.pages.length, i = currentPageIndex();
+  const n = viewPages().length, i = currentPageIndex();
   if (document.activeElement !== $("#pageInput")) $("#pageInput").value = i + 1;
   $("#pageInput").max = n;
   $("#pageCount").textContent = `/ ${n}`;
@@ -420,7 +420,7 @@ function updatePageNav() {
 
 function goToPage(i) {
   if (!state.doc) return;
-  i = Math.max(0, Math.min(state.doc.pages.length - 1, i));
+  i = Math.max(0, Math.min(viewPages().length - 1, i));
   const el = pageElements()[i];
   if (el) $("#pages").scrollTop = el.offsetTop - 22;
   updatePageNav();
@@ -459,11 +459,11 @@ function onKeyDown(e) {
   if (k === "pagedown") { e.preventDefault(); goToPage(currentPageIndex() + 1); }
   else if (k === "pageup") { e.preventDefault(); goToPage(currentPageIndex() - 1); }
   else if (k === "home") { e.preventDefault(); goToPage(0); }
-  else if (k === "end") { e.preventDefault(); goToPage(state.doc.pages.length - 1); }
+  else if (k === "end") { e.preventDefault(); goToPage(viewPages().length - 1); }
   else if ((k === "delete" || k === "backspace") && mk.selected !== null) { e.preventDefault(); deleteMarkup(mk.selected); }
   else if (k === "escape") { if (mk.draft) { const p = mk.draft.page; mk.draft = null; renderMarkups(p); } setTool("select"); select(null); }
   else if (k === "f" && !e.shiftKey) toggleFullscreen();
-  else if (TOOL_KEYS[k] && !e.shiftKey) setTool(TOOL_KEYS[k]);
+  else if (TOOL_KEYS[k] && !e.shiftKey && !isBook()) setTool(TOOL_KEYS[k]); // no markups on e-books
 }
 
 /* ------------------------------------------------------------------ setup */

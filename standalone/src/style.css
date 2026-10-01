@@ -372,3 +372,7 @@ body.viewer-only #btnFullscreen .fs-off { display: inline; }
 .ai-parts .btn.copied { color: var(--success); border-color: var(--success); background: var(--success-soft); }
 .logo { background: none; width: 26px; height: 26px; }
 .logo svg { width: 26px; height: 26px; display: block; }
+
+/* ---- v1.06: e-books (EPUB / FB2) ---- */
+body:not(.is-book) .book-only, body.is-book .pdf-only { display: none !important; }
+body.is-book .tool-rail { display: none; }

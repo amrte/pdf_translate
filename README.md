@@ -31,6 +31,13 @@ segment list and the pages near the viewport are drawn. Redactions are merged in
 rectangles as possible. As a reference point, a 615-page document with 20,000 segments opens
 in about 3.5 s and rebuilds in about 7 s in headless Chromium on 4 cores.
 
+**E-books:** the standalone version also translates **EPUB** and **FB2** books (also zipped FB2,
+`.fb2.zip` / `.fbz`). Paragraphs, headings, list items, table cells, verse lines, footnotes, the
+title and the table of contents become segments. Inline formatting is kept as numbered markers
+(`<1>italic</1>`, `<2/>` for an image or footnote reference). The rebuild writes the translations
+into the book's own XHTML / FictionBook files, so images, styles, links and footnotes are kept
+unchanged, and you download a new `.epub` / `.fb2`. The viewer shows the book laid out as pages.
+
 Extra features in the standalone version:
 
 * **⟳ update PDF** on a segment card (or <kbd>Ctrl</kbd>+<kbd>S</kbd> in its text box) writes that one

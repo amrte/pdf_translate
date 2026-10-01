@@ -36,7 +36,7 @@
 <!-- Upload screen -->
 <main id="uploadView" class="upload-view">
   <label class="dropzone" id="dropzone">
-    <input type="file" id="fileInput" accept="application/pdf,.pdf" hidden>
+    <input type="file" id="fileInput" accept="application/pdf,.pdf,application/epub+zip,.epub,.fb2,.fbz,.zip" hidden>
     <div class="dz-icon">
       <svg viewBox="0 0 24 24" width="44" height="44" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 17v-6"/><path d="m9 14 3-3 3 3"/></svg>
     </div>
@@ -208,7 +208,10 @@
 <dialog id="buildDialog" class="modal">
   <form method="dialog">
     <h2 data-i18n="build.title">Rebuild the PDF</h2>
-    <p class="muted" data-i18n="build.text"></p>
+    <p class="muted pdf-only" data-i18n="build.text"></p>
+    <p class="muted book-only" data-i18n="build.bookText"></p>
+    <label class="field book-only"><span data-i18n="build.bookLang"></span> <input id="bookLang" size="8" placeholder="uk"></label>
+    <div class="pdf-only">
     <label class="field"><span data-i18n="build.font">Font</span>
       <select id="fontMode">
         <option value="auto" data-i18n="build.fontAuto"></option>
@@ -231,6 +234,7 @@
       </select>
     </label>
     <p class="muted small" data-i18n="build.fontsNote"></p>
+    </div>
     <div class="modal-actions">
       <button value="cancel" class="btn ghost" data-i18n="common.cancel">Cancel</button>
       <button value="ok" class="btn primary" id="buildGo" data-i18n="tb.build">Build PDF</button>
