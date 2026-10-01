@@ -46,7 +46,7 @@ const I18N = {
     "filter.all": "Alle",
     "filter.todo": "Nicht übersetzt",
     "filter.done": "Übersetzt",
-    "filter.numbers": "Nur Zahlen (bleiben)",
+    "filter.numbers": "Zahlen & Formeln (bleiben)",
     "filter.allPages": "Alle Seiten",
     "filter.empty": "Keine Segmente passen zum Filter.",
     "filter.noText": "In dieser Datei wurden keine Textsegmente gefunden.",
@@ -67,6 +67,7 @@ const I18N = {
     "meta.justify": "Blocksatz",
     "meta.rotated": "gedreht {deg}°",
     "meta.numbers": "nur Zahlen, bleiben unverändert",
+    "meta.formula": "Formel, bleibt unverändert",
     "meta.shrunk": " · Text verkleinert",
 
     "export.title": "Für einen externen Übersetzer exportieren",
@@ -260,7 +261,7 @@ const I18N = {
     "filter.all": "All",
     "filter.todo": "Untranslated",
     "filter.done": "Translated",
-    "filter.numbers": "Numbers only (kept)",
+    "filter.numbers": "Numbers & formulas (kept)",
     "filter.allPages": "All pages",
     "filter.empty": "No segments match the filter.",
     "filter.noText": "No text segments found in this file.",
@@ -281,6 +282,7 @@ const I18N = {
     "meta.justify": "justify",
     "meta.rotated": "rotated {deg}°",
     "meta.numbers": "numbers only, kept as they are",
+    "meta.formula": "formula, kept as it is",
     "meta.shrunk": " · text reduced to fit",
 
     "export.title": "Export for an external translator",

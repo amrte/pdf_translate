@@ -61,6 +61,8 @@ Extra features in the standalone version:
   pointer); zoomed pages scroll fully in both directions.
 * Form and table layouts: label/value columns without borders, wrapped cells and bold
   "Label:" + regular value pairs are detected as separate segments.
+* Formulas (math fonts, or math signs without words) are kept as they are and are not sent for
+  translation; superscripts and subscripts (m³, CO₂) are extracted as Unicode characters.
 * Textbook layouts: paragraphs that flow around a heading or picture keep their shape, narrow
   table columns are kept apart, and lead-ins ("Grammatik:") never overlap the text after them.
 

@@ -634,7 +634,7 @@ const translatable = () => state.doc.segments.filter((s) => !s.skip);
 
 function segMeta(s) {
   const page = t("meta.page", { n: s.page + 1 });
-  if (s.skip) return `${page} · ${t("meta.numbers")}`;
+  if (s.skip) return `${page} · ${t(s.formula ? "meta.formula" : "meta.numbers")}`;
   if (isBook()) return s.hidden ? `${t("meta.notShown")} · ${s.tag}` : `${page} · ${s.tag}`;
   const style = [s.bold && t("meta.bold"), s.italic && t("meta.italic")].filter(Boolean).join(" ");
   const rot = s.rotation ? ` · ${t("meta.rotated", { deg: s.rotation })}` : "";

@@ -4,6 +4,26 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.07
+
+PDF layout fixes for tables and formulas (technical and school books):
+
+- **Formulas stay as they are.** Text set in math fonts, or with math signs (=, ·, ≈, π, ρ …) and no
+  real word, is recognised as a formula: it is not translated, not exported and not sent to the AI,
+  and the rebuild leaves it untouched. Before, fractions and exponents were flattened onto one line
+  and the fraction bars struck through the text. Formulas are listed under the
+  "Numbers & formulas (kept)" filter.
+- **Superscripts and subscripts** (m³, 10¹⁰, CO₂) are extracted as ³, ¹⁰, ₂, so they come back as
+  superscripts in the translation instead of "m3".
+- **Table columns are no longer shifted**: the lead-in rule from 1.04 ("Grammatik:" followed by
+  text) only applies across a word space. Before, a value cell could be pushed right by the full
+  column gap when the translated label in front of it was longer.
+- **Sans-serif text stays sans-serif** when the font's name does not reveal its family: the family
+  is then taken from the measured letter widths instead of the font flags, which are often wrong.
+  "Roman" and "Book" in a font name are no longer taken to mean serif (Univers-Roman, Gotham-Book).
+- **Bold beginnings** such as "**Tabelle 2.3** Heizwerte …" stay bold in the translation up to the
+  number ("**Таблиця 2.3** Теплота …").
+
 ## 1.06
 
 - **EPUB and FB2 e-books** can now be translated, as well as PDFs. Open an `.epub`, `.fb2` or zipped

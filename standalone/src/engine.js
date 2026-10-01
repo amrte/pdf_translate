@@ -5,11 +5,19 @@ const MUPDF_URL = "https://cdn.jsdelivr.net/npm/mupdf@1.28.1/dist/mupdf.js";
 let M = null;
 
 const BULLET_RE = /^\s*(?:[•◦▪▫●○■□►▶➢➤✓✔·‣⁃]|\(?\d{1,3}[.)]\s|\(?[a-zA-Z][.)]\s)/;
-const SERIF_HINTS = ["times", "serif", "roman", "georgia", "garamond", "cambria", "minion", "charis",
-  "palatino", "book", "baskerville", "caslon", "charter", "didot", "bodoni", "libertin",
-  "merriweather", "lora", "constantia", "century", "tinos", "nimbusrom", "utopia"];
+// ("Roman" and "Book" are weights, not families: Univers-Roman and Gotham-Book are sans-serif.)
+const SERIF_HINTS = ["times", "serif", "georgia", "garamond", "cambria", "minion", "charis",
+  "palatino", "bookman", "baskerville", "caslon", "charter", "didot", "bodoni", "libertin",
+  "merriweather", "lora", "constantia", "century", "tinos", "nimbusrom", "utopia", "termes", "pagella",
+  "bonum", "schola", "sabon", "bembo", "plantin", "perpetua", "goudy", "hoefler", "crimson", "spectral",
+  "antiqua", "kepler", "joanna", "rockwell", "clarendon", "cheltenham", "warnock", "chaparral", "stix"];
 const MONO_HINTS = ["courier", "mono", "consol", "menlo", "inconsolata", "code", "typewriter"];
-const SANS_HINTS = ["sans", "arial", "helvet", "verdana", "tahoma", "calibri", "segoe"];
+const SANS_HINTS = ["sans", "arial", "helvet", "verdana", "tahoma", "calibri", "segoe", "heros", "sanl", "nimbussan",
+  "myriad", "frutiger", "univers", "futura", "gill", "roboto", "lato", "montserrat", "raleway", "ubuntu", "fira",
+  "trebuchet", "avenir", "optima", "franklin", "gothic", "grotesk", "grotesque", "akzidenz", "corbel", "candara",
+  "eurostile", "dinpro", "dinot", "din-", "cmss", "lmss", "gotham", "proxima", "nunito", "barlow", "oswald"];
+/** TeX fonts are named by short codes (cmr10, cmbx12, cmti10: Computer Modern, a serif). */
+const TEX_SERIF_RE = /^(?:cm(?:r|bx|ti|sl|csc|mi|b|dunh|fib|u)\d|lmr|lmroman|ec(?:rm|bx|ti|sl)\d|t1-?lmr)/;
 const BASE_FONTS = {
   "sans-serif": ["Helvetica", "Helvetica-Bold", "Helvetica-Oblique", "Helvetica-BoldOblique"],
   "serif": ["Times-Roman", "Times-Bold", "Times-Italic", "Times-BoldItalic"],
@@ -60,13 +68,29 @@ function colorHex(c) {
   return "#" + [r, g, b].map((v) => Math.round(Math.max(0, Math.min(1, v)) * 255).toString(16).padStart(2, "0")).join("");
 }
 
-function familyOf(low, serif, mono) {
+/** The font family its name tells, or null. */
+function familyHint(low) {
   if (MONO_HINTS.some((h) => low.includes(h))) return "monospace";
   if (SANS_HINTS.some((h) => low.includes(h))) return "sans-serif";
-  if (SERIF_HINTS.some((h) => low.includes(h))) return "serif";
-  if (mono) return "monospace";
-  if (serif) return "serif";
-  return "sans-serif";
+  if (SERIF_HINTS.some((h) => low.includes(h)) || TEX_SERIF_RE.test(low)) return "serif";
+  return null;
+}
+
+function familyOf(low, serif, mono) {
+  return familyHint(low) || (mono ? "monospace" : serif ? "serif" : "sans-serif");
+}
+
+// Letters whose widths tell a typical sans-serif (Helvetica/Arial: about 0.55 em) from a serif
+// (Times: about 0.45 em), for fonts whose name says nothing; the font flags are often wrong.
+const WIDTH_SAMPLE = new Set([..."aenosаеносрн"]);
+
+/** A font's family: from its name, else from its measured letter widths, else from its flags. */
+function familyFor(info) {
+  if (info.hinted || info.wn < 12) return info.family;
+  const avg = info.ws / info.wn;
+  if (info.family !== "monospace" && avg < 0.49) return "serif";
+  if (info.family !== "monospace" && avg > 0.515) return "sans-serif";
+  return info.family;
 }
 
 const fontInfoCache = new Map();
@@ -91,6 +115,8 @@ function fontInfo(font) {
       bold: nameBold || (!named && font.isBold()),
       italic: nameItalic || (!named && font.isItalic()),
       family: familyOf(low, font.isSerif(), font.isMono()),
+      hinted: Boolean(familyHint(low)),
+      ws: 0, wn: 0, // letter widths (em), see familyFor
     };
     fontInfoCache.set(raw, info);
   }
@@ -198,6 +224,10 @@ function pageBlocks(page, bounds, seps) {
           if (gap > 0.8 * size || (sawSpace && gap > 0.4 * size)) { split = true; gapBefore = gap; }
           else if (!split) split = divided(lastInk, qb, seps, horizontal);
         }
+      }
+      if (!info.hinted && WIDTH_SAMPLE.has(c) && info.wn < 400) {
+        info.ws += (Math.abs(line.dir[0]) > 0.99 ? qb[2] - qb[0] : qb[3] - qb[1]) / size;
+        info.wn++;
       }
       if (split) {
         span = { key, text: "", bbox: null, origin: [origin[0], origin[1]], size, font: info, color: col, gapBefore };
@@ -533,12 +563,30 @@ function splitColumns(rows) {
   return column;
 }
 
+const SUPERSCRIPT = { 0: "⁰", 1: "¹", 2: "²", 3: "³", 4: "⁴", 5: "⁵", 6: "⁶", 7: "⁷", 8: "⁸", 9: "⁹", "+": "⁺", "-": "⁻", "−": "⁻", "=": "⁼", "(": "⁽", ")": "⁾", n: "ⁿ", i: "ⁱ" };
+const SUBSCRIPT = { 0: "₀", 1: "₁", 2: "₂", 3: "₃", 4: "₄", 5: "₅", 6: "₆", 7: "₇", 8: "₈", 9: "₉", "+": "₊", "-": "₋", "−": "₋", "=": "₌", "(": "₍", ")": "₎" };
+
+/**
+ * Small raised or lowered text (m³, 10¹⁰, CO₂) as Unicode superscripts / subscripts, so that it
+ * stays a superscript through translation and rebuild. Text that has no such characters is kept.
+ */
+function scriptText(span, ref, rot) {
+  if (span === ref || span.size > 0.85 * ref.size) return span.text;
+  const shift = baselineOf(ref.origin, rot) - baselineOf(span.origin, rot); // > 0: raised
+  const map = shift > 0.15 * ref.size ? SUPERSCRIPT : shift < -0.08 * ref.size ? SUBSCRIPT : null;
+  if (!map || ![...span.text.trim()].every((c) => map[c])) return span.text;
+  return span.text.replace(/\S/g, (c) => map[c]);
+}
+
 function spansText(spans, rot) {
-  let text = spans[0].text;
+  let ref = spans[0];
+  for (const s of spans) if (s.size > ref.size && /[\p{L}\p{N}]/u.test(s.text)) ref = s;
+  let text = scriptText(spans[0], ref, rot);
   for (let i = 1; i < spans.length; i++) {
     const prev = spans[i - 1], cur = spans[i];
-    if (!text.endsWith(" ") && !cur.text.startsWith(" ") && gapOf(prev, cur, rot) > 0.15 * Math.min(prev.size, cur.size)) text += " ";
-    text += cur.text;
+    const t = scriptText(cur, ref, rot);
+    if (t === cur.text && !text.endsWith(" ") && !cur.text.startsWith(" ") && gapOf(prev, cur, rot) > 0.15 * Math.min(prev.size, cur.size)) text += " ";
+    text += t;
   }
   return text;
 }
@@ -656,7 +704,9 @@ function buildSegment(group, pageNo, bounds, id, marginsByRot, pageLines, shaped
   }
   const align = guessAlign(lines, rotation, bounds, marginsByRot[rotation], pageLines);
   const color = dominant(spans, (s) => s.color);
+  const formula = isFormula(text, spans);
   const marks = inlineMarks(spans, info, color, size);
+  const prefix = stylePrefix(spans, info, color);
   // Where each line starts, when that is not simply the paragraph's left edge (text flowing
   // around a heading or picture, hanging indents): [start along the line, baseline], in the
   // text's own frame. The translation is laid out in the same shape.
@@ -668,16 +718,36 @@ function buildSegment(group, pageNo, bounds, id, marginsByRot, pageLines, shaped
     if (r.some((x, i) => i > 0 && x[0] > left + 0.5 * size)) rows = r;
   }
   return {
-    id, page: pageNo, text, size, font, rotation, lines: lines.length, line_pitch: pitch, ...(rows ? { rows } : {}), ...(marks.length ? { marks } : {}),
-    // Numbers, dates, times, amounts and codes without any letter need no translation.
-    skip: !/\p{L}/u.test(text),
+    id, page: pageNo, text, size, font, rotation, lines: lines.length, line_pitch: pitch, ...(rows ? { rows } : {}), ...(marks.length ? { marks } : {}), ...(prefix ? { prefix } : {}),
+    // Numbers, dates, times, amounts and codes without any letter need no translation; nor do
+    // formulas, whose layout (fractions, exponents) a reflowed line would destroy.
+    skip: !/\p{L}/u.test(text) || formula,
+    ...(formula ? { formula: true } : {}),
     bbox: bbox.map(round2),
     color,
-    bold: info.bold, italic: info.italic, family: info.family,
+    bold: info.bold, italic: info.italic, family: familyFor(info),
     align,
     origin: lines[0].origin.map(round2),
     redact: spans.filter((s) => s.text.trim()).map((s) => redactRect(s, rotation).map(round2)),
   };
+}
+
+const MATH_FONT_RE = /^(?:cm(?:mi|sy|ex|bsy|mib)\d|msam|msbm|eufm|eusm|rsfs|stmary|wasy|lmmath|latinmodern-?math|cambria-?math|stix\w*math|xits|asana|tx(?:mi|sy|ex)|px(?:mi|sy|ex)|mtmi|mtsy|mathematicalpi|mt-?extra|euler|esint|symbol)|math/i;
+const MATH_SIGN_RE = /[=≈≠≤≥±∓×÷·⋅√∑∏∫∂∞∝→⇒⇔∇∆Δ\u0370-\u03ff]/;
+
+/**
+ * A formula (E = m·v², fraction parts, unit expressions such as kg·m²/s³): mostly set in math
+ * fonts, or math signs without a single word. It stays as it is.
+ */
+function isFormula(text, spans) {
+  let math = 0, all = 0;
+  for (const s of spans) {
+    const n = s.text.replace(/\s/g, "").length;
+    all += n;
+    if (MATH_FONT_RE.test(s.font.name)) math += n;
+  }
+  if (all && math >= 0.6 * all && !/\p{L}{5,}/u.test(text)) return true;
+  return MATH_SIGN_RE.test(text) && !/\p{L}{4,}/u.test(text);
 }
 
 /**
@@ -1177,6 +1247,7 @@ function inlineMarks(spans, info, color, size) {
   const seen = new Set();
   const out = [];
   for (const m of marked.values()) {
+    if (m.prefix) continue;
     if (plain.has(m[0]) || seen.has(m[0])) continue;
     seen.add(m[0]);
     out.push(m);
@@ -1186,10 +1257,28 @@ function inlineMarks(spans, info, color, size) {
 }
 
 /**
+ * A styled beginning such as "**Tabelle 2.3** Heizwerte …" or "**Abb. 4:** …": [last word, bold,
+ * italic, colour or ""]. The translation is styled from its start up to that word ("Таблиця 2.3").
+ */
+function stylePrefix(spans, info, color) {
+  const lead = [];
+  for (const s of spans) {
+    if (!s.text.trim()) continue;
+    if (s.font.bold !== info.bold || s.font.italic !== info.italic || s.color !== color) lead.push(s); else break;
+  }
+  if (!lead.length || lead.length === spans.filter((s) => s.text.trim()).length) return null;
+  const words = lead.map((s) => s.text).join(" ").trim().split(/\s+/);
+  const last = wordCore(words[words.length - 1]);
+  if (words.length > 4 || !last || !/\d|[:.]$/.test(words[words.length - 1])) return null;
+  const f = lead[0].font;
+  return [last, f.bold ? 1 : 0, f.italic ? 1 : 0, lead[0].color === color ? "" : lead[0].color];
+}
+
+/**
  * Split text into paragraphs of breakable tokens: {sp: space before, glyphs, w (em)}.
  * `styleOf(word)` may return {chain, color} for words to print in another style.
  */
-function tokenize(text, fk, chain, styleOf = null) {
+function tokenize(text, fk, chain, styleOf = null, prefix = null) {
   const spaceAdv = fk.glyph(chain, 32).adv;
   const paras = [];
   for (const para of text.replace(/\r\n?/g, "\n").split("\n")) {
@@ -1206,11 +1295,13 @@ function tokenize(text, fk, chain, styleOf = null) {
       }
       pendingSpace = false;
     }
-    for (const t of tokens) {
+    // The styled beginning ends with the first token that is its last word (within the first few).
+    const prefixEnd = prefix && !paras.length ? tokens.slice(0, 8).findIndex((t) => wordCore(t.text) === prefix.last) : -1;
+    for (const [ti, t] of tokens.entries()) {
       t.glyphs = []; t.w = 0;
       const core = styleOf ? wordCore(t.text) : "";
-      const st = core ? styleOf(core) : null;
-      const from = st ? t.text.indexOf(core) : -1, to = from + core.length;
+      let st = core ? styleOf(core) : null, from = st ? t.text.indexOf(core) : -1, to = from + core.length;
+      if (!st && ti <= prefixEnd) { st = prefix; from = 0; to = t.text.length; }
       let i = 0;
       for (const ch of t.text) {
         const inCore = st && i >= from && i < to;
@@ -1353,7 +1444,12 @@ function layoutSegment(seg, text, fk, bounds, obs, opts, used, stats, leadEnd = 
     }
     if (styles.size) styleOf = (w) => styles.get(w) || null;
   }
-  const tok = tokenize(text.trim(), fk, chain, styleOf);
+  let prefix = null;
+  if (seg.prefix) {
+    const [last, bold, italic, color] = seg.prefix;
+    prefix = { last, chain: fk.chain({ ...seg, bold: !!bold, italic: !!italic }, text), color: color || null, scale: 1 };
+  }
+  const tok = tokenize(text.trim(), fk, chain, styleOf, prefix);
   /** Largest scale (<= 1) at which the text fits a box of width W, and its lines. */
   const fitWidth = (W) => {
     const fits = (k) => {
@@ -1492,7 +1588,8 @@ function leadInEnd(seg, laid) {
   let end = null;
   for (const l of laid) {
     if (l.rot !== seg.rotation || Math.abs(l.base - base) > 0.3 * seg.size) continue;
-    if (l.right > start + 0.3 * seg.size || l.right < start - 4 * seg.size) continue;
+    // A lead-in is followed by a word space; a wider gap is a column (table cells, label/value).
+    if (l.right > start + 0.3 * seg.size || l.right < start - 1.2 * seg.size) continue;
     const e = l.end + Math.max(0.25 * seg.size, start - l.right);
     if (e > start + 0.01 && (end === null || e > end)) end = e;
   }
