@@ -4,6 +4,12 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.05
+
+- Fixed: **Help → Translate with AI**, field "Fields per part": the default 1000 (and any other
+  number not on a 50-step grid) was rejected by the browser with "Please enter a valid value. The
+  two nearest valid values are 970 and 1020". Any whole number from 20 upwards is now accepted.
+
 ## 1.04
 
 Layout fixes for textbooks, exercise sheets and other mixed layouts:
