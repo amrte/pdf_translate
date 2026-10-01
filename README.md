@@ -64,7 +64,8 @@ Extra features in the standalone version:
   continues across parts.
 * Full-screen PDF view (button or F), full screen for the whole app, fit width / fit page.
 * Fields can be moved and resized on the page (drag the box / its handles); size, font, bold,
-  italic and colour can be set per field (**Aa** on a card).
+  italic and colour can be set per field (**Aa** on a card), also for numbers; formulas are
+  scaled as drawn in the original.
 * Pages can be turned by 90° (↻ in the page toolbar).
 * Find and replace in translations (and find in the original): 🔍, Ctrl+F / Ctrl+H.
 * **Compare** view: original and translation side by side, scrolling together (page by page for a

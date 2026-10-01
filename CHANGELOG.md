@@ -4,6 +4,17 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.16
+
+- **Comparison view**: the pages sit close together, with slim margins at the sides (the page
+  number is shown in the toolbar). Going full screen, resizing the window or the panels fits both
+  sides to the width again.
+- **Font size of numbers and formulas**: number and formula fields now have the **Aa** button too.
+  A number (or any untranslated field given its own style) is set again from its original text in
+  the chosen size, font, weight and colour. A formula is drawn again from the original page, only
+  scaled to the chosen size, so fractions, exponents and math fonts stay exact; dragging its box
+  moves it, dragging the handles scales it.
+
 ## 1.15
 
 - **Word, PowerPoint and Excel** (`.docx`, `.pptx`, `.xlsx`): open them like a PDF or e-book.

@@ -1607,7 +1607,7 @@ function layoutSegment(seg, text, fk, bounds, obs, opts, used, stats, leadEnd = 
   return ops.join("\n");
 }
 
-function appendContent(doc, page, content, used) {
+function appendContent(doc, page, content, used, xobjects = new Map()) {
   const pobj = page.getObject();
   let res = pobj.get("Resources");
   if (res.isNull()) {
@@ -1619,6 +1619,11 @@ function appendContent(doc, page, content, used) {
   let fonts = res.get("Font");
   if (fonts.isNull()) { fonts = doc.newDictionary(); res.put("Font", fonts); }
   for (const e of used) fonts.put(e.res, e.ref);
+  if (xobjects.size) {
+    let xo = res.get("XObject");
+    if (xo.isNull()) { xo = doc.newDictionary(); res.put("XObject", xo); }
+    for (const [name, ref] of xobjects) xo.put(name, ref);
+  }
   const inv = M.Matrix.invert(page.getTransform());
   const contents = pobj.get("Contents");
   const arr = doc.newArray();
@@ -1681,34 +1686,78 @@ function leadInEnd(seg, laid) {
 
 /** Replace the translated segments of one page (`index` in `doc`; `segs` are all its segments). */
 function translatePage(doc, index, fk, segs, translations, pageInfo, opts, stats) {
-  const todo = [], keep = [...((pageInfo && pageInfo.protect) || [])];
+  const todo = [], scaled = [], keep = [...((pageInfo && pageInfo.protect) || [])];
+  // An untranslated field with its own size, place or style (numbers, kept text) is set again
+  // from its original text; a formula is drawn again from the original page, scaled and moved,
+  // so its layout (fractions, exponents) stays exact.
+  const textOf = (s) => ((translations[s.id] || "").trim() ? translations[s.id] : s.styled && !s.formula ? s.text : "");
   for (const s of segs) {
-    if ((translations[s.id] || "").trim()) todo.push(s);
+    if (textOf(s).trim()) todo.push(s);
+    else if (s.styled && s.formula) scaled.push(s);
     else keep.push(s.orig_bbox || s.bbox); // (a moved box still protects the text where it is)
   }
-  stats.untranslated += segs.length - todo.length;
-  if (!todo.length) return;
+  stats.untranslated += segs.length - todo.length - scaled.length;
+  if (!todo.length && !scaled.length) return;
   const page = doc.loadPage(index);
   const bounds = page.getBounds();
   let obs = null;
   if (opts.expand) obs = obstaclesFor((pageInfo && pageInfo.graphics) || pageGraphics(page), segs);
+  const xobjects = new Map(), copies = [];
+  if (scaled.length) {
+    // The page as it is now, drawn again (clipped and scaled) for each formula.
+    xobjects.set("PTorig", pageForm(doc, page));
+    for (const s of scaled) {
+      const from = s.orig_bbox || s.bbox, to = s.bbox;
+      let k = 1;
+      if (s.exact_size && s.orig_size) k = s.size / s.orig_size;
+      else if (s.fixed) k = Math.min((to[2] - to[0]) / Math.max(1, from[2] - from[0]), (to[3] - to[1]) / Math.max(1, from[3] - from[1]));
+      const m = [k, 0, 0, k, to[0] - k * from[0], to[1] - k * from[1]];
+      const pad = 0.15 * (s.orig_size || s.size);
+      const clip = [from[0] - pad, from[1] - pad, from[2] - from[0] + 2 * pad, from[3] - from[1] + 2 * pad];
+      copies.push(`q ${m.map(fmt).join(" ")} cm ${clip.map(fmt).join(" ")} re W n ${page.getTransform().map(fmt).join(" ")} cm /PTorig Do Q`);
+    }
+    // The formula's glyphs and the lines inside its box (fraction bars) go; nothing else does.
+    for (const s of scaled) {
+      const b = s.orig_bbox || s.bbox, pad = 0.15 * (s.orig_size || s.size);
+      page.createAnnotation("Redact").setRect([b[0] - pad, b[1] - pad, b[2] + pad, b[3] + pad]);
+    }
+    page.applyRedactions(false, 0, 1, 0); // keep images, remove line art inside, remove text
+  }
   for (const r of redactionRects(todo, keep)) page.createAnnotation("Redact").setRect(r);
-  page.applyRedactions(false, 0, 0, 0); // keep images, keep line art, remove text
+  if (todo.length) page.applyRedactions(false, 0, 0, 0); // keep images, keep line art, remove text
   const used = new Set();
   const laid = []; // where the lines of translations laid out so far end, for lead-ins
   // Patches of paper colour over scanned (OCR) text come first, under all translations.
   const covers = todo.filter((seg) => seg.cover).map((seg) =>
     `q ${rg(seg.bg || "#ffffff")} ${seg.cover.map(([x0, y0, x1, y1]) => `${fmt(x0)} ${fmt(y0)} ${fmt(x1 - x0)} ${fmt(y1 - y0)} re`).join(" ")} f Q`);
-  const content = covers.concat(todo.map((seg) => {
+  const content = covers.concat(copies, todo.map((seg) => {
     const ends = [];
-    const ops = layoutSegment(seg, translations[seg.id], fk, bounds, obs, opts, used, stats, seg.fixed ? null : leadInEnd(seg, laid), ends);
+    const ops = layoutSegment(seg, textOf(seg), fk, bounds, obs, opts, used, stats, seg.fixed ? null : leadInEnd(seg, laid), ends);
     const right = localBox(seg.bbox, seg.rotation)[2];
     for (const [a, b] of ends) laid.push({ rot: seg.rotation, end: a, base: b, right });
     return ops;
   })).join("\n");
-  appendContent(doc, page, content, used);
-  stats.replaced += todo.length;
+  appendContent(doc, page, content, used, xobjects);
+  stats.replaced += todo.length + scaled.length;
   free(page);
+}
+
+/** The page's current content as a form XObject (in PDF user space, with the page's resources). */
+function pageForm(doc, page) {
+  const pobj = page.getObject();
+  const contents = pobj.get("Contents"), parts = [];
+  const read = (o) => { if (o.isStream()) { const b = o.readStream(); parts.push(b.asUint8Array().slice(), new Uint8Array([10])); free(b); } };
+  if (contents.isArray()) for (let k = 0; k < contents.length; k++) read(contents.get(k)); else if (!contents.isNull()) read(contents);
+  const data = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));
+  parts.reduce((at, p) => (data.set(p, at), at + p.length), 0);
+  const box = pobj.getInheritable("MediaBox");
+  const mb = box.isArray() ? [0, 1, 2, 3].map((k) => box.get(k).asNumber()) : [0, 0, 612, 792];
+  // (a copy of the resources: the page's own get the form added to them afterwards)
+  const res = pobj.getInheritable("Resources"), copy = doc.newDictionary();
+  if (!res.isNull()) res.forEach((v, k) => copy.put(k, v));
+  const xo = copy.get("XObject");
+  if (!xo.isNull()) { const x = doc.newDictionary(); xo.forEach((v, k) => x.put(k, v)); copy.put("XObject", x); }
+  return doc.addStream(data, { Type: "XObject", Subtype: "Form", BBox: mb, Resources: copy });
 }
 
 /**

@@ -25,7 +25,9 @@ const shownBox = (s) => (state.overrides[s.id] && state.overrides[s.id].bbox) ||
 function effSeg(s) {
   const o = state.overrides && state.overrides[s.id];
   if (!o || isBook()) return s;
-  const e = { ...s };
+  // (styled: an untranslated field is set again in its own style; orig_size: for formulas,
+  // which are drawn again from the original, scaled)
+  const e = { ...s, styled: true, orig_size: s.size };
   const [ox0, oy0, ox1, oy1] = s.bbox;
   if (o.bbox) {
     const [x0, y0, x1, y1] = o.bbox;
@@ -90,7 +92,7 @@ function applyOverride(id, value) {
 // With a translated PDF open, a changed field is written into it right away.
 const applyTimers = new Map();
 function scheduleApply(id) {
-  if (!state.hasOutput || !hasTr(id)) return;
+  if (!state.hasOutput) return; // (also untranslated fields: numbers and formulas keep their text in a new size)
   clearTimeout(applyTimers.get(id));
   applyTimers.set(id, setTimeout(() => { applyTimers.delete(id); applyField(id); }, 250));
 }
@@ -195,6 +197,14 @@ function stylePanelHtml(s) {
   const bold = o.bold !== undefined ? o.bold : s.bold, italic = o.italic !== undefined ? o.italic : s.italic;
   const fonts = [["", "st.fontOrig"], ["sans-serif", "st.sans"], ["serif", "st.serif"], ["monospace", "st.mono"]];
   if (state.customFont || o.font === "custom") fonts.push(["custom", "st.custom"]);
+  // A formula is drawn again from the original, only larger or smaller.
+  if (s.formula) {
+    return `<div class="seg-style">
+    <label title="${escapeHtml(t("st.sizeTitle"))}">${t("st.size")} <input type="number" data-st="size" min="0.5" step="any" value="${o.size || Math.round(s.size * 10) / 10}"></label>
+    <button type="button" class="mini" data-st="reset" title="${escapeHtml(t("st.resetTitle"))}">↺</button>
+    <span class="muted small st-hint">${escapeHtml(t("st.formulaHint"))}</span>
+  </div>`;
+  }
   return `<div class="seg-style">
     <label title="${escapeHtml(t("st.sizeTitle"))}">${t("st.size")} <input type="number" data-st="size" min="0.5" step="any" value="${o.size || Math.round(s.size * 10) / 10}"></label>
     <select data-st="font" title="${escapeHtml(t("st.font"))}">${fonts.map(([v, k]) => `<option value="${v}"${(o.font || "") === v ? " selected" : ""}>${escapeHtml(t(k))}</option>`).join("")}</select>
@@ -970,6 +980,15 @@ function syncCmp(from) {
 
 function initCompare() {
   $("#viewCompare").addEventListener("click", () => setCompare(!cmp.on));
+  // When the viewer gets wider or narrower (full screen, window size), both sides fit the width again.
+  let lastWidth = 0, fitTimer = 0;
+  new ResizeObserver(() => {
+    const w = $("#pages").clientWidth;
+    if (!cmp.on || !w || Math.abs(w - lastWidth) < 2) { lastWidth = w; return; }
+    lastWidth = w;
+    clearTimeout(fitTimer);
+    fitTimer = setTimeout(() => { if (cmp.on) { fitWidth(); syncCmp("main"); } }, 120);
+  }).observe($("#pages"));
   for (const [id, side] of [["#pages", "main"], ["#pagesCmp", "cmp"]]) {
     let raf = 0;
     $(id).addEventListener("scroll", () => {

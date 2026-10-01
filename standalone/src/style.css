@@ -447,3 +447,6 @@ mark.find.cur { background: #ff9f1c; box-shadow: 0 0 0 1px #e07b00; }
 .cbox.active { border: 2px solid #f0a020; z-index: 2; }
 .pages.no-boxes ~ .cmp-pages .cbox:not(.active) { display: none; }
 body.comparing .viewer-body .pages { flex: 1 1 0; }
+/* (slim margins between and beside the pages; the page number is in the toolbar) */
+body.comparing .viewer-body .pages { padding: 4px 5px; gap: 6px; }
+body.comparing .viewer-body .pages .page-label { display: none; }

@@ -681,7 +681,7 @@ function setZoom(z, anchor) {
 function fitWidth() {
   const box = $("#pages");
   const widest = Math.max(...viewPages().map((p, i) => shownSize(i)[0]));
-  setZoom((box.clientWidth - 48) / (widest * 1.25));
+  setZoom((box.clientWidth - (cmp.on ? 10 : 48)) / (widest * 1.25)); // (the comparison view has slim margins)
 }
 
 /* ------------------------------------------------- virtualised segment list */
@@ -843,7 +843,7 @@ function makeCard(id) {
       <span class="seg-meta" data-shrunk="${escapeHtml(t("meta.shrunk"))}">${escapeHtml(segMeta(s))}</span>
       <button type="button" class="mini" data-act="copy" title="${escapeHtml(t("card.copyTitle"))}">${t("card.copy")}</button>
       <button type="button" class="mini" data-act="same" title="${escapeHtml(t("card.keepTitle"))}">${t("card.keep")}</button>
-      ${isBook() || s.skip ? "" : `<button type="button" class="mini${state.overrides[id] ? " on" : ""}" data-act="style" title="${escapeHtml(t("card.styleTitle"))}">Aa</button>`}
+      ${isBook() ? "" : `<button type="button" class="mini${state.overrides[id] ? " on" : ""}" data-act="style" title="${escapeHtml(t("card.styleTitle"))}">Aa</button>`}
       <button type="button" class="mini apply" data-act="apply" title="${escapeHtml(t("card.applyTitle"))}">${t("card.apply")}</button>
     </div>
     ${styleOpen.has(id) && !isBook() ? stylePanelHtml(s) : ""}

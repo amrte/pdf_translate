@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="PDF Translate 1.15">
+  <meta name="generator" content="PDF Translate 1.16">
   <title>PDF Translate</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Cdefs%3E%3ClinearGradient id=%22g%22 x1=%220%22 y1=%220%22 x2=%221%22 y2=%221%22%3E%3Cstop offset=%220%22 stop-color=%22#4a6cf7%22/%3E%3Cstop offset=%221%22 stop-color=%22#2440b3%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=%2232%22 height=%2232%22 rx=%227%22 fill=%22url%28#g%29%22/%3E%3Cpath d=%22M8 4.5h9.5l6 6V23a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V6.5a2 2 0 0 1 2-2z%22 fill=%22#fff%22/%3E%3Cpath d=%22M17.5 4.5v4.8a1.2 1.2 0 0 0 1.2 1.2h4.8z%22 fill=%22#c7d2fe%22/%3E%3Crect x=%229%22 y=%2213%22 width=%229%22 height=%221.7%22 rx=%22.85%22 fill=%22#9aabf0%22/%3E%3Crect x=%229%22 y=%2216.6%22 width=%2211%22 height=%221.7%22 rx=%22.85%22 fill=%22#9aabf0%22/%3E%3Crect x=%229%22 y=%2220.2%22 width=%226%22 height=%221.7%22 rx=%22.85%22 fill=%22#9aabf0%22/%3E%3Ccircle cx=%2224%22 cy=%2224%22 r=%227%22 fill=%22#f59e0b%22 stroke=%22#fff%22 stroke-width=%221.6%22/%3E%3Cpath d=%22M20.4 21.7h4.6M27.6 26.3H23%22 fill=%22none%22 stroke=%22#fff%22 stroke-width=%221.6%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M24.6 19.4l3.5 2.3-3.5 2.3zM23.4 24l-3.5 2.3 3.5 2.3z%22 fill=%22#fff%22/%3E%3C/svg%3E">
   <style>
@@ -456,6 +456,9 @@ mark.find.cur { background: #ff9f1c; box-shadow: 0 0 0 1px #e07b00; }
 .cbox.active { border: 2px solid #f0a020; z-index: 2; }
 .pages.no-boxes ~ .cmp-pages .cbox:not(.active) { display: none; }
 body.comparing .viewer-body .pages { flex: 1 1 0; }
+/* (slim margins between and beside the pages; the page number is in the toolbar) */
+body.comparing .viewer-body .pages { padding: 4px 5px; gap: 6px; }
+body.comparing .viewer-body .pages .page-label { display: none; }
 
   </style>
 </head>
@@ -464,7 +467,7 @@ body.comparing .viewer-body .pages { flex: 1 1 0; }
   <div class="brand">
     <span class="logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><defs><linearGradient id="logoGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4a6cf7"/><stop offset="1" stop-color="#2440b3"/></linearGradient></defs><rect width="32" height="32" rx="7" fill="url(#logoGrad)"/><path d="M8 4.5h9.5l6 6V23a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V6.5a2 2 0 0 1 2-2z" fill="#fff"/><path d="M17.5 4.5v4.8a1.2 1.2 0 0 0 1.2 1.2h4.8z" fill="#c7d2fe"/><rect x="9" y="13" width="9" height="1.7" rx=".85" fill="#9aabf0"/><rect x="9" y="16.6" width="11" height="1.7" rx=".85" fill="#9aabf0"/><rect x="9" y="20.2" width="6" height="1.7" rx=".85" fill="#9aabf0"/><circle cx="24" cy="24" r="7" fill="#f59e0b" stroke="#fff" stroke-width="1.6"/><path d="M20.4 21.7h4.6M27.6 26.3H23" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/><path d="M24.6 19.4l3.5 2.3-3.5 2.3zM23.4 24l-3.5 2.3 3.5 2.3z" fill="#fff"/></svg></span>
     <span>PDF Translate</span>
-    <span class="version" id="appVersion">v1.15</span>
+    <span class="version" id="appVersion">v1.16</span>
   </div>
   <ol class="steps" id="steps">
     <li data-step="1"><span>1</span> <i data-i18n="step.extract">Extract text</i></li>
@@ -779,7 +782,7 @@ body.comparing .viewer-body .pages { flex: 1 1 0; }
     <div class="ai-parts-head"><b data-i18n="ai.parts">Copy prompt + text</b> <span class="muted small" data-i18n="ai.partsHint"></span></div>
     <div class="ai-parts" id="aiParts"></div>
     </div>
-    <p class="muted small help-version help-part">PDF Translate v1.15</p>
+    <p class="muted small help-version help-part">PDF Translate v1.16</p>
     <div class="modal-actions">
       <button value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
       <button type="button" class="btn ai-part" id="aiCopyPrompt" data-i18n="ai.copyPrompt">Copy prompt only</button>
@@ -1020,6 +1023,7 @@ const I18N = {
     "st.color": "Textfarbe",
     "st.resetTitle": "Feld zurücksetzen: Position, Größe, Schrift und Farbe wie im Original",
     "st.hint": "Auf der Seite: Rahmen ziehen = verschieben, an den Griffen ziehen = Größe ändern.",
+    "st.formulaHint": "Die Formel wird aus dem Original neu gezeichnet, nur größer oder kleiner. Rahmen ziehen = verschieben, an den Griffen ziehen = skalieren.",
     "hist.field": "Feldformat",
     "hist.fieldReset": "Feld zurückgesetzt",
     "hist.move": "Feld verschoben",
@@ -1322,6 +1326,7 @@ const I18N = {
     "st.color": "Text colour",
     "st.resetTitle": "Reset the field: position, size, font and colour as in the original",
     "st.hint": "On the page: drag the box to move it, drag the handles to resize it.",
+    "st.formulaHint": "The formula is drawn again from the original, only larger or smaller. Drag the box to move it, drag the handles to scale it.",
     "hist.field": "field format",
     "hist.fieldReset": "field reset",
     "hist.move": "field moved",
@@ -3177,7 +3182,7 @@ function layoutSegment(seg, text, fk, bounds, obs, opts, used, stats, leadEnd = 
   return ops.join("\n");
 }
 
-function appendContent(doc, page, content, used) {
+function appendContent(doc, page, content, used, xobjects = new Map()) {
   const pobj = page.getObject();
   let res = pobj.get("Resources");
   if (res.isNull()) {
@@ -3189,6 +3194,11 @@ function appendContent(doc, page, content, used) {
   let fonts = res.get("Font");
   if (fonts.isNull()) { fonts = doc.newDictionary(); res.put("Font", fonts); }
   for (const e of used) fonts.put(e.res, e.ref);
+  if (xobjects.size) {
+    let xo = res.get("XObject");
+    if (xo.isNull()) { xo = doc.newDictionary(); res.put("XObject", xo); }
+    for (const [name, ref] of xobjects) xo.put(name, ref);
+  }
   const inv = M.Matrix.invert(page.getTransform());
   const contents = pobj.get("Contents");
   const arr = doc.newArray();
@@ -3251,34 +3261,78 @@ function leadInEnd(seg, laid) {
 
 /** Replace the translated segments of one page (`index` in `doc`; `segs` are all its segments). */
 function translatePage(doc, index, fk, segs, translations, pageInfo, opts, stats) {
-  const todo = [], keep = [...((pageInfo && pageInfo.protect) || [])];
+  const todo = [], scaled = [], keep = [...((pageInfo && pageInfo.protect) || [])];
+  // An untranslated field with its own size, place or style (numbers, kept text) is set again
+  // from its original text; a formula is drawn again from the original page, scaled and moved,
+  // so its layout (fractions, exponents) stays exact.
+  const textOf = (s) => ((translations[s.id] || "").trim() ? translations[s.id] : s.styled && !s.formula ? s.text : "");
   for (const s of segs) {
-    if ((translations[s.id] || "").trim()) todo.push(s);
+    if (textOf(s).trim()) todo.push(s);
+    else if (s.styled && s.formula) scaled.push(s);
     else keep.push(s.orig_bbox || s.bbox); // (a moved box still protects the text where it is)
   }
-  stats.untranslated += segs.length - todo.length;
-  if (!todo.length) return;
+  stats.untranslated += segs.length - todo.length - scaled.length;
+  if (!todo.length && !scaled.length) return;
   const page = doc.loadPage(index);
   const bounds = page.getBounds();
   let obs = null;
   if (opts.expand) obs = obstaclesFor((pageInfo && pageInfo.graphics) || pageGraphics(page), segs);
+  const xobjects = new Map(), copies = [];
+  if (scaled.length) {
+    // The page as it is now, drawn again (clipped and scaled) for each formula.
+    xobjects.set("PTorig", pageForm(doc, page));
+    for (const s of scaled) {
+      const from = s.orig_bbox || s.bbox, to = s.bbox;
+      let k = 1;
+      if (s.exact_size && s.orig_size) k = s.size / s.orig_size;
+      else if (s.fixed) k = Math.min((to[2] - to[0]) / Math.max(1, from[2] - from[0]), (to[3] - to[1]) / Math.max(1, from[3] - from[1]));
+      const m = [k, 0, 0, k, to[0] - k * from[0], to[1] - k * from[1]];
+      const pad = 0.15 * (s.orig_size || s.size);
+      const clip = [from[0] - pad, from[1] - pad, from[2] - from[0] + 2 * pad, from[3] - from[1] + 2 * pad];
+      copies.push(`q ${m.map(fmt).join(" ")} cm ${clip.map(fmt).join(" ")} re W n ${page.getTransform().map(fmt).join(" ")} cm /PTorig Do Q`);
+    }
+    // The formula's glyphs and the lines inside its box (fraction bars) go; nothing else does.
+    for (const s of scaled) {
+      const b = s.orig_bbox || s.bbox, pad = 0.15 * (s.orig_size || s.size);
+      page.createAnnotation("Redact").setRect([b[0] - pad, b[1] - pad, b[2] + pad, b[3] + pad]);
+    }
+    page.applyRedactions(false, 0, 1, 0); // keep images, remove line art inside, remove text
+  }
   for (const r of redactionRects(todo, keep)) page.createAnnotation("Redact").setRect(r);
-  page.applyRedactions(false, 0, 0, 0); // keep images, keep line art, remove text
+  if (todo.length) page.applyRedactions(false, 0, 0, 0); // keep images, keep line art, remove text
   const used = new Set();
   const laid = []; // where the lines of translations laid out so far end, for lead-ins
   // Patches of paper colour over scanned (OCR) text come first, under all translations.
   const covers = todo.filter((seg) => seg.cover).map((seg) =>
     `q ${rg(seg.bg || "#ffffff")} ${seg.cover.map(([x0, y0, x1, y1]) => `${fmt(x0)} ${fmt(y0)} ${fmt(x1 - x0)} ${fmt(y1 - y0)} re`).join(" ")} f Q`);
-  const content = covers.concat(todo.map((seg) => {
+  const content = covers.concat(copies, todo.map((seg) => {
     const ends = [];
-    const ops = layoutSegment(seg, translations[seg.id], fk, bounds, obs, opts, used, stats, seg.fixed ? null : leadInEnd(seg, laid), ends);
+    const ops = layoutSegment(seg, textOf(seg), fk, bounds, obs, opts, used, stats, seg.fixed ? null : leadInEnd(seg, laid), ends);
     const right = localBox(seg.bbox, seg.rotation)[2];
     for (const [a, b] of ends) laid.push({ rot: seg.rotation, end: a, base: b, right });
     return ops;
   })).join("\n");
-  appendContent(doc, page, content, used);
-  stats.replaced += todo.length;
+  appendContent(doc, page, content, used, xobjects);
+  stats.replaced += todo.length + scaled.length;
   free(page);
+}
+
+/** The page's current content as a form XObject (in PDF user space, with the page's resources). */
+function pageForm(doc, page) {
+  const pobj = page.getObject();
+  const contents = pobj.get("Contents"), parts = [];
+  const read = (o) => { if (o.isStream()) { const b = o.readStream(); parts.push(b.asUint8Array().slice(), new Uint8Array([10])); free(b); } };
+  if (contents.isArray()) for (let k = 0; k < contents.length; k++) read(contents.get(k)); else if (!contents.isNull()) read(contents);
+  const data = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));
+  parts.reduce((at, p) => (data.set(p, at), at + p.length), 0);
+  const box = pobj.getInheritable("MediaBox");
+  const mb = box.isArray() ? [0, 1, 2, 3].map((k) => box.get(k).asNumber()) : [0, 0, 612, 792];
+  // (a copy of the resources: the page's own get the form added to them afterwards)
+  const res = pobj.getInheritable("Resources"), copy = doc.newDictionary();
+  if (!res.isNull()) res.forEach((v, k) => copy.put(k, v));
+  const xo = copy.get("XObject");
+  if (!xo.isNull()) { const x = doc.newDictionary(); xo.forEach((v, k) => x.put(k, v)); copy.put("XObject", x); }
+  return doc.addStream(data, { Type: "XObject", Subtype: "Form", BBox: mb, Resources: copy });
 }
 
 /**
@@ -5839,7 +5893,7 @@ function setZoom(z, anchor) {
 function fitWidth() {
   const box = $("#pages");
   const widest = Math.max(...viewPages().map((p, i) => shownSize(i)[0]));
-  setZoom((box.clientWidth - 48) / (widest * 1.25));
+  setZoom((box.clientWidth - (cmp.on ? 10 : 48)) / (widest * 1.25)); // (the comparison view has slim margins)
 }
 
 /* ------------------------------------------------- virtualised segment list */
@@ -6001,7 +6055,7 @@ function makeCard(id) {
       <span class="seg-meta" data-shrunk="${escapeHtml(t("meta.shrunk"))}">${escapeHtml(segMeta(s))}</span>
       <button type="button" class="mini" data-act="copy" title="${escapeHtml(t("card.copyTitle"))}">${t("card.copy")}</button>
       <button type="button" class="mini" data-act="same" title="${escapeHtml(t("card.keepTitle"))}">${t("card.keep")}</button>
-      ${isBook() || s.skip ? "" : `<button type="button" class="mini${state.overrides[id] ? " on" : ""}" data-act="style" title="${escapeHtml(t("card.styleTitle"))}">Aa</button>`}
+      ${isBook() ? "" : `<button type="button" class="mini${state.overrides[id] ? " on" : ""}" data-act="style" title="${escapeHtml(t("card.styleTitle"))}">Aa</button>`}
       <button type="button" class="mini apply" data-act="apply" title="${escapeHtml(t("card.applyTitle"))}">${t("card.apply")}</button>
     </div>
     ${styleOpen.has(id) && !isBook() ? stylePanelHtml(s) : ""}
@@ -7246,7 +7300,9 @@ const shownBox = (s) => (state.overrides[s.id] && state.overrides[s.id].bbox) ||
 function effSeg(s) {
   const o = state.overrides && state.overrides[s.id];
   if (!o || isBook()) return s;
-  const e = { ...s };
+  // (styled: an untranslated field is set again in its own style; orig_size: for formulas,
+  // which are drawn again from the original, scaled)
+  const e = { ...s, styled: true, orig_size: s.size };
   const [ox0, oy0, ox1, oy1] = s.bbox;
   if (o.bbox) {
     const [x0, y0, x1, y1] = o.bbox;
@@ -7311,7 +7367,7 @@ function applyOverride(id, value) {
 // With a translated PDF open, a changed field is written into it right away.
 const applyTimers = new Map();
 function scheduleApply(id) {
-  if (!state.hasOutput || !hasTr(id)) return;
+  if (!state.hasOutput) return; // (also untranslated fields: numbers and formulas keep their text in a new size)
   clearTimeout(applyTimers.get(id));
   applyTimers.set(id, setTimeout(() => { applyTimers.delete(id); applyField(id); }, 250));
 }
@@ -7416,6 +7472,14 @@ function stylePanelHtml(s) {
   const bold = o.bold !== undefined ? o.bold : s.bold, italic = o.italic !== undefined ? o.italic : s.italic;
   const fonts = [["", "st.fontOrig"], ["sans-serif", "st.sans"], ["serif", "st.serif"], ["monospace", "st.mono"]];
   if (state.customFont || o.font === "custom") fonts.push(["custom", "st.custom"]);
+  // A formula is drawn again from the original, only larger or smaller.
+  if (s.formula) {
+    return `<div class="seg-style">
+    <label title="${escapeHtml(t("st.sizeTitle"))}">${t("st.size")} <input type="number" data-st="size" min="0.5" step="any" value="${o.size || Math.round(s.size * 10) / 10}"></label>
+    <button type="button" class="mini" data-st="reset" title="${escapeHtml(t("st.resetTitle"))}">↺</button>
+    <span class="muted small st-hint">${escapeHtml(t("st.formulaHint"))}</span>
+  </div>`;
+  }
   return `<div class="seg-style">
     <label title="${escapeHtml(t("st.sizeTitle"))}">${t("st.size")} <input type="number" data-st="size" min="0.5" step="any" value="${o.size || Math.round(s.size * 10) / 10}"></label>
     <select data-st="font" title="${escapeHtml(t("st.font"))}">${fonts.map(([v, k]) => `<option value="${v}"${(o.font || "") === v ? " selected" : ""}>${escapeHtml(t(k))}</option>`).join("")}</select>
@@ -8191,6 +8255,15 @@ function syncCmp(from) {
 
 function initCompare() {
   $("#viewCompare").addEventListener("click", () => setCompare(!cmp.on));
+  // When the viewer gets wider or narrower (full screen, window size), both sides fit the width again.
+  let lastWidth = 0, fitTimer = 0;
+  new ResizeObserver(() => {
+    const w = $("#pages").clientWidth;
+    if (!cmp.on || !w || Math.abs(w - lastWidth) < 2) { lastWidth = w; return; }
+    lastWidth = w;
+    clearTimeout(fitTimer);
+    fitTimer = setTimeout(() => { if (cmp.on) { fitWidth(); syncCmp("main"); } }, 120);
+  }).observe($("#pages"));
   for (const [id, side] of [["#pages", "main"], ["#pagesCmp", "cmp"]]) {
     let raf = 0;
     $(id).addEventListener("scroll", () => {
