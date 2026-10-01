@@ -12,7 +12,19 @@ A small web app for translating PDF documents **without losing their layout**:
 
 ![workflow](https://img.shields.io/badge/PDF-extract%20%E2%86%92%20translate%20%E2%86%92%20rebuild-3158d4)
 
-## Quick start
+## Standalone version (one HTML file, no server)
+
+[`standalone/pdf-translate.html`](standalone/pdf-translate.html) is the whole app in a single
+file. Download it and open it in a modern browser (Chrome, Edge, Firefox or Safari). Everything
+runs locally on [MuPDF.js](https://www.npmjs.com/package/mupdf) (WebAssembly), so your PDF is never
+uploaded. The first time it runs, the browser downloads the MuPDF engine (about 4 MB) from
+cdn.jsdelivr.net. The last opened PDF and its translations are kept in the browser.
+
+How it differs from the server version: the built-in fonts cover Latin, Greek, Cyrillic,
+Chinese, Japanese and Korean. For other alphabets you can load your own font. Right-to-left and
+complex scripts (Arabic, Hebrew, Indic, Thai) are not shaped correctly in this version.
+
+## Server version: quick start
 
 ```bash
 pip install -r requirements.txt

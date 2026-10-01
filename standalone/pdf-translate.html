@@ -1,0 +1,2122 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PDF Translate</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%233158d4'/%3E%3Ctext x='16' y='22' font-size='15' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='bold'%3EA%E2%86%92%3C/text%3E%3C/svg%3E">
+  <style>
+:root {
+  --bg: #f4f5f8;
+  --surface: #ffffff;
+  --surface-2: #f8f9fb;
+  --border: #e2e5ec;
+  --text: #1c2030;
+  --muted: #6b7183;
+  --accent: #3158d4;
+  --accent-soft: #e7edfd;
+  --success: #1f8a4c;
+  --success-soft: #e3f4ea;
+  --warn: #b26a00;
+  --danger: #c0392b;
+  --page-shadow: 0 1px 3px rgba(20, 25, 40, .12), 0 6px 20px rgba(20, 25, 40, .06);
+  --radius: 10px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #14161c;
+    --surface: #1d2028;
+    --surface-2: #23262f;
+    --border: #323644;
+    --text: #e6e8ee;
+    --muted: #9298a8;
+    --accent: #7193ff;
+    --accent-soft: #263156;
+    --success: #4cc283;
+    --success-soft: #1c3529;
+    --warn: #f0a640;
+    --danger: #ff7b6b;
+    --page-shadow: 0 1px 3px rgba(0, 0, 0, .5);
+    color-scheme: dark;
+  }
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  font: 14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+}
+[hidden] { display: none !important; }
+code { font-size: 12.5px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 4px; padding: 0 4px; }
+.muted { color: var(--muted); }
+.small { font-size: 12px; }
+
+/* ---------- top bar ---------- */
+.topbar {
+  display: flex; align-items: center; gap: 20px;
+  padding: 10px 18px; background: var(--surface); border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 650; font-size: 16px; }
+.logo {
+  display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 8px;
+  background: var(--accent); color: #fff; font-size: 13px; font-weight: 700;
+}
+.steps { display: flex; gap: 6px; list-style: none; margin: 0; padding: 0; flex-wrap: wrap; }
+.steps li {
+  display: flex; align-items: center; gap: 7px; color: var(--muted);
+  padding: 5px 12px 5px 6px; border-radius: 99px; font-size: 13px;
+}
+.steps li span {
+  display: inline-grid; place-items: center; width: 21px; height: 21px; border-radius: 50%;
+  border: 1.5px solid currentColor; font-size: 11.5px; font-weight: 600;
+}
+.steps li.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.steps li.done { color: var(--success); }
+.steps li.done span { background: var(--success); border-color: var(--success); color: #fff; }
+.topbar-actions { margin-left: auto; display: flex; align-items: center; gap: 12px; min-width: 0; }
+.doc-name { color: var(--muted); max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ---------- buttons ---------- */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px; justify-content: center;
+  height: 34px; padding: 0 13px; border-radius: 8px; border: 1px solid var(--border);
+  background: var(--surface); color: var(--text); font: inherit; font-weight: 550;
+  cursor: pointer; text-decoration: none; white-space: nowrap;
+}
+.btn:hover { border-color: var(--accent); color: var(--accent); }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn.primary:hover { filter: brightness(1.08); color: #fff; }
+.btn.success { background: var(--success); border-color: var(--success); color: #fff; }
+.btn.success:hover { filter: brightness(1.08); color: #fff; }
+.btn.ghost { background: transparent; }
+.icon-btn {
+  width: 30px; height: 30px; border-radius: 7px; border: 1px solid var(--border);
+  background: var(--surface); color: var(--text); font-size: 17px; cursor: pointer; line-height: 1;
+}
+.icon-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ---------- upload ---------- */
+.upload-view { flex: 1; overflow: auto; padding: 48px 20px; display: flex; flex-direction: column; align-items: center; gap: 36px; }
+.dropzone {
+  width: min(680px, 100%); border: 2px dashed var(--border); border-radius: 16px; background: var(--surface);
+  padding: 54px 24px; text-align: center; cursor: pointer; transition: border-color .15s, background .15s;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+}
+.dropzone:hover, .dropzone.over { border-color: var(--accent); background: var(--accent-soft); }
+.dropzone.small { padding: 22px 16px; width: 100%; }
+.dz-icon { color: var(--accent); }
+.dz-title { font-size: 17px; font-weight: 600; }
+.dropzone.small .dz-title { font-size: 15px; }
+.dz-title u { color: var(--accent); text-decoration-thickness: 1.5px; text-underline-offset: 3px; }
+.dz-sub { color: var(--muted); }
+.dz-progress { display: flex; gap: 10px; align-items: center; color: var(--accent); font-weight: 600; margin-top: 10px; }
+.how { width: min(980px, 100%); display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.how-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; }
+.how-item p { margin: 6px 0 0; color: var(--muted); }
+
+/* ---------- workspace ---------- */
+.work-view { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(380px, 1fr); }
+.viewer-pane, .editor-pane { display: flex; flex-direction: column; min-height: 0; }
+.viewer-pane { border-right: 1px solid var(--border); }
+.editor-pane { background: var(--surface); }
+.pane-toolbar {
+  display: flex; align-items: center; gap: 8px; padding: 9px 12px;
+  background: var(--surface); border-bottom: 1px solid var(--border);
+}
+.pane-toolbar.wrap { flex-wrap: wrap; }
+.spacer { flex: 1; }
+.check { display: inline-flex; align-items: center; gap: 7px; cursor: pointer; user-select: none; }
+.zoom-label { min-width: 44px; text-align: center; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+.seg-toggle { display: inline-flex; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 2px; }
+.seg-toggle button {
+  border: 0; background: transparent; color: var(--muted); font: inherit; font-weight: 550;
+  padding: 5px 12px; border-radius: 6px; cursor: pointer;
+}
+.seg-toggle button.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+.seg-toggle button:disabled { opacity: .45; cursor: not-allowed; }
+
+.pages { flex: 1; overflow: auto; padding: 22px; display: flex; flex-direction: column; align-items: center; gap: 22px; }
+.page { position: relative; background: #fff; box-shadow: var(--page-shadow); flex: none; }
+.page img { display: block; width: 100%; height: 100%; user-select: none; -webkit-user-drag: none; }
+.page-label { position: absolute; top: -18px; left: 0; font-size: 11.5px; color: var(--muted); }
+.page .box {
+  position: absolute; border: 1px dashed rgba(49, 88, 212, .55); background: rgba(49, 88, 212, .05);
+  border-radius: 2px; cursor: pointer;
+}
+.page .box.done { border: 1px solid rgba(31, 138, 76, .6); background: rgba(31, 138, 76, .07); }
+.page .box:hover { background: rgba(49, 88, 212, .16); }
+.page .box.active { border: 2px solid #f0a020; background: rgba(240, 160, 32, .18); z-index: 2; }
+.pages.no-boxes .box:not(.active) { display: none; }
+.pages.translated .box { display: none; }
+
+/* ---------- editor ---------- */
+.progress-row { display: flex; align-items: center; gap: 10px; padding: 10px 14px 0; color: var(--muted); font-size: 13px; }
+.progress { flex: 1; height: 6px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 99px; overflow: hidden; }
+.progress-bar { height: 100%; width: 0; background: var(--success); transition: width .25s; }
+.filter-row { display: flex; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+.filter-row input, .filter-row select, .lang-row input, .field select, textarea {
+  font: inherit; color: var(--text); background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: 7px; padding: 6px 9px;
+}
+.filter-row input { flex: 1; min-width: 0; }
+input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+
+.segments { flex: 1; overflow: auto; padding: 10px 14px 40px; }
+.seg {
+  border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 10px;
+  background: var(--surface); transition: border-color .15s, box-shadow .15s;
+}
+.seg.active { border-color: #f0a020; box-shadow: 0 0 0 3px rgba(240, 160, 32, .2); }
+.seg-head {
+  display: flex; align-items: center; gap: 8px; padding: 7px 10px 0; font-size: 12px; color: var(--muted);
+}
+.seg-id { font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+.seg-status { width: 8px; height: 8px; border-radius: 50%; background: var(--border); }
+.seg.done .seg-status { background: var(--success); }
+.seg-meta { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.seg-head .mini {
+  margin-left: auto; border: 0; background: transparent; color: var(--muted); cursor: pointer;
+  font: inherit; font-size: 12px; padding: 2px 5px; border-radius: 5px;
+}
+.seg-head .mini:hover { color: var(--accent); background: var(--accent-soft); }
+.seg-head .mini + .mini { margin-left: 0; }
+.seg-src { padding: 5px 10px 7px; white-space: pre-wrap; word-break: break-word; cursor: pointer; }
+.seg textarea {
+  display: block; width: 100%; resize: vertical; min-height: 38px; border: 0; border-top: 1px solid var(--border);
+  border-radius: 0 0 var(--radius) var(--radius); background: var(--surface-2); padding: 8px 10px; line-height: 1.45;
+}
+.seg textarea:focus { outline: 2px solid var(--accent); outline-offset: -2px; }
+.seg.shrunk .seg-meta::after { content: " · text reduced to fit"; color: var(--warn); }
+.empty { color: var(--muted); text-align: center; padding: 40px 10px; }
+
+/* ---------- dialogs ---------- */
+.modal {
+  border: 1px solid var(--border); border-radius: 14px; padding: 0; width: min(520px, calc(100% - 32px));
+  background: var(--surface); color: var(--text); box-shadow: 0 20px 60px rgba(0, 0, 0, .25);
+}
+.modal.wide { width: min(680px, calc(100% - 32px)); }
+.modal::backdrop { background: rgba(15, 18, 28, .45); }
+.modal form { padding: 20px 22px; display: flex; flex-direction: column; gap: 12px; }
+.modal h2 { margin: 0; font-size: 18px; }
+.modal p { margin: 0; }
+.formats { display: flex; flex-direction: column; gap: 6px; }
+.format {
+  display: grid; grid-template-columns: auto 1fr; column-gap: 10px; align-items: center;
+  border: 1px solid var(--border); border-radius: 9px; padding: 8px 12px; cursor: pointer;
+}
+.format input { grid-row: span 2; }
+.format span { color: var(--muted); font-size: 12.5px; }
+.format:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+.lang-row { display: flex; gap: 16px; flex-wrap: wrap; }
+.lang-row label { display: flex; align-items: center; gap: 7px; }
+.field { display: flex; flex-direction: column; gap: 5px; font-weight: 550; }
+.field select { font-weight: 400; }
+.or { text-align: center; color: var(--muted); font-size: 13px; }
+.modal textarea { width: 100%; resize: vertical; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12.5px; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px; }
+
+/* ---------- toasts / busy ---------- */
+.toast-stack { position: fixed; right: 18px; bottom: 18px; display: flex; flex-direction: column; gap: 8px; z-index: 50; max-width: min(420px, calc(100% - 36px)); }
+.toast {
+  background: var(--text); color: var(--bg); padding: 10px 14px; border-radius: 9px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.2); animation: pop .18s ease-out;
+}
+.toast.error { background: var(--danger); color: #fff; }
+.toast.ok { background: var(--success); color: #fff; }
+@keyframes pop { from { transform: translateY(8px); opacity: 0; } }
+.busy { position: fixed; inset: 0; background: rgba(15, 18, 28, .35); display: grid; place-items: center; z-index: 40; }
+.busy-box { background: var(--surface); padding: 18px 24px; border-radius: 12px; display: flex; gap: 12px; align-items: center; font-weight: 600; box-shadow: 0 10px 40px rgba(0,0,0,.25); }
+.spinner { width: 20px; height: 20px; border: 2.5px solid var(--accent-soft); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 900px) {
+  .work-view { grid-template-columns: minmax(0, 1fr); grid-template-rows: 45% 55%; }
+  .pane-toolbar, .filter-row { flex-wrap: wrap; }
+  .filter-row input { flex-basis: 100%; }
+  .pages { padding: 22px 12px; }
+  .viewer-pane { border-right: 0; border-bottom: 1px solid var(--border); }
+  .steps { display: none; }
+}
+
+.engine-status { font-size: 12.5px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+.engine-status.error { color: var(--danger); font-weight: 600; }
+.privacy { font-size: 12.5px; color: var(--success); font-weight: 600; }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="logo">A→</span>
+    <span>PDF Translate</span>
+  </div>
+  <ol class="steps" id="steps">
+    <li data-step="1"><span>1</span> Extract text</li>
+    <li data-step="2"><span>2</span> Translate</li>
+    <li data-step="3"><span>3</span> Rebuild PDF</li>
+  </ol>
+  <div class="topbar-actions">
+    <span class="doc-name" id="docName"></span>
+    <button class="btn ghost" id="btnNew" hidden title="Open another PDF">Open another PDF</button>
+  </div>
+</header>
+
+<!-- Upload screen -->
+<main id="uploadView" class="upload-view">
+  <label class="dropzone" id="dropzone">
+    <input type="file" id="fileInput" accept="application/pdf,.pdf" hidden>
+    <div class="dz-icon">
+      <svg viewBox="0 0 24 24" width="44" height="44" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 17v-6"/><path d="m9 14 3-3 3 3"/></svg>
+    </div>
+    <div class="dz-title">Drop a PDF here or <u>choose a file</u></div>
+    <div class="dz-sub">The text is extracted; pictures, drawings and layout stay as they are.</div>
+    <div class="dz-progress" id="uploadProgress" hidden><div class="spinner"></div> <span id="uploadProgressText">Extracting text…</span></div>
+    <div class="engine-status" id="engineStatus"><div class="spinner"></div> Loading the PDF engine (about 4 MB, the first time only)…</div>
+    <div class="privacy">Everything runs in your browser. Your PDF is never uploaded.</div>
+  </label>
+  <section class="how">
+    <div class="how-item">
+      <b>1 · Extract</b>
+      <p>Each paragraph, heading, label and table cell becomes a numbered segment. Its position, font size, colour and style are saved.</p>
+    </div>
+    <div class="how-item">
+      <b>2 · Translate anywhere</b>
+      <p>Export the segments as TXT, Word, XLIFF, CSV or JSON. Translate them in DeepL, Google Translate, a chatbot, a CAT tool or with a human translator, then import the result. You can also edit translations here.</p>
+    </div>
+    <div class="how-item">
+      <b>3 · Rebuild</b>
+      <p>The original text is removed and the translation is written into the same place. Images, vector graphics and the rest of the page are not touched.</p>
+    </div>
+  </section>
+</main>
+
+<!-- Workspace -->
+<main id="workView" class="work-view" hidden>
+  <section class="viewer-pane">
+    <div class="pane-toolbar">
+      <div class="seg-toggle" role="tablist">
+        <button class="active" data-variant="original" id="viewOriginal">Original</button>
+        <button data-variant="translated" id="viewTranslated" disabled>Translated</button>
+      </div>
+      <label class="check"><input type="checkbox" id="showBoxes" checked> Show segments</label>
+      <div class="spacer"></div>
+      <button class="icon-btn" id="zoomOut" title="Zoom out">−</button>
+      <span class="zoom-label" id="zoomLabel">100%</span>
+      <button class="icon-btn" id="zoomIn" title="Zoom in">+</button>
+    </div>
+    <div class="pages" id="pages"></div>
+  </section>
+
+  <section class="editor-pane">
+    <div class="pane-toolbar wrap">
+      <button class="btn" id="btnExport" title="Download the text for an external translator">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v12m0 0-4-4m4 4 4-4M5 21h14"/></svg>
+        Export
+      </button>
+      <button class="btn" id="btnCopy" title="Copy all segments with [[n]] markers, ready to paste into a translator">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+        Copy all
+      </button>
+      <button class="btn" id="btnImport" title="Load the translated file or paste translated text">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 15V3m0 0L8 7m4-4 4 4M5 21h14"/></svg>
+        Import
+      </button>
+      <div class="spacer"></div>
+      <button class="btn primary" id="btnBuild">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="m9 14 2 2 4-4"/></svg>
+        Build PDF
+      </button>
+      <a class="btn success" id="btnDownload" hidden title="Download the translated PDF">Download</a>
+    </div>
+    <div class="progress-row">
+      <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+      <span id="progressText">0 / 0 translated</span>
+    </div>
+    <div class="filter-row">
+      <input type="search" id="search" placeholder="Search source or translation…">
+      <select id="filterStatus">
+        <option value="all">All</option>
+        <option value="todo">Untranslated</option>
+        <option value="done">Translated</option>
+      </select>
+      <select id="filterPage"><option value="all">All pages</option></select>
+    </div>
+    <div class="segments" id="segments"></div>
+  </section>
+</main>
+
+<!-- Export dialog -->
+<dialog id="exportDialog" class="modal">
+  <form method="dialog">
+    <h2>Export for an external translator</h2>
+    <p class="muted">Every segment has a <code>[[number]]</code> marker or an id. Keep the markers or ids when you translate so the text can be imported back.</p>
+    <div class="formats">
+      <label class="format"><input type="radio" name="fmt" value="txt" checked>
+        <b>Plain text (.txt)</b><span>DeepL, ChatGPT/Claude, or any text translator.</span></label>
+      <label class="format"><input type="radio" name="fmt" value="docx">
+        <b>Word (.docx)</b><span>Google Translate and DeepL document translation.</span></label>
+      <label class="format"><input type="radio" name="fmt" value="xliff">
+        <b>XLIFF 1.2 (.xlf)</b><span>CAT tools: Trados, memoQ, OmegaT, Phrase, Crowdin.</span></label>
+      <label class="format"><input type="radio" name="fmt" value="csv">
+        <b>Spreadsheet (.csv)</b><span>Excel or Google Sheets. Fill in the <i>target</i> column.</span></label>
+      <label class="format"><input type="radio" name="fmt" value="json">
+        <b>JSON (.json)</b><span>Scripts and translation APIs.</span></label>
+    </div>
+    <div class="lang-row" id="langRow">
+      <label>Source language <input id="srcLang" value="en" size="6"></label>
+      <label>Target language <input id="tgtLang" placeholder="e.g. de" size="6"></label>
+    </div>
+    <label class="check"><input type="checkbox" id="includeTranslations"> Include translations already entered</label>
+    <div class="modal-actions">
+      <button value="cancel" class="btn ghost">Cancel</button>
+      <button value="ok" class="btn primary" id="exportGo">Download</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Import dialog -->
+<dialog id="importDialog" class="modal wide">
+  <form method="dialog">
+    <h2>Import translation</h2>
+    <label class="dropzone small" id="importDrop">
+      <input type="file" id="importFile" accept=".txt,.docx,.xlf,.xliff,.csv,.tsv,.json" hidden>
+      <div class="dz-title">Drop the translated file here or <u>choose a file</u></div>
+      <div class="dz-sub">.txt · .docx · .xlf / .xliff · .csv · .json</div>
+    </label>
+    <div class="or">or paste the translated text, including its <code>[[n]]</code> markers</div>
+    <textarea id="pasteArea" rows="10" placeholder="[[1]]&#10;Translated text of segment 1&#10;&#10;[[2]]&#10;Translated text of segment 2"></textarea>
+    <label class="check"><input type="checkbox" id="importOverwrite" checked> Replace translations already entered</label>
+    <div class="modal-actions">
+      <button value="cancel" class="btn ghost">Cancel</button>
+      <button value="ok" class="btn primary" id="importGo">Import pasted text</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Build dialog -->
+<dialog id="buildDialog" class="modal">
+  <form method="dialog">
+    <h2>Rebuild the PDF</h2>
+    <p class="muted">Only segments that have a translation are replaced. All other text, images and drawings are kept.</p>
+    <label class="field">Font
+      <select id="fontMode">
+        <option value="auto">Match original (sans / serif / mono)</option>
+        <option value="sans-serif">Always sans-serif</option>
+        <option value="serif">Always serif</option>
+        <option value="monospace">Always monospace</option>
+        <option value="custom">My own font file…</option>
+      </select>
+    </label>
+    <div class="field" id="fontUploadRow" hidden>
+      <input type="file" id="fontFile" accept=".ttf,.otf,.ttc">
+      <span class="muted" id="fontStatus">Choose a .ttf/.otf font that covers the target language.</span>
+    </div>
+    <label class="check"><input type="checkbox" id="optExpand" checked> Let single-line text use free space to its side before shrinking it</label>
+    <label class="field">Smallest text size if a translation is too long
+      <select id="minScale">
+        <option value="0">No limit (always fit the box)</option>
+        <option value="0.5">50% of the original</option>
+        <option value="0.7">70% of the original</option>
+      </select>
+    </label>
+    <p class="muted small">Built-in fonts cover Latin, Greek, Cyrillic, Chinese, Japanese and Korean. For other alphabets, upload a font that supports them. Right-to-left and complex scripts (Arabic, Hebrew, Indic, Thai) are not shaped correctly.</p>
+    <div class="modal-actions">
+      <button value="cancel" class="btn ghost">Cancel</button>
+      <button value="ok" class="btn primary" id="buildGo">Build PDF</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="toast-stack" id="toasts"></div>
+<div class="busy" id="busy" hidden><div class="busy-box"><div class="spinner"></div><span id="busyText">Working…</span></div></div>
+
+<script type="module">
+// ======================================================================
+// PDF engine: extraction, exchange formats and rebuild (runs on MuPDF WASM)
+// ======================================================================
+const MUPDF_URL = "https://cdn.jsdelivr.net/npm/mupdf@1.28.1/dist/mupdf.js";
+let M = null;
+
+const BULLET_RE = /^\s*(?:[•◦▪▫●○■□►▶➢➤✓✔·‣⁃]|\(?\d{1,3}[.)]\s|\(?[a-zA-Z][.)]\s)/;
+const SERIF_HINTS = ["times", "serif", "roman", "georgia", "garamond", "cambria", "minion", "charis",
+  "palatino", "book", "baskerville", "caslon", "charter", "didot", "bodoni", "libertin",
+  "merriweather", "lora", "constantia", "century", "tinos", "nimbusrom", "utopia"];
+const MONO_HINTS = ["courier", "mono", "consol", "menlo", "inconsolata", "code", "typewriter"];
+const SANS_HINTS = ["sans", "arial", "helvet", "verdana", "tahoma", "calibri", "segoe"];
+const BASE_FONTS = {
+  "sans-serif": ["Helvetica", "Helvetica-Bold", "Helvetica-Oblique", "Helvetica-BoldOblique"],
+  "serif": ["Times-Roman", "Times-Bold", "Times-Italic", "Times-BoldItalic"],
+  "monospace": ["Courier", "Courier-Bold", "Courier-Oblique", "Courier-BoldOblique"],
+};
+
+const tick = () => new Promise((r) => setTimeout(r, 0));
+const round2 = (v) => Math.round(v * 100) / 100;
+const union = (a, b) => (a ? [Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.max(a[2], b[2]), Math.max(a[3], b[3])] : b.slice());
+const applyM = (m, x, y) => [m[0] * x + m[2] * y + m[4], m[1] * x + m[3] * y + m[5]];
+const boxOf = (pts) => {
+  const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]);
+  return [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)];
+};
+const quadBox = (q) => boxOf([[q[0], q[1]], [q[2], q[3]], [q[4], q[5]], [q[6], q[7]]]);
+const free = (o) => { try { o && o.destroy && o.destroy(); } catch (_) { /* already freed */ } };
+
+async function initEngine(module) {
+  if (!M) M = module || await import(MUPDF_URL);
+  return M;
+}
+
+function rotationOf(dir) {
+  const [dx, dy] = dir;
+  if (Math.abs(dx) > 0.99) return dx > 0 ? 0 : 180;
+  if (Math.abs(dy) > 0.99) return dy < 0 ? 90 : 270;
+  return null; // skewed text is left untouched
+}
+
+const DIRS = { 0: [1, 0], 90: [0, -1], 180: [-1, 0], 270: [0, 1] };
+
+/** A box in the text's own frame: a = along the reading direction, b = across (line progression). */
+function localBox(r, rotation) {
+  const d = DIRS[rotation], n = [-d[1], d[0]];
+  const pts = [[r[0], r[1]], [r[2], r[1]], [r[0], r[3]], [r[2], r[3]]];
+  const a = pts.map(([x, y]) => x * d[0] + y * d[1]), b = pts.map(([x, y]) => x * n[0] + y * n[1]);
+  return [Math.min(...a), Math.min(...b), Math.max(...a), Math.max(...b)];
+}
+
+function colorHex(c) {
+  let r = 0, g = 0, b = 0;
+  if (c && c.length === 1) r = g = b = c[0];
+  else if (c && c.length === 3) [r, g, b] = c;
+  else if (c && c.length === 4) {
+    const [C, Mg, Y, K] = c;
+    r = (1 - C) * (1 - K); g = (1 - Mg) * (1 - K); b = (1 - Y) * (1 - K);
+  }
+  return "#" + [r, g, b].map((v) => Math.round(Math.max(0, Math.min(1, v)) * 255).toString(16).padStart(2, "0")).join("");
+}
+
+function familyOf(low, serif, mono) {
+  if (MONO_HINTS.some((h) => low.includes(h))) return "monospace";
+  if (SANS_HINTS.some((h) => low.includes(h))) return "sans-serif";
+  if (SERIF_HINTS.some((h) => low.includes(h))) return "serif";
+  if (mono) return "monospace";
+  if (serif) return "serif";
+  return "sans-serif";
+}
+
+const fontInfoCache = new Map();
+function fontInfo(font) {
+  const raw = font.getName();
+  let info = fontInfoCache.get(raw);
+  if (!info) {
+    const name = raw.replace(/^[A-Z]{6}\+/, "");
+    const low = name.toLowerCase();
+    info = {
+      name,
+      bold: font.isBold() || /bold|black|heavy|semibold|demi/.test(low),
+      italic: font.isItalic() || /italic|oblique/.test(low),
+      family: familyOf(low, font.isSerif(), font.isMono()),
+    };
+    fontInfoCache.set(raw, info);
+  }
+  return info;
+}
+
+// ---------------------------------------------------------------- graphics
+
+/** Table borders / rules (thin boxes) and the boxes of shapes and images on a page. */
+function pageGraphics(page) {
+  const seps = [], containers = [];
+  const addRect = (r) => {
+    const w = r[2] - r[0], h = r[3] - r[1];
+    if (w < 3 || h < 3) { seps.push(r); return; }
+    seps.push([r[0], r[1], r[0], r[3]], [r[2], r[1], r[2], r[3]], [r[0], r[1], r[2], r[1]], [r[0], r[3], r[2], r[3]]);
+    containers.push(r);
+  };
+  const onPath = (path, ctm) => {
+    const subs = [];
+    let cur = null;
+    path.walk({
+      moveTo(x, y) { cur = { pts: [applyM(ctm, x, y)], curved: false }; subs.push(cur); },
+      lineTo(x, y) { if (cur) cur.pts.push(applyM(ctm, x, y)); },
+      curveTo(x1, y1, x2, y2, x3, y3) { if (cur) { cur.pts.push(applyM(ctm, x3, y3)); cur.curved = true; } },
+    });
+    for (const s of subs) {
+      const bb = boxOf(s.pts);
+      const big = bb[2] - bb[0] > 3 && bb[3] - bb[1] > 3;
+      if (s.curved) { if (big) containers.push(bb); continue; }
+      const axial = s.pts.every((p, i) => i === 0 || Math.abs(p[0] - s.pts[i - 1][0]) < 0.5 || Math.abs(p[1] - s.pts[i - 1][1]) < 0.5);
+      if (!axial) { if (big) containers.push(bb); continue; }
+      if (s.pts.length <= 2) { if (s.pts.length === 2) seps.push(bb); continue; }
+      if (s.pts.length <= 5) { addRect(bb); continue; }
+      for (let i = 1; i < s.pts.length; i++) seps.push(boxOf([s.pts[i - 1], s.pts[i]]));
+    }
+  };
+  const dev = new M.Device({
+    fillPath(path, evenOdd, ctm) { onPath(path, ctm); },
+    strokePath(path, stroke, ctm) { onPath(path, ctm); },
+    fillImage(image, ctm) { containers.push(boxOf([[0, 0], [1, 0], [0, 1], [1, 1]].map(([x, y]) => applyM(ctm, x, y)))); },
+  });
+  try { page.run(dev, M.Matrix.identity); } catch (e) { console.warn("Could not analyse page graphics", e); }
+  try { dev.close(); } catch (_) { /* not needed */ }
+  free(dev);
+  return { seps, containers };
+}
+
+function divided(a, b, seps, horizontal = true) {
+  if (!seps.length || !horizontal) return false;
+  if (a[2] <= b[0] + 1 || b[2] <= a[0] + 1) { // side by side: vertical line in between?
+    let [lo, hi] = a[2] <= b[0] + 1 ? [a[2], b[0]] : [b[2], a[0]];
+    if (lo > hi) [lo, hi] = [hi, lo];
+    const mid = (Math.max(a[1], b[1]) + Math.min(a[3], b[3])) / 2;
+    return seps.some(([x0, y0, x1, y1]) => x1 - x0 < 3 && lo - 0.5 <= (x0 + x1) / 2 && (x0 + x1) / 2 <= hi + 0.5 && y0 <= mid && mid <= y1);
+  }
+  const [up, low] = a[1] <= b[1] ? [a, b] : [b, a];
+  const lo = up[3] - 0.2 * (up[3] - up[1]), hi = low[1] + 0.2 * (low[3] - low[1]);
+  const left = Math.max(a[0], b[0]), right = Math.min(a[2], b[2]);
+  if (right <= left) return false;
+  return seps.some(([x0, y0, x1, y1]) => y1 - y0 < 3 && lo <= (y0 + y1) / 2 && (y0 + y1) / 2 <= hi && x0 < right - 1 && x1 > left + 1);
+}
+
+// --------------------------------------------------------------- extraction
+
+function pageBlocks(page, bounds, seps) {
+  const st = page.toStructuredText("preserve-whitespace");
+  const blocks = [];
+  let block = null, line = null, span = null, lastInk = null, sawSpace = false;
+  st.walk({
+    beginTextBlock() { block = { lines: [] }; blocks.push(block); },
+    endTextBlock() { block = null; },
+    beginLine(bbox, wmode, dir) {
+      if (!block) { block = { lines: [] }; blocks.push(block); }
+      line = { dir: [dir[0], dir[1]], spans: [] };
+      block.lines.push(line);
+      span = null; lastInk = null; sawSpace = false;
+    },
+    onChar(c, origin, font, size, quad, color) {
+      if (!line) return;
+      const qb = quadBox(quad);
+      if (qb[2] < bounds[0] || qb[0] > bounds[2] || qb[3] < bounds[1] || qb[1] > bounds[3]) return; // off-page
+      const blank = !c.trim();
+      const info = fontInfo(font);
+      const col = colorHex(color);
+      const key = `${info.name}|${size.toFixed(2)}|${col}`;
+      // Start a new span on a style change, and where a table border or a wide gap separates
+      // this glyph from the previous one (MuPDF fills such gaps with synthetic spaces).
+      let split = !span || span.key !== key;
+      if (!split && !blank && lastInk) {
+        const horizontal = Math.abs(line.dir[0]) > 0.99;
+        const gap = horizontal ? Math.abs(qb[0] - lastInk[2]) : Math.abs(qb[1] - lastInk[3]);
+        split = gap > 2 * size || ((sawSpace || gap > 0.15 * size) && divided(lastInk, qb, seps, horizontal));
+      }
+      if (split) {
+        span = { key, text: "", bbox: null, origin: [origin[0], origin[1]], size, font: info, color: col };
+        line.spans.push(span);
+      }
+      span.text += c;
+      if (blank) { sawSpace = true; return; }
+      span.bbox = union(span.bbox, qb);
+      if (span.text.trim().length === 1) span.origin = [origin[0], origin[1]];
+      lastInk = qb; sawSpace = false;
+    },
+  });
+  free(st);
+  for (const b of blocks) for (const l of b.lines) l.spans = l.spans.filter((sp) => sp.bbox);
+  return blocks;
+}
+
+function gapOf(prev, cur, rot) {
+  if (rot === 0) return cur.bbox[0] - prev.bbox[2];
+  if (rot === 180) return prev.bbox[0] - cur.bbox[2];
+  if (rot === 90) return prev.bbox[1] - cur.bbox[3];
+  return cur.bbox[1] - prev.bbox[3];
+}
+
+function chunksOf(line, rot, seps) {
+  const spans = line.spans.filter((s) => s.text.trim());
+  if (!spans.length) return [];
+  const out = [[spans[0]]];
+  for (let i = 1; i < spans.length; i++) {
+    const prev = spans[i - 1], cur = spans[i];
+    const gap = gapOf(prev, cur, rot);
+    if (gap > 2 * Math.max(prev.size, cur.size) || (gap > 0 && divided(prev.bbox, cur.bbox, seps, rot === 0 || rot === 180))) out.push([cur]);
+    else out[out.length - 1].push(cur);
+  }
+  return out;
+}
+
+function spansText(spans, rot) {
+  let text = spans[0].text;
+  for (let i = 1; i < spans.length; i++) {
+    const prev = spans[i - 1], cur = spans[i];
+    if (!text.endsWith(" ") && !cur.text.startsWith(" ") && gapOf(prev, cur, rot) > 0.15 * Math.min(prev.size, cur.size)) text += " ";
+    text += cur.text;
+  }
+  return text;
+}
+
+function joinLines(parts) {
+  let text = "";
+  for (let part of parts) {
+    part = part.trim();
+    if (!part) continue;
+    if (!text) text = part;
+    else if (text.endsWith("-") && text.length > 1 && /\p{L}/u.test(text[text.length - 2]) && /^\p{Ll}/u.test(part)) text = text.slice(0, -1) + part;
+    else text += " " + part;
+  }
+  return text;
+}
+
+function sameBaseline(a, b) {
+  const axis = a.rotation === 0 || a.rotation === 180 ? 1 : 0;
+  return Math.abs(a.origin[axis] - b.origin[axis]) < 0.3 * Math.min(a.size, b.size);
+}
+
+function mergeVisualLines(lines) {
+  const out = [];
+  for (const l of lines) {
+    const prev = out[out.length - 1];
+    if (prev && sameBaseline(prev, l)) {
+      out[out.length - 1] = { ...prev, spans: prev.spans.concat(l.spans), text: prev.text + " " + l.text, bbox: union(prev.bbox, l.bbox), size: Math.max(prev.size, l.size) };
+    } else out.push(l);
+  }
+  return out;
+}
+
+function dominant(spans, key) {
+  const w = new Map();
+  for (const s of spans) {
+    const k = key(s);
+    w.set(k, (w.get(k) || 0) + s.text.trim().length + 0.01);
+  }
+  let best = null, bw = -1;
+  for (const [k, v] of w) if (v > bw) { best = k; bw = v; }
+  return best;
+}
+
+function guessAlign(lines, rotation, bounds, margins) {
+  const pb = localBox(bounds, rotation);
+  const pageWidth = pb[2] - pb[0];
+  const size = Math.max(...lines.map((l) => l.size));
+  const tol = 0.6 * size;
+  const boxes = lines.map((l) => localBox(l.bbox, rotation));
+  const lefts = boxes.map((b) => b[0]), rights = boxes.map((b) => b[2]);
+  const spread = (a) => Math.max(...a) - Math.min(...a);
+  if (lines.length === 1) {
+    const [x0, x1] = [lefts[0], rights[0]];
+    const [lm, rm] = margins || [pb[0], pb[2]];
+    if (x0 - lm < 2 * size) return "left";
+    const c = (x0 + x1) / 2;
+    if ((Math.abs(c - (pb[0] + pb[2]) / 2) < 0.02 * pageWidth || Math.abs(c - (lm + rm) / 2) < 0.02 * pageWidth) && x1 - x0 < 0.8 * pageWidth) return "center";
+    if (Math.abs(x1 - rm) < tol && x0 - lm > 0.3 * pageWidth) return "right";
+    return "left";
+  }
+  const leftOk = spread(lefts) < tol, rightOk = spread(rights) < tol;
+  if (leftOk && lines.length >= 3) {
+    const body = rights.slice(0, -1);
+    if (spread(body) < tol && rights[rights.length - 1] < Math.max(...body) - tol) return "justify";
+  }
+  if (leftOk) return "left";
+  if (rightOk) return "right";
+  if (spread(lefts.map((l, i) => (l + rights[i]) / 2)) < tol) return "center";
+  return "left";
+}
+
+function redactRect(span, rotation) {
+  const [x0, y0, x1, y1] = span.bbox;
+  const [ox, oy] = span.origin;
+  const perp = rotation === 0 || rotation === 180 ? y1 - y0 : x1 - x0;
+  const size = perp > 0 ? Math.min(span.size, perp) : span.size;
+  const lo = 0.25 * size, hi = 0.5 * size;
+  if (rotation === 0) return [x0, oy - hi, x1, oy - lo];
+  if (rotation === 180) return [x0, oy + lo, x1, oy + hi];
+  if (rotation === 90) return [ox - hi, y0, ox - lo, y1];
+  return [ox + lo, y0, ox + hi, y1];
+}
+
+function buildSegment(group, pageNo, bounds, id, marginsByRot) {
+  const lines = mergeVisualLines(group);
+  const spans = lines.flatMap((l) => l.spans);
+  const text = joinLines(lines.map((l) => l.text));
+  if (!text.trim()) return null;
+  const rotation = lines[0].rotation;
+  let bbox = null;
+  for (const s of spans) bbox = union(bbox, s.bbox);
+  const size = Number(dominant(spans, (s) => round2(s.size).toFixed(1)));
+  const font = dominant(spans, (s) => s.font.name);
+  const info = spans.find((s) => s.font.name === font).font;
+  let pitch = null;
+  if (lines.length > 1) {
+    const axis = rotation === 0 || rotation === 180 ? 1 : 0;
+    const diffs = [];
+    for (let i = 1; i < lines.length; i++) {
+      const d = Math.abs(lines[i].origin[axis] - lines[i - 1].origin[axis]);
+      if (d > 0.3 * size) diffs.push(d);
+    }
+    if (diffs.length) {
+      diffs.sort((a, b) => a - b);
+      const m = diffs.length >> 1;
+      pitch = round2(diffs.length % 2 ? diffs[m] : (diffs[m - 1] + diffs[m]) / 2);
+    }
+  }
+  return {
+    id, page: pageNo, text, size, font, rotation, lines: lines.length, line_pitch: pitch,
+    bbox: bbox.map(round2),
+    color: dominant(spans, (s) => s.color),
+    bold: info.bold, italic: info.italic, family: info.family,
+    align: guessAlign(lines, rotation, bounds, marginsByRot[rotation]),
+    origin: lines[0].origin.map(round2),
+    redact: spans.filter((s) => s.text.trim()).map((s) => redactRect(s, rotation).map(round2)),
+  };
+}
+
+/** Extract translatable segments from every page. */
+async function extractDocument(bytes, onProgress) {
+  const doc = M.Document.openDocument(bytes, "application/pdf");
+  if (doc.needsPassword && doc.needsPassword()) { free(doc); throw new Error("Password-protected PDFs are not supported."); }
+  const pages = [], segments = [];
+  const n = doc.countPages();
+  for (let p = 0; p < n; p++) {
+    const page = doc.loadPage(p);
+    const bounds = page.getBounds();
+    const width = bounds[2] - bounds[0], height = bounds[3] - bounds[1];
+    pages.push({ width, height, x0: bounds[0], y0: bounds[1] });
+    const { seps } = pageGraphics(page);
+    const blocks = [];
+    for (const block of pageBlocks(page, bounds, seps)) {
+      const lines = [];
+      for (const line of block.lines) {
+        const rot = rotationOf(line.dir);
+        if (rot === null) continue;
+        const chunks = chunksOf(line, rot, seps);
+        for (const chunk of chunks) {
+          const text = spansText(chunk, rot);
+          if (!text.trim()) continue;
+          let bbox = null;
+          for (const s of chunk) bbox = union(bbox, s.bbox);
+          lines.push({ spans: chunk, text, bbox, origin: chunk[0].origin, size: Math.max(...chunk.map((s) => s.size)), rotation: rot, standalone: chunks.length > 1 });
+        }
+      }
+      if (lines.length) blocks.push(lines);
+    }
+    const marginsByRot = {};
+    for (const rot of [0, 90, 180, 270]) {
+      const boxes = blocks.flat().filter((l) => l.rotation === rot).map((l) => localBox(l.bbox, rot));
+      if (boxes.length) marginsByRot[rot] = [Math.min(...boxes.map((b) => b[0])), Math.max(...boxes.map((b) => b[2]))];
+    }
+    for (const lines of blocks) {
+      const groups = [];
+      for (const line of lines) {
+        const cur = groups[groups.length - 1];
+        if (!cur || line.standalone || cur[cur.length - 1].standalone) { groups.push([line]); continue; }
+        const prev = cur[cur.length - 1];
+        const ratio = Math.max(line.size, prev.size) / Math.max(0.1, Math.min(line.size, prev.size));
+        const axis = prev.rotation === 0 || prev.rotation === 180 ? 1 : 0;
+        const pitch = Math.abs(line.origin[axis] - prev.origin[axis]);
+        if (line.rotation === prev.rotation && sameBaseline(line, prev)) {
+          const a = prev.bbox, b = line.bbox;
+          const gap = axis === 1 ? Math.max(b[0] - a[2], a[0] - b[2]) : Math.max(b[1] - a[3], a[1] - b[3]);
+          if (gap > 2 * Math.max(line.size, prev.size) || divided(a, b, seps, axis === 1)) groups.push([line]);
+          else cur.push(line);
+          continue;
+        }
+        if (line.rotation !== prev.rotation || ratio > 1.25 || pitch > 2 * Math.max(line.size, prev.size)
+          || BULLET_RE.test(line.text) || divided(prev.bbox, line.bbox, seps, axis === 1)) groups.push([line]);
+        else cur.push(line);
+      }
+      for (const g of groups) {
+        const seg = buildSegment(g, p, bounds, segments.length + 1, marginsByRot);
+        if (seg) segments.push(seg);
+      }
+    }
+    free(page);
+    if (onProgress) onProgress(p + 1, n);
+    await tick();
+  }
+  free(doc);
+  return { pages, segments };
+}
+
+// --------------------------------------------------------- exchange formats
+
+const MARKER_LINE_RE = /^\s*[\[［【〔(（<«]{2}\s*#?\s*(\p{Nd}+)\s*[\]］】〕)）>»]{2}\s*(.*)$/u;
+const digitsToInt = (s) => parseInt(s.replace(/\p{Nd}/gu, (d) => {
+  const code = d.codePointAt(0);
+  for (const zero of [0x30, 0x660, 0x6f0, 0x966, 0x9e6, 0xe50, 0xff10]) if (code >= zero && code <= zero + 9) return String(code - zero);
+  return d;
+}), 10);
+
+function exportTxt(segments, tr = {}) {
+  return segments.map((s) => `[[${s.id}]]\n${tr[s.id] || s.text}\n`).join("\n");
+}
+
+function parseMarkedText(text) {
+  const result = {};
+  let current = null, buf = [];
+  const flush = () => {
+    if (current !== null) {
+      const v = buf.join("\n").trim();
+      if (v) result[current] = v;
+    }
+  };
+  for (const raw of text.replace(/\r\n?/g, "\n").split("\n")) {
+    const m = raw.match(MARKER_LINE_RE);
+    if (m) {
+      flush();
+      current = digitsToInt(m[1]);
+      buf = m[2].trim() ? [m[2]] : [];
+    } else if (current !== null) buf.push(raw);
+  }
+  flush();
+  return result;
+}
+
+function csvCell(v) {
+  v = String(v ?? "");
+  return /[",\n\r;]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
+}
+
+function exportCsv(segments, tr = {}) {
+  const rows = [["id", "page", "source", "target"], ...segments.map((s) => [s.id, s.page + 1, s.text, tr[s.id] || ""])];
+  return "﻿" + rows.map((r) => r.map(csvCell).join(",")).join("\r\n") + "\r\n";
+}
+
+function parseCsvRows(text, delim) {
+  const rows = [];
+  let row = [], cell = "", q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) {
+      if (c === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; }
+      else cell += c;
+    } else if (c === '"') q = true;
+    else if (c === delim) { row.push(cell); cell = ""; }
+    else if (c === "\n" || c === "\r") {
+      if (c === "\r" && text[i + 1] === "\n") i++;
+      row.push(cell); rows.push(row); row = []; cell = "";
+    } else cell += c;
+  }
+  if (cell || row.length) { row.push(cell); rows.push(row); }
+  return rows;
+}
+
+function parseCsv(text) {
+  text = text.replace(/^﻿/, "");
+  const head = text.slice(0, 4096).split(/\r?\n/)[0];
+  const delim = [",", ";", "\t"].map((d) => [d, head.split(d).length]).sort((a, b) => b[1] - a[1])[0][0];
+  const rows = parseCsvRows(text, delim);
+  if (!rows.length) return {};
+  const header = rows[0].map((h) => h.trim().toLowerCase());
+  let idCol = 0, tgtCol = rows[0].length - 1, body = rows;
+  if (header.includes("id")) {
+    idCol = header.indexOf("id");
+    body = rows.slice(1);
+    for (const name of ["target", "translation", "translated"]) if (header.includes(name)) { tgtCol = header.indexOf(name); break; }
+  }
+  const out = {};
+  for (const r of body) {
+    if (r.length <= Math.max(idCol, tgtCol)) continue;
+    const id = parseInt(r[idCol].trim(), 10);
+    const v = r[tgtCol].trim();
+    if (Number.isFinite(id) && String(id) === r[idCol].trim() && v) out[id] = v;
+  }
+  return out;
+}
+
+function exportJson(segments, tr = {}, name = "") {
+  return JSON.stringify({ document: name, segments: segments.map((s) => ({ id: s.id, page: s.page + 1, source: s.text, target: tr[s.id] || "" })) }, null, 2);
+}
+
+function parseJson(data) {
+  const out = {};
+  const items = Array.isArray(data) ? data : data && Array.isArray(data.segments) ? data.segments : null;
+  if (items) {
+    for (const it of items) {
+      const v = String(it.target || it.translation || "").trim();
+      if (v && it.id != null) out[parseInt(it.id, 10)] = v;
+    }
+  } else if (data && typeof data === "object") {
+    for (const [k, v] of Object.entries(data)) if (/^\s*\d+\s*$/.test(k) && typeof v === "string" && v.trim()) out[parseInt(k, 10)] = v.trim();
+  }
+  return out;
+}
+
+const xmlEsc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+const attrEsc = (s) => xmlEsc(s).replace(/"/g, "&quot;");
+
+function exportXliff(segments, tr = {}, name = "", src = "en", tgt = "") {
+  const out = [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">',
+    `  <file original="${attrEsc(name)}" source-language="${attrEsc(src || "en")}"${tgt ? ` target-language="${attrEsc(tgt)}"` : ""} datatype="plaintext">`,
+    "    <body>",
+  ];
+  for (const s of segments) {
+    out.push(`      <trans-unit id="${s.id}">`, `        <source>${xmlEsc(s.text)}</source>`);
+    if (tr[s.id]) out.push(`        <target state="translated">${xmlEsc(tr[s.id])}</target>`);
+    out.push(`        <note>page ${s.page + 1}</note>`, "      </trans-unit>");
+  }
+  out.push("    </body>", "  </file>", "</xliff>", "");
+  return out.join("\n");
+}
+
+function parseXliff(text) {
+  const dom = new DOMParser().parseFromString(text, "application/xml");
+  if (dom.getElementsByTagName("parsererror").length) throw new Error("The XLIFF file is not valid XML.");
+  const out = {};
+  for (const el of dom.getElementsByTagName("*")) {
+    if (el.localName !== "trans-unit" && el.localName !== "unit") continue;
+    const id = parseInt((el.getAttribute("id") || "").trim(), 10);
+    if (!Number.isFinite(id)) continue;
+    const v = [...el.getElementsByTagName("*")].filter((t) => t.localName === "target").map((t) => t.textContent).join("").trim();
+    if (v) out[id] = v;
+  }
+  return out;
+}
+
+// ---- minimal ZIP (store) writer and reader, enough for .docx
+const CRC_TABLE = (() => {
+  const t = new Uint32Array(256);
+  for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; }
+  return t;
+})();
+function crc32(bytes) {
+  let c = 0xffffffff;
+  for (let i = 0; i < bytes.length; i++) c = CRC_TABLE[(c ^ bytes[i]) & 0xff] ^ (c >>> 8);
+  return (c ^ 0xffffffff) >>> 0;
+}
+
+function zipStore(files) {
+  const enc = new TextEncoder();
+  const parts = [], central = [];
+  let offset = 0;
+  for (const f of files) {
+    const name = enc.encode(f.name);
+    const data = typeof f.data === "string" ? enc.encode(f.data) : f.data;
+    const crc = crc32(data);
+    const local = new DataView(new ArrayBuffer(30));
+    local.setUint32(0, 0x04034b50, true); local.setUint16(4, 20, true); local.setUint16(6, 0x0800, true);
+    local.setUint32(14, crc, true); local.setUint32(18, data.length, true); local.setUint32(22, data.length, true);
+    local.setUint16(26, name.length, true);
+    parts.push(new Uint8Array(local.buffer), name, data);
+    const cd = new DataView(new ArrayBuffer(46));
+    cd.setUint32(0, 0x02014b50, true); cd.setUint16(4, 20, true); cd.setUint16(6, 20, true); cd.setUint16(8, 0x0800, true);
+    cd.setUint32(16, crc, true); cd.setUint32(20, data.length, true); cd.setUint32(24, data.length, true);
+    cd.setUint16(28, name.length, true); cd.setUint32(42, offset, true);
+    central.push(new Uint8Array(cd.buffer), name);
+    offset += 30 + name.length + data.length;
+  }
+  const cdSize = central.reduce((n, p) => n + p.length, 0);
+  const end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true); end.setUint16(8, files.length, true); end.setUint16(10, files.length, true);
+  end.setUint32(12, cdSize, true); end.setUint32(16, offset, true);
+  return new Blob([...parts, ...central, new Uint8Array(end.buffer)]);
+}
+
+async function unzipEntry(bytes, wanted) {
+  const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  let eocd = -1;
+  for (let i = bytes.length - 22; i >= Math.max(0, bytes.length - 65557); i--) if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+  if (eocd < 0) throw new Error("Not a valid .docx (zip) file.");
+  let p = dv.getUint32(eocd + 16, true);
+  const count = dv.getUint16(eocd + 10, true);
+  const dec = new TextDecoder();
+  for (let i = 0; i < count; i++) {
+    const method = dv.getUint16(p + 10, true), csize = dv.getUint32(p + 20, true);
+    const nlen = dv.getUint16(p + 28, true), xlen = dv.getUint16(p + 30, true), clen = dv.getUint16(p + 32, true);
+    const loc = dv.getUint32(p + 42, true);
+    const name = dec.decode(bytes.subarray(p + 46, p + 46 + nlen));
+    if (name === wanted) {
+      const start = loc + 30 + dv.getUint16(loc + 26, true) + dv.getUint16(loc + 28, true);
+      const raw = bytes.subarray(start, start + csize);
+      if (method === 0) return raw;
+      const stream = new Blob([raw]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
+      return new Uint8Array(await new Response(stream).arrayBuffer());
+    }
+    p += 46 + nlen + xlen + clen;
+  }
+  throw new Error(`${wanted} not found in the .docx file.`);
+}
+
+const W_NS = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+
+function exportDocx(segments, tr = {}) {
+  const para = (text, marker) => {
+    const props = marker ? '<w:rPr><w:color w:val="999999"/><w:sz w:val="16"/></w:rPr>' : "";
+    const runs = text.split("\n").map((l, i) => (i ? "<w:br/>" : "") + `<w:t xml:space="preserve">${xmlEsc(l)}</w:t>`).join("");
+    return `<w:p><w:r>${props}${runs}</w:r></w:p>`;
+  };
+  const body = segments.map((s) => para(`[[${s.id}]]`, true) + para(tr[s.id] || s.text, false)).join("");
+  return zipStore([
+    { name: "[Content_Types].xml", data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>' },
+    { name: "_rels/.rels", data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>' },
+    { name: "word/document.xml", data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="${W_NS}"><w:body>${body}</w:body></w:document>` },
+  ]);
+}
+
+async function parseDocx(bytes) {
+  const xml = new TextDecoder().decode(await unzipEntry(bytes, "word/document.xml"));
+  const dom = new DOMParser().parseFromString(xml, "application/xml");
+  const paras = [...dom.getElementsByTagNameNS(W_NS, "p")].map((p) => {
+    let s = "";
+    for (const el of p.getElementsByTagNameNS(W_NS, "*")) {
+      if (el.localName === "t") s += el.textContent;
+      else if (el.localName === "br" || el.localName === "cr") s += "\n";
+      else if (el.localName === "tab") s += "\t";
+    }
+    return s;
+  });
+  return parseMarkedText(paras.join("\n"));
+}
+
+/** Detect the format of a translated file and parse it into {id: text}. */
+async function parseImport(name, bytes) {
+  name = (name || "").toLowerCase();
+  if (name.endsWith(".docx") || (bytes[0] === 0x50 && bytes[1] === 0x4b)) return parseDocx(bytes);
+  const text = new TextDecoder().decode(bytes).replace(/^﻿/, "");
+  const head = text.trimStart();
+  if (/\.(xlf|xliff)$/.test(name) || (head.startsWith("<") && head.slice(0, 500).includes("xliff"))) return parseXliff(text);
+  if (name.endsWith(".json") || head.startsWith("{") || head.startsWith("[")) {
+    try { return parseJson(JSON.parse(text)); } catch (_) { /* not JSON after all */ }
+  }
+  if (/\.(csv|tsv)$/.test(name)) return parseCsv(text);
+  return parseMarkedText(text);
+}
+
+// ------------------------------------------------------------------ rebuild
+
+const CJK_RE = /[ᄀ-ᇿ⺀-鿿ꥠ-꥿가-퟿豈-﫿＀-￯]|[\u{20000}-\u{3134f}]/u;
+const NO_LINE_START = new Set([..."、。，．！？：；）」』】》〉,.!?;:)]}%"]);
+
+class FontKit {
+  constructor(doc, opts) {
+    this.doc = doc;
+    this.opts = opts;
+    this.entries = new Map();
+    this.missing = 0;
+  }
+  entry(name) {
+    let e = this.entries.get(name);
+    if (!e) {
+      const font = name === "custom" ? new M.Font("UserFont", this.opts.customFont) : new M.Font(name);
+      e = { name, font, ref: null, res: `FTr${this.entries.size}`, adv: new Map(), gid: new Map() };
+      this.entries.set(name, e);
+    }
+    return e;
+  }
+  chain(seg, text) {
+    const family = this.opts.fontMode === "auto" || this.opts.fontMode === "custom" ? seg.family : this.opts.fontMode;
+    const v = (seg.bold ? 1 : 0) + (seg.italic ? 2 : 0);
+    const chain = [];
+    if (this.opts.fontMode === "custom" && this.opts.customFont) chain.push("custom");
+    chain.push(BASE_FONTS[family][v]);
+    let cjk = this.opts.cjk || "zh-Hans";
+    if (/[぀-ヿ]/.test(text)) cjk = "ja";
+    else if (/[가-힯ᄀ-ᇿ]/.test(text)) cjk = "ko";
+    chain.push(cjk);
+    return chain;
+  }
+  glyph(chain, cp) {
+    for (const name of chain) {
+      const e = this.entry(name);
+      let gid = e.gid.get(cp);
+      if (gid === undefined) { gid = e.font.encodeCharacter(cp); e.gid.set(cp, gid); }
+      if (gid > 0) return { e, gid, adv: this.advance(e, gid) };
+    }
+    if (cp > 32) this.missing++;
+    const e = this.entry(chain[0]);
+    return { e, gid: 0, adv: this.advance(e, 0) };
+  }
+  advance(e, gid) {
+    let a = e.adv.get(gid);
+    if (a === undefined) { a = e.font.advanceGlyph(gid, 0); e.adv.set(gid, a); }
+    return a;
+  }
+  ref(e) {
+    if (!e.ref) e.ref = this.doc.addFont(e.font);
+    return e.ref;
+  }
+}
+
+/** Split text into paragraphs of breakable tokens: {sp: space before, glyphs, w (em)}. */
+function tokenize(text, fk, chain) {
+  const spaceAdv = fk.glyph(chain, 32).adv;
+  const paras = [];
+  for (const para of text.replace(/\r\n?/g, "\n").split("\n")) {
+    const tokens = [];
+    let cur = null, pendingSpace = false;
+    for (const ch of para) {
+      const cp = ch.codePointAt(0);
+      if (/\s/.test(ch)) { pendingSpace = true; cur = null; continue; }
+      const g = fk.glyph(chain, cp);
+      if (cur && !pendingSpace && NO_LINE_START.has(ch)) { cur.glyphs.push(g); cur.w += g.adv; continue; }
+      if (CJK_RE.test(ch) || !cur || pendingSpace || CJK_RE.test(cur.last)) {
+        cur = { sp: pendingSpace && tokens.length > 0, glyphs: [g], w: g.adv, last: ch };
+        tokens.push(cur);
+      } else {
+        cur.glyphs.push(g); cur.w += g.adv; cur.last = ch;
+      }
+      pendingSpace = false;
+    }
+    paras.push(tokens);
+  }
+  return { paras, spaceAdv };
+}
+
+/** Greedy line breaking; widths are in em (font size 1). */
+function wrap(tok, width) {
+  const lines = [];
+  for (const tokens of tok.paras) {
+    let line = { tokens: [], w: 0, last: false };
+    const push = () => { lines.push(line); line = { tokens: [], w: 0, last: false }; };
+    for (let t of tokens) {
+      const sw = line.tokens.length && t.sp ? tok.spaceAdv : 0;
+      if (line.tokens.length && line.w + sw + t.w > width) push();
+      if (!line.tokens.length && t.w > width) { // break an over-long word by characters
+        let piece = { sp: false, glyphs: [], w: 0 };
+        for (const g of t.glyphs) {
+          if (piece.glyphs.length && piece.w + g.adv > width) { line.tokens.push(piece); line.w = piece.w; push(); piece = { sp: false, glyphs: [], w: 0 }; }
+          piece.glyphs.push(g); piece.w += g.adv;
+        }
+        t = piece;
+      }
+      line.w += (line.tokens.length && t.sp ? tok.spaceAdv : 0) + t.w;
+      line.tokens.push(t);
+    }
+    line.last = true;
+    push();
+  }
+  return lines;
+}
+
+function lineHeight(seg) {
+  return Math.max(seg.line_pitch || 1.15 * seg.size, seg.size);
+}
+
+function obstaclesFor(page, segs) {
+  const { seps, containers } = pageGraphics(page);
+  const edges = segs.map((s) => s.bbox).concat(seps);
+  for (const c of containers) edges.push([c[0], c[1], c[0], c[3]], [c[2], c[1], c[2], c[3]], [c[0], c[1], c[2], c[1]], [c[0], c[3], c[2], c[3]]);
+  return { edges, containers };
+}
+
+/** How far a single-line segment may grow along its reading direction: [a0, a1] in the local frame. */
+function expandedSpan(seg, bounds, obs) {
+  const rot = seg.rotation;
+  const r = localBox(seg.bbox, rot), pb = localBox(bounds, rot);
+  const margin = Math.min(0.04 * (pb[2] - pb[0]), 24), gap = 0.4 * seg.size;
+  let right = pb[2] - margin, left = pb[0] + margin;
+  const pageArea = (bounds[2] - bounds[0]) * (bounds[3] - bounds[1]);
+  const sb = seg.bbox;
+  for (const c of obs.containers) {
+    const inside = c[0] - 1 <= sb[0] && sb[2] <= c[2] + 1 && c[1] - 1 <= sb[1] && sb[3] <= c[3] + 1;
+    if (inside && (c[2] - c[0]) * (c[3] - c[1]) < 0.9 * pageArea) {
+      const lc = localBox(c, rot);
+      right = Math.min(right, lc[2] - gap);
+      left = Math.max(left, lc[0] + gap);
+    }
+  }
+  const h = r[3] - r[1], by0 = r[1] + 0.2 * h, by1 = r[3] - 0.2 * h;
+  for (const e of obs.edges) {
+    if (e === sb) continue;
+    const o = localBox(e, rot);
+    if (o[3] < by0 || o[1] > by1) continue;
+    if (o[0] >= r[2] - 0.5) right = Math.min(right, o[0] - gap);
+    if (o[2] <= r[0] + 0.5) left = Math.max(left, o[2] + gap);
+  }
+  right = Math.max(right, r[2]);
+  left = Math.min(left, r[0]);
+  if (seg.align === "left" || seg.align === "justify") return [r[0], right];
+  if (seg.align === "right") return [left, r[2]];
+  const grow = Math.min(r[0] - left, right - r[2]);
+  return [r[0] - grow, r[2] + grow];
+}
+
+const fmt = (v) => (Math.abs(v) < 1e-6 ? "0" : String(Math.round(v * 1000) / 1000));
+
+/** Lay out one translation and return PDF content-stream operators (in page space). */
+function layoutSegment(seg, text, fk, bounds, obs, opts, used, stats) {
+  const d = DIRS[seg.rotation], n = [-d[1], d[0]], u = [d[1], -d[0]];
+  const corners = [[seg.bbox[0], seg.bbox[1]], [seg.bbox[2], seg.bbox[1]], [seg.bbox[0], seg.bbox[3]], [seg.bbox[2], seg.bbox[3]]];
+  const along = corners.map(([x, y]) => x * d[0] + y * d[1]), across = corners.map(([x, y]) => x * n[0] + y * n[1]);
+  let a0 = Math.min(...along), a1 = Math.max(...along);
+  const b1 = Math.max(...across);
+  if (obs && seg.lines === 1) [a0, a1] = expandedSpan(seg, bounds, obs);
+  const W = (a1 - a0) * 1.01;
+  const ob = seg.origin[0] * n[0] + seg.origin[1] * n[1];
+  const s0 = seg.size, L0 = lineHeight(seg);
+  const top = ob - 0.85 * s0;
+  const H = Math.max(b1, ob + 0.2 * s0) + 0.15 * s0 - top;
+
+  const chain = fk.chain(seg, text);
+  const tok = tokenize(text.trim(), fk, chain);
+  const fits = (k) => {
+    const lines = wrap(tok, W / (s0 * k));
+    return (lines.length - 1) * L0 * k + 1.05 * s0 * k <= H + 0.01 ? lines : null;
+  };
+  let k = 1, lines = fits(1);
+  if (!lines) {
+    const search = (lo) => {
+      let hi = 1, best = null, bestK = lo;
+      if (!fits(lo)) return null;
+      for (let i = 0; i < 18; i++) {
+        const mid = (lo + hi) / 2;
+        const ok = fits(mid);
+        if (ok) { best = ok; bestK = mid; lo = mid; } else hi = mid;
+      }
+      return best ? [bestK, best] : [lo, fits(lo)];
+    };
+    const found = search(Math.max(opts.minScale || 0, 0.02)) || search(0.02) || [0.02, wrap(tok, W / (s0 * 0.02))];
+    [k, lines] = found;
+    stats.shrunk.push({ id: seg.id, scale: Math.round(k * 100) / 100 });
+  }
+  const s = s0 * k, L = L0 * k;
+  const base1 = seg.lines === 1 && lines.length === 1 ? ob - (s0 - s) * 0.3 : top + 0.85 * s;
+  const ops = [`BT ${seg.color.slice(1).match(/../g).map((h) => fmt(parseInt(h, 16) / 255)).join(" ")} rg`];
+  let curFont = null;
+  lines.forEach((line, i) => {
+    const b = base1 + i * L;
+    const lw = line.w * s, spare = W - lw;
+    let a = a0, extra = 0;
+    if (seg.align === "right") a = a0 + spare;
+    else if (seg.align === "center") a = a0 + spare / 2;
+    else if (seg.align === "justify" && !line.last) {
+      const gaps = line.tokens.filter((t, j) => j > 0 && t.sp).length;
+      if (gaps) extra = Math.max(0, spare) / gaps;
+    }
+    line.tokens.forEach((t, j) => {
+      if (j > 0 && t.sp) a += tok.spaceAdv * s + extra;
+      let run = null;
+      const flush = () => {
+        if (!run) return;
+        if (curFont !== run.e) { ops.push(`/${run.e.res} 1 Tf`); curFont = run.e; }
+        const px = run.a * d[0] + b * n[0], py = run.a * d[1] + b * n[1];
+        ops.push(`${fmt(d[0] * s)} ${fmt(d[1] * s)} ${fmt(u[0] * s)} ${fmt(u[1] * s)} ${fmt(px)} ${fmt(py)} Tm <${run.hex}> Tj`);
+        run = null;
+      };
+      for (const g of t.glyphs) {
+        if (!run || run.e !== g.e) { flush(); run = { e: g.e, a, hex: "" }; fk.ref(g.e); used.add(g.e); }
+        run.hex += g.gid.toString(16).padStart(4, "0");
+        a += g.adv * s;
+      }
+      flush();
+    });
+  });
+  ops.push("ET");
+  return ops.join("\n");
+}
+
+function appendContent(doc, page, content, used) {
+  const pobj = page.getObject();
+  let res = pobj.get("Resources");
+  if (res.isNull()) {
+    const inherited = pobj.getInheritable("Resources");
+    res = doc.newDictionary();
+    if (!inherited.isNull()) inherited.forEach((v, k) => res.put(k, v));
+    pobj.put("Resources", res);
+  }
+  let fonts = res.get("Font");
+  if (fonts.isNull()) { fonts = doc.newDictionary(); res.put("Font", fonts); }
+  for (const e of used) fonts.put(e.res, e.ref);
+  const inv = M.Matrix.invert(page.getTransform());
+  const contents = pobj.get("Contents");
+  const arr = doc.newArray();
+  arr.push(doc.addStream("q\n", {}));
+  if (contents.isArray()) for (let i = 0; i < contents.length; i++) arr.push(contents.get(i));
+  else if (!contents.isNull()) arr.push(contents);
+  arr.push(doc.addStream("\nQ\n", {}));
+  arr.push(doc.addStream(`q ${inv.map(fmt).join(" ")} cm\n${content}\nQ\n`, {}));
+  pobj.put("Contents", arr);
+}
+
+/**
+ * Build the translated PDF. Only segments with a translation are touched: their glyphs are
+ * removed with text-only redactions (images and vector art stay) and the translation is
+ * typeset into the same box with the original size, colour, style, alignment and rotation.
+ */
+async function buildTranslated(bytes, segments, translations, opts, onProgress) {
+  const doc = M.Document.openDocument(bytes, "application/pdf");
+  const fk = new FontKit(doc, opts);
+  const stats = { replaced: 0, untranslated: 0, shrunk: [], missing: 0 };
+  const byPage = new Map();
+  for (const s of segments) {
+    if (!byPage.has(s.page)) byPage.set(s.page, []);
+    byPage.get(s.page).push(s);
+  }
+  let done = 0;
+  for (const [pno, segs] of byPage) {
+    const todo = segs.filter((s) => (translations[s.id] || "").trim());
+    stats.untranslated += segs.length - todo.length;
+    if (todo.length) {
+      const page = doc.loadPage(pno);
+      const bounds = page.getBounds();
+      const obs = opts.expand ? obstaclesFor(page, segs) : null;
+      for (const seg of todo) {
+        for (const r of seg.redact) {
+          const annot = page.createAnnotation("Redact");
+          annot.setRect(r);
+        }
+      }
+      page.applyRedactions(false, 0, 0, 0); // keep images, keep line art, remove text
+      const used = new Set();
+      const content = todo.map((seg) => layoutSegment(seg, translations[seg.id], fk, bounds, obs, opts, used, stats)).join("\n");
+      appendContent(doc, page, content, used);
+      stats.replaced += todo.length;
+      free(page);
+    }
+    done++;
+    if (onProgress) onProgress(done, byPage.size);
+    await tick();
+  }
+  stats.missing = fk.missing;
+  doc.subsetFonts();
+  const buf = doc.saveToBuffer("garbage,compress");
+  const out = buf.asUint8Array().slice();
+  free(buf);
+  free(doc);
+  return { bytes: out, stats };
+}
+
+/** Render a page to a PNG blob. */
+function renderPage(doc, index, zoom) {
+  const page = doc.loadPage(index);
+  const pix = page.toPixmap(M.Matrix.scale(zoom, zoom), M.ColorSpace.DeviceRGB, false, true);
+  const png = pix.asPNG();
+  const blob = new Blob([png], { type: "image/png" });
+  free(pix);
+  free(page);
+  return blob;
+}
+
+const Engine = {
+  init: initEngine, extract: extractDocument, build: buildTranslated, render: renderPage,
+  open: (bytes) => M.Document.openDocument(bytes, "application/pdf"),
+  exportTxt, exportCsv, exportJson, exportXliff, exportDocx, parseImport, parseMarkedText,
+};
+
+// ======================================================================
+// User interface
+// ======================================================================
+const $ = (sel) => document.querySelector(sel);
+const LS_LAST = "pdftr:last";
+const lsKey = (id) => `pdftr:tr:${id}`;
+
+const state = {
+  doc: null,          // {id, name, pages, segments}
+  srcBytes: null,     // original PDF
+  srcDoc: null,       // MuPDF document for rendering the original
+  outBytes: null,     // translated PDF
+  outDoc: null,
+  outUrl: null,
+  translations: {},
+  variant: "original",
+  zoom: 1,
+  activeId: null,
+  customFont: null,   // {name, bytes}
+  shrunk: new Set(),
+};
+
+let engineReady = null;
+function ensureEngine() {
+  if (!engineReady) {
+    engineReady = Engine.init().catch((err) => {
+      engineReady = null;
+      throw new Error("Could not load the PDF engine from the internet. Check your connection and reload the page. " + (err.message || ""));
+    });
+  }
+  return engineReady;
+}
+
+/* ------------------------------------------------------------------ utils */
+
+function toast(message, kind = "") {
+  const el = document.createElement("div");
+  el.className = `toast ${kind}`;
+  el.textContent = message;
+  $("#toasts").appendChild(el);
+  setTimeout(() => el.remove(), kind === "error" ? 8000 : 4500);
+}
+
+function busy(text) {
+  $("#busyText").textContent = text || "";
+  $("#busy").hidden = !text;
+}
+
+function saveBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = Object.assign(document.createElement("a"), { href: url, download: filename });
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+}
+
+const stem = () => (state.doc.name || "document.pdf").replace(/\.pdf$/i, "") || "document";
+
+async function sha256(bytes) {
+  const hash = await crypto.subtle.digest("SHA-256", bytes);
+  return [...new Uint8Array(hash)].slice(0, 12).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+let saveTimer = null;
+function persist() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    try { localStorage.setItem(lsKey(state.doc.id), JSON.stringify(state.translations)); } catch (_) { /* quota / private mode */ }
+  }, 300);
+}
+
+const hasTr = (id) => Boolean((state.translations[id] || "").trim());
+
+/* ------------------------------------------- IndexedDB: remember the last PDF */
+
+function idb() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open("pdf-translate", 1);
+    req.onupgradeneeded = () => req.result.createObjectStore("files");
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function idbPut(value) {
+  try {
+    const db = await idb();
+    const tx = db.transaction("files", "readwrite");
+    tx.objectStore("files").put(value, "last");
+    await new Promise((r) => { tx.oncomplete = r; tx.onerror = r; });
+  } catch (_) { /* storage unavailable: the session simply won't be restored */ }
+}
+
+async function idbGet() {
+  try {
+    const db = await idb();
+    return await new Promise((resolve) => {
+      const req = db.transaction("files").objectStore("files").get("last");
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = () => resolve(null);
+    });
+  } catch (_) { return null; }
+}
+
+/* ------------------------------------------------------------- loading */
+
+async function openPdf(file) {
+  if (!file) return;
+  if (!/\.pdf$/i.test(file.name) && file.type !== "application/pdf") {
+    toast("Please choose a PDF file.", "error");
+    return;
+  }
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  await loadBytes(bytes, file.name, true);
+  $("#fileInput").value = "";
+}
+
+async function loadBytes(bytes, name, remember) {
+  $("#uploadProgress").hidden = false;
+  $("#uploadProgressText").textContent = "Loading the PDF engine…";
+  try {
+    await ensureEngine();
+    $("#uploadProgressText").textContent = "Extracting text…";
+    const id = await sha256(bytes);
+    const { pages, segments } = await Engine.extract(bytes.slice(), (i, n) => {
+      $("#uploadProgressText").textContent = `Extracting text… page ${i} of ${n}`;
+    });
+    if (remember) idbPut({ name, bytes });
+    openDocument({ id, name, pages, segments }, bytes);
+  } catch (err) {
+    console.error(err);
+    toast(/password/i.test(err.message) ? err.message : `Could not open this PDF: ${err.message || err}`, "error");
+  } finally {
+    $("#uploadProgress").hidden = true;
+  }
+}
+
+function disposeDocs() {
+  for (const key of ["srcDoc", "outDoc"]) {
+    try { state[key] && state[key].destroy && state[key].destroy(); } catch (_) { /* ignore */ }
+    state[key] = null;
+  }
+  if (state.outUrl) URL.revokeObjectURL(state.outUrl);
+  state.outUrl = null;
+  state.outBytes = null;
+}
+
+function openDocument(doc, bytes) {
+  disposeDocs();
+  state.doc = doc;
+  state.srcBytes = bytes;
+  state.srcDoc = Engine.open(bytes.slice());
+  state.variant = "original";
+  state.activeId = null;
+  state.shrunk = new Set();
+  try {
+    state.translations = JSON.parse(localStorage.getItem(lsKey(doc.id)) || "{}");
+    localStorage.setItem(LS_LAST, doc.id);
+  } catch (_) {
+    state.translations = {};
+  }
+  $("#uploadView").hidden = true;
+  $("#workView").hidden = false;
+  $("#btnNew").hidden = false;
+  $("#docName").textContent = doc.name;
+  $("#docName").title = doc.name;
+  document.title = `${doc.name} · PDF Translate`;
+
+  $("#filterPage").innerHTML = '<option value="all">All pages</option>' +
+    doc.pages.map((_, i) => `<option value="${i}">Page ${i + 1}</option>`).join("");
+
+  state.zoom = fitZoom();
+  renderPages();
+  renderSegments();
+  setBuilt(false);
+  setVariant("original");
+  updateProgress();
+  if (!doc.segments.length) {
+    toast("No selectable text was found. Scanned PDFs need OCR before they can be translated.", "error");
+  }
+}
+
+function closeDocument() {
+  disposeDocs();
+  state.doc = null;
+  try { localStorage.removeItem(LS_LAST); } catch (_) { /* ignore */ }
+  $("#workView").hidden = true;
+  $("#uploadView").hidden = false;
+  $("#btnNew").hidden = true;
+  $("#docName").textContent = "";
+  document.title = "PDF Translate";
+  updateSteps();
+}
+
+/* --------------------------------------------------------------- viewer */
+
+function fitZoom() {
+  const avail = $("#pages").clientWidth - 48;
+  const widest = Math.max(...state.doc.pages.map((p) => p.width));
+  const z = Math.floor((avail / (widest * 1.25)) * 10) / 10;
+  return Math.min(1.5, Math.max(0.4, z || 1));
+}
+
+const pageCssWidth = (page) => Math.round(page.width * 1.25 * state.zoom);
+
+function renderZoom(page) {
+  const px = pageCssWidth(page) * (window.devicePixelRatio || 1);
+  return Math.min(4, Math.max(0.5, Math.ceil((px / page.width) * 4) / 4));
+}
+
+// Pages are rendered lazily, one at a time, when they scroll into view.
+const imgCache = new Map(); // `${variant}:${page}:${zoom}` -> object URL
+let renderQueue = [];
+let rendering = false;
+const observer = new IntersectionObserver((entries) => {
+  for (const e of entries) if (e.isIntersecting) queueRender(Number(e.target.dataset.page));
+}, { root: null, rootMargin: "600px 0px" });
+
+function queueRender(i) {
+  if (!renderQueue.includes(i)) renderQueue.push(i);
+  pump();
+}
+
+async function pump() {
+  if (rendering) return;
+  rendering = true;
+  while (renderQueue.length && state.doc) {
+    const i = renderQueue.shift();
+    const el = document.querySelector(`.page[data-page="${i}"]`);
+    if (!el) continue;
+    const variant = state.variant;
+    const doc = variant === "translated" ? state.outDoc : state.srcDoc;
+    if (!doc) continue;
+    const zoom = renderZoom(state.doc.pages[i]);
+    const key = `${variant}:${variant === "translated" ? state.buildNo : 0}:${i}:${zoom}`;
+    let url = imgCache.get(key);
+    if (!url) {
+      try {
+        url = URL.createObjectURL(Engine.render(doc, i, zoom));
+        imgCache.set(key, url);
+      } catch (err) {
+        console.error(err);
+        continue;
+      }
+      await new Promise((r) => setTimeout(r, 0));
+    }
+    const img = el.querySelector("img");
+    if (img.dataset.key !== key) { img.src = url; img.dataset.key = key; }
+  }
+  rendering = false;
+}
+
+function clearImageCache() {
+  for (const url of imgCache.values()) URL.revokeObjectURL(url);
+  imgCache.clear();
+}
+
+function renderPages() {
+  const wrap = $("#pages");
+  observer.disconnect();
+  clearImageCache();
+  wrap.innerHTML = "";
+  const byPage = new Map();
+  for (const s of state.doc.segments) {
+    if (!byPage.has(s.page)) byPage.set(s.page, []);
+    byPage.get(s.page).push(s);
+  }
+  state.doc.pages.forEach((page, i) => {
+    const el = document.createElement("div");
+    el.className = "page";
+    el.dataset.page = i;
+    el.style.width = `${pageCssWidth(page)}px`;
+    el.style.aspectRatio = `${page.width} / ${page.height}`;
+    el.innerHTML = `<span class="page-label">Page ${i + 1}</span>`;
+    const img = document.createElement("img");
+    img.alt = `Page ${i + 1}`;
+    el.appendChild(img);
+    for (const s of byPage.get(i) || []) {
+      const box = document.createElement("div");
+      box.className = "box" + (hasTr(s.id) ? " done" : "");
+      box.dataset.id = s.id;
+      const [x0, y0, x1, y1] = s.bbox;
+      Object.assign(box.style, {
+        left: `${((x0 - page.x0) / page.width) * 100}%`, top: `${((y0 - page.y0) / page.height) * 100}%`,
+        width: `${((x1 - x0) / page.width) * 100}%`, height: `${((y1 - y0) / page.height) * 100}%`,
+      });
+      box.title = `#${s.id}: ${s.text.slice(0, 120)}`;
+      el.appendChild(box);
+    }
+    wrap.appendChild(el);
+    observer.observe(el);
+  });
+  $("#zoomLabel").textContent = `${Math.round(state.zoom * 100)}%`;
+}
+
+function refreshImages() {
+  renderQueue = [];
+  const view = $("#pages").getBoundingClientRect();
+  document.querySelectorAll(".page").forEach((el) => {
+    const i = Number(el.dataset.page);
+    el.style.width = `${pageCssWidth(state.doc.pages[i])}px`;
+    const r = el.getBoundingClientRect();
+    if (r.bottom > view.top - 600 && r.top < view.bottom + 600) queueRender(i);
+  });
+  $("#zoomLabel").textContent = `${Math.round(state.zoom * 100)}%`;
+}
+
+function setVariant(variant) {
+  state.variant = variant;
+  $("#viewOriginal").classList.toggle("active", variant === "original");
+  $("#viewTranslated").classList.toggle("active", variant === "translated");
+  $("#pages").classList.toggle("translated", variant === "translated");
+  refreshImages();
+}
+
+function setZoom(z) {
+  const pages = $("#pages");
+  const ratio = pages.scrollTop / Math.max(1, pages.scrollHeight);
+  state.zoom = Math.min(3, Math.max(0.4, Math.round(z * 10) / 10));
+  refreshImages();
+  pages.scrollTop = ratio * pages.scrollHeight;
+}
+
+/* -------------------------------------------------------------- editor */
+
+function segMeta(s) {
+  const style = [s.bold && "bold", s.italic && "italic"].filter(Boolean).join(" ");
+  const rot = s.rotation ? ` · rotated ${s.rotation}°` : "";
+  return `p.${s.page + 1} · ${Math.round(s.size * 10) / 10}pt${style ? " " + style : ""} · ${s.align}${rot}`;
+}
+
+function renderSegments() {
+  const list = $("#segments");
+  list.innerHTML = "";
+  const frag = document.createDocumentFragment();
+  for (const s of state.doc.segments) {
+    const card = document.createElement("div");
+    card.className = "seg" + (hasTr(s.id) ? " done" : "") + (state.shrunk.has(s.id) ? " shrunk" : "");
+    card.dataset.id = s.id;
+    card.innerHTML = `
+      <div class="seg-head">
+        <span class="seg-status"></span>
+        <span class="seg-id">#${s.id}</span>
+        <span class="seg-meta"></span>
+        <button type="button" class="mini" data-act="copy" title="Copy source text">copy</button>
+        <button type="button" class="mini" data-act="same" title="Keep the original text (use it as the translation)">keep</button>
+      </div>
+      <div class="seg-src"></div>
+      <textarea rows="1" spellcheck="true" placeholder="Translation…"></textarea>`;
+    card.querySelector(".seg-meta").textContent = segMeta(s);
+    card.querySelector(".seg-src").textContent = s.text;
+    card.querySelector("textarea").value = state.translations[s.id] || "";
+    frag.appendChild(card);
+  }
+  list.appendChild(frag);
+  if (!state.doc.segments.length) list.innerHTML = '<div class="empty">No text segments found in this PDF.</div>';
+  requestAnimationFrame(() => list.querySelectorAll("textarea").forEach(autoGrow));
+  applyFilter();
+}
+
+function autoGrow(ta) {
+  ta.style.height = "auto";
+  ta.style.height = `${Math.min(ta.scrollHeight + 2, 320)}px`;
+}
+
+function markDone(id) {
+  const done = hasTr(id);
+  document.querySelector(`.seg[data-id="${id}"]`)?.classList.toggle("done", done);
+  document.querySelector(`.box[data-id="${id}"]`)?.classList.toggle("done", done);
+}
+
+function updateProgress() {
+  const total = state.doc ? state.doc.segments.length : 0;
+  const done = state.doc ? state.doc.segments.filter((s) => hasTr(s.id)).length : 0;
+  $("#progressText").textContent = `${done} / ${total} translated`;
+  $("#progressBar").style.width = total ? `${(done / total) * 100}%` : "0";
+  updateSteps();
+}
+
+function updateSteps() {
+  const steps = [...document.querySelectorAll("#steps li")];
+  steps.forEach((li) => li.classList.remove("active", "done"));
+  if (!state.doc) { steps[0].classList.add("active"); return; }
+  const any = state.doc.segments.some((s) => hasTr(s.id));
+  steps[0].classList.add("done");
+  if (state.outBytes) {
+    steps[1].classList.add("done");
+    steps[2].classList.add("done");
+  } else {
+    steps[1].classList.add(any ? "done" : "active");
+    if (any) steps[2].classList.add("active");
+  }
+}
+
+const segIndex = new Map();
+function segById(id) {
+  if (segIndex.get("doc") !== state.doc) {
+    segIndex.clear();
+    segIndex.set("doc", state.doc);
+    for (const s of state.doc.segments) segIndex.set(s.id, s);
+  }
+  return segIndex.get(Number(id));
+}
+
+function applyFilter() {
+  const q = $("#search").value.trim().toLowerCase();
+  const status = $("#filterStatus").value;
+  const page = $("#filterPage").value;
+  let shown = 0;
+  for (const card of document.querySelectorAll(".seg")) {
+    const id = Number(card.dataset.id);
+    const s = segById(id);
+    let ok = page === "all" || String(s.page) === page;
+    if (ok && status !== "all") ok = (status === "done") === hasTr(id);
+    if (ok && q) ok = s.text.toLowerCase().includes(q) || (state.translations[id] || "").toLowerCase().includes(q);
+    card.hidden = !ok;
+    if (ok) shown++;
+  }
+  let empty = $("#segments .empty.filter");
+  if (!shown && state.doc.segments.length) {
+    if (!empty) {
+      empty = Object.assign(document.createElement("div"), { className: "empty filter", textContent: "No segments match the filter." });
+      $("#segments").appendChild(empty);
+    }
+  } else if (empty) empty.remove();
+}
+
+function setActive(id, { scrollList = false, scrollViewer = false, focus = false } = {}) {
+  document.querySelectorAll(".seg.active, .box.active").forEach((el) => el.classList.remove("active"));
+  state.activeId = id;
+  const card = document.querySelector(`.seg[data-id="${id}"]`);
+  const box = document.querySelector(`.box[data-id="${id}"]`);
+  card?.classList.add("active");
+  box?.classList.add("active");
+  if (scrollList && card) {
+    if (card.hidden) { $("#search").value = ""; $("#filterStatus").value = "all"; $("#filterPage").value = "all"; applyFilter(); }
+    card.scrollIntoView({ block: "center", behavior: "smooth" });
+  }
+  if (scrollViewer && box) box.scrollIntoView({ block: "center", inline: "center", behavior: "smooth" });
+  if (focus && card) card.querySelector("textarea").focus({ preventScroll: true });
+}
+
+function setTranslation(id, value) {
+  if (value && value.trim()) state.translations[id] = value;
+  else delete state.translations[id];
+  markDone(id);
+  persist();
+  updateProgress();
+}
+
+/* -------------------------------------------------------- export/import */
+
+async function copyAll() {
+  const text = Engine.exportTxt(state.doc.segments);
+  try {
+    await navigator.clipboard.writeText(text);
+    toast(`Copied ${state.doc.segments.length} segments. Paste them into your translator, keeping the [[n]] markers.`, "ok");
+  } catch (_) {
+    $("#pasteArea").value = text;
+    $("#importDialog").showModal();
+    $("#pasteArea").select();
+    toast("Clipboard is not available. The text is selected below, so copy it with Ctrl+C.");
+  }
+}
+
+function doExport() {
+  const format = document.querySelector('input[name="fmt"]:checked').value;
+  const tr = $("#includeTranslations").checked ? state.translations : {};
+  const segs = state.doc.segments;
+  const name = `${stem()}.segments`;
+  try {
+    if (format === "txt") saveBlob(new Blob([Engine.exportTxt(segs, tr)], { type: "text/plain;charset=utf-8" }), `${name}.txt`);
+    else if (format === "csv") saveBlob(new Blob([Engine.exportCsv(segs, tr)], { type: "text/csv;charset=utf-8" }), `${name}.csv`);
+    else if (format === "json") saveBlob(new Blob([Engine.exportJson(segs, tr, state.doc.name)], { type: "application/json" }), `${name}.json`);
+    else if (format === "xliff") saveBlob(new Blob([Engine.exportXliff(segs, tr, state.doc.name, $("#srcLang").value.trim(), $("#tgtLang").value.trim())], { type: "application/xliff+xml" }), `${name}.xlf`);
+    else if (format === "docx") saveBlob(Engine.exportDocx(segs, tr), `${name}.docx`);
+  } catch (err) {
+    toast(err.message, "error");
+  }
+}
+
+function mergeImported(parsed) {
+  const known = new Set(state.doc.segments.map((s) => s.id));
+  const ids = Object.keys(parsed).map(Number);
+  const matched = ids.filter((id) => known.has(id));
+  const unknown = ids.filter((id) => !known.has(id));
+  const overwrite = $("#importOverwrite").checked;
+  let applied = 0;
+  for (const id of matched) {
+    if (!overwrite && hasTr(id)) continue;
+    state.translations[id] = parsed[id];
+    applied++;
+  }
+  persist();
+  renderSegments();
+  document.querySelectorAll(".box").forEach((b) => b.classList.toggle("done", hasTr(b.dataset.id)));
+  updateProgress();
+  let msg = `Imported ${applied} translation${applied === 1 ? "" : "s"}.`;
+  if (unknown.length) msg += ` ${unknown.length} unknown marker(s) ignored.`;
+  const missing = known.size - matched.length;
+  if (missing && matched.length) msg += ` ${missing} segment(s) had no translation in the file.`;
+  toast(msg, applied ? "ok" : "error");
+  if (!matched.length) toast("No [[n]] markers or segment ids were recognised. Keep the markers when translating.", "error");
+}
+
+async function importFile(file) {
+  if (!file) return;
+  $("#importDialog").close();
+  try {
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    mergeImported(await Engine.parseImport(file.name, bytes));
+  } catch (err) {
+    toast(`Could not read ${file.name}: ${err.message}`, "error");
+  } finally {
+    $("#importFile").value = "";
+  }
+}
+
+function importPasted() {
+  const text = $("#pasteArea").value;
+  if (!text.trim()) { toast("Paste some translated text first.", "error"); return; }
+  mergeImported(Engine.parseMarkedText(text));
+  $("#pasteArea").value = "";
+}
+
+/* ---------------------------------------------------------------- build */
+
+function setBuilt(built) {
+  $("#viewTranslated").disabled = !built;
+  const dl = $("#btnDownload");
+  dl.hidden = !built;
+  if (built) {
+    dl.href = state.outUrl;
+    dl.download = `${stem()}.translated.pdf`;
+  }
+  updateSteps();
+}
+
+async function doBuild() {
+  const count = Object.keys(state.translations).filter(hasTr).length;
+  if (!count) {
+    toast("There are no translations yet. Type, paste or import some first.", "error");
+    return;
+  }
+  const fontMode = $("#fontMode").value;
+  if (fontMode === "custom" && !state.customFont) {
+    toast("Choose a font file first, or pick another font option.", "error");
+    return;
+  }
+  busy(`Rebuilding PDF with ${count} translated segment${count === 1 ? "" : "s"}…`);
+  await new Promise((r) => setTimeout(r, 30));
+  try {
+    const started = performance.now();
+    const { bytes, stats } = await Engine.build(state.srcBytes.slice(), state.doc.segments, state.translations, {
+      fontMode,
+      customFont: state.customFont && state.customFont.bytes,
+      expand: $("#optExpand").checked,
+      minScale: Number($("#minScale").value),
+    }, (i, n) => busy(`Rebuilding PDF… page ${i} of ${n}`));
+    disposeOutput();
+    state.outBytes = bytes;
+    state.outDoc = Engine.open(bytes.slice());
+    state.outUrl = URL.createObjectURL(new Blob([bytes], { type: "application/pdf" }));
+    state.buildNo = (state.buildNo || 0) + 1;
+    state.shrunk = new Set(stats.shrunk.map((x) => x.id));
+    document.querySelectorAll(".seg").forEach((c) => c.classList.toggle("shrunk", state.shrunk.has(Number(c.dataset.id))));
+    setBuilt(true);
+    setVariant("translated");
+    const secs = ((performance.now() - started) / 1000).toFixed(1);
+    let msg = `Done: ${stats.replaced} segments replaced in ${secs}s (${Math.round(bytes.length / 1024)} KB).`;
+    if (stats.shrunk.length) msg += ` ${stats.shrunk.length} had their text reduced to fit.`;
+    toast(msg, "ok");
+    if (stats.missing) {
+      toast(`${stats.missing} character(s) are not covered by the built-in fonts. Upload a font that supports your language in the Build dialog.`, "error");
+    }
+  } catch (err) {
+    console.error(err);
+    toast(`Build failed: ${err.message || err}`, "error");
+  } finally {
+    busy("");
+  }
+}
+
+function disposeOutput() {
+  try { state.outDoc && state.outDoc.destroy && state.outDoc.destroy(); } catch (_) { /* ignore */ }
+  if (state.outUrl) URL.revokeObjectURL(state.outUrl);
+  state.outDoc = null;
+  state.outUrl = null;
+}
+
+async function chooseFont(file) {
+  if (!file) return;
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  try {
+    await ensureEngine();
+    new M.Font("UserFont", bytes.slice()); // validate
+    state.customFont = { name: file.name, bytes };
+    $("#fontStatus").textContent = `Using ${file.name}`;
+  } catch (err) {
+    state.customFont = null;
+    $("#fontStatus").textContent = "This font file could not be read.";
+    toast("This font file could not be read.", "error");
+  }
+}
+
+/* --------------------------------------------------------------- wiring */
+
+function setupDropzone(zone, onFile) {
+  ["dragenter", "dragover"].forEach((ev) => zone.addEventListener(ev, (e) => { e.preventDefault(); zone.classList.add("over"); }));
+  ["dragleave", "drop"].forEach((ev) => zone.addEventListener(ev, (e) => { e.preventDefault(); zone.classList.remove("over"); }));
+  zone.addEventListener("drop", (e) => { e.stopPropagation(); onFile(e.dataTransfer.files[0]); });
+}
+
+function init() {
+  setupDropzone($("#dropzone"), openPdf);
+  $("#fileInput").addEventListener("change", (e) => openPdf(e.target.files[0]));
+  $("#btnNew").addEventListener("click", closeDocument);
+
+  document.addEventListener("dragover", (e) => e.preventDefault());
+  document.addEventListener("drop", (e) => {
+    e.preventDefault();
+    const file = e.dataTransfer?.files?.[0];
+    if (file && /\.pdf$/i.test(file.name) && !document.querySelector("dialog[open]")) openPdf(file);
+  });
+
+  $("#viewOriginal").addEventListener("click", () => setVariant("original"));
+  $("#viewTranslated").addEventListener("click", () => setVariant("translated"));
+  $("#zoomIn").addEventListener("click", () => setZoom(state.zoom + 0.2));
+  $("#zoomOut").addEventListener("click", () => setZoom(state.zoom - 0.2));
+  $("#showBoxes").addEventListener("change", (e) => $("#pages").classList.toggle("no-boxes", !e.target.checked));
+  $("#pages").addEventListener("click", (e) => {
+    const box = e.target.closest(".box");
+    if (box) setActive(Number(box.dataset.id), { scrollList: true, focus: true });
+  });
+
+  const list = $("#segments");
+  list.addEventListener("input", (e) => {
+    if (e.target.tagName !== "TEXTAREA") return;
+    setTranslation(Number(e.target.closest(".seg").dataset.id), e.target.value);
+    autoGrow(e.target);
+  });
+  list.addEventListener("focusin", (e) => {
+    const card = e.target.closest(".seg");
+    if (card && Number(card.dataset.id) !== state.activeId) setActive(Number(card.dataset.id), { scrollViewer: true });
+  });
+  list.addEventListener("click", (e) => {
+    const card = e.target.closest(".seg");
+    if (!card) return;
+    const id = Number(card.dataset.id);
+    const act = e.target.dataset.act;
+    if (act === "copy") {
+      navigator.clipboard?.writeText(segById(id).text).then(() => toast("Source text copied."));
+    } else if (act === "same") {
+      const ta = card.querySelector("textarea");
+      ta.value = segById(id).text;
+      setTranslation(id, ta.value);
+      autoGrow(ta);
+    } else if (e.target.classList.contains("seg-src")) {
+      setActive(id, { scrollViewer: true, focus: true });
+    }
+  });
+  list.addEventListener("keydown", (e) => {
+    if (e.target.tagName !== "TEXTAREA") return;
+    const down = (e.key === "Enter" && (e.ctrlKey || e.metaKey)) || (e.altKey && e.key === "ArrowDown");
+    const up = e.altKey && e.key === "ArrowUp";
+    if (!down && !up) return;
+    e.preventDefault();
+    const cards = [...list.querySelectorAll(".seg:not([hidden])")];
+    const next = cards[cards.indexOf(e.target.closest(".seg")) + (down ? 1 : -1)];
+    if (next) {
+      next.querySelector("textarea").focus();
+      next.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }
+  });
+  $("#search").addEventListener("input", applyFilter);
+  $("#filterStatus").addEventListener("change", applyFilter);
+  $("#filterPage").addEventListener("change", (e) => {
+    applyFilter();
+    if (e.target.value !== "all") document.querySelector(`.page[data-page="${e.target.value}"]`)?.scrollIntoView({ behavior: "smooth" });
+  });
+
+  $("#btnExport").addEventListener("click", () => $("#exportDialog").showModal());
+  $("#exportDialog").addEventListener("close", () => { if ($("#exportDialog").returnValue === "ok") doExport(); });
+  $("#btnCopy").addEventListener("click", copyAll);
+
+  $("#btnImport").addEventListener("click", () => $("#importDialog").showModal());
+  setupDropzone($("#importDrop"), importFile);
+  $("#importFile").addEventListener("change", (e) => importFile(e.target.files[0]));
+  $("#importDialog").addEventListener("close", () => { if ($("#importDialog").returnValue === "ok") importPasted(); });
+
+  $("#btnBuild").addEventListener("click", () => {
+    $("#fontUploadRow").hidden = $("#fontMode").value !== "custom";
+    $("#buildDialog").showModal();
+  });
+  $("#fontMode").addEventListener("change", (e) => { $("#fontUploadRow").hidden = e.target.value !== "custom"; });
+  $("#fontFile").addEventListener("change", (e) => chooseFont(e.target.files[0]));
+  $("#buildDialog").addEventListener("close", () => { if ($("#buildDialog").returnValue === "ok") doBuild(); });
+
+  window.addEventListener("resize", () => { if (state.doc) refreshImages(); });
+
+  // Start downloading the engine right away, and restore the last session.
+  ensureEngine().then(() => { $("#engineStatus").hidden = true; }).catch((err) => {
+    $("#engineStatus").textContent = err.message;
+    $("#engineStatus").classList.add("error");
+  });
+  let last = null;
+  try { last = localStorage.getItem(LS_LAST); } catch (_) { /* ignore */ }
+  updateSteps();
+  if (last) {
+    idbGet().then((saved) => {
+      if (saved && saved.bytes) loadBytes(saved.bytes, saved.name, false);
+    });
+  }
+}
+
+init();
+</script>
+</body>
+</html>
