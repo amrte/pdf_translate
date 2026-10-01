@@ -1,8 +1,9 @@
 <!doctype html>
-<html lang="en">
+<html lang="de">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="generator" content="PDF Translate 1.00">
   <title>PDF Translate</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%233158d4'/%3E%3Ctext x='16' y='22' font-size='15' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='bold'%3EA%E2%86%92%3C/text%3E%3C/svg%3E">
   <style>
@@ -198,7 +199,8 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); ou
   border-radius: 0 0 var(--radius) var(--radius); background: var(--surface-2); padding: 8px 10px; line-height: 1.45;
 }
 .seg textarea:focus { outline: 2px solid var(--accent); outline-offset: -2px; }
-.seg.shrunk .seg-meta::after { content: " · text reduced to fit"; color: var(--warn); }
+.seg.shrunk .seg-meta::after { content: attr(data-shrunk); color: var(--warn); }
+.steps li i { font-style: normal; }
 .empty { color: var(--muted); text-align: center; padding: 40px 10px; }
 
 /* ---------- dialogs ---------- */
@@ -250,6 +252,7 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); ou
   .steps { display: none; }
 }
 
+/* ---------- standalone additions ---------- */
 .engine-status { font-size: 12.5px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
 .engine-status.error { color: var(--danger); font-weight: 600; }
 .privacy { font-size: 12.5px; color: var(--success); font-weight: 600; }
@@ -277,23 +280,60 @@ kbd { font: 11.5px ui-monospace, monospace; border: 1px solid var(--border); bor
 .editor-pane .pane-toolbar .btn { padding: 0 10px; }
 .page .box.skip { border: 1px dotted rgba(120, 120, 120, .45); background: transparent; }
 .page .box.skip:hover { background: rgba(120, 120, 120, .08); }
-</style>
+
+/* ---------- compact chrome (v1.00) ---------- */
+.topbar { padding: 4px 12px; gap: 14px; min-height: 40px; }
+.brand { font-size: 14.5px; gap: 8px; }
+.logo { width: 24px; height: 24px; border-radius: 6px; font-size: 11px; }
+.steps li { padding: 2px 9px 2px 3px; font-size: 12.5px; gap: 6px; }
+.steps li span { width: 18px; height: 18px; font-size: 10.5px; }
+.topbar-actions { gap: 8px; }
+.btn { height: 28px; padding: 0 10px; border-radius: 7px; font-size: 13px; gap: 5px; }
+.btn svg { width: 15px; height: 15px; }
+.icon-btn { width: 26px; height: 26px; font-size: 15px; border-radius: 6px; }
+.pane-toolbar { padding: 4px 10px; gap: 6px; min-height: 37px; }
+.seg-toggle button { padding: 2px 10px; font-size: 13px; }
+.check { font-size: 13px; }
+.zoom-label { font-size: 12.5px; min-width: 40px; }
+.progress-row { padding: 6px 12px 0; font-size: 12px; }
+.filter-row { padding: 6px 12px; gap: 6px; }
+.filter-row input, .filter-row select { padding: 3px 8px; font-size: 13px; }
+.segments { padding-top: 8px; }
+.editor-pane .pane-toolbar .btn { padding: 0 8px; }
+.lang-switch { display: inline-flex; border: 1px solid var(--border); border-radius: 7px; overflow: hidden; }
+.lang-switch button { border: 0; background: transparent; color: var(--muted); font: inherit; font-size: 12px; font-weight: 600; padding: 3px 8px; cursor: pointer; }
+.lang-switch button.active { background: var(--accent-soft); color: var(--accent); }
+.version { font-size: 11px; color: var(--muted); font-weight: 500; padding: 1px 6px; border: 1px solid var(--border); border-radius: 99px; }
+.help-version { margin-top: 4px; }
+/* Narrow editor pane: icon-only secondary buttons (their titles explain them). */
+.editor-pane { container-type: inline-size; }
+@container (max-width: 640px) {
+  .pane-toolbar #btnExport span, .pane-toolbar #btnCopy span, .pane-toolbar #btnAi span, .pane-toolbar #btnImport span { display: none; }
+  .pane-toolbar #btnExport, .pane-toolbar #btnCopy, .pane-toolbar #btnAi, .pane-toolbar #btnImport { padding: 0 7px; }
+}
+
+  </style>
 </head>
 <body>
 <header class="topbar">
   <div class="brand">
     <span class="logo">A→</span>
     <span>PDF Translate</span>
+    <span class="version" id="appVersion">v1.00</span>
   </div>
   <ol class="steps" id="steps">
-    <li data-step="1"><span>1</span> Extract text</li>
-    <li data-step="2"><span>2</span> Translate</li>
-    <li data-step="3"><span>3</span> Rebuild PDF</li>
+    <li data-step="1"><span>1</span> <i data-i18n="step.extract">Extract text</i></li>
+    <li data-step="2"><span>2</span> <i data-i18n="step.translate">Translate</i></li>
+    <li data-step="3"><span>3</span> <i data-i18n="step.rebuild">Rebuild PDF</i></li>
   </ol>
   <div class="topbar-actions">
     <span class="doc-name" id="docName"></span>
-    <button class="btn ghost" id="btnHelp" title="How it works, and a prompt for translating with AI">? Help</button>
-    <button class="btn ghost" id="btnNew" hidden title="Open another PDF">Open another PDF</button>
+    <div class="lang-switch" role="group" aria-label="Language / Sprache">
+      <button type="button" data-lang="de" title="Deutsch">DE</button>
+      <button type="button" data-lang="en" title="English">EN</button>
+    </div>
+    <button class="btn ghost" id="btnHelp" data-i18n-title="help.btnTitle" data-i18n="help.btn">? Help</button>
+    <button class="btn ghost" id="btnNew" hidden data-i18n="top.new">Open another PDF</button>
   </div>
 </header>
 
@@ -304,25 +344,16 @@ kbd { font: 11.5px ui-monospace, monospace; border: 1px solid var(--border); bor
     <div class="dz-icon">
       <svg viewBox="0 0 24 24" width="44" height="44" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 17v-6"/><path d="m9 14 3-3 3 3"/></svg>
     </div>
-    <div class="dz-title">Drop a PDF here or <u>choose a file</u></div>
-    <div class="dz-sub">The text is extracted; pictures, drawings and layout stay as they are.</div>
-    <div class="dz-progress" id="uploadProgress" hidden><div class="spinner"></div> <span id="uploadProgressText">Extracting text…</span></div>
-    <div class="engine-status" id="engineStatus"><div class="spinner"></div> Loading the PDF engine (about 4 MB, the first time only)…</div>
-    <div class="privacy">Everything runs in your browser. Your PDF is never uploaded.</div>
+    <div class="dz-title" data-i18n="upload.title">Drop a PDF here or <u>choose a file</u></div>
+    <div class="dz-sub" data-i18n="upload.sub">The text is extracted; pictures, drawings and layout stay as they are.</div>
+    <div class="dz-progress" id="uploadProgress" hidden><div class="spinner"></div> <span id="uploadProgressText"></span></div>
+    <div class="engine-status" id="engineStatus"><div class="spinner"></div> <span data-i18n="upload.engine">Loading the PDF engine…</span></div>
+    <div class="privacy" data-i18n="upload.privacy">Everything runs in your browser. Your PDF is never uploaded.</div>
   </label>
   <section class="how">
-    <div class="how-item">
-      <b>1 · Extract</b>
-      <p>Each paragraph, heading, label and table cell becomes a numbered segment. Its position, font size, colour and style are saved.</p>
-    </div>
-    <div class="how-item">
-      <b>2 · Translate anywhere</b>
-      <p>Export the segments as TXT, Word, XLIFF, CSV or JSON. Translate them in DeepL, Google Translate, a chatbot, a CAT tool or with a human translator, then import the result. You can also edit translations here.</p>
-    </div>
-    <div class="how-item">
-      <b>3 · Rebuild</b>
-      <p>The original text is removed and the translation is written into the same place. Images, vector graphics and the rest of the page are not touched.</p>
-    </div>
+    <div class="how-item"><b data-i18n="how.1.title">1 · Extract</b><p data-i18n="how.1.text"></p></div>
+    <div class="how-item"><b data-i18n="how.2.title">2 · Translate anywhere</b><p data-i18n="how.2.text"></p></div>
+    <div class="how-item"><b data-i18n="how.3.title">3 · Rebuild</b><p data-i18n="how.3.text"></p></div>
   </section>
 </main>
 
@@ -331,57 +362,57 @@ kbd { font: 11.5px ui-monospace, monospace; border: 1px solid var(--border); bor
   <section class="viewer-pane">
     <div class="pane-toolbar">
       <div class="seg-toggle" role="tablist">
-        <button class="active" data-variant="original" id="viewOriginal">Original</button>
-        <button data-variant="translated" id="viewTranslated" disabled>Translated</button>
+        <button class="active" data-variant="original" id="viewOriginal" data-i18n="view.original">Original</button>
+        <button data-variant="translated" id="viewTranslated" disabled data-i18n="view.translated">Translated</button>
       </div>
-      <label class="check"><input type="checkbox" id="showBoxes" checked> Show segments</label>
+      <label class="check"><input type="checkbox" id="showBoxes" checked> <span data-i18n="view.boxes">Show segments</span></label>
       <div class="spacer"></div>
-      <button class="icon-btn" id="zoomOut" title="Zoom out">−</button>
+      <button class="icon-btn" id="zoomOut" data-i18n-title="zoom.out">−</button>
       <span class="zoom-label" id="zoomLabel">100%</span>
-      <button class="icon-btn" id="zoomIn" title="Zoom in (or Ctrl + mouse wheel)">+</button>
-      <button class="icon-btn" id="zoomFit" title="Fit page width">⤢</button>
+      <button class="icon-btn" id="zoomIn" data-i18n-title="zoom.in">+</button>
+      <button class="icon-btn" id="zoomFit" data-i18n-title="zoom.fit">⤢</button>
     </div>
     <div class="pages" id="pages"></div>
   </section>
 
   <section class="editor-pane">
     <div class="pane-toolbar wrap">
-      <button class="btn" id="btnExport" title="Download the text for an external translator">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v12m0 0-4-4m4 4 4-4M5 21h14"/></svg>
-        Export
+      <button class="btn" id="btnExport" data-i18n-title="tb.exportTitle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v12m0 0-4-4m4 4 4-4M5 21h14"/></svg>
+        <span data-i18n="tb.export">Export</span>
       </button>
-      <button class="btn" id="btnCopy" title="Copy all segments with [[n]] markers, ready to paste into a translator">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
-        Copy
+      <button class="btn" id="btnCopy" data-i18n-title="tb.copyTitle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+        <span data-i18n="tb.copy">Copy</span>
       </button>
-      <button class="btn" id="btnAi" title="A ready-made prompt for translating this document with ChatGPT, Claude or Gemini">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>
-        AI
+      <button class="btn" id="btnAi" data-i18n-title="tb.aiTitle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>
+        <span data-i18n="tb.ai">AI</span>
       </button>
-      <button class="btn" id="btnImport" title="Load the translated file or paste translated text">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 15V3m0 0L8 7m4-4 4 4M5 21h14"/></svg>
-        Import
+      <button class="btn" id="btnImport" data-i18n-title="tb.importTitle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 15V3m0 0L8 7m4-4 4 4M5 21h14"/></svg>
+        <span data-i18n="tb.import">Import</span>
       </button>
       <div class="spacer"></div>
       <button class="btn primary" id="btnBuild">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="m9 14 2 2 4-4"/></svg>
-        Build PDF
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="m9 14 2 2 4-4"/></svg>
+        <span data-i18n="tb.build">Build PDF</span>
       </button>
-      <a class="btn success" id="btnDownload" hidden title="Download the translated PDF">Download</a>
+      <a class="btn success" id="btnDownload" hidden href="#" data-i18n="tb.download" data-i18n-title="tb.downloadTitle">Download</a>
     </div>
     <div class="progress-row">
       <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
-      <span id="progressText">0 / 0 translated</span>
+      <span id="progressText"></span>
     </div>
     <div class="filter-row">
-      <input type="search" id="search" placeholder="Search source or translation…">
+      <input type="search" id="search" data-i18n-placeholder="filter.search">
       <select id="filterStatus">
-        <option value="all">All</option>
-        <option value="todo">Untranslated</option>
-        <option value="done">Translated</option>
-        <option value="numbers">Numbers only (kept)</option>
+        <option value="all" data-i18n="filter.all">All</option>
+        <option value="todo" data-i18n="filter.todo">Untranslated</option>
+        <option value="done" data-i18n="filter.done">Translated</option>
+        <option value="numbers" data-i18n="filter.numbers">Numbers only (kept)</option>
       </select>
-      <select id="filterPage"><option value="all">All pages</option></select>
+      <select id="filterPage"><option value="all" data-i18n="filter.allPages">All pages</option></select>
     </div>
     <div class="segments" id="segments"></div>
   </section>
@@ -390,28 +421,28 @@ kbd { font: 11.5px ui-monospace, monospace; border: 1px solid var(--border); bor
 <!-- Export dialog -->
 <dialog id="exportDialog" class="modal">
   <form method="dialog">
-    <h2>Export for an external translator</h2>
-    <p class="muted">Every segment has a <code>[[number]]</code> marker or an id. Keep the markers or ids when you translate so the text can be imported back.</p>
+    <h2 data-i18n="export.title">Export for an external translator</h2>
+    <p class="muted" data-i18n="export.text"></p>
     <div class="formats">
       <label class="format"><input type="radio" name="fmt" value="txt" checked>
-        <b>Plain text (.txt)</b><span>DeepL, ChatGPT/Claude, or any text translator.</span></label>
+        <b data-i18n="export.txt">Plain text (.txt)</b><span data-i18n="export.txtHint"></span></label>
       <label class="format"><input type="radio" name="fmt" value="docx">
-        <b>Word (.docx)</b><span>Google Translate and DeepL document translation.</span></label>
+        <b>Word (.docx)</b><span data-i18n="export.docxHint"></span></label>
       <label class="format"><input type="radio" name="fmt" value="xliff">
-        <b>XLIFF 1.2 (.xlf)</b><span>CAT tools: Trados, memoQ, OmegaT, Phrase, Crowdin.</span></label>
+        <b>XLIFF 1.2 (.xlf)</b><span data-i18n="export.xliffHint"></span></label>
       <label class="format"><input type="radio" name="fmt" value="csv">
-        <b>Spreadsheet (.csv)</b><span>Excel or Google Sheets. Fill in the <i>target</i> column.</span></label>
+        <b data-i18n="export.csv">Spreadsheet (.csv)</b><span data-i18n="export.csvHint"></span></label>
       <label class="format"><input type="radio" name="fmt" value="json">
-        <b>JSON (.json)</b><span>Scripts and translation APIs.</span></label>
+        <b>JSON (.json)</b><span data-i18n="export.jsonHint"></span></label>
     </div>
     <div class="lang-row" id="langRow">
-      <label>Source language <input id="srcLang" value="en" size="6"></label>
-      <label>Target language <input id="tgtLang" placeholder="e.g. de" size="6"></label>
+      <label><span data-i18n="lang.source">Source language</span> <input id="srcLang" value="de" size="6"></label>
+      <label><span data-i18n="lang.target">Target language</span> <input id="tgtLang" placeholder="en" size="6"></label>
     </div>
-    <label class="check"><input type="checkbox" id="includeTranslations"> Include translations already entered</label>
+    <label class="check"><input type="checkbox" id="includeTranslations"> <span data-i18n="export.include">Include translations already entered</span></label>
     <div class="modal-actions">
-      <button value="cancel" class="btn ghost">Cancel</button>
-      <button value="ok" class="btn primary" id="exportGo">Download</button>
+      <button value="cancel" class="btn ghost" data-i18n="common.cancel">Cancel</button>
+      <button value="ok" class="btn primary" id="exportGo" data-i18n="common.download">Download</button>
     </div>
   </form>
 </dialog>
@@ -419,18 +450,18 @@ kbd { font: 11.5px ui-monospace, monospace; border: 1px solid var(--border); bor
 <!-- Import dialog -->
 <dialog id="importDialog" class="modal wide">
   <form method="dialog">
-    <h2>Import translation</h2>
+    <h2 data-i18n="import.title">Import translation</h2>
     <label class="dropzone small" id="importDrop">
       <input type="file" id="importFile" accept=".txt,.docx,.xlf,.xliff,.csv,.tsv,.json" hidden>
-      <div class="dz-title">Drop the translated file here or <u>choose a file</u></div>
+      <div class="dz-title" data-i18n="import.drop">Drop the translated file here or <u>choose a file</u></div>
       <div class="dz-sub">.txt · .docx · .xlf / .xliff · .csv · .json</div>
     </label>
-    <div class="or">or paste the translated text, including its <code>[[n]]</code> markers</div>
-    <textarea id="pasteArea" rows="10" placeholder="[[1]]&#10;Translated text of segment 1&#10;&#10;[[2]]&#10;Translated text of segment 2"></textarea>
-    <label class="check"><input type="checkbox" id="importOverwrite" checked> Replace translations already entered</label>
+    <div class="or" data-i18n="import.or"></div>
+    <textarea id="pasteArea" rows="10" data-i18n-placeholder="import.placeholder"></textarea>
+    <label class="check"><input type="checkbox" id="importOverwrite" checked> <span data-i18n="import.overwrite">Replace translations already entered</span></label>
     <div class="modal-actions">
-      <button value="cancel" class="btn ghost">Cancel</button>
-      <button value="ok" class="btn primary" id="importGo">Import pasted text</button>
+      <button value="cancel" class="btn ghost" data-i18n="common.cancel">Cancel</button>
+      <button value="ok" class="btn primary" id="importGo" data-i18n="import.go">Import pasted text</button>
     </div>
   </form>
 </dialog>
@@ -438,33 +469,33 @@ kbd { font: 11.5px ui-monospace, monospace; border: 1px solid var(--border); bor
 <!-- Build dialog -->
 <dialog id="buildDialog" class="modal">
   <form method="dialog">
-    <h2>Rebuild the PDF</h2>
-    <p class="muted">Only segments that have a translation are replaced. All other text, images and drawings are kept.</p>
-    <label class="field">Font
+    <h2 data-i18n="build.title">Rebuild the PDF</h2>
+    <p class="muted" data-i18n="build.text"></p>
+    <label class="field"><span data-i18n="build.font">Font</span>
       <select id="fontMode">
-        <option value="auto">Match original (sans / serif / mono)</option>
-        <option value="sans-serif">Always sans-serif</option>
-        <option value="serif">Always serif</option>
-        <option value="monospace">Always monospace</option>
-        <option value="custom">My own font file…</option>
+        <option value="auto" data-i18n="build.fontAuto"></option>
+        <option value="sans-serif" data-i18n="build.fontSans"></option>
+        <option value="serif" data-i18n="build.fontSerif"></option>
+        <option value="monospace" data-i18n="build.fontMono"></option>
+        <option value="custom" data-i18n="build.fontCustom"></option>
       </select>
     </label>
     <div class="field" id="fontUploadRow" hidden>
       <input type="file" id="fontFile" accept=".ttf,.otf,.ttc">
-      <span class="muted" id="fontStatus">Choose a .ttf/.otf font that covers the target language.</span>
+      <span class="muted" id="fontStatus" data-i18n="build.fontHint"></span>
     </div>
-    <label class="check"><input type="checkbox" id="optExpand" checked> Let single-line text use free space to its side before shrinking it</label>
-    <label class="field">Smallest text size if a translation is too long
+    <label class="check"><input type="checkbox" id="optExpand" checked> <span data-i18n="build.expand"></span></label>
+    <label class="field"><span data-i18n="build.minScale"></span>
       <select id="minScale">
-        <option value="0">No limit (always fit the box)</option>
-        <option value="0.5">50% of the original</option>
-        <option value="0.7">70% of the original</option>
+        <option value="0" data-i18n="build.min0"></option>
+        <option value="0.5" data-i18n="build.min50"></option>
+        <option value="0.7" data-i18n="build.min70"></option>
       </select>
     </label>
-    <p class="muted small">Built-in fonts cover Latin, Greek, Cyrillic, Chinese, Japanese and Korean. For other alphabets, upload a font that supports them. Right-to-left and complex scripts (Arabic, Hebrew, Indic, Thai) are not shaped correctly.</p>
+    <p class="muted small" data-i18n="build.fontsNote"></p>
     <div class="modal-actions">
-      <button value="cancel" class="btn ghost">Cancel</button>
-      <button value="ok" class="btn primary" id="buildGo">Build PDF</button>
+      <button value="cancel" class="btn ghost" data-i18n="common.cancel">Cancel</button>
+      <button value="ok" class="btn primary" id="buildGo" data-i18n="tb.build">Build PDF</button>
     </div>
   </form>
 </dialog>
@@ -472,40 +503,452 @@ kbd { font: 11.5px ui-monospace, monospace; border: 1px solid var(--border); bor
 <!-- Help + AI prompt dialog -->
 <dialog id="helpDialog" class="modal wide">
   <form method="dialog">
-    <h2>Help</h2>
+    <h2 data-i18n="help.title">Help</h2>
     <ol class="help-steps">
-      <li><b>Extract:</b> open a PDF. Each paragraph, label and table cell becomes a numbered segment; click a box on the page to jump to it.</li>
-      <li><b>Translate:</b> type in the boxes, or use an AI or translation tool with the prompt below and paste its answer into <b>Import</b>.</li>
-      <li><b>Rebuild:</b> <b>Build PDF</b> writes every translation into the PDF. To fix one segment afterwards, edit it and press <b>⟳ update PDF</b> on its card (or <kbd>Ctrl</kbd>+<kbd>S</kbd>). Only that page is redone.</li>
+      <li data-i18n="help.step1"></li>
+      <li data-i18n="help.step2"></li>
+      <li data-i18n="help.step3"></li>
     </ol>
-    <p class="muted small">Shortcuts in a translation box: <kbd>Ctrl</kbd>+<kbd>Enter</kbd> next segment · <kbd>Alt</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> previous/next · <kbd>Ctrl</kbd>+<kbd>S</kbd> update this segment in the PDF.</p>
+    <p class="muted small" data-i18n="help.shortcuts"></p>
 
-    <h2 id="aiTitle">Translate with AI (ChatGPT, Claude, Gemini…)</h2>
+    <h2 id="aiTitle" data-i18n="ai.title">Translate with AI</h2>
     <div class="ai-grid">
-      <label>Target language <input id="aiTarget" placeholder="e.g. English"></label>
-      <label>Source language <input id="aiSource" placeholder="auto-detect"></label>
-      <label>Pages <span class="range"><input id="aiFrom" type="number" min="1" value="1"> – <input id="aiTo" type="number" min="1"></span></label>
-      <label class="check"><input type="checkbox" id="aiOnlyTodo"> Only segments without a translation</label>
+      <label><span data-i18n="lang.target">Target language</span> <input id="aiTarget" data-i18n-placeholder="ai.targetPh"></label>
+      <label><span data-i18n="lang.source">Source language</span> <input id="aiSource" data-i18n-placeholder="ai.sourcePh"></label>
+      <label><span data-i18n="ai.pages">Pages</span> <span class="range"><input id="aiFrom" type="number" min="1" value="1"> – <input id="aiTo" type="number" min="1"></span></label>
+      <label class="check"><input type="checkbox" id="aiOnlyTodo"> <span data-i18n="ai.onlyTodo"></span></label>
     </div>
-    <label class="field">What the document is about <span class="muted">(optional, helps with terminology)</span>
-      <input id="aiContext" placeholder="e.g. test report for a protection relay in a power substation">
+    <label class="field"><span><span data-i18n="ai.context"></span> <span class="muted" data-i18n="ai.contextHint"></span></span>
+      <input id="aiContext" data-i18n-placeholder="ai.contextPh">
     </label>
-    <label class="field">Glossary <span class="muted">(optional, one per line: source = translation)</span>
-      <textarea id="aiGlossary" rows="2" placeholder="Feld = Bay&#10;Prüfer = Tester"></textarea>
+    <label class="field"><span><span data-i18n="ai.glossary"></span> <span class="muted" data-i18n="ai.glossaryHint"></span></span>
+      <textarea id="aiGlossary" rows="2" data-i18n-placeholder="ai.glossaryPh"></textarea>
     </label>
     <textarea id="aiPrompt" rows="9" readonly></textarea>
     <p class="muted small" id="aiStats"></p>
+    <p class="muted small help-version">PDF Translate v1.00</p>
     <div class="modal-actions">
-      <button value="cancel" class="btn ghost">Close</button>
-      <button type="button" class="btn" id="aiCopyPrompt">Copy prompt only</button>
-      <button type="button" class="btn primary" id="aiCopyAll">Copy prompt + text</button>
+      <button value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
+      <button type="button" class="btn" id="aiCopyPrompt" data-i18n="ai.copyPrompt">Copy prompt only</button>
+      <button type="button" class="btn primary" id="aiCopyAll" data-i18n="ai.copyAll">Copy prompt + text</button>
     </div>
   </form>
 </dialog>
 
 <div class="toast-stack" id="toasts"></div>
-<div class="busy" id="busy" hidden><div class="busy-box"><div class="spinner"></div><span id="busyText">Working…</span></div></div>
+<div class="busy" id="busy" hidden><div class="busy-box"><div class="spinner"></div><span id="busyText"></span></div></div>
 
+<script>
+// Translations of the interface (German is the default language)
+// Interface texts. German is the default; English can be chosen in the top bar.
+// Static elements carry data-i18n (innerHTML), data-i18n-title and data-i18n-placeholder;
+// scripts call t(key, {vars}). Values may contain simple HTML.
+const I18N = {
+  de: {
+    "step.extract": "Text extrahieren",
+    "step.translate": "Übersetzen",
+    "step.rebuild": "PDF erstellen",
+    "help.btn": "? Hilfe",
+    "help.btnTitle": "So funktioniert es – und ein Prompt zum Übersetzen mit KI",
+    "top.new": "Andere PDF öffnen",
+
+    "upload.title": "PDF hier ablegen oder <u>Datei auswählen</u>",
+    "upload.sub": "Der Text wird extrahiert; Bilder, Zeichnungen und Layout bleiben unverändert.",
+    "upload.engine": "PDF-Engine wird geladen (ca. 4 MB, nur beim ersten Mal)…",
+    "upload.privacy": "Alles läuft in Ihrem Browser. Ihre PDF wird nirgendwo hochgeladen.",
+    "how.1.title": "1 · Extrahieren",
+    "how.1.text": "Jeder Absatz, jede Überschrift, Beschriftung und Tabellenzelle wird zu einem nummerierten Segment. Position, Schriftgröße, Farbe und Stil werden gespeichert.",
+    "how.2.title": "2 · Beliebig übersetzen",
+    "how.2.text": "Exportieren Sie die Segmente als TXT, Word, XLIFF, CSV oder JSON. Übersetzen Sie sie mit DeepL, Google Übersetzer, einer KI, einem CAT-Tool oder von Hand und importieren Sie das Ergebnis. Übersetzungen lassen sich auch direkt hier bearbeiten.",
+    "how.3.title": "3 · Neu erstellen",
+    "how.3.text": "Der Originaltext wird entfernt und die Übersetzung an dieselbe Stelle geschrieben. Bilder, Vektorgrafiken und der Rest der Seite bleiben unberührt.",
+
+    "view.original": "Original",
+    "view.translated": "Übersetzung",
+    "view.boxes": "Segmente anzeigen",
+    "zoom.out": "Verkleinern",
+    "zoom.in": "Vergrößern (oder Strg + Mausrad)",
+    "zoom.fit": "An Seitenbreite anpassen",
+    "page.n": "Seite {n}",
+
+    "tb.export": "Export",
+    "tb.exportTitle": "Text für einen externen Übersetzer herunterladen",
+    "tb.copy": "Kopieren",
+    "tb.copyTitle": "Alle Segmente mit [[n]]-Markierungen kopieren, bereit zum Einfügen in einen Übersetzer",
+    "tb.ai": "KI",
+    "tb.aiTitle": "Fertiger Prompt, um dieses Dokument mit ChatGPT, Claude oder Gemini zu übersetzen",
+    "tb.import": "Import",
+    "tb.importTitle": "Übersetzte Datei laden oder übersetzten Text einfügen",
+    "tb.build": "PDF erstellen",
+    "tb.download": "Download",
+    "tb.downloadTitle": "Übersetzte PDF herunterladen",
+
+    "progress": "{done} / {total} übersetzt",
+    "filter.search": "Original oder Übersetzung suchen…",
+    "filter.all": "Alle",
+    "filter.todo": "Nicht übersetzt",
+    "filter.done": "Übersetzt",
+    "filter.numbers": "Nur Zahlen (bleiben)",
+    "filter.allPages": "Alle Seiten",
+    "filter.empty": "Keine Segmente passen zum Filter.",
+    "filter.noText": "In dieser PDF wurden keine Textsegmente gefunden.",
+
+    "card.copy": "kopieren",
+    "card.copyTitle": "Originaltext kopieren",
+    "card.keep": "behalten",
+    "card.keepTitle": "Originaltext unverändert übernehmen",
+    "card.apply": "⟳ in PDF übernehmen",
+    "card.applyTitle": "Diese Übersetzung sofort in die PDF schreiben (Strg+S)",
+    "card.placeholder": "Übersetzung…",
+    "meta.page": "S. {n}",
+    "meta.bold": "fett",
+    "meta.italic": "kursiv",
+    "meta.left": "links",
+    "meta.center": "zentriert",
+    "meta.right": "rechts",
+    "meta.justify": "Blocksatz",
+    "meta.rotated": "gedreht {deg}°",
+    "meta.numbers": "nur Zahlen, bleiben unverändert",
+    "meta.shrunk": " · Text verkleinert",
+
+    "export.title": "Für einen externen Übersetzer exportieren",
+    "export.text": "Jedes Segment hat eine <code>[[Nummer]]</code>-Markierung oder eine ID. Behalten Sie diese beim Übersetzen bei, damit der Text wieder importiert werden kann.",
+    "export.txt": "Text (.txt)",
+    "export.txtHint": "DeepL, ChatGPT/Claude oder jeder Textübersetzer.",
+    "export.docxHint": "Dokumentübersetzung von Google Übersetzer und DeepL.",
+    "export.xliffHint": "CAT-Tools: Trados, memoQ, OmegaT, Phrase, Crowdin.",
+    "export.csv": "Tabelle (.csv)",
+    "export.csvHint": "Excel oder Google Tabellen. Spalte <i>target</i> ausfüllen.",
+    "export.jsonHint": "Skripte und Übersetzungs-APIs.",
+    "export.include": "Bereits eingegebene Übersetzungen einschließen",
+    "lang.source": "Ausgangssprache",
+    "lang.target": "Zielsprache",
+    "common.cancel": "Abbrechen",
+    "common.close": "Schließen",
+    "common.download": "Herunterladen",
+
+    "import.title": "Übersetzung importieren",
+    "import.drop": "Übersetzte Datei hier ablegen oder <u>Datei auswählen</u>",
+    "import.or": "oder den übersetzten Text einfügen, mit seinen <code>[[n]]</code>-Markierungen",
+    "import.placeholder": "[[1]]\nÜbersetzter Text von Segment 1\n\n[[2]]\nÜbersetzter Text von Segment 2",
+    "import.overwrite": "Bereits eingegebene Übersetzungen ersetzen",
+    "import.go": "Eingefügten Text importieren",
+
+    "build.title": "PDF neu erstellen",
+    "build.text": "Nur Segmente mit Übersetzung werden ersetzt. Aller andere Text, Bilder und Zeichnungen bleiben erhalten.",
+    "build.font": "Schrift",
+    "build.fontAuto": "Wie im Original (serifenlos / Serifen / Festbreite)",
+    "build.fontSans": "Immer serifenlos",
+    "build.fontSerif": "Immer mit Serifen",
+    "build.fontMono": "Immer Festbreite",
+    "build.fontCustom": "Eigene Schriftdatei…",
+    "build.fontHint": "Wählen Sie eine .ttf/.otf-Schrift, die die Zielsprache abdeckt.",
+    "build.expand": "Einzeiligen Text erst in freien Platz daneben laufen lassen, bevor er verkleinert wird",
+    "build.minScale": "Kleinste Textgröße, wenn eine Übersetzung zu lang ist",
+    "build.min0": "Keine Grenze (immer einpassen)",
+    "build.min50": "50 % des Originals",
+    "build.min70": "70 % des Originals",
+    "build.fontsNote": "Die eingebauten Schriften decken Lateinisch, Griechisch, Kyrillisch, Chinesisch, Japanisch und Koreanisch ab. Für andere Schriftsysteme laden Sie eine passende Schrift. Rechts-nach-links- und komplexe Schriften (Arabisch, Hebräisch, indische Schriften, Thai) werden nicht korrekt gesetzt.",
+
+    "help.title": "Hilfe",
+    "help.step1": "<b>Extrahieren:</b> PDF öffnen. Jeder Absatz, jede Beschriftung und Tabellenzelle wird zu einem nummerierten Segment; ein Klick auf einen Rahmen auf der Seite springt dorthin. Felder nur mit Zahlen oder Datum werden nicht übersetzt.",
+    "help.step2": "<b>Übersetzen:</b> in die Felder tippen, oder mit dem Prompt unten eine KI bzw. ein Übersetzungstool nutzen und die Antwort unter <b>Importieren</b> einfügen.",
+    "help.step3": "<b>Erstellen:</b> <b>PDF erstellen</b> schreibt alle Übersetzungen in die PDF. Um später ein Segment zu korrigieren, ändern Sie es und klicken auf <b>⟳ in PDF übernehmen</b> (oder <kbd>Strg</kbd>+<kbd>S</kbd>). Nur diese Seite wird neu erstellt.",
+    "help.shortcuts": "Tastenkürzel im Übersetzungsfeld: <kbd>Strg</kbd>+<kbd>Enter</kbd> nächstes Segment · <kbd>Alt</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> vorheriges/nächstes · <kbd>Strg</kbd>+<kbd>S</kbd> Segment in PDF übernehmen · <kbd>Strg</kbd> + Mausrad zoomen.",
+    "ai.title": "Mit KI übersetzen (ChatGPT, Claude, Gemini…)",
+    "ai.targetPh": "z. B. Englisch",
+    "ai.sourcePh": "automatisch erkennen",
+    "ai.pages": "Seiten",
+    "ai.onlyTodo": "Nur Segmente ohne Übersetzung",
+    "ai.context": "Worum geht es im Dokument?",
+    "ai.contextHint": "(optional, hilft bei der Fachsprache)",
+    "ai.contextPh": "z. B. Prüfbericht für ein Schutzrelais in einem Umspannwerk",
+    "ai.glossary": "Glossar",
+    "ai.glossaryHint": "(optional, eine Zeile pro Begriff: Original = Übersetzung)",
+    "ai.glossaryPh": "Feld = Bay\nPrüfer = Tester",
+    "ai.copyPrompt": "Nur Prompt kopieren",
+    "ai.copyAll": "Prompt + Text kopieren",
+    "ai.stats": "{n} Segmente, {chars} Zeichen.",
+    "ai.tooLong": " Das ist viel für eine KI-Antwort, die abgeschnitten werden könnte: übersetzen Sie wenige Seiten auf einmal (Feld „Seiten“) und importieren Sie jede Antwort; Importe werden ergänzt.",
+    "ai.pasteHere": "[Segmente hier einfügen]",
+
+    "msg.chooseFile": "Bitte wählen Sie eine PDF-Datei.",
+    "msg.loadingEngine": "PDF-Engine wird geladen…",
+    "msg.opening": "Wird geöffnet…",
+    "msg.extracting": "Text wird extrahiert… Seite {i} von {n}",
+    "msg.openFailed": "Diese PDF konnte nicht geöffnet werden: {err}",
+    "msg.password": "Passwortgeschützte PDFs werden nicht unterstützt.",
+    "msg.noText": "Es wurde kein auswählbarer Text gefunden. Gescannte PDFs brauchen vorher eine Texterkennung (OCR).",
+    "msg.engineFailed": "Die PDF-Engine konnte nicht aus dem Internet geladen werden. Prüfen Sie die Verbindung und laden Sie die Seite neu.",
+    "msg.copied": "{n} Segmente kopiert. Fügen Sie sie in Ihren Übersetzer ein und behalten Sie die [[n]]-Markierungen.",
+    "msg.noClipboard": "Die Zwischenablage ist nicht verfügbar. Der Text ist markiert – kopieren Sie ihn mit Strg+C.",
+    "msg.imported": "{n} Übersetzung(en) importiert.",
+    "msg.unknownMarkers": " {n} unbekannte Markierung(en) ignoriert.",
+    "msg.missing": " {n} Segment(e) hatten keine Übersetzung in der Datei.",
+    "msg.noMarkers": "Keine [[n]]-Markierungen oder Segment-IDs erkannt. Behalten Sie die Markierungen beim Übersetzen bei.",
+    "msg.readFailed": "{file} konnte nicht gelesen werden: {err}",
+    "msg.pasteFirst": "Fügen Sie zuerst übersetzten Text ein.",
+    "msg.saving": "PDF wird gespeichert…",
+    "msg.saveFailed": "Die PDF konnte nicht gespeichert werden: {err}",
+    "msg.fontMissing": "{n} Zeichen sind in den eingebauten Schriften nicht enthalten. Wählen Sie im Dialog „PDF erstellen“ eine passende Schrift.",
+    "msg.updateFailed": "Die PDF konnte nicht aktualisiert werden: {err}",
+    "msg.noTranslations": "Noch keine Übersetzungen. Tippen, einfügen oder importieren Sie zuerst welche.",
+    "msg.chooseFont": "Wählen Sie zuerst eine Schriftdatei oder eine andere Schriftoption.",
+    "msg.building": "PDF wird mit {n} übersetzten Segment(en) erstellt…",
+    "msg.buildingPage": "PDF wird erstellt… Seite {i} von {n}",
+    "msg.built": "Fertig: {n} Segmente in {secs} s ersetzt ({mb} MB).",
+    "msg.shrunk": " Bei {n} wurde der Text verkleinert, damit er passt.",
+    "msg.buildFailed": "Erstellen fehlgeschlagen: {err}",
+    "msg.notFont": "Das ist keine TrueType/OpenType-Schriftdatei.",
+    "msg.usingFont": "Verwendet: {name}",
+    "msg.sourceCopied": "Originaltext kopiert.",
+    "msg.openFirst": "Öffnen Sie zuerst eine PDF.",
+    "msg.noSelection": "Keine Segmente in dieser Auswahl.",
+    "msg.promptCopied": "Prompt kopiert. Fügen Sie die Segmente (Kopieren) dahinter ein, senden Sie alles an die KI und fügen Sie die Antwort unter „Importieren“ ein.",
+    "msg.promptAllCopied": "Prompt und {n} Segmente kopiert. In den KI-Chat einfügen, dann die Antwort unter „Importieren“ einfügen.",
+    "msg.working": "Bitte warten…",
+  },
+
+  en: {
+    "step.extract": "Extract text",
+    "step.translate": "Translate",
+    "step.rebuild": "Rebuild PDF",
+    "help.btn": "? Help",
+    "help.btnTitle": "How it works, and a prompt for translating with AI",
+    "top.new": "Open another PDF",
+
+    "upload.title": "Drop a PDF here or <u>choose a file</u>",
+    "upload.sub": "The text is extracted; pictures, drawings and layout stay as they are.",
+    "upload.engine": "Loading the PDF engine (about 4 MB, the first time only)…",
+    "upload.privacy": "Everything runs in your browser. Your PDF is never uploaded.",
+    "how.1.title": "1 · Extract",
+    "how.1.text": "Each paragraph, heading, label and table cell becomes a numbered segment. Its position, font size, colour and style are saved.",
+    "how.2.title": "2 · Translate anywhere",
+    "how.2.text": "Export the segments as TXT, Word, XLIFF, CSV or JSON. Translate them in DeepL, Google Translate, an AI chat, a CAT tool or by hand, then import the result. You can also edit translations here.",
+    "how.3.title": "3 · Rebuild",
+    "how.3.text": "The original text is removed and the translation is written into the same place. Images, vector graphics and the rest of the page are not touched.",
+
+    "view.original": "Original",
+    "view.translated": "Translated",
+    "view.boxes": "Show segments",
+    "zoom.out": "Zoom out",
+    "zoom.in": "Zoom in (or Ctrl + mouse wheel)",
+    "zoom.fit": "Fit page width",
+    "page.n": "Page {n}",
+
+    "tb.export": "Export",
+    "tb.exportTitle": "Download the text for an external translator",
+    "tb.copy": "Copy",
+    "tb.copyTitle": "Copy all segments with [[n]] markers, ready to paste into a translator",
+    "tb.ai": "AI",
+    "tb.aiTitle": "A ready-made prompt for translating this document with ChatGPT, Claude or Gemini",
+    "tb.import": "Import",
+    "tb.importTitle": "Load the translated file or paste translated text",
+    "tb.build": "Build PDF",
+    "tb.download": "Download",
+    "tb.downloadTitle": "Download the translated PDF",
+
+    "progress": "{done} / {total} translated",
+    "filter.search": "Search source or translation…",
+    "filter.all": "All",
+    "filter.todo": "Untranslated",
+    "filter.done": "Translated",
+    "filter.numbers": "Numbers only (kept)",
+    "filter.allPages": "All pages",
+    "filter.empty": "No segments match the filter.",
+    "filter.noText": "No text segments found in this PDF.",
+
+    "card.copy": "copy",
+    "card.copyTitle": "Copy source text",
+    "card.keep": "keep",
+    "card.keepTitle": "Keep the original text (use it as the translation)",
+    "card.apply": "⟳ update PDF",
+    "card.applyTitle": "Write this translation into the PDF now (Ctrl+S)",
+    "card.placeholder": "Translation…",
+    "meta.page": "p.{n}",
+    "meta.bold": "bold",
+    "meta.italic": "italic",
+    "meta.left": "left",
+    "meta.center": "center",
+    "meta.right": "right",
+    "meta.justify": "justify",
+    "meta.rotated": "rotated {deg}°",
+    "meta.numbers": "numbers only, kept as they are",
+    "meta.shrunk": " · text reduced to fit",
+
+    "export.title": "Export for an external translator",
+    "export.text": "Every segment has a <code>[[number]]</code> marker or an id. Keep the markers or ids when you translate so the text can be imported back.",
+    "export.txt": "Plain text (.txt)",
+    "export.txtHint": "DeepL, ChatGPT/Claude, or any text translator.",
+    "export.docxHint": "Google Translate and DeepL document translation.",
+    "export.xliffHint": "CAT tools: Trados, memoQ, OmegaT, Phrase, Crowdin.",
+    "export.csv": "Spreadsheet (.csv)",
+    "export.csvHint": "Excel or Google Sheets. Fill in the <i>target</i> column.",
+    "export.jsonHint": "Scripts and translation APIs.",
+    "export.include": "Include translations already entered",
+    "lang.source": "Source language",
+    "lang.target": "Target language",
+    "common.cancel": "Cancel",
+    "common.close": "Close",
+    "common.download": "Download",
+
+    "import.title": "Import translation",
+    "import.drop": "Drop the translated file here or <u>choose a file</u>",
+    "import.or": "or paste the translated text, including its <code>[[n]]</code> markers",
+    "import.placeholder": "[[1]]\nTranslated text of segment 1\n\n[[2]]\nTranslated text of segment 2",
+    "import.overwrite": "Replace translations already entered",
+    "import.go": "Import pasted text",
+
+    "build.title": "Rebuild the PDF",
+    "build.text": "Only segments that have a translation are replaced. All other text, images and drawings are kept.",
+    "build.font": "Font",
+    "build.fontAuto": "Match original (sans / serif / mono)",
+    "build.fontSans": "Always sans-serif",
+    "build.fontSerif": "Always serif",
+    "build.fontMono": "Always monospace",
+    "build.fontCustom": "My own font file…",
+    "build.fontHint": "Choose a .ttf/.otf font that covers the target language.",
+    "build.expand": "Let single-line text use free space to its side before shrinking it",
+    "build.minScale": "Smallest text size if a translation is too long",
+    "build.min0": "No limit (always fit the box)",
+    "build.min50": "50% of the original",
+    "build.min70": "70% of the original",
+    "build.fontsNote": "Built-in fonts cover Latin, Greek, Cyrillic, Chinese, Japanese and Korean. For other alphabets, upload a font that supports them. Right-to-left and complex scripts (Arabic, Hebrew, Indic, Thai) are not shaped correctly.",
+
+    "help.title": "Help",
+    "help.step1": "<b>Extract:</b> open a PDF. Each paragraph, label and table cell becomes a numbered segment; click a box on the page to jump to it. Fields with only numbers or dates are not translated.",
+    "help.step2": "<b>Translate:</b> type in the boxes, or use an AI or translation tool with the prompt below and paste its answer into <b>Import</b>.",
+    "help.step3": "<b>Rebuild:</b> <b>Build PDF</b> writes every translation into the PDF. To fix one segment afterwards, edit it and press <b>⟳ update PDF</b> on its card (or <kbd>Ctrl</kbd>+<kbd>S</kbd>). Only that page is redone.",
+    "help.shortcuts": "Shortcuts in a translation box: <kbd>Ctrl</kbd>+<kbd>Enter</kbd> next segment · <kbd>Alt</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> previous/next · <kbd>Ctrl</kbd>+<kbd>S</kbd> update this segment in the PDF · <kbd>Ctrl</kbd> + mouse wheel to zoom.",
+    "ai.title": "Translate with AI (ChatGPT, Claude, Gemini…)",
+    "ai.targetPh": "e.g. English",
+    "ai.sourcePh": "auto-detect",
+    "ai.pages": "Pages",
+    "ai.onlyTodo": "Only segments without a translation",
+    "ai.context": "What the document is about",
+    "ai.contextHint": "(optional, helps with terminology)",
+    "ai.contextPh": "e.g. test report for a protection relay in a power substation",
+    "ai.glossary": "Glossary",
+    "ai.glossaryHint": "(optional, one per line: source = translation)",
+    "ai.glossaryPh": "Feld = Bay\nPrüfer = Tester",
+    "ai.copyPrompt": "Copy prompt only",
+    "ai.copyAll": "Copy prompt + text",
+    "ai.stats": "{n} segments, {chars} characters.",
+    "ai.tooLong": " That is a lot for one AI answer, which may be cut off: translate a few pages at a time (Pages field) and import each answer; imports add up.",
+    "ai.pasteHere": "[paste the segments here]",
+
+    "msg.chooseFile": "Please choose a PDF file.",
+    "msg.loadingEngine": "Loading the PDF engine…",
+    "msg.opening": "Opening…",
+    "msg.extracting": "Extracting text… page {i} of {n}",
+    "msg.openFailed": "Could not open this PDF: {err}",
+    "msg.password": "Password-protected PDFs are not supported.",
+    "msg.noText": "No selectable text was found. Scanned PDFs need OCR before they can be translated.",
+    "msg.engineFailed": "Could not load the PDF engine from the internet. Check your connection and reload the page.",
+    "msg.copied": "Copied {n} segments. Paste them into your translator, keeping the [[n]] markers.",
+    "msg.noClipboard": "Clipboard is not available. The text is selected, so copy it with Ctrl+C.",
+    "msg.imported": "Imported {n} translation(s).",
+    "msg.unknownMarkers": " {n} unknown marker(s) ignored.",
+    "msg.missing": " {n} segment(s) had no translation in the file.",
+    "msg.noMarkers": "No [[n]] markers or segment ids were recognised. Keep the markers when translating.",
+    "msg.readFailed": "Could not read {file}: {err}",
+    "msg.pasteFirst": "Paste some translated text first.",
+    "msg.saving": "Saving PDF…",
+    "msg.saveFailed": "Could not save the PDF: {err}",
+    "msg.fontMissing": "{n} character(s) are not covered by the built-in fonts. Choose a font that supports your language in the Build dialog.",
+    "msg.updateFailed": "Could not update the PDF: {err}",
+    "msg.noTranslations": "There are no translations yet. Type, paste or import some first.",
+    "msg.chooseFont": "Choose a font file first, or pick another font option.",
+    "msg.building": "Rebuilding PDF with {n} translated segment(s)…",
+    "msg.buildingPage": "Rebuilding PDF… page {i} of {n}",
+    "msg.built": "Done: {n} segments replaced in {secs}s ({mb} MB).",
+    "msg.shrunk": " {n} had their text reduced to fit.",
+    "msg.buildFailed": "Build failed: {err}",
+    "msg.notFont": "This is not a TrueType/OpenType font file.",
+    "msg.usingFont": "Using {name}",
+    "msg.sourceCopied": "Source text copied.",
+    "msg.openFirst": "Open a PDF first.",
+    "msg.noSelection": "No segments in this selection.",
+    "msg.promptCopied": "Prompt copied. Add the segments (Copy) after it, send it to the AI, then paste the answer into Import.",
+    "msg.promptAllCopied": "Prompt and {n} segments copied. Paste them into the AI chat, then paste its answer into Import.",
+    "msg.working": "Working…",
+  },
+};
+
+// The prompt given to an AI, in the interface language.
+const AI_PROMPT = {
+  de: {
+    intro: (src, tgt) => `Übersetze die folgenden Textsegmente${src ? ` (Ausgangssprache: ${src})` : ""}. Zielsprache: ${tgt}.`,
+    target: "[ZIELSPRACHE]",
+    rules: [
+      "Die Segmente stammen aus einer PDF. Jede Übersetzung wird an genau dieselbe Stelle der Seite zurückgeschrieben, in ein Feld derselben Größe – das Layout muss erhalten bleiben. Halte dich strikt an diese Regeln:",
+      "",
+      "1. Jedes Segment beginnt mit einer Markierungszeile wie [[12]]. Übernimm jede Markierung exakt, in einer eigenen Zeile und in derselben Reihenfolge. Füge keine Segmente hinzu, lass keine weg, führe keine zusammen, teile keine und nummeriere nicht neu.",
+      "2. Schreibe die Übersetzung jedes Segments direkt unter seine Markierung. Gib jedes Segment zurück, auch solche, die keine Übersetzung brauchen (Namen, Codes): diese unverändert übernehmen.",
+      "3. Viele Segmente sind Tabellenzellen, Formularbeschriftungen, Werte oder Überschriften, keine Sätze. Übersetze jedes für sich, so wie eine solche Beschriftung oder ein solcher Wert in der Zielsprache üblich geschrieben wird. Ein Satz kann im nächsten Segment weitergehen – behalte trotzdem jeden Teil in seinem eigenen Segment.",
+      "4. Der Platz ist begrenzt: Jede Übersetzung soll etwa so lang sein wie das Original, nie deutlich länger. Bevorzuge den kurzen, üblichen Fachbegriff und verwende Standardabkürzungen, wo das Original abkürzt.",
+      "5. Behalte die Form jedes Segments: Eine Beschriftung mit \":\" am Ende bleibt eine Beschriftung mit \":\"; behalte Aufzählungszeichen, Nummerierung, Klammern und Satzzeichen am Ende; behalte GROSSBUCHSTABEN und die Schreibweise des Originals.",
+      "6. Nicht übersetzen oder ändern: Modell-, Teile- und Seriennummern, Codes und Kennungen (z. B. 7SJ6212-5BA00), Dateinamen und Pfade, URLs, E-Mail-Adressen, Einheiten, Symbole und Formeln (z. B. I>>, p>, 10/0,4kV) sowie Namen von Personen und Firmen. Zahlen, Datumsangaben und Dezimaltrennzeichen genau so lassen, wie sie geschrieben sind.",
+      "7. Zeilenumbrüche innerhalb eines Segments nur dort, wo auch das Original welche hat.",
+      "8. Antworte nur mit den übersetzten Segmenten im exakt gleichen [[n]]-Format, als reiner Text: keine Einleitung, keine Kommentare, kein Markdown, kein Codeblock.",
+    ],
+    context: (c) => `Kontext: Das Dokument ist ${c}. Verwende die Fachsprache dieses Gebiets.`,
+    glossary: "Verwende für die folgenden Begriffe diese Übersetzungen:",
+    segments: "Segmente:",
+  },
+  en: {
+    intro: (src, tgt) => `Translate the text segments below${src ? ` from ${src}` : ""} into ${tgt}.`,
+    target: "[TARGET LANGUAGE]",
+    rules: [
+      "The segments were extracted from a PDF. Each translation will be put back into exactly the same place on the page, in a box of the same size, so the original layout must survive. Follow these rules strictly:",
+      "",
+      "1. Every segment starts with a marker line like [[12]]. Copy every marker exactly, on its own line, in the same order. Do not add, remove, merge, split or renumber segments.",
+      "2. Put the translation of each segment directly under its marker. Return every segment, also those that need no translation (names, codes): copy them unchanged.",
+      "3. Many segments are table cells, form labels, values or headings, not sentences. Translate each one on its own, the way such a label or value is normally written in the target language. A sentence may continue in the next segment: keep each part in its own segment anyway.",
+      "4. The space is limited: keep each translation about as long as the original, never much longer. Prefer the short, common technical term and use standard abbreviations where the original uses abbreviations.",
+      "5. Keep the form of each segment: a label ending with \":\" stays a label ending with \":\"; keep leading bullets, numbering, brackets and trailing punctuation; keep ALL CAPS, Title Case and lower case as in the original.",
+      "6. Do not translate or change: model, part and serial numbers, codes and identifiers (e.g. 7SJ6212-5BA00), file names and paths, URLs, e-mail addresses, units, symbols and formulas (e.g. I>>, p>, 10/0,4kV), and names of people and companies. Keep numbers, dates and decimal separators exactly as written.",
+      "7. Keep line breaks inside a segment only where the original has them.",
+      "8. Reply with the translated segments only, in exactly the same [[n]] format, as plain text: no introduction, no comments, no Markdown, no code block.",
+    ],
+    context: (c) => `Context: the document is ${c}. Use the terminology of that field.`,
+    glossary: "Use these translations for the following terms:",
+    segments: "Segments:",
+  },
+};
+
+const LANG_KEY = "pdftr:lang";
+let LANG = "de";
+try { LANG = localStorage.getItem(LANG_KEY) || "de"; } catch (_) { /* storage blocked */ }
+if (!I18N[LANG]) LANG = "de";
+
+/** Translate a key, filling {placeholders} from vars. */
+function t(key, vars) {
+  let s = (I18N[LANG] && I18N[LANG][key]) ?? I18N.en[key] ?? key;
+  if (vars) s = s.replace(/\{(\w+)\}/g, (m, k) => (vars[k] !== undefined ? vars[k] : m));
+  return s;
+}
+
+/** Apply the current language to all static elements under root. */
+function applyI18n(root = document) {
+  document.documentElement.lang = LANG;
+  root.querySelectorAll("[data-i18n]").forEach((el) => { el.innerHTML = t(el.dataset.i18n); });
+  root.querySelectorAll("[data-i18n-title]").forEach((el) => { el.title = t(el.dataset.i18nTitle); });
+  root.querySelectorAll("[data-i18n-placeholder]").forEach((el) => { el.placeholder = t(el.dataset.i18nPlaceholder); });
+  document.querySelectorAll(".lang-switch button").forEach((b) => b.classList.toggle("active", b.dataset.lang === LANG));
+}
+
+function setLanguage(lang) {
+  if (!I18N[lang]) return;
+  LANG = lang;
+  try { localStorage.setItem(LANG_KEY, lang); } catch (_) { /* storage blocked */ }
+  applyI18n();
+  document.dispatchEvent(new CustomEvent("languagechange"));
+}
+
+applyI18n();
+
+</script>
 <script type="text/plain" id="engine-src">
 // ======================================================================
 // PDF engine: extraction, exchange formats and rebuild (runs on MuPDF WASM)
@@ -1846,7 +2289,7 @@ const pool = {
         await w.ready;
       }).catch((err) => {
         this.ready = null;
-        throw new Error("Could not load the PDF engine from the internet. Check your connection and reload the page. " + (err.message || ""));
+        throw new Error(t("msg.engineFailed") + " " + (err.message || ""));
       });
     }
     return this.ready;
@@ -1945,7 +2388,7 @@ async function idbGet() {
 async function openPdf(file) {
   if (!file) return;
   if (!/\.pdf$/i.test(file.name) && file.type !== "application/pdf") {
-    toast("Please choose a PDF file.", "error");
+    toast(t("msg.chooseFile"), "error");
     return;
   }
   const bytes = new Uint8Array(await file.arrayBuffer());
@@ -1980,24 +2423,24 @@ async function extractAll(pageCount, onProgress) {
 }
 
 async function loadBytes(bytes, name, remember) {
-  setLoading("Loading the PDF engine…");
+  setLoading(t("msg.loadingEngine"));
   try {
     await pool.start();
     const id = await sha256(bytes);
     // More workers for bigger documents, fewer for huge files (each worker holds a copy).
     const mb = bytes.length / 1048576;
     await pool.ensure(mb > 150 ? 1 : mb > 60 ? 2 : pool.maxSize);
-    setLoading("Opening…");
+    setLoading(t("msg.opening"));
     const counts = await pool.all("open", () => ({ bytes }));
     const pageCount = counts[0];
     const started = performance.now();
-    const { pages, segments } = await extractAll(pageCount, (i, n) => setLoading(`Extracting text… page ${i} of ${n}`));
+    const { pages, segments } = await extractAll(pageCount, (i, n) => setLoading(t("msg.extracting", { i, n })));
     console.info(`Extracted ${segments.length} segments from ${pageCount} pages in ${Math.round(performance.now() - started)} ms using ${pool.workers.length} worker(s)`);
     if (remember) idbPut({ name, bytes });
     openDocument({ id, name, pages, segments }, bytes);
   } catch (err) {
     console.error(err);
-    toast(/password/i.test(err.message) ? err.message : `Could not open this PDF: ${err.message || err}`, "error");
+    toast(/password/i.test(err.message) ? t("msg.password") : t("msg.openFailed", { err: err.message || err }), "error");
   } finally {
     setLoading("");
   }
@@ -2033,8 +2476,7 @@ function openDocument(doc, bytes) {
   $("#docName").title = doc.name;
   document.title = `${doc.name} · PDF Translate`;
 
-  $("#filterPage").innerHTML = '<option value="all">All pages</option>' +
-    doc.pages.map((_, i) => `<option value="${i}">Page ${i + 1}</option>`).join("");
+  fillPageFilter();
   $("#search").value = "";
   $("#filterStatus").value = "all";
 
@@ -2046,8 +2488,27 @@ function openDocument(doc, bytes) {
   setVariant("original");
   updateProgress();
   if (!doc.segments.length) {
-    toast("No selectable text was found. Scanned PDFs need OCR before they can be translated.", "error");
+    toast(t("msg.noText"), "error");
   }
+}
+
+function fillPageFilter() {
+  const sel = $("#filterPage"), cur = sel.value;
+  sel.innerHTML = `<option value="all">${t("filter.allPages")}</option>` +
+    state.doc.pages.map((_, i) => `<option value="${i}">${t("page.n", { n: i + 1 })}</option>`).join("");
+  sel.value = [...sel.options].some((o) => o.value === cur) ? cur : "all";
+}
+
+/** Re-render everything that was built from translated strings. */
+function onLanguageChange() {
+  updateProgress();
+  if (!state.doc) return;
+  fillPageFilter();
+  document.querySelectorAll(".page").forEach((el) => { el.querySelector(".page-label").textContent = t("page.n", { n: Number(el.dataset.page) + 1 }); });
+  for (const [, el] of vl.rendered) { el.remove(); ro.unobserve(el); }
+  vl.rendered.clear();
+  applyFilter();
+  if ($("#helpDialog").open) refreshAiPrompt();
 }
 
 function closeDocument() {
@@ -2168,7 +2629,7 @@ function renderPages() {
   visiblePages.clear();
   const html = state.doc.pages.map((page, i) =>
     `<div class="page" data-page="${i}" style="width:${pageCssWidth(page)}px;aspect-ratio:${page.width} / ${page.height}">` +
-    `<span class="page-label">Page ${i + 1}</span><img alt="Page ${i + 1}"></div>`).join("");
+    `<span class="page-label">${t("page.n", { n: i + 1 })}</span><img alt=""></div>`).join("");
   wrap.innerHTML = html;
   segsByPage = new Map();
   for (const s of state.doc.segments) {
@@ -2253,10 +2714,11 @@ const segById = (id) => segIndex.get(Number(id));
 const translatable = () => state.doc.segments.filter((s) => !s.skip);
 
 function segMeta(s) {
-  if (s.skip) return `p.${s.page + 1} · numbers only, kept as they are`;
-  const style = [s.bold && "bold", s.italic && "italic"].filter(Boolean).join(" ");
-  const rot = s.rotation ? ` · rotated ${s.rotation}°` : "";
-  return `p.${s.page + 1} · ${Math.round(s.size * 10) / 10}pt${style ? " " + style : ""} · ${s.align}${rot}`;
+  const page = t("meta.page", { n: s.page + 1 });
+  if (s.skip) return `${page} · ${t("meta.numbers")}`;
+  const style = [s.bold && t("meta.bold"), s.italic && t("meta.italic")].filter(Boolean).join(" ");
+  const rot = s.rotation ? ` · ${t("meta.rotated", { deg: s.rotation })}` : "";
+  return `${page} · ${Math.round(s.size * 10) / 10}pt${style ? " " + style : ""} · ${t("meta." + s.align)}${rot}`;
 }
 
 /**
@@ -2397,13 +2859,13 @@ function makeCard(id) {
     <div class="seg-head">
       <span class="seg-status"></span>
       <span class="seg-id">#${id}</span>
-      <span class="seg-meta">${escapeHtml(segMeta(s))}</span>
-      <button type="button" class="mini" data-act="copy" title="Copy source text">copy</button>
-      <button type="button" class="mini" data-act="same" title="Keep the original text (use it as the translation)">keep</button>
-      <button type="button" class="mini apply" data-act="apply" title="Write this translation into the PDF now (Ctrl+S)">⟳ update PDF</button>
+      <span class="seg-meta" data-shrunk="${escapeHtml(t("meta.shrunk"))}">${escapeHtml(segMeta(s))}</span>
+      <button type="button" class="mini" data-act="copy" title="${escapeHtml(t("card.copyTitle"))}">${t("card.copy")}</button>
+      <button type="button" class="mini" data-act="same" title="${escapeHtml(t("card.keepTitle"))}">${t("card.keep")}</button>
+      <button type="button" class="mini apply" data-act="apply" title="${escapeHtml(t("card.applyTitle"))}">${t("card.apply")}</button>
     </div>
     <div class="seg-src">${escapeHtml(s.text)}</div>
-    <textarea rows="1" spellcheck="true" placeholder="Translation…"></textarea>`;
+    <textarea rows="1" spellcheck="true" placeholder="${escapeHtml(t("card.placeholder"))}"></textarea>`;
   el.querySelector("textarea").value = state.translations[id] || "";
   return el;
 }
@@ -2423,7 +2885,7 @@ function markDone(id) {
 function updateProgress() {
   let total = 0, done = 0;
   if (state.doc) for (const s of state.doc.segments) if (!s.skip) { total++; if (hasTr(s.id)) done++; }
-  $("#progressText").textContent = `${done} / ${total} translated`;
+  $("#progressText").textContent = t("progress", { done, total });
   $("#progressBar").style.width = total ? `${(done / total) * 100}%` : "0";
   updateSteps(done > 0);
 }
@@ -2456,7 +2918,7 @@ function applyFilter() {
     ids.push(s.id);
   }
   $("#segments").classList.toggle("is-empty", !ids.length);
-  $("#segments").dataset.empty = state.doc.segments.length ? "No segments match the filter." : "No text segments found in this PDF.";
+  $("#segments").dataset.empty = state.doc.segments.length ? t("filter.empty") : t("filter.noText");
   vl.setIds(ids);
 }
 
@@ -2499,12 +2961,12 @@ async function copyAll() {
   const text = Engine.exportTxt(segs);
   try {
     await navigator.clipboard.writeText(text);
-    toast(`Copied ${segs.length} segments. Paste them into your translator, keeping the [[n]] markers.`, "ok");
+    toast(t("msg.copied", { n: segs.length }), "ok");
   } catch (_) {
     $("#pasteArea").value = text;
     $("#importDialog").showModal();
     $("#pasteArea").select();
-    toast("Clipboard is not available. The text is selected below, so copy it with Ctrl+C.");
+    toast(t("msg.noClipboard"));
   }
 }
 
@@ -2548,13 +3010,13 @@ function mergeImported(parsed) {
   vl.dirty = true;
   applyFilter();
   updateProgress();
-  let msg = `Imported ${applied} translation${applied === 1 ? "" : "s"}.`;
-  if (unknown) msg += ` ${unknown} unknown marker(s) ignored.`;
+  let msg = t("msg.imported", { n: applied });
+  if (unknown) msg += t("msg.unknownMarkers", { n: unknown });
   const got = new Set(matched);
   const missing = translatable().filter((s) => !got.has(s.id)).length;
-  if (missing && matched.length) msg += ` ${missing} segment(s) had no translation in the file.`;
+  if (missing && matched.length) msg += t("msg.missing", { n: missing });
   toast(msg, applied ? "ok" : "error");
-  if (!matched.length) toast("No [[n]] markers or segment ids were recognised. Keep the markers when translating.", "error");
+  if (!matched.length) toast(t("msg.noMarkers"), "error");
 }
 
 async function importFile(file) {
@@ -2564,7 +3026,7 @@ async function importFile(file) {
     const bytes = new Uint8Array(await file.arrayBuffer());
     mergeImported(await Engine.parseImport(file.name, bytes));
   } catch (err) {
-    toast(`Could not read ${file.name}: ${err.message}`, "error");
+    toast(t("msg.readFailed", { file: file.name, err: err.message }), "error");
   } finally {
     $("#importFile").value = "";
   }
@@ -2572,7 +3034,7 @@ async function importFile(file) {
 
 function importPasted() {
   const text = $("#pasteArea").value;
-  if (!text.trim()) { toast("Paste some translated text first.", "error"); return; }
+  if (!text.trim()) { toast(t("msg.pasteFirst"), "error"); return; }
   mergeImported(Engine.parseMarkedText(text));
   $("#pasteArea").value = "";
 }
@@ -2588,13 +3050,13 @@ function setBuilt(built) {
 async function downloadOutput() {
   try {
     if (!state.outBytes || state.outDirty) {
-      busy("Saving PDF…");
+      busy(t("msg.saving"));
       state.outBytes = await pool.workers[0].call("save");
       state.outDirty = false;
     }
     saveBlob(new Blob([state.outBytes], { type: "application/pdf" }), `${stem()}.translated.pdf`);
   } catch (err) {
-    toast(`Could not save the PDF: ${err.message || err}`, "error");
+    toast(t("msg.saveFailed", { err: err.message || err }), "error");
   } finally {
     busy("");
   }
@@ -2640,9 +3102,9 @@ function applyField(id) {
       if (state.variant !== "translated") setVariant("translated"); else queueRender(s.page);
       ensureBoxes(s.page);
       document.querySelector(`.box[data-id="${id}"]`)?.scrollIntoView({ block: "nearest", behavior: "smooth" });
-      if (stats.missing) toast(`${stats.missing} character(s) are not covered by the built-in fonts. Choose a font in the Build dialog.`, "error");
+      if (stats.missing) toast(t("msg.fontMissing", { n: stats.missing }), "error");
     } catch (err) {
-      toast(`Could not update the PDF: ${err.message || err}`, "error");
+      toast(t("msg.updateFailed", { err: err.message || err }), "error");
     }
   });
   return applyChain;
@@ -2652,15 +3114,15 @@ let building = false;
 async function doBuild() {
   const count = Object.keys(state.translations).filter((id) => segIndex.has(Number(id)) && hasTr(id)).length;
   if (!count) {
-    toast("There are no translations yet. Type, paste or import some first.", "error");
+    toast(t("msg.noTranslations"), "error");
     return;
   }
   const fontMode = $("#fontMode").value;
   if (fontMode === "custom" && !state.customFont) {
-    toast("Choose a font file first, or pick another font option.", "error");
+    toast(t("msg.chooseFont"), "error");
     return;
   }
-  busy(`Rebuilding PDF with ${count} translated segment${count === 1 ? "" : "s"}…`);
+  busy(t("msg.building", { n: count }));
   building = true;
   try {
     const started = performance.now();
@@ -2671,7 +3133,7 @@ async function doBuild() {
       translations,
       pages: state.doc.pages,
       opts: buildOptions(),
-    }, [], (i, n) => busy(`Rebuilding PDF… page ${i} of ${n}`));
+    }, [], (i, n) => busy(t("msg.buildingPage", { i, n })));
     disposeOutput();
     state.outBytes = bytes;
     state.hasOutput = true;
@@ -2685,15 +3147,15 @@ async function doBuild() {
     setBuilt(true);
     setVariant("translated");
     const secs = ((performance.now() - started) / 1000).toFixed(1);
-    let msg = `Done: ${stats.replaced} segments replaced in ${secs}s (${(bytes.length / 1048576).toFixed(1)} MB).`;
-    if (stats.shrunk.length) msg += ` ${stats.shrunk.length} had their text reduced to fit.`;
+    let msg = t("msg.built", { n: stats.replaced, secs, mb: (bytes.length / 1048576).toFixed(1) });
+    if (stats.shrunk.length) msg += t("msg.shrunk", { n: stats.shrunk.length });
     toast(msg, "ok");
     if (stats.missing) {
-      toast(`${stats.missing} character(s) are not covered by the built-in fonts. Upload a font that supports your language in the Build dialog.`, "error");
+      toast(t("msg.fontMissing", { n: stats.missing }), "error");
     }
   } catch (err) {
     console.error(err);
-    toast(`Build failed: ${err.message || err}`, "error");
+    toast(t("msg.buildFailed", { err: err.message || err }), "error");
   } finally {
     building = false;
     busy("");
@@ -2707,12 +3169,12 @@ async function chooseFont(file) {
   const sig = String.fromCharCode(...bytes.slice(0, 4));
   if (!(sig === "OTTO" || sig === "true" || sig === "ttcf" || (bytes[0] === 0 && bytes[1] === 1 && bytes[2] === 0 && bytes[3] === 0))) {
     state.customFont = null;
-    $("#fontStatus").textContent = "This is not a TrueType/OpenType font file.";
-    toast("This is not a TrueType/OpenType font file.", "error");
+    $("#fontStatus").textContent = t("msg.notFont");
+    toast(t("msg.notFont"), "error");
     return;
   }
   state.customFont = { name: file.name, bytes };
-  $("#fontStatus").textContent = `Using ${file.name}`;
+  $("#fontStatus").textContent = t("msg.usingFont", { name: file.name });
 }
 
 /* --------------------------------------------------------------- wiring */
@@ -2773,7 +3235,7 @@ function init() {
     const id = Number(card.dataset.id);
     const act = e.target.dataset.act;
     if (act === "copy") {
-      navigator.clipboard?.writeText(segById(id).text).then(() => toast("Source text copied."));
+      navigator.clipboard?.writeText(segById(id).text).then(() => toast(t("msg.sourceCopied")));
     } else if (act === "same") {
       const ta = card.querySelector("textarea");
       ta.value = segById(id).text;
@@ -2852,6 +3314,8 @@ function init() {
   }
 }
 
+document.querySelectorAll(".lang-switch button").forEach((b) => b.addEventListener("click", () => setLanguage(b.dataset.lang)));
+document.addEventListener("languagechange", onLanguageChange);
 init();
 
 /* ------------------------------------------------------------ AI prompt */
@@ -2864,27 +3328,15 @@ function aiSegments() {
 }
 
 function aiPromptText() {
-  const target = $("#aiTarget").value.trim() || "[TARGET LANGUAGE]";
+  const P = AI_PROMPT[LANG] || AI_PROMPT.en;
+  const target = $("#aiTarget").value.trim() || P.target;
   const source = $("#aiSource").value.trim();
   const context = $("#aiContext").value.trim();
   const glossary = $("#aiGlossary").value.trim();
-  const lines = [
-    `Translate the text segments below${source ? ` from ${source}` : ""} into ${target}.`,
-    "",
-    "The segments were extracted from a PDF. Each translation will be put back into exactly the same place on the page, in a box of the same size, so the original layout must survive. Follow these rules strictly:",
-    "",
-    "1. Every segment starts with a marker line like [[12]]. Copy every marker exactly, on its own line, in the same order. Do not add, remove, merge, split or renumber segments.",
-    "2. Put the translation of each segment directly under its marker. Return every segment, also those that need no translation (names, numbers, codes): copy them unchanged.",
-    "3. Many segments are table cells, form labels, values or headings, not sentences. Translate each one on its own, the way such a label or value is normally written in the target language. A sentence may continue in the next segment: keep each part in its own segment anyway.",
-    "4. The space is limited: keep each translation about as long as the original, never much longer. Prefer the short, common technical term and use standard abbreviations where the original uses abbreviations.",
-    "5. Keep the form of each segment: a label ending with \":\" stays a label ending with \":\"; keep leading bullets, numbering, brackets and trailing punctuation; keep ALL CAPS, Title Case and lower case as in the original.",
-    "6. Do not translate or change: model, part and serial numbers, codes and identifiers (e.g. 7SJ6212-5BA00), file names and paths, URLs, e-mail addresses, units, symbols and formulas (e.g. I>>, p>, 10/0,4kV), and names of people and companies. Keep numbers, dates and decimal separators exactly as written.",
-    "7. Keep line breaks inside a segment only where the original has them.",
-    "8. Reply with the translated segments only, in exactly the same [[n]] format, as plain text: no introduction, no comments, no Markdown, no code block.",
-  ];
-  if (context) lines.push("", `Context: the document is ${context.replace(/\.$/, "")}. Use the terminology of that field.`);
-  if (glossary) lines.push("", "Use these translations for the following terms:", ...glossary.split(/\n/).map((l) => l.trim()).filter(Boolean).map((l) => `- ${l}`));
-  lines.push("", "Segments:");
+  const lines = [P.intro(source, target), "", ...P.rules];
+  if (context) lines.push("", P.context(context.replace(/\.$/, "")));
+  if (glossary) lines.push("", P.glossary, ...glossary.split(/\n/).map((l) => l.trim()).filter(Boolean).map((l) => `- ${l}`));
+  lines.push("", P.segments);
   return lines.join("\n");
 }
 
@@ -2893,8 +3345,8 @@ function refreshAiPrompt() {
   const segs = aiSegments();
   const chars = segs.reduce((n, s) => n + s.text.length, 0);
   $("#aiPrompt").value = aiPromptText();
-  let msg = `${segs.length} segment${segs.length === 1 ? "" : "s"}, ${chars.toLocaleString()} characters.`;
-  if (chars > 20000) msg += " That is a lot for one AI answer, which may be cut off: translate a few pages at a time (Pages field) and import each answer; imports add up.";
+  let msg = t("ai.stats", { n: segs.length, chars: chars.toLocaleString(LANG) });
+  if (chars > 20000) msg += t("ai.tooLong");
   $("#aiStats").textContent = msg;
 }
 
@@ -2905,7 +3357,7 @@ async function copyText(text, okMessage) {
   } catch (_) {
     $("#aiPrompt").value = text;
     $("#aiPrompt").select();
-    toast("Clipboard is not available. The text is selected in the box, so copy it with Ctrl+C.");
+    toast(t("msg.noClipboard"));
   }
 }
 
@@ -2927,18 +3379,17 @@ function initHelp() {
   for (const id of ["#aiTarget", "#aiSource", "#aiFrom", "#aiTo", "#aiOnlyTodo", "#aiContext", "#aiGlossary"]) {
     $(id).addEventListener("input", refreshAiPrompt);
   }
-  $("#aiCopyPrompt").addEventListener("click", () => copyText(aiPromptText() + "\n\n[paste the segments here]",
-    "Prompt copied. Add the segments (Copy all) after it, send it to the AI, then paste the answer into Import."));
+  $("#aiCopyPrompt").addEventListener("click", () => copyText(`${aiPromptText()}\n\n${t("ai.pasteHere")}`, t("msg.promptCopied")));
   $("#aiCopyAll").addEventListener("click", () => {
-    if (!state.doc) { toast("Open a PDF first.", "error"); return; }
+    if (!state.doc) { toast(t("msg.openFirst"), "error"); return; }
     const segs = aiSegments();
-    if (!segs.length) { toast("No segments in this selection.", "error"); return; }
-    copyText(`${aiPromptText()}\n\n${Engine.exportTxt(segs)}`,
-      `Prompt and ${segs.length} segments copied. Paste them into the AI chat, then paste its answer into Import.`);
+    if (!segs.length) { toast(t("msg.noSelection"), "error"); return; }
+    copyText(`${aiPromptText()}\n\n${Engine.exportTxt(segs)}`, t("msg.promptAllCopied", { n: segs.length }));
   });
 }
 
 initHelp();
+
 </script>
 </body>
 </html>

@@ -12,7 +12,12 @@ A small web app for translating PDF documents **without losing their layout**:
 
 ![workflow](https://img.shields.io/badge/PDF-extract%20%E2%86%92%20translate%20%E2%86%92%20rebuild-3158d4)
 
-## Standalone version (one HTML file, no server)
+## Standalone version (one HTML file, no server) – v1.00
+
+Current version: see [`VERSION`](VERSION) and [`CHANGELOG.md`](CHANGELOG.md). Each update adds 0.01.
+The interface is in German by default; switch to English with DE / EN in the top bar.
+
+The file is generated from `standalone/src/` with `python standalone/build.py`.
 
 [`standalone/pdf-translate.html`](standalone/pdf-translate.html) is the whole app in a single
 file. Download it and open it in a modern browser (Chrome, Edge, Firefox or Safari). Everything

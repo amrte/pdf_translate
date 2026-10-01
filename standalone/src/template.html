@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="generator" content="PDF Translate {{VERSION}}">
+  <title>PDF Translate</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%233158d4'/%3E%3Ctext x='16' y='22' font-size='15' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='bold'%3EA%E2%86%92%3C/text%3E%3C/svg%3E">
+  <style>
+{{STYLE}}
+  </style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="logo">A→</span>
+    <span>PDF Translate</span>
+    <span class="version" id="appVersion">v{{VERSION}}</span>
+  </div>
+  <ol class="steps" id="steps">
+    <li data-step="1"><span>1</span> <i data-i18n="step.extract">Extract text</i></li>
+    <li data-step="2"><span>2</span> <i data-i18n="step.translate">Translate</i></li>
+    <li data-step="3"><span>3</span> <i data-i18n="step.rebuild">Rebuild PDF</i></li>
+  </ol>
+  <div class="topbar-actions">
+    <span class="doc-name" id="docName"></span>
+    <div class="lang-switch" role="group" aria-label="Language / Sprache">
+      <button type="button" data-lang="de" title="Deutsch">DE</button>
+      <button type="button" data-lang="en" title="English">EN</button>
+    </div>
+    <button class="btn ghost" id="btnHelp" data-i18n-title="help.btnTitle" data-i18n="help.btn">? Help</button>
+    <button class="btn ghost" id="btnNew" hidden data-i18n="top.new">Open another PDF</button>
+  </div>
+</header>
+
+<!-- Upload screen -->
+<main id="uploadView" class="upload-view">
+  <label class="dropzone" id="dropzone">
+    <input type="file" id="fileInput" accept="application/pdf,.pdf" hidden>
+    <div class="dz-icon">
+      <svg viewBox="0 0 24 24" width="44" height="44" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 17v-6"/><path d="m9 14 3-3 3 3"/></svg>
+    </div>
+    <div class="dz-title" data-i18n="upload.title">Drop a PDF here or <u>choose a file</u></div>
+    <div class="dz-sub" data-i18n="upload.sub">The text is extracted; pictures, drawings and layout stay as they are.</div>
+    <div class="dz-progress" id="uploadProgress" hidden><div class="spinner"></div> <span id="uploadProgressText"></span></div>
+    <div class="engine-status" id="engineStatus"><div class="spinner"></div> <span data-i18n="upload.engine">Loading the PDF engine…</span></div>
+    <div class="privacy" data-i18n="upload.privacy">Everything runs in your browser. Your PDF is never uploaded.</div>
+  </label>
+  <section class="how">
+    <div class="how-item"><b data-i18n="how.1.title">1 · Extract</b><p data-i18n="how.1.text"></p></div>
+    <div class="how-item"><b data-i18n="how.2.title">2 · Translate anywhere</b><p data-i18n="how.2.text"></p></div>
+    <div class="how-item"><b data-i18n="how.3.title">3 · Rebuild</b><p data-i18n="how.3.text"></p></div>
+  </section>
+</main>
+
+<!-- Workspace -->
+<main id="workView" class="work-view" hidden>
+  <section class="viewer-pane">
+    <div class="pane-toolbar">
+      <div class="seg-toggle" role="tablist">
+        <button class="active" data-variant="original" id="viewOriginal" data-i18n="view.original">Original</button>
+        <button data-variant="translated" id="viewTranslated" disabled data-i18n="view.translated">Translated</button>
+      </div>
+      <label class="check"><input type="checkbox" id="showBoxes" checked> <span data-i18n="view.boxes">Show segments</span></label>
+      <div class="spacer"></div>
+      <button class="icon-btn" id="zoomOut" data-i18n-title="zoom.out">−</button>
+      <span class="zoom-label" id="zoomLabel">100%</span>
+      <button class="icon-btn" id="zoomIn" data-i18n-title="zoom.in">+</button>
+      <button class="icon-btn" id="zoomFit" data-i18n-title="zoom.fit">⤢</button>
+    </div>
+    <div class="pages" id="pages"></div>
+  </section>
+
+  <section class="editor-pane">
+    <div class="pane-toolbar wrap">
+      <button class="btn" id="btnExport" data-i18n-title="tb.exportTitle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v12m0 0-4-4m4 4 4-4M5 21h14"/></svg>
+        <span data-i18n="tb.export">Export</span>
+      </button>
+      <button class="btn" id="btnCopy" data-i18n-title="tb.copyTitle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+        <span data-i18n="tb.copy">Copy</span>
+      </button>
+      <button class="btn" id="btnAi" data-i18n-title="tb.aiTitle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>
+        <span data-i18n="tb.ai">AI</span>
+      </button>
+      <button class="btn" id="btnImport" data-i18n-title="tb.importTitle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 15V3m0 0L8 7m4-4 4 4M5 21h14"/></svg>
+        <span data-i18n="tb.import">Import</span>
+      </button>
+      <div class="spacer"></div>
+      <button class="btn primary" id="btnBuild">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="m9 14 2 2 4-4"/></svg>
+        <span data-i18n="tb.build">Build PDF</span>
+      </button>
+      <a class="btn success" id="btnDownload" hidden href="#" data-i18n="tb.download" data-i18n-title="tb.downloadTitle">Download</a>
+    </div>
+    <div class="progress-row">
+      <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+      <span id="progressText"></span>
+    </div>
+    <div class="filter-row">
+      <input type="search" id="search" data-i18n-placeholder="filter.search">
+      <select id="filterStatus">
+        <option value="all" data-i18n="filter.all">All</option>
+        <option value="todo" data-i18n="filter.todo">Untranslated</option>
+        <option value="done" data-i18n="filter.done">Translated</option>
+        <option value="numbers" data-i18n="filter.numbers">Numbers only (kept)</option>
+      </select>
+      <select id="filterPage"><option value="all" data-i18n="filter.allPages">All pages</option></select>
+    </div>
+    <div class="segments" id="segments"></div>
+  </section>
+</main>
+
+<!-- Export dialog -->
+<dialog id="exportDialog" class="modal">
+  <form method="dialog">
+    <h2 data-i18n="export.title">Export for an external translator</h2>
+    <p class="muted" data-i18n="export.text"></p>
+    <div class="formats">
+      <label class="format"><input type="radio" name="fmt" value="txt" checked>
+        <b data-i18n="export.txt">Plain text (.txt)</b><span data-i18n="export.txtHint"></span></label>
+      <label class="format"><input type="radio" name="fmt" value="docx">
+        <b>Word (.docx)</b><span data-i18n="export.docxHint"></span></label>
+      <label class="format"><input type="radio" name="fmt" value="xliff">
+        <b>XLIFF 1.2 (.xlf)</b><span data-i18n="export.xliffHint"></span></label>
+      <label class="format"><input type="radio" name="fmt" value="csv">
+        <b data-i18n="export.csv">Spreadsheet (.csv)</b><span data-i18n="export.csvHint"></span></label>
+      <label class="format"><input type="radio" name="fmt" value="json">
+        <b>JSON (.json)</b><span data-i18n="export.jsonHint"></span></label>
+    </div>
+    <div class="lang-row" id="langRow">
+      <label><span data-i18n="lang.source">Source language</span> <input id="srcLang" value="de" size="6"></label>
+      <label><span data-i18n="lang.target">Target language</span> <input id="tgtLang" placeholder="en" size="6"></label>
+    </div>
+    <label class="check"><input type="checkbox" id="includeTranslations"> <span data-i18n="export.include">Include translations already entered</span></label>
+    <div class="modal-actions">
+      <button value="cancel" class="btn ghost" data-i18n="common.cancel">Cancel</button>
+      <button value="ok" class="btn primary" id="exportGo" data-i18n="common.download">Download</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Import dialog -->
+<dialog id="importDialog" class="modal wide">
+  <form method="dialog">
+    <h2 data-i18n="import.title">Import translation</h2>
+    <label class="dropzone small" id="importDrop">
+      <input type="file" id="importFile" accept=".txt,.docx,.xlf,.xliff,.csv,.tsv,.json" hidden>
+      <div class="dz-title" data-i18n="import.drop">Drop the translated file here or <u>choose a file</u></div>
+      <div class="dz-sub">.txt · .docx · .xlf / .xliff · .csv · .json</div>
+    </label>
+    <div class="or" data-i18n="import.or"></div>
+    <textarea id="pasteArea" rows="10" data-i18n-placeholder="import.placeholder"></textarea>
+    <label class="check"><input type="checkbox" id="importOverwrite" checked> <span data-i18n="import.overwrite">Replace translations already entered</span></label>
+    <div class="modal-actions">
+      <button value="cancel" class="btn ghost" data-i18n="common.cancel">Cancel</button>
+      <button value="ok" class="btn primary" id="importGo" data-i18n="import.go">Import pasted text</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Build dialog -->
+<dialog id="buildDialog" class="modal">
+  <form method="dialog">
+    <h2 data-i18n="build.title">Rebuild the PDF</h2>
+    <p class="muted" data-i18n="build.text"></p>
+    <label class="field"><span data-i18n="build.font">Font</span>
+      <select id="fontMode">
+        <option value="auto" data-i18n="build.fontAuto"></option>
+        <option value="sans-serif" data-i18n="build.fontSans"></option>
+        <option value="serif" data-i18n="build.fontSerif"></option>
+        <option value="monospace" data-i18n="build.fontMono"></option>
+        <option value="custom" data-i18n="build.fontCustom"></option>
+      </select>
+    </label>
+    <div class="field" id="fontUploadRow" hidden>
+      <input type="file" id="fontFile" accept=".ttf,.otf,.ttc">
+      <span class="muted" id="fontStatus" data-i18n="build.fontHint"></span>
+    </div>
+    <label class="check"><input type="checkbox" id="optExpand" checked> <span data-i18n="build.expand"></span></label>
+    <label class="field"><span data-i18n="build.minScale"></span>
+      <select id="minScale">
+        <option value="0" data-i18n="build.min0"></option>
+        <option value="0.5" data-i18n="build.min50"></option>
+        <option value="0.7" data-i18n="build.min70"></option>
+      </select>
+    </label>
+    <p class="muted small" data-i18n="build.fontsNote"></p>
+    <div class="modal-actions">
+      <button value="cancel" class="btn ghost" data-i18n="common.cancel">Cancel</button>
+      <button value="ok" class="btn primary" id="buildGo" data-i18n="tb.build">Build PDF</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Help + AI prompt dialog -->
+<dialog id="helpDialog" class="modal wide">
+  <form method="dialog">
+    <h2 data-i18n="help.title">Help</h2>
+    <ol class="help-steps">
+      <li data-i18n="help.step1"></li>
+      <li data-i18n="help.step2"></li>
+      <li data-i18n="help.step3"></li>
+    </ol>
+    <p class="muted small" data-i18n="help.shortcuts"></p>
+
+    <h2 id="aiTitle" data-i18n="ai.title">Translate with AI</h2>
+    <div class="ai-grid">
+      <label><span data-i18n="lang.target">Target language</span> <input id="aiTarget" data-i18n-placeholder="ai.targetPh"></label>
+      <label><span data-i18n="lang.source">Source language</span> <input id="aiSource" data-i18n-placeholder="ai.sourcePh"></label>
+      <label><span data-i18n="ai.pages">Pages</span> <span class="range"><input id="aiFrom" type="number" min="1" value="1"> – <input id="aiTo" type="number" min="1"></span></label>
+      <label class="check"><input type="checkbox" id="aiOnlyTodo"> <span data-i18n="ai.onlyTodo"></span></label>
+    </div>
+    <label class="field"><span><span data-i18n="ai.context"></span> <span class="muted" data-i18n="ai.contextHint"></span></span>
+      <input id="aiContext" data-i18n-placeholder="ai.contextPh">
+    </label>
+    <label class="field"><span><span data-i18n="ai.glossary"></span> <span class="muted" data-i18n="ai.glossaryHint"></span></span>
+      <textarea id="aiGlossary" rows="2" data-i18n-placeholder="ai.glossaryPh"></textarea>
+    </label>
+    <textarea id="aiPrompt" rows="9" readonly></textarea>
+    <p class="muted small" id="aiStats"></p>
+    <p class="muted small help-version">PDF Translate v{{VERSION}}</p>
+    <div class="modal-actions">
+      <button value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
+      <button type="button" class="btn" id="aiCopyPrompt" data-i18n="ai.copyPrompt">Copy prompt only</button>
+      <button type="button" class="btn primary" id="aiCopyAll" data-i18n="ai.copyAll">Copy prompt + text</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="toast-stack" id="toasts"></div>
+<div class="busy" id="busy" hidden><div class="busy-box"><div class="spinner"></div><span id="busyText"></span></div></div>
+
+<script>
+// Translations of the interface (German is the default language)
+{{I18N}}
+</script>
+<script type="text/plain" id="engine-src">
+{{ENGINE}}
+</script>
+<script type="module">
+{{UI}}
+</script>
+</body>
+</html>
