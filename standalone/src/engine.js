@@ -649,7 +649,7 @@ function exportXliff(segments, tr = {}, name = "", src = "en", tgt = "") {
   const out = [
     '<?xml version="1.0" encoding="UTF-8"?>',
     '<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">',
-    `  <file original="${attrEsc(name)}" source-language="${attrEsc(src || "en")}"${tgt ? ` target-language="${attrEsc(tgt)}"` : ""} datatype="plaintext">`,
+    `  <file original="${attrEsc(name)}" source-language="${attrEsc(src || "und")}"${tgt ? ` target-language="${attrEsc(tgt)}"` : ""} datatype="plaintext">`,
     "    <body>",
   ];
   for (const s of segments) {
@@ -1202,6 +1202,11 @@ function createHandler() {
       const bytes = buf.asUint8Array().slice();
       free(buf);
       return { result: bytes, transfer: [bytes.buffer] };
+    }
+    if (cmd === "resetOutput") {
+      free(W.edit);
+      W.edit = null;
+      return { result: true };
     }
     if (cmd === "close") {
       free(W.doc); free(W.edit);

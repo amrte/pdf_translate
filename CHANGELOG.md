@@ -4,6 +4,15 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.01
+
+- New button (bin icon next to the progress bar) to **remove all translations**. It asks for
+  confirmation, discards the translated PDF as well, and can be undone from the message that follows.
+- The **target language** defaults to the interface language: German interface → German, English
+  interface → English (export dialog and AI prompt). A language you type yourself is kept.
+- The **source language** is no longer entered or guessed by the app: the AI prompt tells the AI to
+  detect it (it may change within the document). XLIFF exports state it as `und` (undetermined).
+
 ## 1.00
 
 First versioned release of the standalone app (`standalone/pdf-translate.html`).

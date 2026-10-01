@@ -99,6 +99,9 @@
     <div class="progress-row">
       <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
       <span id="progressText"></span>
+      <button type="button" class="icon-btn clear-btn" id="btnClear" data-i18n-title="clear.title">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v6M14 11v6"/></svg>
+      </button>
     </div>
     <div class="filter-row">
       <input type="search" id="search" data-i18n-placeholder="filter.search">
@@ -132,8 +135,7 @@
         <b>JSON (.json)</b><span data-i18n="export.jsonHint"></span></label>
     </div>
     <div class="lang-row" id="langRow">
-      <label><span data-i18n="lang.source">Source language</span> <input id="srcLang" value="de" size="6"></label>
-      <label><span data-i18n="lang.target">Target language</span> <input id="tgtLang" placeholder="en" size="6"></label>
+      <label><span data-i18n="lang.target">Target language</span> <input id="tgtLang" size="6" placeholder="de"></label>
     </div>
     <label class="check"><input type="checkbox" id="includeTranslations"> <span data-i18n="export.include">Include translations already entered</span></label>
     <div class="modal-actions">
@@ -210,7 +212,6 @@
     <h2 id="aiTitle" data-i18n="ai.title">Translate with AI</h2>
     <div class="ai-grid">
       <label><span data-i18n="lang.target">Target language</span> <input id="aiTarget" data-i18n-placeholder="ai.targetPh"></label>
-      <label><span data-i18n="lang.source">Source language</span> <input id="aiSource" data-i18n-placeholder="ai.sourcePh"></label>
       <label><span data-i18n="ai.pages">Pages</span> <span class="range"><input id="aiFrom" type="number" min="1" value="1"> – <input id="aiTo" type="number" min="1"></span></label>
       <label class="check"><input type="checkbox" id="aiOnlyTodo"> <span data-i18n="ai.onlyTodo"></span></label>
     </div>

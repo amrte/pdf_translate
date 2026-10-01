@@ -129,13 +129,19 @@ const pool = {
 
 /* ------------------------------------------------------------------ utils */
 
-function toast(message, kind = "") {
+/** Show a message; `action` ({label, run}) adds a button such as "Undo". */
+function toast(message, kind = "", action = null) {
   const el = document.createElement("div");
   el.className = `toast ${kind}`;
   el.textContent = message;
+  if (action) {
+    const btn = Object.assign(document.createElement("button"), { type: "button", className: "toast-action", textContent: action.label });
+    btn.addEventListener("click", () => { el.remove(); action.run(); });
+    el.appendChild(btn);
+  }
   $("#toasts").appendChild(el);
   while ($("#toasts").children.length > 4) $("#toasts").firstChild.remove();
-  setTimeout(() => el.remove(), kind === "error" ? 8000 : 4500);
+  setTimeout(() => el.remove(), action ? 12000 : kind === "error" ? 8000 : 4500);
 }
 
 function busy(text) {
@@ -317,8 +323,60 @@ function fillPageFilter() {
   sel.value = [...sel.options].some((o) => o.value === cur) ? cur : "all";
 }
 
+/**
+ * Default languages follow the interface: German interface -> translate into German (from
+ * English), English interface -> into English (from German). Fields the user typed in are kept.
+ */
+function applyLanguageDefaults() {
+  for (const [sel, key] of [["#tgtLang", "default.targetCode"], ["#aiTarget", "default.targetName"]]) {
+    const el = $(sel);
+    if (!el.dataset.userSet) el.value = t(key);
+  }
+}
+
+/** Rebuild the visible cards and page outlines after translations changed in bulk. */
+function refreshCards() {
+  for (const [, el] of vl.rendered) { el.remove(); ro.unobserve(el); }
+  vl.rendered.clear();
+  vl.heights.clear();
+  vl.dirty = true;
+  applyFilter();
+  document.querySelectorAll(".box").forEach((b) => b.classList.toggle("done", hasTr(b.dataset.id)));
+  updateProgress();
+}
+
+/** Remove every translation (after confirmation) and discard the translated PDF; undoable. */
+async function clearAllTranslations() {
+  if (!state.doc) return;
+  const n = Object.keys(state.translations).filter((id) => hasTr(id)).length;
+  if (!n) { toast(t("clear.none")); return; }
+  if (!confirm(t("clear.confirm", { n }))) return;
+  const backup = { ...state.translations };
+  const docId = state.doc.id;
+  state.translations = {};
+  persist();
+  disposeOutput();
+  state.shrunk = new Set();
+  state.buildNo++;
+  pool.workers[0]?.call("resetOutput").catch(() => {});
+  setBuilt(false);
+  if (state.variant === "translated") setVariant("original");
+  refreshCards();
+  toast(t("clear.done", { n }), "ok", {
+    label: t("common.undo"),
+    run: () => {
+      if (!state.doc || state.doc.id !== docId) return;
+      state.translations = { ...backup, ...state.translations };
+      persist();
+      refreshCards();
+      toast(t("clear.restored", { n }), "ok");
+    },
+  });
+}
+
 /** Re-render everything that was built from translated strings. */
 function onLanguageChange() {
+  applyLanguageDefaults();
   updateProgress();
   if (!state.doc) return;
   fillPageFilter();
@@ -797,7 +855,7 @@ function doExport() {
     if (format === "txt") saveBlob(new Blob([Engine.exportTxt(segs, tr)], { type: "text/plain;charset=utf-8" }), `${name}.txt`);
     else if (format === "csv") saveBlob(new Blob([Engine.exportCsv(segs, tr)], { type: "text/csv;charset=utf-8" }), `${name}.csv`);
     else if (format === "json") saveBlob(new Blob([Engine.exportJson(segs, tr, state.doc.name)], { type: "application/json" }), `${name}.json`);
-    else if (format === "xliff") saveBlob(new Blob([Engine.exportXliff(segs, tr, state.doc.name, $("#srcLang").value.trim(), $("#tgtLang").value.trim())], { type: "application/xliff+xml" }), `${name}.xlf`);
+    else if (format === "xliff") saveBlob(new Blob([Engine.exportXliff(segs, tr, state.doc.name, "und", $("#tgtLang").value.trim())], { type: "application/xliff+xml" }), `${name}.xlf`);
     else if (format === "docx") saveBlob(Engine.exportDocx(segs, tr), `${name}.docx`);
   } catch (err) {
     toast(err.message, "error");
@@ -1091,6 +1149,11 @@ function init() {
   $("#btnExport").addEventListener("click", () => $("#exportDialog").showModal());
   $("#exportDialog").addEventListener("close", () => { if ($("#exportDialog").returnValue === "ok") doExport(); });
   $("#btnCopy").addEventListener("click", copyAll);
+  $("#btnClear").addEventListener("click", clearAllTranslations);
+  for (const sel of ["#tgtLang", "#aiTarget"]) {
+    $(sel).addEventListener("input", (e) => { e.target.dataset.userSet = e.target.value.trim() ? "1" : ""; });
+  }
+  applyLanguageDefaults();
 
   $("#btnImport").addEventListener("click", () => $("#importDialog").showModal());
   setupDropzone($("#importDrop"), importFile);
@@ -1148,10 +1211,9 @@ function aiSegments() {
 function aiPromptText() {
   const P = AI_PROMPT[LANG] || AI_PROMPT.en;
   const target = $("#aiTarget").value.trim() || P.target;
-  const source = $("#aiSource").value.trim();
   const context = $("#aiContext").value.trim();
   const glossary = $("#aiGlossary").value.trim();
-  const lines = [P.intro(source, target), "", ...P.rules];
+  const lines = [P.intro(target), "", ...P.rules];
   if (context) lines.push("", P.context(context.replace(/\.$/, "")));
   if (glossary) lines.push("", P.glossary, ...glossary.split(/\n/).map((l) => l.trim()).filter(Boolean).map((l) => `- ${l}`));
   lines.push("", P.segments);
@@ -1184,7 +1246,6 @@ function openHelp(focusAi) {
   if (state.doc) {
     $("#aiTo").max = $("#aiFrom").max = state.doc.pages.length;
     if (helpDocId !== state.doc.id) { $("#aiFrom").value = 1; $("#aiTo").value = state.doc.pages.length; helpDocId = state.doc.id; }
-    if (!$("#aiTarget").value && $("#tgtLang").value) $("#aiTarget").value = $("#tgtLang").value;
   }
   refreshAiPrompt();
   $("#helpDialog").showModal();
@@ -1194,7 +1255,7 @@ function openHelp(focusAi) {
 function initHelp() {
   $("#btnHelp").addEventListener("click", () => openHelp(false));
   $("#btnAi").addEventListener("click", () => openHelp(true));
-  for (const id of ["#aiTarget", "#aiSource", "#aiFrom", "#aiTo", "#aiOnlyTodo", "#aiContext", "#aiGlossary"]) {
+  for (const id of ["#aiTarget", "#aiFrom", "#aiTo", "#aiOnlyTodo", "#aiContext", "#aiGlossary"]) {
     $(id).addEventListener("input", refreshAiPrompt);
   }
   $("#aiCopyPrompt").addEventListener("click", () => copyText(`${aiPromptText()}\n\n${t("ai.pasteHere")}`, t("msg.promptCopied")));

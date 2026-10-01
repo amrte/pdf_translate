@@ -79,7 +79,6 @@ const I18N = {
     "export.csvHint": "Excel oder Google Tabellen. Spalte <i>target</i> ausfüllen.",
     "export.jsonHint": "Skripte und Übersetzungs-APIs.",
     "export.include": "Bereits eingegebene Übersetzungen einschließen",
-    "lang.source": "Ausgangssprache",
     "lang.target": "Zielsprache",
     "common.cancel": "Abbrechen",
     "common.close": "Schließen",
@@ -115,7 +114,6 @@ const I18N = {
     "help.shortcuts": "Tastenkürzel im Übersetzungsfeld: <kbd>Strg</kbd>+<kbd>Enter</kbd> nächstes Segment · <kbd>Alt</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> vorheriges/nächstes · <kbd>Strg</kbd>+<kbd>S</kbd> Segment in PDF übernehmen · <kbd>Strg</kbd> + Mausrad zoomen.",
     "ai.title": "Mit KI übersetzen (ChatGPT, Claude, Gemini…)",
     "ai.targetPh": "z. B. Englisch",
-    "ai.sourcePh": "automatisch erkennen",
     "ai.pages": "Seiten",
     "ai.onlyTodo": "Nur Segmente ohne Übersetzung",
     "ai.context": "Worum geht es im Dokument?",
@@ -165,6 +163,14 @@ const I18N = {
     "msg.promptCopied": "Prompt kopiert. Fügen Sie die Segmente (Kopieren) dahinter ein, senden Sie alles an die KI und fügen Sie die Antwort unter „Importieren“ ein.",
     "msg.promptAllCopied": "Prompt und {n} Segmente kopiert. In den KI-Chat einfügen, dann die Antwort unter „Importieren“ einfügen.",
     "msg.working": "Bitte warten…",
+    "default.targetCode": "de",
+    "default.targetName": "Deutsch",
+    "clear.title": "Alle Übersetzungen löschen",
+    "clear.confirm": "Alle {n} Übersetzungen löschen?\n\nDie übersetzte PDF wird ebenfalls verworfen. Direkt danach können Sie das Löschen rückgängig machen.",
+    "clear.none": "Es gibt keine Übersetzungen zum Löschen.",
+    "clear.done": "{n} Übersetzungen gelöscht.",
+    "clear.restored": "{n} Übersetzungen wiederhergestellt. Erstellen Sie die PDF bei Bedarf neu.",
+    "common.undo": "Rückgängig",
   },
 
   en: {
@@ -244,7 +250,6 @@ const I18N = {
     "export.csvHint": "Excel or Google Sheets. Fill in the <i>target</i> column.",
     "export.jsonHint": "Scripts and translation APIs.",
     "export.include": "Include translations already entered",
-    "lang.source": "Source language",
     "lang.target": "Target language",
     "common.cancel": "Cancel",
     "common.close": "Close",
@@ -280,7 +285,6 @@ const I18N = {
     "help.shortcuts": "Shortcuts in a translation box: <kbd>Ctrl</kbd>+<kbd>Enter</kbd> next segment · <kbd>Alt</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> previous/next · <kbd>Ctrl</kbd>+<kbd>S</kbd> update this segment in the PDF · <kbd>Ctrl</kbd> + mouse wheel to zoom.",
     "ai.title": "Translate with AI (ChatGPT, Claude, Gemini…)",
     "ai.targetPh": "e.g. English",
-    "ai.sourcePh": "auto-detect",
     "ai.pages": "Pages",
     "ai.onlyTodo": "Only segments without a translation",
     "ai.context": "What the document is about",
@@ -330,13 +334,21 @@ const I18N = {
     "msg.promptCopied": "Prompt copied. Add the segments (Copy) after it, send it to the AI, then paste the answer into Import.",
     "msg.promptAllCopied": "Prompt and {n} segments copied. Paste them into the AI chat, then paste its answer into Import.",
     "msg.working": "Working…",
+    "default.targetCode": "en",
+    "default.targetName": "English",
+    "clear.title": "Remove all translations",
+    "clear.confirm": "Remove all {n} translations?\n\nThe translated PDF is discarded too. You can undo this right afterwards.",
+    "clear.none": "There are no translations to remove.",
+    "clear.done": "{n} translations removed.",
+    "clear.restored": "{n} translations restored. Build the PDF again if you need it.",
+    "common.undo": "Undo",
   },
 };
 
 // The prompt given to an AI, in the interface language.
 const AI_PROMPT = {
   de: {
-    intro: (src, tgt) => `Übersetze die folgenden Textsegmente${src ? ` (Ausgangssprache: ${src})` : ""}. Zielsprache: ${tgt}.`,
+    intro: (tgt) => `Übersetze die folgenden Textsegmente. Zielsprache: ${tgt}. Erkenne die Ausgangssprache selbst (sie kann innerhalb des Dokuments wechseln).`,
     target: "[ZIELSPRACHE]",
     rules: [
       "Die Segmente stammen aus einer PDF. Jede Übersetzung wird an genau dieselbe Stelle der Seite zurückgeschrieben, in ein Feld derselben Größe – das Layout muss erhalten bleiben. Halte dich strikt an diese Regeln:",
@@ -355,7 +367,7 @@ const AI_PROMPT = {
     segments: "Segmente:",
   },
   en: {
-    intro: (src, tgt) => `Translate the text segments below${src ? ` from ${src}` : ""} into ${tgt}.`,
+    intro: (tgt) => `Translate the text segments below into ${tgt}. Detect the source language yourself (it may change within the document).`,
     target: "[TARGET LANGUAGE]",
     rules: [
       "The segments were extracted from a PDF. Each translation will be put back into exactly the same place on the page, in a box of the same size, so the original layout must survive. Follow these rules strictly:",

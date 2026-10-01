@@ -302,3 +302,9 @@ kbd { font: 11.5px ui-monospace, monospace; border: 1px solid var(--border); bor
   .pane-toolbar #btnExport span, .pane-toolbar #btnCopy span, .pane-toolbar #btnAi span, .pane-toolbar #btnImport span { display: none; }
   .pane-toolbar #btnExport, .pane-toolbar #btnCopy, .pane-toolbar #btnAi, .pane-toolbar #btnImport { padding: 0 7px; }
 }
+/* "remove all translations" + toast actions (v1.01) */
+.progress-row .clear-btn { width: 24px; height: 22px; display: inline-grid; place-items: center; color: var(--muted); }
+.progress-row .clear-btn:hover { color: var(--danger); border-color: var(--danger); }
+.toast { display: flex; align-items: center; gap: 12px; }
+.toast-action { margin-left: auto; border: 1px solid currentColor; background: transparent; color: inherit; font: inherit; font-weight: 700; border-radius: 6px; padding: 2px 10px; cursor: pointer; }
+.toast-action:hover { background: rgba(255, 255, 255, .15); }
