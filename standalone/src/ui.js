@@ -916,6 +916,17 @@ function setActive(id, { scrollList = false, scrollViewer = false, focus = false
   if (focus) vl.rendered.get(id)?.querySelector("textarea").focus({ preventScroll: true });
 }
 
+/** No segment selected any more (a click beside the boxes or the cards, or Esc). */
+function clearActive() {
+  if (state.activeId === null) return;
+  vl.rendered.get(state.activeId)?.classList.remove("active");
+  document.querySelectorAll(`.box[data-id="${state.activeId}"]`).forEach((b) => b.classList.remove("active"));
+  state.activeId = null;
+  showHandles(null);
+  const focused = document.activeElement;
+  if (focused && focused.closest && focused.closest(".seg")) focused.blur();
+}
+
 let progressTimer = null;
 function setTranslation(id, value) {
   if (value && value.trim()) state.translations[id] = value;
@@ -1242,6 +1253,7 @@ function init() {
   $("#pages").addEventListener("click", (e) => {
     const box = e.target.closest(".box");
     if (box) setActive(Number(box.dataset.id), { scrollList: true, focus: true });
+    else if (mk.tool === "select" && !e.target.closest(".mk, .mk-editor")) clearActive(); // clicked beside the boxes
   });
 
   const list = $("#segments");
@@ -1268,7 +1280,7 @@ function init() {
   });
   list.addEventListener("click", (e) => {
     const card = e.target.closest(".seg");
-    if (!card) return;
+    if (!card) { clearActive(); return; } // clicked beside the cards
     const id = Number(card.dataset.id);
     const act = e.target.dataset.act;
     if (act === "copy") {

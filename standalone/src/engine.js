@@ -184,11 +184,61 @@ function divided(a, b, seps, horizontal = true) {
 
 const colorCache = new Map();
 
+/**
+ * Does the page's content use /ActualText (replacement text in marked content)? Some PDF writers
+ * put a whole paragraph's text there: MuPDF then reports the paragraph as one line with wrong
+ * boxes, which breaks the layout of the translation.
+ */
+function usesActualText(page) {
+  try {
+    const obj = page.getObject();
+    const seen = new Set();
+    const streamHas = (s) => { try { return s && s.isStream() && s.readStream().asString().includes("ActualText"); } catch (_) { return false; } };
+    const resHas = (res, depth) => {
+      if (!res || !res.isDictionary() || depth > 2) return false;
+      let found = false;
+      const props = res.get("Properties");
+      if (props.isDictionary()) props.forEach((v) => { if (!found && v.isDictionary() && !v.get("ActualText").isNull()) found = true; });
+      const xo = res.get("XObject");
+      if (!found && xo.isDictionary()) {
+        xo.forEach((v) => {
+          if (found || seen.has(v.toString())) return;
+          seen.add(v.toString());
+          if (v.isStream() && v.get("Subtype").toString() === "/Form" && (streamHas(v) || resHas(v.get("Resources"), depth + 1))) found = true;
+        });
+      }
+      return found;
+    };
+    const contents = obj.get("Contents");
+    if (contents.isArray()) { for (let i = 0; i < contents.length; i++) if (streamHas(contents.get(i))) return true; } else if (streamHas(contents)) return true;
+    return resHas(obj.getInheritable("Resources"), 0);
+  } catch (_) {
+    return false;
+  }
+}
+
+const unknownChars = (blocks) => {
+  let n = 0;
+  for (const b of blocks) for (const l of b.lines) for (const sp of l.spans) n += (sp.text.match(/\ufffd/g) || []).length;
+  return n;
+};
+
+/**
+ * Text blocks of a page. On pages with /ActualText the replacement text is ignored (the glyphs as
+ * drawn are read), unless that loses characters that only the replacement text provides.
+ */
 function pageBlocks(page, bounds, seps) {
+  const blocks = readBlocks(page, bounds, seps, "preserve-whitespace");
+  if (!usesActualText(page)) return blocks;
+  const drawn = readBlocks(page, bounds, seps, "preserve-whitespace,ignore-actualtext");
+  return unknownChars(drawn) <= unknownChars(blocks) ? drawn : blocks;
+}
+
+function readBlocks(page, bounds, seps, options) {
   // Font pointers are only unique while this structured-text page keeps its fonts alive;
   // MuPDF reuses the addresses later, so the pointer cache must not outlive the page.
   fontPtrCache.clear();
-  const st = page.toStructuredText("preserve-whitespace");
+  const st = page.toStructuredText(options);
   const blocks = [];
   let block = null, line = null, span = null, lastInk = null, sawSpace = false;
   st.walk({

@@ -4,6 +4,16 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.11
+
+- **Layout fix for paragraphs tagged with "ActualText"** (replacement text that some PDF writers
+  attach to whole paragraphs, e.g. for accessibility): such a paragraph was read as one line with a
+  wrong, far too large box, and its translation came out as a single tiny line. On pages with
+  ActualText the text is now read as it is drawn on the page (unless that would lose characters
+  only the replacement text provides).
+- **Deselect a segment** by clicking beside the boxes on the page, on the empty part of the segment
+  list, or with Esc. The highlight and the resize handles disappear.
+
 ## 1.10
 
 - **Font size above the limit**: a size set for a field (**Aa**) is now used exactly. The text is

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="PDF Translate 1.10">
+  <meta name="generator" content="PDF Translate 1.11">
   <title>PDF Translate</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Cdefs%3E%3ClinearGradient id=%22g%22 x1=%220%22 y1=%220%22 x2=%221%22 y2=%221%22%3E%3Cstop offset=%220%22 stop-color=%22#4a6cf7%22/%3E%3Cstop offset=%221%22 stop-color=%22#2440b3%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=%2232%22 height=%2232%22 rx=%227%22 fill=%22url%28#g%29%22/%3E%3Cpath d=%22M8 4.5h9.5l6 6V23a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V6.5a2 2 0 0 1 2-2z%22 fill=%22#fff%22/%3E%3Cpath d=%22M17.5 4.5v4.8a1.2 1.2 0 0 0 1.2 1.2h4.8z%22 fill=%22#c7d2fe%22/%3E%3Crect x=%229%22 y=%2213%22 width=%229%22 height=%221.7%22 rx=%22.85%22 fill=%22#9aabf0%22/%3E%3Crect x=%229%22 y=%2216.6%22 width=%2211%22 height=%221.7%22 rx=%22.85%22 fill=%22#9aabf0%22/%3E%3Crect x=%229%22 y=%2220.2%22 width=%226%22 height=%221.7%22 rx=%22.85%22 fill=%22#9aabf0%22/%3E%3Ccircle cx=%2224%22 cy=%2224%22 r=%227%22 fill=%22#f59e0b%22 stroke=%22#fff%22 stroke-width=%221.6%22/%3E%3Cpath d=%22M20.4 21.7h4.6M27.6 26.3H23%22 fill=%22none%22 stroke=%22#fff%22 stroke-width=%221.6%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M24.6 19.4l3.5 2.3-3.5 2.3zM23.4 24l-3.5 2.3 3.5 2.3z%22 fill=%22#fff%22/%3E%3C/svg%3E">
   <style>
@@ -441,7 +441,7 @@ mark.find.cur { background: #ff9f1c; box-shadow: 0 0 0 1px #e07b00; }
   <div class="brand">
     <span class="logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><defs><linearGradient id="logoGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4a6cf7"/><stop offset="1" stop-color="#2440b3"/></linearGradient></defs><rect width="32" height="32" rx="7" fill="url(#logoGrad)"/><path d="M8 4.5h9.5l6 6V23a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V6.5a2 2 0 0 1 2-2z" fill="#fff"/><path d="M17.5 4.5v4.8a1.2 1.2 0 0 0 1.2 1.2h4.8z" fill="#c7d2fe"/><rect x="9" y="13" width="9" height="1.7" rx=".85" fill="#9aabf0"/><rect x="9" y="16.6" width="11" height="1.7" rx=".85" fill="#9aabf0"/><rect x="9" y="20.2" width="6" height="1.7" rx=".85" fill="#9aabf0"/><circle cx="24" cy="24" r="7" fill="#f59e0b" stroke="#fff" stroke-width="1.6"/><path d="M20.4 21.7h4.6M27.6 26.3H23" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/><path d="M24.6 19.4l3.5 2.3-3.5 2.3zM23.4 24l-3.5 2.3 3.5 2.3z" fill="#fff"/></svg></span>
     <span>PDF Translate</span>
-    <span class="version" id="appVersion">v1.10</span>
+    <span class="version" id="appVersion">v1.11</span>
   </div>
   <ol class="steps" id="steps">
     <li data-step="1"><span>1</span> <i data-i18n="step.extract">Extract text</i></li>
@@ -732,7 +732,7 @@ mark.find.cur { background: #ff9f1c; box-shadow: 0 0 0 1px #e07b00; }
     <p class="muted small" id="aiStats"></p>
     <div class="ai-parts-head"><b data-i18n="ai.parts">Copy prompt + text</b> <span class="muted small" data-i18n="ai.partsHint"></span></div>
     <div class="ai-parts" id="aiParts"></div>
-    <p class="muted small help-version">PDF Translate v1.10</p>
+    <p class="muted small help-version">PDF Translate v1.11</p>
     <div class="modal-actions">
       <button value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
       <button type="button" class="btn" id="aiCopyPrompt" data-i18n="ai.copyPrompt">Copy prompt only</button>
@@ -1669,11 +1669,61 @@ function divided(a, b, seps, horizontal = true) {
 
 const colorCache = new Map();
 
+/**
+ * Does the page's content use /ActualText (replacement text in marked content)? Some PDF writers
+ * put a whole paragraph's text there: MuPDF then reports the paragraph as one line with wrong
+ * boxes, which breaks the layout of the translation.
+ */
+function usesActualText(page) {
+  try {
+    const obj = page.getObject();
+    const seen = new Set();
+    const streamHas = (s) => { try { return s && s.isStream() && s.readStream().asString().includes("ActualText"); } catch (_) { return false; } };
+    const resHas = (res, depth) => {
+      if (!res || !res.isDictionary() || depth > 2) return false;
+      let found = false;
+      const props = res.get("Properties");
+      if (props.isDictionary()) props.forEach((v) => { if (!found && v.isDictionary() && !v.get("ActualText").isNull()) found = true; });
+      const xo = res.get("XObject");
+      if (!found && xo.isDictionary()) {
+        xo.forEach((v) => {
+          if (found || seen.has(v.toString())) return;
+          seen.add(v.toString());
+          if (v.isStream() && v.get("Subtype").toString() === "/Form" && (streamHas(v) || resHas(v.get("Resources"), depth + 1))) found = true;
+        });
+      }
+      return found;
+    };
+    const contents = obj.get("Contents");
+    if (contents.isArray()) { for (let i = 0; i < contents.length; i++) if (streamHas(contents.get(i))) return true; } else if (streamHas(contents)) return true;
+    return resHas(obj.getInheritable("Resources"), 0);
+  } catch (_) {
+    return false;
+  }
+}
+
+const unknownChars = (blocks) => {
+  let n = 0;
+  for (const b of blocks) for (const l of b.lines) for (const sp of l.spans) n += (sp.text.match(/\ufffd/g) || []).length;
+  return n;
+};
+
+/**
+ * Text blocks of a page. On pages with /ActualText the replacement text is ignored (the glyphs as
+ * drawn are read), unless that loses characters that only the replacement text provides.
+ */
 function pageBlocks(page, bounds, seps) {
+  const blocks = readBlocks(page, bounds, seps, "preserve-whitespace");
+  if (!usesActualText(page)) return blocks;
+  const drawn = readBlocks(page, bounds, seps, "preserve-whitespace,ignore-actualtext");
+  return unknownChars(drawn) <= unknownChars(blocks) ? drawn : blocks;
+}
+
+function readBlocks(page, bounds, seps, options) {
   // Font pointers are only unique while this structured-text page keeps its fonts alive;
   // MuPDF reuses the addresses later, so the pointer cache must not outlive the page.
   fontPtrCache.clear();
-  const st = page.toStructuredText("preserve-whitespace");
+  const st = page.toStructuredText(options);
   const blocks = [];
   let block = null, line = null, span = null, lastInk = null, sawSpace = false;
   st.walk({
@@ -5260,6 +5310,17 @@ function setActive(id, { scrollList = false, scrollViewer = false, focus = false
   if (focus) vl.rendered.get(id)?.querySelector("textarea").focus({ preventScroll: true });
 }
 
+/** No segment selected any more (a click beside the boxes or the cards, or Esc). */
+function clearActive() {
+  if (state.activeId === null) return;
+  vl.rendered.get(state.activeId)?.classList.remove("active");
+  document.querySelectorAll(`.box[data-id="${state.activeId}"]`).forEach((b) => b.classList.remove("active"));
+  state.activeId = null;
+  showHandles(null);
+  const focused = document.activeElement;
+  if (focused && focused.closest && focused.closest(".seg")) focused.blur();
+}
+
 let progressTimer = null;
 function setTranslation(id, value) {
   if (value && value.trim()) state.translations[id] = value;
@@ -5586,6 +5647,7 @@ function init() {
   $("#pages").addEventListener("click", (e) => {
     const box = e.target.closest(".box");
     if (box) setActive(Number(box.dataset.id), { scrollList: true, focus: true });
+    else if (mk.tool === "select" && !e.target.closest(".mk, .mk-editor")) clearActive(); // clicked beside the boxes
   });
 
   const list = $("#segments");
@@ -5612,7 +5674,7 @@ function init() {
   });
   list.addEventListener("click", (e) => {
     const card = e.target.closest(".seg");
-    if (!card) return;
+    if (!card) { clearActive(); return; } // clicked beside the cards
     const id = Number(card.dataset.id);
     const act = e.target.dataset.act;
     if (act === "copy") {
@@ -6272,7 +6334,7 @@ function onKeyDown(e) {
   else if (k === "home") { e.preventDefault(); goToPage(0); }
   else if (k === "end") { e.preventDefault(); goToPage(viewPages().length - 1); }
   else if ((k === "delete" || k === "backspace") && mk.selected !== null) { e.preventDefault(); deleteMarkup(mk.selected); }
-  else if (k === "escape") { if (mk.draft) { const p = mk.draft.page; mk.draft = null; renderMarkups(p); } setTool("select"); select(null); }
+  else if (k === "escape") { if (mk.draft) { const p = mk.draft.page; mk.draft = null; renderMarkups(p); } setTool("select"); select(null); clearActive(); }
   else if (k === "f" && !e.shiftKey) toggleFullscreen();
   else if (TOOL_KEYS[k] && !e.shiftKey && !isBook()) setTool(TOOL_KEYS[k]); // no markups on e-books
 }
