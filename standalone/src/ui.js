@@ -352,6 +352,7 @@ function openDocument(doc, bytes) {
   $("#filterStatus").value = "all";
 
   state.zoom = fitZoom();
+  state.fitMode = true;
   initMarkupsForDocument();
   renderPages();
   vl.reset();
@@ -661,6 +662,7 @@ let zoomRenderTimer = null;
  */
 function setZoom(z, anchor) {
   const box = $("#pages");
+  state.fitMode = false;
   z = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Math.round(z * 100) / 100));
   if (!state.doc || z === state.zoom) return;
   const ax = anchor ? anchor[0] : box.clientWidth / 2, ay = anchor ? anchor[1] : box.clientHeight / 2;
@@ -682,6 +684,7 @@ function fitWidth() {
   const box = $("#pages");
   const widest = Math.max(...viewPages().map((p, i) => shownSize(i)[0]));
   setZoom((box.clientWidth - (cmp.on ? 10 : 48)) / (widest * 1.25)); // (the comparison view has slim margins)
+  state.fitMode = true; // (follows the width when the view is resized)
 }
 
 /* ------------------------------------------------- virtualised segment list */

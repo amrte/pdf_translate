@@ -727,6 +727,7 @@ function onFindKey(e) {
 
 function initTools() {
   initCompare();
+  initLayout();
   const pages = $("#pages");
   pages.addEventListener("pointerdown", onBoxDown);
   window.addEventListener("pointermove", onBoxMove);
@@ -783,7 +784,7 @@ function initTools() {
 // Original (the main viewer, left) and translation (right) side by side, scrolling together.
 // PDF pages correspond one to one; the pages of a translated e-book or Office document are
 // matched through the segments shown near the top of the view.
-const cmp = { on: false, observer: null, visible: new Set(), queue: [], busy: false, cache: new Map(), quiet: { main: 0, cmp: 0 }, savedZoom: null };
+const cmp = { on: false, observer: null, visible: new Set(), queue: [], busy: false, cache: new Map(), expect: { main: null, cmp: null }, savedZoom: null };
 const CMP_CACHE_MAX = 30;
 
 const cmpPages = () => (isBook() && state.outView ? state.outView.pages : state.doc.pages);
@@ -861,9 +862,26 @@ function renderCmpPages() {
   wrap.querySelectorAll(".cpage").forEach((el) => cmp.observer.observe(el));
 }
 
+/** The markups of page i on the translated side as well (shown only; they are edited on the left). */
+function cmpMarkups(i) {
+  if (!cmp.on || isBook()) return;
+  const el = document.querySelector(`#pagesCmp .cpage[data-cpage="${i}"]`);
+  if (!el || !el.dataset.boxes) return;
+  let svg = el.querySelector("svg.mk-layer");
+  const list = state.markups.filter((m) => m.page === i);
+  if (!svg && !list.length) return;
+  if (!svg) {
+    const p = state.doc.pages[i];
+    svg = svgEl("svg", { class: "mk-layer", viewBox: `${p.x0} ${p.y0} ${p.width} ${p.height}`, preserveAspectRatio: "none" });
+    el.querySelector(".page-body").appendChild(svg);
+  }
+  svg.replaceChildren(...list.map(markupNode));
+}
+
 function cmpBoxes(el, i) {
   if (el.dataset.boxes) return;
   el.dataset.boxes = "1";
+  cmpMarkups(i);
   const page = cmpPages()[i];
   el.querySelector(".page-body").insertAdjacentHTML("beforeend", (cmp.byPage.get(i) || []).map(([id, [x0, y0, x1, y1]]) =>
     `<div class="cbox${id === state.activeId ? " active" : ""}" data-id="${id}" title="#${id}" style="left:${((x0 - page.x0) / page.width) * 100}%;top:${((y0 - page.y0) / page.height) * 100}%;width:${((x1 - x0) / page.width) * 100}%;height:${((y1 - y0) / page.height) * 100}%"></div>`).join(""));
@@ -942,6 +960,8 @@ function syncCmp(from) {
   const main = $("#pages"), other = $("#pagesCmp");
   const [src, dst] = from === "main" ? [main, other] : [other, main];
   const [srcSel, srcAttr, dstSel, dstAttr] = from === "main" ? [".page", "page", ".cpage", "cpage"] : [".cpage", "cpage", ".page", "page"];
+  // PDF: both sides have the same pages at the same size, so the same scroll position.
+  if (!isBook()) { moveTo(dst, src.scrollTop, src.scrollLeft); return; }
   const a = cmpAnchor(src, srcSel, srcAttr);
   if (!a) return;
   let target = { i: a.i, f: a.f };
@@ -972,28 +992,43 @@ function syncCmp(from) {
   const el = dst.querySelector(`${dstSel}[data-${dstAttr}="${target.i}"]`);
   if (!el) return;
   const delta = el.getBoundingClientRect().top - dst.getBoundingClientRect().top + target.f * el.getBoundingClientRect().height;
-  if (Math.abs(delta) < 1 && dst.scrollLeft === src.scrollLeft) return;
-  cmp.quiet[from === "main" ? "cmp" : "main"] = performance.now() + 120; // (its own scroll event is not synced back)
-  dst.scrollTop += delta;
-  dst.scrollLeft = src.scrollLeft;
+  moveTo(dst, dst.scrollTop + delta, src.scrollLeft);
+}
+
+/** Scroll `el` without syncing the move back (its scroll event is recognised and skipped). */
+function moveTo(el, top, left) {
+  const side = el.id === "pages" ? "main" : "cmp";
+  const before = [el.scrollTop, el.scrollLeft];
+  el.scrollTop = top;
+  el.scrollLeft = left;
+  if (Math.abs(el.scrollTop - before[0]) >= 0.5 || Math.abs(el.scrollLeft - before[1]) >= 0.5) cmp.expect[side] = [el.scrollTop, el.scrollLeft];
 }
 
 function initCompare() {
   $("#viewCompare").addEventListener("click", () => setCompare(!cmp.on));
-  // When the viewer gets wider or narrower (full screen, window size), both sides fit the width again.
+  // When the viewer gets wider or narrower (full screen, window size, the border to the fields, the
+  // folded tool rail), the pages fit the width again: always in the comparison view, otherwise when
+  // the zoom was "fit width".
   let lastWidth = 0, fitTimer = 0;
   new ResizeObserver(() => {
     const w = $("#pages").clientWidth;
-    if (!cmp.on || !w || Math.abs(w - lastWidth) < 2) { lastWidth = w; return; }
+    if (!state.doc || !w || Math.abs(w - lastWidth) < 2) { lastWidth = w; return; }
     lastWidth = w;
+    if (!cmp.on && !state.fitMode && !splitDrag) return;
     clearTimeout(fitTimer);
-    fitTimer = setTimeout(() => { if (cmp.on) { fitWidth(); syncCmp("main"); } }, 120);
+    fitTimer = setTimeout(() => { if (cmp.on || state.fitMode || splitDrag) { fitWidth(); syncCmp("main"); } }, splitDrag ? 0 : 100);
   }).observe($("#pages"));
+  // The other side follows in the same scroll event, so both move together.
   for (const [id, side] of [["#pages", "main"], ["#pagesCmp", "cmp"]]) {
-    let raf = 0;
-    $(id).addEventListener("scroll", () => {
-      if (!cmp.on || performance.now() < cmp.quiet[side]) return;
-      if (!raf) raf = requestAnimationFrame(() => { raf = 0; syncCmp(side); });
+    const el = $(id);
+    el.addEventListener("scroll", () => {
+      if (!cmp.on) return;
+      const exp = cmp.expect[side];
+      if (exp) {
+        cmp.expect[side] = null;
+        if (Math.abs(el.scrollTop - exp[0]) < 1 && Math.abs(el.scrollLeft - exp[1]) < 1) return; // our own move
+      }
+      syncCmp(side);
     }, { passive: true });
   }
   $("#pagesCmp").addEventListener("click", (e) => {
@@ -1001,4 +1036,60 @@ function initCompare() {
     if (box) setActive(Number(box.dataset.id), { scrollList: true, scrollViewer: true, focus: true });
     else clearActive();
   });
+}
+
+/* ------------------------------------------- page view / fields border, tool rail */
+
+const SPLIT_KEY = "pdftr:split", RAIL_KEY = "pdftr:rail-folded";
+let splitDrag = null;
+
+/** Width of the page view as a share of the workspace (null: the default layout). */
+function setSplit(share) {
+  const wv = $("#workView");
+  if (share === null) { wv.style.gridTemplateColumns = ""; return; }
+  wv.style.gridTemplateColumns = `minmax(240px, ${share}fr) 6px minmax(320px, ${1 - share}fr)`;
+}
+
+function initLayout() {
+  const split = $("#splitter"), wv = $("#workView");
+  try { const v = Number(localStorage.getItem(SPLIT_KEY)); if (v > 0 && v < 1) setSplit(v); } catch (_) { /* storage blocked */ }
+  split.addEventListener("pointerdown", (e) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    split.setPointerCapture(e.pointerId);
+    splitDrag = { left: wv.getBoundingClientRect().left, width: wv.getBoundingClientRect().width };
+    document.body.classList.add("splitting");
+  });
+  split.addEventListener("pointermove", (e) => {
+    if (!splitDrag) return;
+    const x = Math.min(splitDrag.width - 320, Math.max(240, e.clientX - splitDrag.left));
+    setSplit(x / splitDrag.width);
+  });
+  const end = () => {
+    if (!splitDrag) return;
+    splitDrag = null;
+    document.body.classList.remove("splitting");
+    const cols = getComputedStyle(wv).gridTemplateColumns.split(" ").map(parseFloat);
+    try { localStorage.setItem(SPLIT_KEY, String(cols[0] / (cols[0] + cols[2]))); } catch (_) { /* storage blocked */ }
+    if (state.doc) fitWidth(); // the pages fit the new width
+  };
+  split.addEventListener("pointerup", end);
+  split.addEventListener("pointercancel", end);
+  split.addEventListener("dblclick", () => { // back to the default layout
+    setSplit(null);
+    try { localStorage.removeItem(SPLIT_KEY); } catch (_) { /* storage blocked */ }
+    if (state.doc) requestAnimationFrame(fitWidth);
+  });
+
+  const rail = $("#toolRail");
+  const fold = (on) => {
+    rail.classList.toggle("folded", on);
+    $("#railFold").title = t(on ? "tool.unfold" : "tool.fold");
+    try { localStorage.setItem(RAIL_KEY, on ? "1" : ""); } catch (_) { /* storage blocked */ }
+  };
+  let folded = false;
+  try { folded = localStorage.getItem(RAIL_KEY) === "1"; } catch (_) { /* storage blocked */ }
+  fold(folded);
+  $("#railFold").addEventListener("click", () => fold(!rail.classList.contains("folded")));
+  document.addEventListener("languagechange", () => { $("#railFold").title = t(rail.classList.contains("folded") ? "tool.unfold" : "tool.fold"); });
 }

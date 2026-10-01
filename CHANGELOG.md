@@ -4,6 +4,20 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.17
+
+- **Comparison view**: one scrollbar (on the right) for both sides, and the two sides now move
+  together in the same scroll step: a PDF's translated side follows exactly, e-books and Office
+  documents follow paragraph by paragraph.
+- **Markups in the comparison view**: rectangles, highlights, arrows, notes and the other markups
+  are now shown on the translated side too (they are still drawn and edited on the original side).
+- **Tool bar folds away**: the arrow at the top of the markup tool bar on the left folds it to a
+  thin strip at the edge (and unfolds it again); the setting is remembered.
+- **Adjustable border** between the page view and the translation fields: drag it left or right
+  (double-click resets it). The pages fit the new width while you drag; the width is remembered.
+  Pages also follow later size changes (window, full screen, folded tool bar) as long as the zoom
+  is "fit width".
+
 ## 1.16
 
 - **Comparison view**: the pages sit close together, with slim margins at the sides (the page

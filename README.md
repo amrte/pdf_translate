@@ -70,6 +70,8 @@ Extra features in the standalone version:
 * Find and replace in translations (and find in the original): 🔍, Ctrl+F / Ctrl+H.
 * **Compare** view: original and translation side by side, scrolling together (page by page for a
   PDF, by matching paragraphs for e-books and Office files); a click on a field selects it.
+* The border between the page view and the fields can be dragged (double-click resets it); the
+  markup tool bar can be folded to the left edge.
 * Bilingual download: a PDF with original and translation on one double-size page (portrait pages
   side by side, landscape pages one above the other) or on alternating pages; an EPUB / FB2 / DOCX /
   PPTX with each paragraph followed by its translation; an XLSX with both in each cell.

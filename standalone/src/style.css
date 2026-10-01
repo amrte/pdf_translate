@@ -115,7 +115,7 @@ code { font-size: 12.5px; background: var(--surface-2); border: 1px solid var(--
 .how-item p { margin: 6px 0 0; color: var(--muted); }
 
 /* ---------- workspace ---------- */
-.work-view { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(380px, 1fr); }
+.work-view { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1.15fr) 6px minmax(380px, 1fr); }
 .viewer-pane, .editor-pane { display: flex; flex-direction: column; min-height: 0; }
 .viewer-pane { border-right: 1px solid var(--border); }
 .editor-pane { background: var(--surface); }
@@ -237,7 +237,8 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); ou
 @keyframes spin { to { transform: rotate(360deg); } }
 
 @media (max-width: 900px) {
-  .work-view { grid-template-columns: minmax(0, 1fr); grid-template-rows: 45% 55%; }
+  .work-view { grid-template-columns: minmax(0, 1fr) !important; grid-template-rows: 45% 55%; }
+  .splitter { display: none; }
   .pane-toolbar, .filter-row { flex-wrap: wrap; }
   .filter-row input { flex-basis: 100%; }
   .pages { padding: 22px 12px; }
@@ -375,7 +376,8 @@ p.help-part, button.ai-part { display: block; }
 
 /* ---------- v1.03: full screen, wider help/AI window, AI parts, new logo ---------- */
 body.viewer-only .topbar, body.viewer-only .editor-pane { display: none; }
-body.viewer-only .work-view { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
+body.viewer-only .work-view { grid-template-columns: minmax(0, 1fr) !important; grid-template-rows: minmax(0, 1fr); }
+body.viewer-only .splitter { display: none; }
 body.viewer-only .viewer-pane { border: 0; }
 #btnFullscreen .fs-off { display: none; }
 body.viewer-only #btnFullscreen .fs-on { display: none; }
@@ -450,3 +452,22 @@ body.comparing .viewer-body .pages { flex: 1 1 0; }
 /* (slim margins between and beside the pages; the page number is in the toolbar) */
 body.comparing .viewer-body .pages { padding: 4px 5px; gap: 6px; }
 body.comparing .viewer-body .pages .page-label { display: none; }
+
+/* ---------- v1.17: one scrollbar in the comparison view, page view / fields border, folding tool rail ---------- */
+body.comparing #pages { scrollbar-width: none; }
+body.comparing #pages::-webkit-scrollbar { display: none; }
+.splitter { cursor: col-resize; background: linear-gradient(var(--border), var(--border)) center / 1px 100% no-repeat; position: relative; z-index: 5; touch-action: none; }
+.splitter::after { content: ""; position: absolute; left: 2px; top: 50%; width: 2px; height: 36px; margin-top: -18px; border-radius: 1px; background: var(--muted); opacity: .45; }
+.splitter:hover, body.splitting .splitter { background: var(--accent); }
+.splitter:hover::after, body.splitting .splitter::after { background: #fff; opacity: .9; }
+body.splitting { cursor: col-resize; user-select: none; }
+body.splitting .pages, body.splitting iframe { pointer-events: none; }
+.viewer-pane { border-right: 0; }
+.rail-fold { width: 30px; height: 20px; flex: none; display: grid; place-items: center; border: 0; border-radius: 6px; background: transparent; color: var(--muted); cursor: pointer; padding: 0; margin-bottom: 2px; }
+.rail-fold:hover { background: var(--surface-2); color: var(--text); }
+.tool-rail.folded { width: 14px; padding: 0; overflow: hidden; }
+.tool-rail.folded > :not(.rail-fold) { display: none; }
+.tool-rail.folded .rail-fold { width: 14px; height: 100%; border-radius: 0; }
+.tool-rail.folded .rail-fold svg { transform: rotate(180deg); }
+.cpage svg.mk-layer { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; z-index: 3; }
+.cpage svg.mk-layer * { pointer-events: none !important; }

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="PDF Translate 1.16">
+  <meta name="generator" content="PDF Translate 1.17">
   <title>PDF Translate</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Cdefs%3E%3ClinearGradient id=%22g%22 x1=%220%22 y1=%220%22 x2=%221%22 y2=%221%22%3E%3Cstop offset=%220%22 stop-color=%22#4a6cf7%22/%3E%3Cstop offset=%221%22 stop-color=%22#2440b3%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=%2232%22 height=%2232%22 rx=%227%22 fill=%22url%28#g%29%22/%3E%3Cpath d=%22M8 4.5h9.5l6 6V23a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V6.5a2 2 0 0 1 2-2z%22 fill=%22#fff%22/%3E%3Cpath d=%22M17.5 4.5v4.8a1.2 1.2 0 0 0 1.2 1.2h4.8z%22 fill=%22#c7d2fe%22/%3E%3Crect x=%229%22 y=%2213%22 width=%229%22 height=%221.7%22 rx=%22.85%22 fill=%22#9aabf0%22/%3E%3Crect x=%229%22 y=%2216.6%22 width=%2211%22 height=%221.7%22 rx=%22.85%22 fill=%22#9aabf0%22/%3E%3Crect x=%229%22 y=%2220.2%22 width=%226%22 height=%221.7%22 rx=%22.85%22 fill=%22#9aabf0%22/%3E%3Ccircle cx=%2224%22 cy=%2224%22 r=%227%22 fill=%22#f59e0b%22 stroke=%22#fff%22 stroke-width=%221.6%22/%3E%3Cpath d=%22M20.4 21.7h4.6M27.6 26.3H23%22 fill=%22none%22 stroke=%22#fff%22 stroke-width=%221.6%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M24.6 19.4l3.5 2.3-3.5 2.3zM23.4 24l-3.5 2.3 3.5 2.3z%22 fill=%22#fff%22/%3E%3C/svg%3E">
   <style>
@@ -124,7 +124,7 @@ code { font-size: 12.5px; background: var(--surface-2); border: 1px solid var(--
 .how-item p { margin: 6px 0 0; color: var(--muted); }
 
 /* ---------- workspace ---------- */
-.work-view { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(380px, 1fr); }
+.work-view { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1.15fr) 6px minmax(380px, 1fr); }
 .viewer-pane, .editor-pane { display: flex; flex-direction: column; min-height: 0; }
 .viewer-pane { border-right: 1px solid var(--border); }
 .editor-pane { background: var(--surface); }
@@ -246,7 +246,8 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); ou
 @keyframes spin { to { transform: rotate(360deg); } }
 
 @media (max-width: 900px) {
-  .work-view { grid-template-columns: minmax(0, 1fr); grid-template-rows: 45% 55%; }
+  .work-view { grid-template-columns: minmax(0, 1fr) !important; grid-template-rows: 45% 55%; }
+  .splitter { display: none; }
   .pane-toolbar, .filter-row { flex-wrap: wrap; }
   .filter-row input { flex-basis: 100%; }
   .pages { padding: 22px 12px; }
@@ -384,7 +385,8 @@ p.help-part, button.ai-part { display: block; }
 
 /* ---------- v1.03: full screen, wider help/AI window, AI parts, new logo ---------- */
 body.viewer-only .topbar, body.viewer-only .editor-pane { display: none; }
-body.viewer-only .work-view { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
+body.viewer-only .work-view { grid-template-columns: minmax(0, 1fr) !important; grid-template-rows: minmax(0, 1fr); }
+body.viewer-only .splitter { display: none; }
 body.viewer-only .viewer-pane { border: 0; }
 #btnFullscreen .fs-off { display: none; }
 body.viewer-only #btnFullscreen .fs-on { display: none; }
@@ -460,6 +462,25 @@ body.comparing .viewer-body .pages { flex: 1 1 0; }
 body.comparing .viewer-body .pages { padding: 4px 5px; gap: 6px; }
 body.comparing .viewer-body .pages .page-label { display: none; }
 
+/* ---------- v1.17: one scrollbar in the comparison view, page view / fields border, folding tool rail ---------- */
+body.comparing #pages { scrollbar-width: none; }
+body.comparing #pages::-webkit-scrollbar { display: none; }
+.splitter { cursor: col-resize; background: linear-gradient(var(--border), var(--border)) center / 1px 100% no-repeat; position: relative; z-index: 5; touch-action: none; }
+.splitter::after { content: ""; position: absolute; left: 2px; top: 50%; width: 2px; height: 36px; margin-top: -18px; border-radius: 1px; background: var(--muted); opacity: .45; }
+.splitter:hover, body.splitting .splitter { background: var(--accent); }
+.splitter:hover::after, body.splitting .splitter::after { background: #fff; opacity: .9; }
+body.splitting { cursor: col-resize; user-select: none; }
+body.splitting .pages, body.splitting iframe { pointer-events: none; }
+.viewer-pane { border-right: 0; }
+.rail-fold { width: 30px; height: 20px; flex: none; display: grid; place-items: center; border: 0; border-radius: 6px; background: transparent; color: var(--muted); cursor: pointer; padding: 0; margin-bottom: 2px; }
+.rail-fold:hover { background: var(--surface-2); color: var(--text); }
+.tool-rail.folded { width: 14px; padding: 0; overflow: hidden; }
+.tool-rail.folded > :not(.rail-fold) { display: none; }
+.tool-rail.folded .rail-fold { width: 14px; height: 100%; border-radius: 0; }
+.tool-rail.folded .rail-fold svg { transform: rotate(180deg); }
+.cpage svg.mk-layer { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; z-index: 3; }
+.cpage svg.mk-layer * { pointer-events: none !important; }
+
   </style>
 </head>
 <body>
@@ -467,7 +488,7 @@ body.comparing .viewer-body .pages .page-label { display: none; }
   <div class="brand">
     <span class="logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><defs><linearGradient id="logoGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4a6cf7"/><stop offset="1" stop-color="#2440b3"/></linearGradient></defs><rect width="32" height="32" rx="7" fill="url(#logoGrad)"/><path d="M8 4.5h9.5l6 6V23a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V6.5a2 2 0 0 1 2-2z" fill="#fff"/><path d="M17.5 4.5v4.8a1.2 1.2 0 0 0 1.2 1.2h4.8z" fill="#c7d2fe"/><rect x="9" y="13" width="9" height="1.7" rx=".85" fill="#9aabf0"/><rect x="9" y="16.6" width="11" height="1.7" rx=".85" fill="#9aabf0"/><rect x="9" y="20.2" width="6" height="1.7" rx=".85" fill="#9aabf0"/><circle cx="24" cy="24" r="7" fill="#f59e0b" stroke="#fff" stroke-width="1.6"/><path d="M20.4 21.7h4.6M27.6 26.3H23" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/><path d="M24.6 19.4l3.5 2.3-3.5 2.3zM23.4 24l-3.5 2.3 3.5 2.3z" fill="#fff"/></svg></span>
     <span>PDF Translate</span>
-    <span class="version" id="appVersion">v1.16</span>
+    <span class="version" id="appVersion">v1.17</span>
   </div>
   <ol class="steps" id="steps">
     <li data-step="1"><span>1</span> <i data-i18n="step.extract">Extract text</i></li>
@@ -535,6 +556,7 @@ body.comparing .viewer-body .pages .page-label { display: none; }
     </div>
     <div class="viewer-body">
     <div class="tool-rail" id="toolRail">
+      <button type="button" class="rail-fold" id="railFold" data-i18n-title="tool.fold"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
       <button type="button" class="tool active" data-tool="select" data-i18n-title="tool.select"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3l14 8-6 2-3 6z"/></svg></button>
       <button type="button" class="tool" data-tool="rect" data-i18n-title="tool.rect"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="6" width="16" height="12" rx="1"/></svg></button>
       <button type="button" class="tool" data-tool="ellipse" data-i18n-title="tool.ellipse"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="12" rx="9" ry="6.5"/></svg></button>
@@ -567,6 +589,7 @@ body.comparing .viewer-body .pages .page-label { display: none; }
     <div class="pages translated cmp-pages" id="pagesCmp" hidden></div>
     </div>
   </section>
+  <div class="splitter" id="splitter" data-i18n-title="layout.splitter"></div>
 
   <section class="editor-pane">
     <div class="pane-toolbar wrap">
@@ -782,7 +805,7 @@ body.comparing .viewer-body .pages .page-label { display: none; }
     <div class="ai-parts-head"><b data-i18n="ai.parts">Copy prompt + text</b> <span class="muted small" data-i18n="ai.partsHint"></span></div>
     <div class="ai-parts" id="aiParts"></div>
     </div>
-    <p class="muted small help-version help-part">PDF Translate v1.16</p>
+    <p class="muted small help-version help-part">PDF Translate v1.17</p>
     <div class="modal-actions">
       <button value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
       <button type="button" class="btn ai-part" id="aiCopyPrompt" data-i18n="ai.copyPrompt">Copy prompt only</button>
@@ -857,6 +880,9 @@ const I18N = {
     "view.original": "Original",
     "view.translated": "Übersetzung",
     "view.compare": "Vergleich",
+    "tool.fold": "Werkzeugleiste an den Rand einklappen",
+    "tool.unfold": "Werkzeugleiste ausklappen",
+    "layout.splitter": "Ziehen: Breite von Seitenansicht und Feldern ändern · Doppelklick: zurücksetzen",
     "view.compareTitle": "Original und Übersetzung nebeneinander, synchron scrollend",
     "view.boxes": "Segmente anzeigen",
     "zoom.out": "Verkleinern",
@@ -1160,6 +1186,9 @@ const I18N = {
     "view.original": "Original",
     "view.translated": "Translated",
     "view.compare": "Compare",
+    "tool.fold": "Fold the tool bar to the edge",
+    "tool.unfold": "Unfold the tool bar",
+    "layout.splitter": "Drag: change the width of the page view and the fields · double-click: reset",
     "view.compareTitle": "Original and translation side by side, scrolling together",
     "view.boxes": "Show segments",
     "zoom.out": "Zoom out",
@@ -5564,6 +5593,7 @@ function openDocument(doc, bytes) {
   $("#filterStatus").value = "all";
 
   state.zoom = fitZoom();
+  state.fitMode = true;
   initMarkupsForDocument();
   renderPages();
   vl.reset();
@@ -5873,6 +5903,7 @@ let zoomRenderTimer = null;
  */
 function setZoom(z, anchor) {
   const box = $("#pages");
+  state.fitMode = false;
   z = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Math.round(z * 100) / 100));
   if (!state.doc || z === state.zoom) return;
   const ax = anchor ? anchor[0] : box.clientWidth / 2, ay = anchor ? anchor[1] : box.clientHeight / 2;
@@ -5894,6 +5925,7 @@ function fitWidth() {
   const box = $("#pages");
   const widest = Math.max(...viewPages().map((p, i) => shownSize(i)[0]));
   setZoom((box.clientWidth - (cmp.on ? 10 : 48)) / (widest * 1.25)); // (the comparison view has slim margins)
+  state.fitMode = true; // (follows the width when the view is resized)
 }
 
 /* ------------------------------------------------- virtualised segment list */
@@ -6922,6 +6954,7 @@ function renderMarkups(i, extra) {
   const svg = layerFor(i);
   if (!svg) return;
   svg.replaceChildren(...state.markups.filter((m) => m.page === i).map(markupNode), ...(extra ? [markupNode(extra)] : []));
+  cmpMarkups(i);
 }
 
 function renderAllMarkups() {
@@ -8002,6 +8035,7 @@ function onFindKey(e) {
 
 function initTools() {
   initCompare();
+  initLayout();
   const pages = $("#pages");
   pages.addEventListener("pointerdown", onBoxDown);
   window.addEventListener("pointermove", onBoxMove);
@@ -8058,7 +8092,7 @@ function initTools() {
 // Original (the main viewer, left) and translation (right) side by side, scrolling together.
 // PDF pages correspond one to one; the pages of a translated e-book or Office document are
 // matched through the segments shown near the top of the view.
-const cmp = { on: false, observer: null, visible: new Set(), queue: [], busy: false, cache: new Map(), quiet: { main: 0, cmp: 0 }, savedZoom: null };
+const cmp = { on: false, observer: null, visible: new Set(), queue: [], busy: false, cache: new Map(), expect: { main: null, cmp: null }, savedZoom: null };
 const CMP_CACHE_MAX = 30;
 
 const cmpPages = () => (isBook() && state.outView ? state.outView.pages : state.doc.pages);
@@ -8136,9 +8170,26 @@ function renderCmpPages() {
   wrap.querySelectorAll(".cpage").forEach((el) => cmp.observer.observe(el));
 }
 
+/** The markups of page i on the translated side as well (shown only; they are edited on the left). */
+function cmpMarkups(i) {
+  if (!cmp.on || isBook()) return;
+  const el = document.querySelector(`#pagesCmp .cpage[data-cpage="${i}"]`);
+  if (!el || !el.dataset.boxes) return;
+  let svg = el.querySelector("svg.mk-layer");
+  const list = state.markups.filter((m) => m.page === i);
+  if (!svg && !list.length) return;
+  if (!svg) {
+    const p = state.doc.pages[i];
+    svg = svgEl("svg", { class: "mk-layer", viewBox: `${p.x0} ${p.y0} ${p.width} ${p.height}`, preserveAspectRatio: "none" });
+    el.querySelector(".page-body").appendChild(svg);
+  }
+  svg.replaceChildren(...list.map(markupNode));
+}
+
 function cmpBoxes(el, i) {
   if (el.dataset.boxes) return;
   el.dataset.boxes = "1";
+  cmpMarkups(i);
   const page = cmpPages()[i];
   el.querySelector(".page-body").insertAdjacentHTML("beforeend", (cmp.byPage.get(i) || []).map(([id, [x0, y0, x1, y1]]) =>
     `<div class="cbox${id === state.activeId ? " active" : ""}" data-id="${id}" title="#${id}" style="left:${((x0 - page.x0) / page.width) * 100}%;top:${((y0 - page.y0) / page.height) * 100}%;width:${((x1 - x0) / page.width) * 100}%;height:${((y1 - y0) / page.height) * 100}%"></div>`).join(""));
@@ -8217,6 +8268,8 @@ function syncCmp(from) {
   const main = $("#pages"), other = $("#pagesCmp");
   const [src, dst] = from === "main" ? [main, other] : [other, main];
   const [srcSel, srcAttr, dstSel, dstAttr] = from === "main" ? [".page", "page", ".cpage", "cpage"] : [".cpage", "cpage", ".page", "page"];
+  // PDF: both sides have the same pages at the same size, so the same scroll position.
+  if (!isBook()) { moveTo(dst, src.scrollTop, src.scrollLeft); return; }
   const a = cmpAnchor(src, srcSel, srcAttr);
   if (!a) return;
   let target = { i: a.i, f: a.f };
@@ -8247,28 +8300,43 @@ function syncCmp(from) {
   const el = dst.querySelector(`${dstSel}[data-${dstAttr}="${target.i}"]`);
   if (!el) return;
   const delta = el.getBoundingClientRect().top - dst.getBoundingClientRect().top + target.f * el.getBoundingClientRect().height;
-  if (Math.abs(delta) < 1 && dst.scrollLeft === src.scrollLeft) return;
-  cmp.quiet[from === "main" ? "cmp" : "main"] = performance.now() + 120; // (its own scroll event is not synced back)
-  dst.scrollTop += delta;
-  dst.scrollLeft = src.scrollLeft;
+  moveTo(dst, dst.scrollTop + delta, src.scrollLeft);
+}
+
+/** Scroll `el` without syncing the move back (its scroll event is recognised and skipped). */
+function moveTo(el, top, left) {
+  const side = el.id === "pages" ? "main" : "cmp";
+  const before = [el.scrollTop, el.scrollLeft];
+  el.scrollTop = top;
+  el.scrollLeft = left;
+  if (Math.abs(el.scrollTop - before[0]) >= 0.5 || Math.abs(el.scrollLeft - before[1]) >= 0.5) cmp.expect[side] = [el.scrollTop, el.scrollLeft];
 }
 
 function initCompare() {
   $("#viewCompare").addEventListener("click", () => setCompare(!cmp.on));
-  // When the viewer gets wider or narrower (full screen, window size), both sides fit the width again.
+  // When the viewer gets wider or narrower (full screen, window size, the border to the fields, the
+  // folded tool rail), the pages fit the width again: always in the comparison view, otherwise when
+  // the zoom was "fit width".
   let lastWidth = 0, fitTimer = 0;
   new ResizeObserver(() => {
     const w = $("#pages").clientWidth;
-    if (!cmp.on || !w || Math.abs(w - lastWidth) < 2) { lastWidth = w; return; }
+    if (!state.doc || !w || Math.abs(w - lastWidth) < 2) { lastWidth = w; return; }
     lastWidth = w;
+    if (!cmp.on && !state.fitMode && !splitDrag) return;
     clearTimeout(fitTimer);
-    fitTimer = setTimeout(() => { if (cmp.on) { fitWidth(); syncCmp("main"); } }, 120);
+    fitTimer = setTimeout(() => { if (cmp.on || state.fitMode || splitDrag) { fitWidth(); syncCmp("main"); } }, splitDrag ? 0 : 100);
   }).observe($("#pages"));
+  // The other side follows in the same scroll event, so both move together.
   for (const [id, side] of [["#pages", "main"], ["#pagesCmp", "cmp"]]) {
-    let raf = 0;
-    $(id).addEventListener("scroll", () => {
-      if (!cmp.on || performance.now() < cmp.quiet[side]) return;
-      if (!raf) raf = requestAnimationFrame(() => { raf = 0; syncCmp(side); });
+    const el = $(id);
+    el.addEventListener("scroll", () => {
+      if (!cmp.on) return;
+      const exp = cmp.expect[side];
+      if (exp) {
+        cmp.expect[side] = null;
+        if (Math.abs(el.scrollTop - exp[0]) < 1 && Math.abs(el.scrollLeft - exp[1]) < 1) return; // our own move
+      }
+      syncCmp(side);
     }, { passive: true });
   }
   $("#pagesCmp").addEventListener("click", (e) => {
@@ -8276,6 +8344,62 @@ function initCompare() {
     if (box) setActive(Number(box.dataset.id), { scrollList: true, scrollViewer: true, focus: true });
     else clearActive();
   });
+}
+
+/* ------------------------------------------- page view / fields border, tool rail */
+
+const SPLIT_KEY = "pdftr:split", RAIL_KEY = "pdftr:rail-folded";
+let splitDrag = null;
+
+/** Width of the page view as a share of the workspace (null: the default layout). */
+function setSplit(share) {
+  const wv = $("#workView");
+  if (share === null) { wv.style.gridTemplateColumns = ""; return; }
+  wv.style.gridTemplateColumns = `minmax(240px, ${share}fr) 6px minmax(320px, ${1 - share}fr)`;
+}
+
+function initLayout() {
+  const split = $("#splitter"), wv = $("#workView");
+  try { const v = Number(localStorage.getItem(SPLIT_KEY)); if (v > 0 && v < 1) setSplit(v); } catch (_) { /* storage blocked */ }
+  split.addEventListener("pointerdown", (e) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    split.setPointerCapture(e.pointerId);
+    splitDrag = { left: wv.getBoundingClientRect().left, width: wv.getBoundingClientRect().width };
+    document.body.classList.add("splitting");
+  });
+  split.addEventListener("pointermove", (e) => {
+    if (!splitDrag) return;
+    const x = Math.min(splitDrag.width - 320, Math.max(240, e.clientX - splitDrag.left));
+    setSplit(x / splitDrag.width);
+  });
+  const end = () => {
+    if (!splitDrag) return;
+    splitDrag = null;
+    document.body.classList.remove("splitting");
+    const cols = getComputedStyle(wv).gridTemplateColumns.split(" ").map(parseFloat);
+    try { localStorage.setItem(SPLIT_KEY, String(cols[0] / (cols[0] + cols[2]))); } catch (_) { /* storage blocked */ }
+    if (state.doc) fitWidth(); // the pages fit the new width
+  };
+  split.addEventListener("pointerup", end);
+  split.addEventListener("pointercancel", end);
+  split.addEventListener("dblclick", () => { // back to the default layout
+    setSplit(null);
+    try { localStorage.removeItem(SPLIT_KEY); } catch (_) { /* storage blocked */ }
+    if (state.doc) requestAnimationFrame(fitWidth);
+  });
+
+  const rail = $("#toolRail");
+  const fold = (on) => {
+    rail.classList.toggle("folded", on);
+    $("#railFold").title = t(on ? "tool.unfold" : "tool.fold");
+    try { localStorage.setItem(RAIL_KEY, on ? "1" : ""); } catch (_) { /* storage blocked */ }
+  };
+  let folded = false;
+  try { folded = localStorage.getItem(RAIL_KEY) === "1"; } catch (_) { /* storage blocked */ }
+  fold(folded);
+  $("#railFold").addEventListener("click", () => fold(!rail.classList.contains("folded")));
+  document.addEventListener("languagechange", () => { $("#railFold").title = t(rail.classList.contains("folded") ? "tool.unfold" : "tool.fold"); });
 }
 
 // Start-up (runs after ui.js, markup.js and tools.js have defined everything).

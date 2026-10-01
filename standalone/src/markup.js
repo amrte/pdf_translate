@@ -187,6 +187,7 @@ function renderMarkups(i, extra) {
   const svg = layerFor(i);
   if (!svg) return;
   svg.replaceChildren(...state.markups.filter((m) => m.page === i).map(markupNode), ...(extra ? [markupNode(extra)] : []));
+  cmpMarkups(i);
 }
 
 function renderAllMarkups() {
