@@ -36,6 +36,11 @@ Extra features in the standalone version:
   labels, and leave codes, numbers and paths unchanged. It can include document context, a
   glossary and a page range, and it copies the prompt together with the segments; you paste
   the AI's answer into **Import**.
+* Fields with no letters (numbers, amounts, dates such as `30.09.2026`, times, `-`) need no
+  translation. They are left out of exports, Copy, the AI prompt and the progress count, keep
+  their original text, and appear under the "Numbers only (kept)" filter.
+* Zoom with + / −, the fit-width button, or Ctrl + mouse wheel / pinch (zooms around the
+  pointer); zoomed pages scroll fully in both directions.
 * Form and table layouts: label/value columns without borders, wrapped cells and bold
   "Label:" + regular value pairs are detected as separate segments.
 

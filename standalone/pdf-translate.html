@@ -144,8 +144,11 @@ code { font-size: 12.5px; background: var(--surface-2); border: 1px solid var(--
 .seg-toggle button.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
 .seg-toggle button:disabled { opacity: .45; cursor: not-allowed; }
 
-.pages { flex: 1; overflow: auto; padding: 22px; display: flex; flex-direction: column; align-items: center; gap: 22px; }
-.page { position: relative; background: #fff; box-shadow: var(--page-shadow); flex: none; }
+/* Pages are centred with auto margins rather than align-items:center: when a zoomed page is
+   wider than the viewer it then starts at the left edge instead of overflowing off-screen to
+   the left, where it could not be scrolled to. */
+.pages { flex: 1; overflow: auto; padding: 22px; display: flex; flex-direction: column; align-items: flex-start; gap: 22px; position: relative; }
+.page { position: relative; background: #fff; box-shadow: var(--page-shadow); flex: none; margin: 0 auto; }
 .page img { display: block; width: 100%; height: 100%; user-select: none; -webkit-user-drag: none; }
 .page-label { position: absolute; top: -18px; left: 0; font-size: 11.5px; color: var(--muted); }
 .page .box {
@@ -272,6 +275,8 @@ kbd { font: 11.5px ui-monospace, monospace; border: 1px solid var(--border); bor
 #helpDialog h2 + .help-steps { margin-top: -4px; }
 .modal-actions { flex-wrap: wrap; }
 .editor-pane .pane-toolbar .btn { padding: 0 10px; }
+.page .box.skip { border: 1px dotted rgba(120, 120, 120, .45); background: transparent; }
+.page .box.skip:hover { background: rgba(120, 120, 120, .08); }
 </style>
 </head>
 <body>
@@ -333,7 +338,8 @@ kbd { font: 11.5px ui-monospace, monospace; border: 1px solid var(--border); bor
       <div class="spacer"></div>
       <button class="icon-btn" id="zoomOut" title="Zoom out">−</button>
       <span class="zoom-label" id="zoomLabel">100%</span>
-      <button class="icon-btn" id="zoomIn" title="Zoom in">+</button>
+      <button class="icon-btn" id="zoomIn" title="Zoom in (or Ctrl + mouse wheel)">+</button>
+      <button class="icon-btn" id="zoomFit" title="Fit page width">⤢</button>
     </div>
     <div class="pages" id="pages"></div>
   </section>
@@ -373,6 +379,7 @@ kbd { font: 11.5px ui-monospace, monospace; border: 1px solid var(--border); bor
         <option value="all">All</option>
         <option value="todo">Untranslated</option>
         <option value="done">Translated</option>
+        <option value="numbers">Numbers only (kept)</option>
       </select>
       <select id="filterPage"><option value="all">All pages</option></select>
     </div>
@@ -947,6 +954,8 @@ function buildSegment(group, pageNo, bounds, id, marginsByRot, pageLines) {
   }
   return {
     id, page: pageNo, text, size, font, rotation, lines: lines.length, line_pitch: pitch,
+    // Numbers, dates, times, amounts and codes without any letter need no translation.
+    skip: !/\p{L}/u.test(text),
     bbox: bbox.map(round2),
     color: dominant(spans, (s) => s.color),
     bold: info.bold, italic: info.italic, family: info.family,
@@ -2071,7 +2080,7 @@ const pageCssWidth = (page) => Math.round(page.width * 1.25 * state.zoom);
 
 function renderZoom(page) {
   const px = pageCssWidth(page) * Math.min(2, window.devicePixelRatio || 1);
-  return Math.min(4, Math.max(0.5, Math.ceil((px / page.width) * 4) / 4));
+  return Math.min(6, Math.max(0.5, Math.ceil((px / page.width) * 4) / 4));
 }
 
 // Page images are rendered by the workers, only for pages near the viewport, and kept in a
@@ -2179,7 +2188,7 @@ function ensureBoxes(i) {
   const page = state.doc.pages[i];
   const html = (segsByPage.get(i) || []).map((s) => {
     const [x0, y0, x1, y1] = s.bbox;
-    const cls = "box" + (hasTr(s.id) ? " done" : "") + (s.id === state.activeId ? " active" : "");
+    const cls = "box" + (hasTr(s.id) ? " done" : "") + (s.skip ? " skip" : "") + (s.id === state.activeId ? " active" : "");
     return `<div class="${cls}" data-id="${s.id}" title="#${s.id}" style="left:${((x0 - page.x0) / page.width) * 100}%;top:${((y0 - page.y0) / page.height) * 100}%;width:${((x1 - x0) / page.width) * 100}%;height:${((y1 - y0) / page.height) * 100}%"></div>`;
   }).join("");
   el.insertAdjacentHTML("beforeend", html);
@@ -2204,12 +2213,35 @@ function setVariant(variant) {
   refreshImages();
 }
 
-function setZoom(z) {
-  const pages = $("#pages");
-  const ratio = pages.scrollTop / Math.max(1, pages.scrollHeight);
-  state.zoom = Math.min(3, Math.max(0.4, Math.round(z * 10) / 10));
-  refreshImages();
-  pages.scrollTop = ratio * pages.scrollHeight;
+const ZOOM_MIN = 0.25, ZOOM_MAX = 5;
+let zoomRenderTimer = null;
+
+/**
+ * Change the zoom, keeping the point under `anchor` (viewer coordinates; default: the centre
+ * of the viewer) in place. Page images are re-rendered once zooming pauses.
+ */
+function setZoom(z, anchor) {
+  const box = $("#pages");
+  z = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Math.round(z * 100) / 100));
+  if (!state.doc || z === state.zoom) return;
+  const ax = anchor ? anchor[0] : box.clientWidth / 2, ay = anchor ? anchor[1] : box.clientHeight / 2;
+  const cx = box.scrollLeft + ax, cy = box.scrollTop + ay;
+  const pages = [...box.querySelectorAll(".page")];
+  const el = pages.find((p) => p.offsetTop + p.offsetHeight + 11 >= cy) || pages[pages.length - 1];
+  const fx = (cx - el.offsetLeft) / el.offsetWidth, fy = (cy - el.offsetTop) / el.offsetHeight;
+  state.zoom = z;
+  for (const p of pages) p.style.width = `${pageCssWidth(state.doc.pages[Number(p.dataset.page)])}px`;
+  box.scrollLeft = el.offsetLeft + fx * el.offsetWidth - ax;
+  box.scrollTop = el.offsetTop + fy * el.offsetHeight - ay;
+  $("#zoomLabel").textContent = `${Math.round(z * 100)}%`;
+  clearTimeout(zoomRenderTimer);
+  zoomRenderTimer = setTimeout(refreshImages, 180);
+}
+
+function fitWidth() {
+  const box = $("#pages");
+  const widest = Math.max(...state.doc.pages.map((p) => p.width));
+  setZoom((box.clientWidth - 48) / (widest * 1.25));
 }
 
 /* ------------------------------------------------- virtualised segment list */
@@ -2217,7 +2249,11 @@ function setZoom(z) {
 const segIndex = new Map();
 const segById = (id) => segIndex.get(Number(id));
 
+/** Segments that need a translation (not numbers/dates only). */
+const translatable = () => state.doc.segments.filter((s) => !s.skip);
+
 function segMeta(s) {
+  if (s.skip) return `p.${s.page + 1} · numbers only, kept as they are`;
   const style = [s.bold && "bold", s.italic && "italic"].filter(Boolean).join(" ");
   const rot = s.rotation ? ` · rotated ${s.rotation}°` : "";
   return `p.${s.page + 1} · ${Math.round(s.size * 10) / 10}pt${style ? " " + style : ""} · ${s.align}${rot}`;
@@ -2385,9 +2421,8 @@ function markDone(id) {
 }
 
 function updateProgress() {
-  const total = state.doc ? state.doc.segments.length : 0;
-  let done = 0;
-  if (state.doc) for (const s of state.doc.segments) if (hasTr(s.id)) done++;
+  let total = 0, done = 0;
+  if (state.doc) for (const s of state.doc.segments) if (!s.skip) { total++; if (hasTr(s.id)) done++; }
   $("#progressText").textContent = `${done} / ${total} translated`;
   $("#progressBar").style.width = total ? `${(done / total) * 100}%` : "0";
   updateSteps(done > 0);
@@ -2415,7 +2450,8 @@ function applyFilter() {
   const ids = [];
   for (const s of state.doc.segments) {
     if (page !== null && s.page !== page) continue;
-    if (status !== "all" && (status === "done") !== hasTr(s.id)) continue;
+    if (status === "numbers" ? !s.skip : s.skip) continue; // numbers-only segments have their own filter
+    if ((status === "todo" || status === "done") && (status === "done") !== hasTr(s.id)) continue;
     if (q && !s.text.toLowerCase().includes(q) && !(state.translations[s.id] || "").toLowerCase().includes(q)) continue;
     ids.push(s.id);
   }
@@ -2432,7 +2468,7 @@ function setActive(id, { scrollList = false, scrollViewer = false, focus = false
   state.activeId = id;
   if (scrollList || focus) {
     if (!vl.pos.has(id)) {
-      $("#search").value = ""; $("#filterStatus").value = "all"; $("#filterPage").value = "all";
+      $("#search").value = ""; $("#filterStatus").value = segById(id).skip ? "numbers" : "all"; $("#filterPage").value = "all";
       applyFilter();
     }
     if (scrollList) vl.scrollTo(id);
@@ -2459,10 +2495,11 @@ function setTranslation(id, value) {
 /* -------------------------------------------------------- export/import */
 
 async function copyAll() {
-  const text = Engine.exportTxt(state.doc.segments);
+  const segs = translatable();
+  const text = Engine.exportTxt(segs);
   try {
     await navigator.clipboard.writeText(text);
-    toast(`Copied ${state.doc.segments.length} segments. Paste them into your translator, keeping the [[n]] markers.`, "ok");
+    toast(`Copied ${segs.length} segments. Paste them into your translator, keeping the [[n]] markers.`, "ok");
   } catch (_) {
     $("#pasteArea").value = text;
     $("#importDialog").showModal();
@@ -2474,7 +2511,7 @@ async function copyAll() {
 function doExport() {
   const format = document.querySelector('input[name="fmt"]:checked').value;
   const tr = $("#includeTranslations").checked ? state.translations : {};
-  const segs = state.doc.segments;
+  const segs = translatable();
   const name = `${stem()}.segments`;
   try {
     if (format === "txt") saveBlob(new Blob([Engine.exportTxt(segs, tr)], { type: "text/plain;charset=utf-8" }), `${name}.txt`);
@@ -2513,7 +2550,8 @@ function mergeImported(parsed) {
   updateProgress();
   let msg = `Imported ${applied} translation${applied === 1 ? "" : "s"}.`;
   if (unknown) msg += ` ${unknown} unknown marker(s) ignored.`;
-  const missing = segIndex.size - matched.length;
+  const got = new Set(matched);
+  const missing = translatable().filter((s) => !got.has(s.id)).length;
   if (missing && matched.length) msg += ` ${missing} segment(s) had no translation in the file.`;
   toast(msg, applied ? "ok" : "error");
   if (!matched.length) toast("No [[n]] markers or segment ids were recognised. Keep the markers when translating.", "error");
@@ -2699,8 +2737,16 @@ function init() {
 
   $("#viewOriginal").addEventListener("click", () => setVariant("original"));
   $("#viewTranslated").addEventListener("click", () => setVariant("translated"));
-  $("#zoomIn").addEventListener("click", () => setZoom(state.zoom + 0.2));
-  $("#zoomOut").addEventListener("click", () => setZoom(state.zoom - 0.2));
+  $("#zoomIn").addEventListener("click", () => setZoom(state.zoom * 1.25));
+  $("#zoomOut").addEventListener("click", () => setZoom(state.zoom / 1.25));
+  $("#zoomFit").addEventListener("click", fitWidth);
+  // Ctrl/Cmd + wheel (and touchpad pinch) zooms around the pointer.
+  $("#pages").addEventListener("wheel", (e) => {
+    if (!(e.ctrlKey || e.metaKey) || !state.doc) return;
+    e.preventDefault();
+    const r = $("#pages").getBoundingClientRect();
+    setZoom(state.zoom * Math.exp(-e.deltaY * (e.deltaMode === 1 ? 0.05 : 0.0025)), [e.clientX - r.left, e.clientY - r.top]);
+  }, { passive: false });
   $("#showBoxes").addEventListener("change", (e) => $("#pages").classList.toggle("no-boxes", !e.target.checked));
   $("#pages").addEventListener("click", (e) => {
     const box = e.target.closest(".box");
@@ -2814,7 +2860,7 @@ function aiSegments() {
   const n = state.doc.pages.length;
   const from = Math.min(n, Math.max(1, Number($("#aiFrom").value) || 1)) - 1;
   const to = Math.min(n, Math.max(from + 1, Number($("#aiTo").value) || n)) - 1;
-  return state.doc.segments.filter((s) => s.page >= from && s.page <= to && (!$("#aiOnlyTodo").checked || !hasTr(s.id)));
+  return state.doc.segments.filter((s) => !s.skip && s.page >= from && s.page <= to && (!$("#aiOnlyTodo").checked || !hasTr(s.id)));
 }
 
 function aiPromptText() {
