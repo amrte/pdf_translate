@@ -256,6 +256,22 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); ou
 .vl-inner .seg { position: absolute; top: 0; left: 0; right: 0; margin: 0; contain: layout style; }
 .segments.is-empty::after { content: attr(data-empty); display: block; color: var(--muted); text-align: center; padding: 40px 10px; }
 .page img:not([src]) { visibility: hidden; }
+/* per-segment "update PDF" */
+.seg-head .mini.apply { display: none; color: var(--accent); font-weight: 600; }
+.seg.pending .seg-head .mini.apply { display: inline-block; }
+.seg.pending .seg-status { background: var(--warn); }
+/* help dialog */
+.help-steps { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
+kbd { font: 11.5px ui-monospace, monospace; border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; background: var(--surface-2); }
+.ai-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px 16px; align-items: center; }
+.ai-grid label:not(.check) { display: flex; flex-direction: column; gap: 4px; font-weight: 550; }
+.ai-grid input, .field input { font: inherit; color: var(--text); background: var(--surface-2); border: 1px solid var(--border); border-radius: 7px; padding: 6px 9px; font-weight: 400; }
+.ai-grid .range { display: flex; align-items: center; gap: 6px; font-weight: 400; }
+.ai-grid .range input { width: 80px; }
+#helpDialog { max-height: calc(100vh - 40px); }
+#helpDialog h2 + .help-steps { margin-top: -4px; }
+.modal-actions { flex-wrap: wrap; }
+.editor-pane .pane-toolbar .btn { padding: 0 10px; }
 </style>
 </head>
 <body>
@@ -271,6 +287,7 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); ou
   </ol>
   <div class="topbar-actions">
     <span class="doc-name" id="docName"></span>
+    <button class="btn ghost" id="btnHelp" title="How it works, and a prompt for translating with AI">? Help</button>
     <button class="btn ghost" id="btnNew" hidden title="Open another PDF">Open another PDF</button>
   </div>
 </header>
@@ -329,7 +346,11 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); ou
       </button>
       <button class="btn" id="btnCopy" title="Copy all segments with [[n]] markers, ready to paste into a translator">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
-        Copy all
+        Copy
+      </button>
+      <button class="btn" id="btnAi" title="A ready-made prompt for translating this document with ChatGPT, Claude or Gemini">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>
+        AI
       </button>
       <button class="btn" id="btnImport" title="Load the translated file or paste translated text">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 15V3m0 0L8 7m4-4 4 4M5 21h14"/></svg>
@@ -441,6 +462,40 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); ou
   </form>
 </dialog>
 
+<!-- Help + AI prompt dialog -->
+<dialog id="helpDialog" class="modal wide">
+  <form method="dialog">
+    <h2>Help</h2>
+    <ol class="help-steps">
+      <li><b>Extract:</b> open a PDF. Each paragraph, label and table cell becomes a numbered segment; click a box on the page to jump to it.</li>
+      <li><b>Translate:</b> type in the boxes, or use an AI or translation tool with the prompt below and paste its answer into <b>Import</b>.</li>
+      <li><b>Rebuild:</b> <b>Build PDF</b> writes every translation into the PDF. To fix one segment afterwards, edit it and press <b>⟳ update PDF</b> on its card (or <kbd>Ctrl</kbd>+<kbd>S</kbd>). Only that page is redone.</li>
+    </ol>
+    <p class="muted small">Shortcuts in a translation box: <kbd>Ctrl</kbd>+<kbd>Enter</kbd> next segment · <kbd>Alt</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> previous/next · <kbd>Ctrl</kbd>+<kbd>S</kbd> update this segment in the PDF.</p>
+
+    <h2 id="aiTitle">Translate with AI (ChatGPT, Claude, Gemini…)</h2>
+    <div class="ai-grid">
+      <label>Target language <input id="aiTarget" placeholder="e.g. English"></label>
+      <label>Source language <input id="aiSource" placeholder="auto-detect"></label>
+      <label>Pages <span class="range"><input id="aiFrom" type="number" min="1" value="1"> – <input id="aiTo" type="number" min="1"></span></label>
+      <label class="check"><input type="checkbox" id="aiOnlyTodo"> Only segments without a translation</label>
+    </div>
+    <label class="field">What the document is about <span class="muted">(optional, helps with terminology)</span>
+      <input id="aiContext" placeholder="e.g. test report for a protection relay in a power substation">
+    </label>
+    <label class="field">Glossary <span class="muted">(optional, one per line: source = translation)</span>
+      <textarea id="aiGlossary" rows="2" placeholder="Feld = Bay&#10;Prüfer = Tester"></textarea>
+    </label>
+    <textarea id="aiPrompt" rows="9" readonly></textarea>
+    <p class="muted small" id="aiStats"></p>
+    <div class="modal-actions">
+      <button value="cancel" class="btn ghost">Close</button>
+      <button type="button" class="btn" id="aiCopyPrompt">Copy prompt only</button>
+      <button type="button" class="btn primary" id="aiCopyAll">Copy prompt + text</button>
+    </div>
+  </form>
+</dialog>
+
 <div class="toast-stack" id="toasts"></div>
 <div class="busy" id="busy" hidden><div class="busy-box"><div class="spinner"></div><span id="busyText">Working…</span></div></div>
 
@@ -526,10 +581,17 @@ function fontInfo(font) {
   if (!info) {
     const name = raw.replace(/^[A-Z]{6}\+/, "");
     const low = name.toLowerCase();
+    // Style words in the font name are more reliable than the font's own flags, which some
+    // PDF producers set wrongly; the flags are only used when the name says nothing.
+    const style = low.includes("-") || low.includes(",") ? low.slice(Math.max(low.lastIndexOf("-"), low.lastIndexOf(",")) + 1) : low;
+    const nameItalic = /italic|oblique|kursiv|^it$|^bdit$|^boldit|^bi$|^lightit|^mediumit/.test(style) || /italic|oblique/.test(low);
+    const nameBold = /bold|black|heavy|semibold|demi|^bd|^bdit$|^bi$/.test(style) || /bold|black|heavy/.test(low);
+    const namePlain = /regular|roman|book|normal|medium|light|^mt$|^psmt$|^ps$/.test(style);
+    const named = nameItalic || nameBold || namePlain;
     info = {
       name,
-      bold: font.isBold() || /bold|black|heavy|semibold|demi/.test(low),
-      italic: font.isItalic() || /italic|oblique/.test(low),
+      bold: nameBold || (!named && font.isBold()),
+      italic: nameItalic || (!named && font.isItalic()),
       family: familyOf(low, font.isSerif(), font.isMono()),
     };
     fontInfoCache.set(raw, info);
@@ -599,6 +661,9 @@ function divided(a, b, seps, horizontal = true) {
 const colorCache = new Map();
 
 function pageBlocks(page, bounds, seps) {
+  // Font pointers are only unique while this structured-text page keeps its fonts alive;
+  // MuPDF reuses the addresses later, so the pointer cache must not outlive the page.
+  fontPtrCache.clear();
   const st = page.toStructuredText("preserve-whitespace");
   const blocks = [];
   let block = null, line = null, span = null, lastInk = null, sawSpace = false;
@@ -607,7 +672,7 @@ function pageBlocks(page, bounds, seps) {
     endTextBlock() { block = null; },
     beginLine(bbox, wmode, dir) {
       if (!block) { block = { lines: [] }; blocks.push(block); }
-      line = { dir: [dir[0], dir[1]], spans: [] };
+      line = { dir: [dir[0], dir[1]], spans: [], gaps: [] };
       block.lines.push(line);
       span = null; lastInk = null; sawSpace = false;
     },
@@ -625,14 +690,18 @@ function pageBlocks(page, bounds, seps) {
       const key = `${info.name}|${Math.round(size * 100)}|${col}`;
       // Start a new span on a style change, and where a table border or a wide gap separates
       // this glyph from the previous one (MuPDF fills such gaps with synthetic spaces).
-      let split = !span || span.key !== key;
-      if (!split && !blank && lastInk) {
+      let split = !span || span.key !== key, gapBefore = 0;
+      if (!blank && lastInk) {
         const horizontal = Math.abs(line.dir[0]) > 0.99;
         const gap = horizontal ? Math.abs(qb[0] - lastInk[2]) : Math.abs(qb[1] - lastInk[3]);
-        split = gap > 2 * size || ((sawSpace || gap > 0.15 * size) && divided(lastInk, qb, seps, horizontal));
+        if (sawSpace || gap > 0.15 * size) {
+          line.gaps.push(gap / size); // word gaps in em, to tell column gaps from word spaces
+          if (gap > 0.8 * size) { split = true; gapBefore = gap; }
+          else if (!split) split = divided(lastInk, qb, seps, horizontal);
+        }
       }
       if (split) {
-        span = { key, text: "", bbox: null, origin: [origin[0], origin[1]], size, font: info, color: col };
+        span = { key, text: "", bbox: null, origin: [origin[0], origin[1]], size, font: info, color: col, gapBefore };
         line.spans.push(span);
       }
       span.text += c;
@@ -647,6 +716,91 @@ function pageBlocks(page, bounds, seps) {
   return blocks;
 }
 
+/**
+ * Is `next` the continuation of the paragraph that `prev` belongs to? Lines in different
+ * columns never are, and neither is a line whose first word would still have fitted at the
+ * end of `prev`: then the break was intentional (label/value columns, lists, addresses).
+ */
+function continuesParagraph(prev, next, pageLines, seps, marginsByRot, blockLines) {
+  const rot = prev.rotation;
+  const a = localBox(prev.bbox, rot), b = localBox(next.bbox, rot);
+  const size = Math.max(prev.size, next.size);
+  if (b[0] >= a[2] - 0.5 * size || a[0] >= b[2] - 0.5 * size) return false; // no horizontal overlap
+  if (/[-\u00ad\u2010\u2011]$/.test(prev.text.trim())) return true; // hyphenated word
+  if (/:\s*$/.test(prev.text)) return false; // a form label ("Prüfer:") is complete
+  // Table/form rows: when both lines have text right before them on their own baseline,
+  // they belong together only if those left neighbours do too (the left column of a
+  // two-column page continues; a column of row labels does not).
+  const leftOf = (l) => {
+    const lb = localBox(l.bbox, rot);
+    const m0 = lb[1] + 0.25 * (lb[3] - lb[1]), m1 = lb[3] - 0.25 * (lb[3] - lb[1]);
+    let best = null, bestX = -Infinity;
+    for (const o of pageLines) {
+      if (o === l || o.rotation !== rot) continue;
+      const ob = localBox(o.bbox, rot);
+      if (ob[2] <= lb[0] + 0.5 && ob[1] < m1 && ob[3] > m0 && ob[2] > bestX) { best = o; bestX = ob[2]; }
+    }
+    return best;
+  };
+  const lp = leftOf(prev), ln = leftOf(next);
+  if (lp && ln && lp !== ln && !continuesParagraph(lp, ln, pageLines, seps, marginsByRot, pageLines)) return false;
+  if (b[0] > a[0] + 0.6 * size) return true; // indented continuation (or centred): no test
+  // How far could `prev` have run on? Up to the next text or vertical rule on its line, or the
+  // right margin of the page's text.
+  let limit = (marginsByRot[rot] || [0, a[2]])[1];
+  const mid0 = a[1] + 0.25 * (a[3] - a[1]), mid1 = a[3] - 0.25 * (a[3] - a[1]);
+  for (const l of pageLines) {
+    if (l === prev || l === next || l.rotation !== rot) continue;
+    const o = localBox(l.bbox, rot);
+    if (o[0] >= a[2] - 0.5 && o[1] < mid1 && o[3] > mid0) limit = Math.min(limit, o[0]);
+  }
+  if (rot === 0) {
+    for (const [x0, y0, x1, y1] of seps) {
+      if (x1 - x0 < 3 && x0 >= a[2] - 0.5 && y0 < prev.bbox[3] && y1 > prev.bbox[1]) limit = Math.min(limit, x0);
+    }
+  }
+  // ...and no further than the right edge of its own column (the widest line of the block
+  // that lies in the same column), since wrapped text never runs past it.
+  let colRight = Math.max(a[2], b[2]);
+  for (const l of blockLines || []) {
+    if (l.rotation !== rot) continue;
+    const o = localBox(l.bbox, rot);
+    if (o[0] < a[2] && a[0] < o[2]) colRight = Math.max(colRight, o[2]);
+  }
+  limit = Math.min(limit, colRight);
+  const words = next.text.trim().split(/\s+/);
+  const chars = Math.max(1, next.text.trim().length);
+  const firstWord = (words[0].length / chars) * (b[2] - b[0]);
+  return a[2] + 0.3 * size + firstWord > limit - 0.3 * size;
+}
+
+/** Can `line` be appended to a group whose last line is `prev`? */
+function joins(prev, line, pageLines, seps, marginsByRot, blockLines) {
+  if (line.rotation !== prev.rotation) return false;
+  const axis = prev.rotation === 0 || prev.rotation === 180 ? 1 : 0;
+  if (sameBaseline(line, prev)) {
+    if (line.standalone || prev.standalone) return false;
+    if (isLabelBoundary(prev.spans[prev.spans.length - 1], line.spans[0])) return false;
+    const a = prev.bbox, b = line.bbox;
+    const gap = axis === 1 ? Math.max(b[0] - a[2], a[0] - b[2]) : Math.max(b[1] - a[3], a[1] - b[3]);
+    return gap <= 2 * Math.max(line.size, prev.size) && !divided(a, b, seps, axis === 1);
+  }
+  // `line` must come after `prev` in the direction lines advance
+  const n = DIRS[prev.rotation];
+  const adv = (line.origin[0] - prev.origin[0]) * -n[1] + (line.origin[1] - prev.origin[1]) * n[0];
+  const size = Math.max(line.size, prev.size);
+  if (adv <= 0.3 * size || adv > 2 * size) return false;
+  if (size / Math.max(0.1, Math.min(line.size, prev.size)) > 1.25) return false;
+  if (BULLET_RE.test(line.text) || divided(prev.bbox, line.bbox, seps, axis === 1)) return false;
+  return continuesParagraph(prev, line, pageLines, seps, marginsByRot, blockLines);
+}
+
+/** Form labels ("Prüfer:" in bold, then the value in regular) become their own segments. */
+function isLabelBoundary(prev, cur) {
+  const styleChange = prev.font.bold !== cur.font.bold || prev.font.italic !== cur.font.italic;
+  return styleChange && (/:\s*$/.test(prev.text) || /^\s*\S[^:]{0,40}:\s*$/.test(cur.text));
+}
+
 function gapOf(prev, cur, rot) {
   if (rot === 0) return cur.bbox[0] - prev.bbox[2];
   if (rot === 180) return prev.bbox[0] - cur.bbox[2];
@@ -657,11 +811,18 @@ function gapOf(prev, cur, rot) {
 function chunksOf(line, rot, seps) {
   const spans = line.spans.filter((s) => s.text.trim());
   if (!spans.length) return [];
+  // A column gap is much wider than this line's ordinary word spaces (justified text has
+  // wide but uniform spaces, so it is compared with its own typical space).
+  const normal = (line.gaps || []).filter((g) => g < 0.8).sort((a, b) => a - b);
+  const typical = normal.length ? normal[normal.length >> 1] : 0.3;
+  const columnGap = Math.max(1.0, 3 * typical);
   const out = [[spans[0]]];
   for (let i = 1; i < spans.length; i++) {
     const prev = spans[i - 1], cur = spans[i];
     const gap = gapOf(prev, cur, rot);
-    if (gap > 2 * Math.max(prev.size, cur.size) || (gap > 0 && divided(prev.bbox, cur.bbox, seps, rot === 0 || rot === 180))) out.push([cur]);
+    const size = Math.max(prev.size, cur.size);
+    if (gap > 2 * size || (cur.gapBefore && gap > columnGap * size) || isLabelBoundary(prev, cur)
+      || (gap > 0 && divided(prev.bbox, cur.bbox, seps, rot === 0 || rot === 180))) out.push([cur]);
     else out[out.length - 1].push(cur);
   }
   return out;
@@ -684,6 +845,7 @@ function joinLines(parts) {
     if (!part) continue;
     if (!text) text = part;
     else if (text.endsWith("-") && text.length > 1 && /\p{L}/u.test(text[text.length - 2]) && /^\p{Ll}/u.test(part)) text = text.slice(0, -1) + part;
+    else if (text.endsWith("-") && /^[/\-]/.test(part)) text += part; // "Serien-" + "/Modellnummer:"
     else text += " " + part;
   }
   return text;
@@ -716,7 +878,7 @@ function dominant(spans, key) {
   return best;
 }
 
-function guessAlign(lines, rotation, bounds, margins) {
+function guessAlign(lines, rotation, bounds, margins, pageLines) {
   const pb = localBox(bounds, rotation);
   const pageWidth = pb[2] - pb[0];
   const size = Math.max(...lines.map((l) => l.size));
@@ -728,6 +890,8 @@ function guessAlign(lines, rotation, bounds, margins) {
     const [x0, x1] = [lefts[0], rights[0]];
     const [lm, rm] = margins || [pb[0], pb[2]];
     if (x0 - lm < 2 * size) return "left";
+    // Part of a left-aligned column (another line starts at the same x): left-aligned.
+    if ((pageLines || []).some((l) => l !== lines[0] && l.rotation === rotation && Math.abs(localBox(l.bbox, rotation)[0] - x0) < 1)) return "left";
     const c = (x0 + x1) / 2;
     if ((Math.abs(c - (pb[0] + pb[2]) / 2) < 0.02 * pageWidth || Math.abs(c - (lm + rm) / 2) < 0.02 * pageWidth) && x1 - x0 < 0.8 * pageWidth) return "center";
     if (Math.abs(x1 - rm) < tol && x0 - lm > 0.3 * pageWidth) return "right";
@@ -756,7 +920,7 @@ function redactRect(span, rotation) {
   return [ox + lo, y0, ox + hi, y1];
 }
 
-function buildSegment(group, pageNo, bounds, id, marginsByRot) {
+function buildSegment(group, pageNo, bounds, id, marginsByRot, pageLines) {
   const lines = mergeVisualLines(group);
   const spans = lines.flatMap((l) => l.spans);
   const text = joinLines(lines.map((l) => l.text));
@@ -786,7 +950,7 @@ function buildSegment(group, pageNo, bounds, id, marginsByRot) {
     bbox: bbox.map(round2),
     color: dominant(spans, (s) => s.color),
     bold: info.bold, italic: info.italic, family: info.family,
-    align: guessAlign(lines, rotation, bounds, marginsByRot[rotation]),
+    align: guessAlign(lines, rotation, bounds, marginsByRot[rotation], pageLines),
     origin: lines[0].origin.map(round2),
     redact: spans.filter((s) => s.text.trim()).map((s) => redactRect(s, rotation).map(round2)),
   };
@@ -832,29 +996,22 @@ async function extractPages(doc, pageList, onProgress) {
       const boxes = blocks.flat().filter((l) => l.rotation === rot).map((l) => localBox(l.bbox, rot));
       if (boxes.length) marginsByRot[rot] = [Math.min(...boxes.map((b) => b[0])), Math.max(...boxes.map((b) => b[2]))];
     }
+    const pageLines = blocks.flat();
     let local = 0;
     for (const lines of blocks) {
+      // A line joins the paragraph it continues. That is usually the previous line, but in
+      // tables and forms the cells of one row come first, so look back over recent groups.
       const groups = [];
       for (const line of lines) {
-        const cur = groups[groups.length - 1];
-        if (!cur || line.standalone || cur[cur.length - 1].standalone) { groups.push([line]); continue; }
-        const prev = cur[cur.length - 1];
-        const ratio = Math.max(line.size, prev.size) / Math.max(0.1, Math.min(line.size, prev.size));
-        const axis = prev.rotation === 0 || prev.rotation === 180 ? 1 : 0;
-        const pitch = Math.abs(line.origin[axis] - prev.origin[axis]);
-        if (line.rotation === prev.rotation && sameBaseline(line, prev)) {
-          const a = prev.bbox, b = line.bbox;
-          const gap = axis === 1 ? Math.max(b[0] - a[2], a[0] - b[2]) : Math.max(b[1] - a[3], a[1] - b[3]);
-          if (gap > 2 * Math.max(line.size, prev.size) || divided(a, b, seps, axis === 1)) groups.push([line]);
-          else cur.push(line);
-          continue;
+        let target = null;
+        for (let gi = groups.length - 1; gi >= Math.max(0, groups.length - 16) && !target; gi--) {
+          const g = groups[gi];
+          if (joins(g[g.length - 1], line, pageLines, seps, marginsByRot, lines)) target = g;
         }
-        if (line.rotation !== prev.rotation || ratio > 1.25 || pitch > 2 * Math.max(line.size, prev.size)
-          || BULLET_RE.test(line.text) || divided(prev.bbox, line.bbox, seps, axis === 1)) groups.push([line]);
-        else cur.push(line);
+        if (target) target.push(line); else groups.push([line]);
       }
       for (const g of groups) {
-        const seg = buildSegment(g, p, bounds, ++local, marginsByRot);
+        const seg = buildSegment(g, p, bounds, ++local, marginsByRot, pageLines);
         if (seg) segments.push(seg);
       }
     }
@@ -1245,10 +1402,10 @@ function obstaclesFor(graphics, segs) {
 }
 
 /** How far a single-line segment may grow along its reading direction: [a0, a1] in the local frame. */
-function expandedSpan(seg, bounds, obs) {
+function expandedSpan(seg, bounds, obs, gap = 0.4 * seg.size) {
   const rot = seg.rotation;
   const r = localBox(seg.bbox, rot), pb = localBox(bounds, rot);
-  const margin = Math.min(0.04 * (pb[2] - pb[0]), 24), gap = 0.4 * seg.size;
+  const margin = Math.min(0.04 * (pb[2] - pb[0]), 24);
   let right = pb[2] - margin, left = pb[0] + margin;
   const pageArea = (bounds[2] - bounds[0]) * (bounds[3] - bounds[1]);
   const sb = seg.bbox;
@@ -1286,7 +1443,6 @@ function layoutSegment(seg, text, fk, bounds, obs, opts, used, stats) {
   let a0 = Math.min(...along), a1 = Math.max(...along);
   const b1 = Math.max(...across);
   if (obs && seg.lines === 1) [a0, a1] = expandedSpan(seg, bounds, obs);
-  const W = (a1 - a0) * 1.01;
   const ob = seg.origin[0] * n[0] + seg.origin[1] * n[1];
   const s0 = seg.size, L0 = lineHeight(seg);
   const top = ob - 0.85 * s0;
@@ -1294,12 +1450,14 @@ function layoutSegment(seg, text, fk, bounds, obs, opts, used, stats) {
 
   const chain = fk.chain(seg, text);
   const tok = tokenize(text.trim(), fk, chain);
-  const fits = (k) => {
-    const lines = wrap(tok, W / (s0 * k));
-    return (lines.length - 1) * L0 * k + 1.05 * s0 * k <= H + 0.01 ? lines : null;
-  };
-  let k = 1, lines = fits(1);
-  if (!lines) {
+  /** Largest scale (<= 1) at which the text fits a box of width W, and its lines. */
+  const fitWidth = (W) => {
+    const fits = (k) => {
+      const lines = wrap(tok, W / (s0 * k));
+      return (lines.length - 1) * L0 * k + 1.05 * s0 * k <= H + 0.01 ? lines : null;
+    };
+    const lines = fits(1);
+    if (lines) return { k: 1, lines };
     const search = (lo) => {
       let hi = 1, best = null, bestK = lo;
       if (!fits(lo)) return null;
@@ -1308,12 +1466,23 @@ function layoutSegment(seg, text, fk, bounds, obs, opts, used, stats) {
         const ok = fits(mid);
         if (ok) { best = ok; bestK = mid; lo = mid; } else hi = mid;
       }
-      return best ? [bestK, best] : [lo, fits(lo)];
+      return { k: bestK, lines: best || fits(lo) };
     };
-    const found = search(Math.max(opts.minScale || 0, 0.02)) || search(0.02) || [0.02, wrap(tok, W / (s0 * 0.02))];
-    [k, lines] = found;
-    stats.shrunk.push({ id: seg.id, scale: Math.round(k * 100) / 100 });
+    return search(Math.max(opts.minScale || 0, 0.02)) || search(0.02) || { k: 0.02, lines: wrap(tok, W / (s0 * 0.02)) };
+  };
+  let W = (a1 - a0) * 1.01;
+  let { k, lines } = fitWidth(W);
+  if (k < 1 && obs && seg.lines > 1) {
+    // A wrapped paragraph or table cell may widen a little into free space before shrinking.
+    const [e0, e1] = expandedSpan(seg, bounds, obs, 1.0 * seg.size);
+    const grow = Math.min(e1 - e0, (a1 - a0) * 1.3) - (a1 - a0);
+    if (grow > 0.5) {
+      const n0 = seg.align === "right" ? a0 - grow : seg.align === "center" ? a0 - grow / 2 : a0;
+      const wide = fitWidth((a1 - a0 + grow) * 1.01);
+      if (wide.k > k) { ({ k, lines } = wide); a0 = n0; a1 = n0 + (a1 - a0) + grow; W = (a1 - a0) * 1.01; }
+    }
   }
+  if (k < 1) stats.shrunk.push({ id: seg.id, scale: Math.round(k * 100) / 100 });
   const s = s0 * k, L = L0 * k;
   const base1 = seg.lines === 1 && lines.length === 1 ? ob - (s0 - s) * 0.3 : top + 0.85 * s;
   const ops = [`BT ${seg.color.slice(1).match(/../g).map((h) => fmt(parseInt(h, 16) / 255)).join(" ")} rg`];
@@ -1401,6 +1570,49 @@ function redactionRects(todo, keep) {
   return rects;
 }
 
+/** Replace the translated segments of one page (`index` in `doc`; `segs` are all its segments). */
+function translatePage(doc, index, fk, segs, translations, pageInfo, opts, stats) {
+  const todo = [], keep = [...((pageInfo && pageInfo.protect) || [])];
+  for (const s of segs) {
+    if ((translations[s.id] || "").trim()) todo.push(s);
+    else keep.push(s.bbox);
+  }
+  stats.untranslated += segs.length - todo.length;
+  if (!todo.length) return;
+  const page = doc.loadPage(index);
+  const bounds = page.getBounds();
+  let obs = null;
+  if (opts.expand) obs = obstaclesFor((pageInfo && pageInfo.graphics) || pageGraphics(page), segs);
+  for (const r of redactionRects(todo, keep)) page.createAnnotation("Redact").setRect(r);
+  page.applyRedactions(false, 0, 0, 0); // keep images, keep line art, remove text
+  const used = new Set();
+  const content = todo.map((seg) => layoutSegment(seg, translations[seg.id], fk, bounds, obs, opts, used, stats)).join("\n");
+  appendContent(doc, page, content, used);
+  stats.replaced += todo.length;
+  free(page);
+}
+
+/**
+ * Re-translate a single page of an edited output document: the page is copied fresh from the
+ * original, translated with the given translations, and swapped into `out`.
+ */
+function updatePage(out, src, pno, segs, translations, pageInfo, opts) {
+  const tmp = new M.PDFDocument();
+  try {
+    tmp.graftPage(0, src, pno);
+    const fk = new FontKit(tmp, opts);
+    const stats = { replaced: 0, untranslated: 0, shrunk: [], missing: 0 };
+    translatePage(tmp, 0, fk, segs, translations, pageInfo, opts, stats);
+    stats.missing = fk.missing;
+    tmp.subsetFonts();
+    out.deletePage(pno);
+    out.graftPage(pno, tmp, 0);
+    return stats;
+  } finally {
+    free(tmp);
+  }
+}
+
 /**
  * Build the translated PDF. Only segments with a translation are touched: their glyphs are
  * removed with text-only redactions (images and vector art stay) and the translation is
@@ -1418,25 +1630,7 @@ async function buildTranslated(bytes, segments, translations, pages, opts, onPro
   }
   let done = 0;
   for (const [pno, segs] of byPage) {
-    const todo = [], keep = [...((pages[pno] && pages[pno].protect) || [])];
-    for (const s of segs) {
-      if ((translations[s.id] || "").trim()) todo.push(s);
-      else keep.push(s.bbox);
-    }
-    stats.untranslated += segs.length - todo.length;
-    if (todo.length) {
-      const page = doc.loadPage(pno);
-      const bounds = page.getBounds();
-      let obs = null;
-      if (opts.expand) obs = obstaclesFor((pages[pno] && pages[pno].graphics) || pageGraphics(page), segs);
-      for (const r of redactionRects(todo, keep)) page.createAnnotation("Redact").setRect(r);
-      page.applyRedactions(false, 0, 0, 0); // keep images, keep line art, remove text
-      const used = new Set();
-      const content = todo.map((seg) => layoutSegment(seg, translations[seg.id], fk, bounds, obs, opts, used, stats)).join("\n");
-      appendContent(doc, page, content, used);
-      stats.replaced += todo.length;
-      free(page);
-    }
+    translatePage(doc, pno, fk, segs, translations, pages[pno], opts, stats);
     done++;
     if (onProgress) onProgress(done, byPage.size);
     if (done % 4 === 0) await tick();
@@ -1472,14 +1666,14 @@ const Engine = {
  * the original PDF (for extraction and rendering) and of the latest translated PDF (preview).
  */
 function createHandler() {
-  const W = { doc: null, bytes: null, out: null };
+  const W = { doc: null, bytes: null, edit: null }; // edit: the translated PDF, editable
   return async function handle(cmd, args = {}, progress = () => {}) {
     if (cmd === "init") {
       await initEngine();
       return { result: true };
     }
     if (cmd === "open") {
-      free(W.doc); free(W.out); W.out = null;
+      free(W.doc); free(W.edit); W.edit = null;
       W.bytes = args.bytes;
       W.doc = M.Document.openDocument(args.bytes.slice(), "application/pdf");
       if (W.doc.needsPassword && W.doc.needsPassword()) throw new Error("Password-protected PDFs are not supported.");
@@ -1487,23 +1681,31 @@ function createHandler() {
     }
     if (cmd === "extract") return { result: await extractPages(W.doc, args.pages, progress) };
     if (cmd === "render") {
-      const doc = args.variant === "translated" ? W.out : W.doc;
+      const doc = args.variant === "translated" ? W.edit : W.doc;
       if (!doc) throw new Error("No document is open.");
       const png = renderPNG(doc, args.page, args.zoom);
       return { result: png.buffer, transfer: [png.buffer] };
     }
-    if (cmd === "setOutput") {
-      free(W.out);
-      W.out = args.bytes ? M.Document.openDocument(args.bytes, "application/pdf") : null;
-      return { result: true };
-    }
     if (cmd === "build") {
       const result = await buildTranslated(W.bytes.slice(), args.segments, args.translations, args.pages, args.opts, progress);
+      free(W.edit);
+      W.edit = M.Document.openDocument(result.bytes.slice(), "application/pdf");
       return { result, transfer: [result.bytes.buffer] };
     }
+    if (cmd === "updatePage") {
+      if (!W.edit) W.edit = M.Document.openDocument(W.bytes.slice(), "application/pdf");
+      return { result: updatePage(W.edit, W.doc, args.page, args.segments, args.translations, args.pageInfo, args.opts) };
+    }
+    if (cmd === "save") {
+      if (!W.edit) throw new Error("Nothing has been translated yet.");
+      const buf = W.edit.saveToBuffer("garbage,compress");
+      const bytes = buf.asUint8Array().slice();
+      free(buf);
+      return { result: bytes, transfer: [bytes.buffer] };
+    }
     if (cmd === "close") {
-      free(W.doc); free(W.out);
-      W.doc = W.out = W.bytes = null;
+      free(W.doc); free(W.edit);
+      W.doc = W.edit = W.bytes = null;
       return { result: true };
     }
     throw new Error(`Unknown command ${cmd}`);
@@ -1545,8 +1747,11 @@ const GAP = 10; // px between segment cards
 const state = {
   doc: null,          // {id, name, pages, segments}
   srcBytes: null,     // original PDF
-  outBytes: null,     // translated PDF
-  outUrl: null,
+  outBytes: null,     // translated PDF (saved copy; may lag behind single-field updates)
+  hasOutput: false,   // worker 0 holds an editable translated PDF
+  outDirty: false,    // the editable PDF changed since outBytes was saved
+  applied: {},        // id -> translation currently in the translated PDF
+  pageVersion: new Map(), // page -> number of single-field updates (for preview caching)
   buildNo: 0,
   translations: {},
   variant: "original",
@@ -1790,9 +1995,11 @@ async function loadBytes(bytes, name, remember) {
 }
 
 function disposeOutput() {
-  if (state.outUrl) URL.revokeObjectURL(state.outUrl);
-  state.outUrl = null;
   state.outBytes = null;
+  state.hasOutput = false;
+  state.outDirty = false;
+  state.applied = {};
+  state.pageVersion = new Map();
 }
 
 function openDocument(doc, bytes) {
@@ -1888,7 +2095,7 @@ const observer = new IntersectionObserver((entries) => {
   }
 }, { root: $("#pages"), rootMargin: "800px 0px" });
 
-const imgKey = (i) => `${state.variant}:${state.variant === "translated" ? state.buildNo : 0}:${i}:${renderZoom(state.doc.pages[i])}`;
+const imgKey = (i) => `${state.variant}:${state.variant === "translated" ? `${state.buildNo}.${state.pageVersion.get(i) || 0}` : 0}:${i}:${renderZoom(state.doc.pages[i])}`;
 
 function queueRender(i) {
   const el = document.querySelector(`.page[data-page="${i}"]`);
@@ -1917,7 +2124,8 @@ function pump() {
     const page = state.doc.pages[i];
     const doc = state.doc;
     inflight++;
-    pool.leastBusy(building ? pool.workers[0] : null)
+    // The editable translated PDF lives in worker 0; originals render on any idle worker.
+    (state.variant === "translated" ? pool.workers[0] : pool.leastBusy(building ? pool.workers[0] : null))
       .call("render", { page: i, zoom: renderZoom(page), variant: state.variant })
       .then((buf) => {
         if (state.doc !== doc) return;
@@ -2142,10 +2350,12 @@ const vl = {
 
 const ro = new ResizeObserver((entries) => vl.remeasure(entries));
 
+const isPending = (id) => (state.translations[id] || "").trim() !== (state.applied[id] || "").trim();
+
 function makeCard(id) {
   const s = segById(id);
   const el = document.createElement("div");
-  el.className = "seg" + (hasTr(id) ? " done" : "") + (state.shrunk.has(id) ? " shrunk" : "") + (id === state.activeId ? " active" : "");
+  el.className = "seg" + (hasTr(id) ? " done" : "") + (state.shrunk.has(id) ? " shrunk" : "") + (id === state.activeId ? " active" : "") + (isPending(id) ? " pending" : "");
   el.dataset.id = id;
   el.innerHTML = `
     <div class="seg-head">
@@ -2154,6 +2364,7 @@ function makeCard(id) {
       <span class="seg-meta">${escapeHtml(segMeta(s))}</span>
       <button type="button" class="mini" data-act="copy" title="Copy source text">copy</button>
       <button type="button" class="mini" data-act="same" title="Keep the original text (use it as the translation)">keep</button>
+      <button type="button" class="mini apply" data-act="apply" title="Write this translation into the PDF now (Ctrl+S)">⟳ update PDF</button>
     </div>
     <div class="seg-src">${escapeHtml(s.text)}</div>
     <textarea rows="1" spellcheck="true" placeholder="Translation…"></textarea>`;
@@ -2169,6 +2380,7 @@ function autoGrow(ta) {
 function markDone(id) {
   const done = hasTr(id);
   vl.rendered.get(id)?.classList.toggle("done", done);
+  vl.rendered.get(id)?.classList.toggle("pending", isPending(id));
   document.querySelector(`.box[data-id="${id}"]`)?.classList.toggle("done", done);
 }
 
@@ -2186,7 +2398,7 @@ function updateSteps(any) {
   steps.forEach((li) => li.classList.remove("active", "done"));
   if (!state.doc) { steps[0].classList.add("active"); return; }
   steps[0].classList.add("done");
-  if (state.outBytes) {
+  if (state.hasOutput) {
     steps[1].classList.add("done");
     steps[2].classList.add("done");
   } else {
@@ -2293,6 +2505,7 @@ function mergeImported(parsed) {
     const ta = el.querySelector("textarea");
     if (ta.value !== (state.translations[id] || "")) { ta.value = state.translations[id] || ""; autoGrow(ta); }
     el.classList.toggle("done", hasTr(id));
+    el.classList.toggle("pending", isPending(id));
   }
   document.querySelectorAll(".box").forEach((b) => b.classList.toggle("done", hasTr(b.dataset.id)));
   vl.dirty = true;
@@ -2330,13 +2543,71 @@ function importPasted() {
 
 function setBuilt(built) {
   $("#viewTranslated").disabled = !built;
-  const dl = $("#btnDownload");
-  dl.hidden = !built;
-  if (built) {
-    dl.href = state.outUrl;
-    dl.download = `${stem()}.translated.pdf`;
-  }
+  $("#btnDownload").hidden = !built;
   updateProgress();
+}
+
+async function downloadOutput() {
+  try {
+    if (!state.outBytes || state.outDirty) {
+      busy("Saving PDF…");
+      state.outBytes = await pool.workers[0].call("save");
+      state.outDirty = false;
+    }
+    saveBlob(new Blob([state.outBytes], { type: "application/pdf" }), `${stem()}.translated.pdf`);
+  } catch (err) {
+    toast(`Could not save the PDF: ${err.message || err}`, "error");
+  } finally {
+    busy("");
+  }
+}
+
+function buildOptions() {
+  const fontMode = $("#fontMode").value === "custom" && !state.customFont ? "auto" : $("#fontMode").value;
+  return {
+    fontMode,
+    customFont: state.customFont && state.customFont.bytes,
+    expand: $("#optExpand").checked,
+    minScale: Number($("#minScale").value),
+  };
+}
+
+/**
+ * Write one segment's translation into the translated PDF right away. Its page is rebuilt
+ * from the original with every translation already applied on that page plus this one.
+ */
+let applyChain = Promise.resolve();
+function applyField(id) {
+  applyChain = applyChain.then(async () => {
+    if (!state.doc || !segIndex.has(id)) return;
+    const s = segById(id);
+    if (hasTr(id)) state.applied[id] = state.translations[id]; else delete state.applied[id];
+    const segs = segsByPage.get(s.page) || [];
+    const translations = {};
+    for (const x of segs) if ((state.applied[x.id] || "").trim()) translations[x.id] = state.applied[x.id];
+    try {
+      const stats = await pool.workers[0].call("updatePage", {
+        page: s.page, segments: segs, translations, pageInfo: state.doc.pages[s.page], opts: buildOptions(),
+      });
+      state.hasOutput = true;
+      state.outDirty = true;
+      state.pageVersion.set(s.page, (state.pageVersion.get(s.page) || 0) + 1);
+      for (const x of segs) state.shrunk.delete(x.id);
+      for (const x of stats.shrunk) state.shrunk.add(x.id);
+      for (const x of segs) {
+        const el = vl.rendered.get(x.id);
+        if (el) { el.classList.toggle("shrunk", state.shrunk.has(x.id)); el.classList.toggle("pending", isPending(x.id)); }
+      }
+      setBuilt(true);
+      if (state.variant !== "translated") setVariant("translated"); else queueRender(s.page);
+      ensureBoxes(s.page);
+      document.querySelector(`.box[data-id="${id}"]`)?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      if (stats.missing) toast(`${stats.missing} character(s) are not covered by the built-in fonts. Choose a font in the Build dialog.`, "error");
+    } catch (err) {
+      toast(`Could not update the PDF: ${err.message || err}`, "error");
+    }
+  });
+  return applyChain;
 }
 
 let building = false;
@@ -2361,21 +2632,18 @@ async function doBuild() {
       segments: state.doc.segments,
       translations,
       pages: state.doc.pages,
-      opts: {
-        fontMode,
-        customFont: state.customFont && state.customFont.bytes,
-        expand: $("#optExpand").checked,
-        minScale: Number($("#minScale").value),
-      },
+      opts: buildOptions(),
     }, [], (i, n) => busy(`Rebuilding PDF… page ${i} of ${n}`));
-    busy("Preparing preview…");
     disposeOutput();
     state.outBytes = bytes;
-    state.outUrl = URL.createObjectURL(new Blob([bytes], { type: "application/pdf" }));
-    await pool.all("setOutput", () => ({ bytes }));
+    state.hasOutput = true;
+    state.applied = { ...translations };
     state.buildNo++;
     state.shrunk = new Set(stats.shrunk.map((x) => x.id));
-    for (const [id, el] of vl.rendered) el.classList.toggle("shrunk", state.shrunk.has(id));
+    for (const [id, el] of vl.rendered) {
+      el.classList.toggle("shrunk", state.shrunk.has(id));
+      el.classList.toggle("pending", isPending(id));
+    }
     setBuilt(true);
     setVariant("translated");
     const secs = ((performance.now() - started) / 1000).toFixed(1);
@@ -2465,12 +2733,19 @@ function init() {
       ta.value = segById(id).text;
       setTranslation(id, ta.value);
       autoGrow(ta);
+    } else if (act === "apply") {
+      applyField(id);
     } else if (e.target.classList.contains("seg-src")) {
       setActive(id, { scrollViewer: true, focus: true });
     }
   });
   list.addEventListener("keydown", (e) => {
     if (e.target.tagName !== "TEXTAREA") return;
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") { // update this field in the PDF
+      e.preventDefault();
+      applyField(Number(e.target.closest(".seg").dataset.id));
+      return;
+    }
     const down = (e.key === "Enter" && (e.ctrlKey || e.metaKey)) || (e.altKey && e.key === "ArrowDown");
     const up = e.altKey && e.key === "ArrowUp";
     if (!down && !up) return;
@@ -2496,6 +2771,7 @@ function init() {
   $("#importFile").addEventListener("change", (e) => importFile(e.target.files[0]));
   $("#importDialog").addEventListener("close", () => { if ($("#importDialog").returnValue === "ok") importPasted(); });
 
+  $("#btnDownload").addEventListener("click", (e) => { e.preventDefault(); downloadOutput(); });
   $("#btnBuild").addEventListener("click", () => {
     $("#fontUploadRow").hidden = $("#fontMode").value !== "custom";
     $("#buildDialog").showModal();
@@ -2531,6 +2807,92 @@ function init() {
 }
 
 init();
+
+/* ------------------------------------------------------------ AI prompt */
+
+function aiSegments() {
+  const n = state.doc.pages.length;
+  const from = Math.min(n, Math.max(1, Number($("#aiFrom").value) || 1)) - 1;
+  const to = Math.min(n, Math.max(from + 1, Number($("#aiTo").value) || n)) - 1;
+  return state.doc.segments.filter((s) => s.page >= from && s.page <= to && (!$("#aiOnlyTodo").checked || !hasTr(s.id)));
+}
+
+function aiPromptText() {
+  const target = $("#aiTarget").value.trim() || "[TARGET LANGUAGE]";
+  const source = $("#aiSource").value.trim();
+  const context = $("#aiContext").value.trim();
+  const glossary = $("#aiGlossary").value.trim();
+  const lines = [
+    `Translate the text segments below${source ? ` from ${source}` : ""} into ${target}.`,
+    "",
+    "The segments were extracted from a PDF. Each translation will be put back into exactly the same place on the page, in a box of the same size, so the original layout must survive. Follow these rules strictly:",
+    "",
+    "1. Every segment starts with a marker line like [[12]]. Copy every marker exactly, on its own line, in the same order. Do not add, remove, merge, split or renumber segments.",
+    "2. Put the translation of each segment directly under its marker. Return every segment, also those that need no translation (names, numbers, codes): copy them unchanged.",
+    "3. Many segments are table cells, form labels, values or headings, not sentences. Translate each one on its own, the way such a label or value is normally written in the target language. A sentence may continue in the next segment: keep each part in its own segment anyway.",
+    "4. The space is limited: keep each translation about as long as the original, never much longer. Prefer the short, common technical term and use standard abbreviations where the original uses abbreviations.",
+    "5. Keep the form of each segment: a label ending with \":\" stays a label ending with \":\"; keep leading bullets, numbering, brackets and trailing punctuation; keep ALL CAPS, Title Case and lower case as in the original.",
+    "6. Do not translate or change: model, part and serial numbers, codes and identifiers (e.g. 7SJ6212-5BA00), file names and paths, URLs, e-mail addresses, units, symbols and formulas (e.g. I>>, p>, 10/0,4kV), and names of people and companies. Keep numbers, dates and decimal separators exactly as written.",
+    "7. Keep line breaks inside a segment only where the original has them.",
+    "8. Reply with the translated segments only, in exactly the same [[n]] format, as plain text: no introduction, no comments, no Markdown, no code block.",
+  ];
+  if (context) lines.push("", `Context: the document is ${context.replace(/\.$/, "")}. Use the terminology of that field.`);
+  if (glossary) lines.push("", "Use these translations for the following terms:", ...glossary.split(/\n/).map((l) => l.trim()).filter(Boolean).map((l) => `- ${l}`));
+  lines.push("", "Segments:");
+  return lines.join("\n");
+}
+
+function refreshAiPrompt() {
+  if (!state.doc) return;
+  const segs = aiSegments();
+  const chars = segs.reduce((n, s) => n + s.text.length, 0);
+  $("#aiPrompt").value = aiPromptText();
+  let msg = `${segs.length} segment${segs.length === 1 ? "" : "s"}, ${chars.toLocaleString()} characters.`;
+  if (chars > 20000) msg += " That is a lot for one AI answer, which may be cut off: translate a few pages at a time (Pages field) and import each answer; imports add up.";
+  $("#aiStats").textContent = msg;
+}
+
+async function copyText(text, okMessage) {
+  try {
+    await navigator.clipboard.writeText(text);
+    toast(okMessage, "ok");
+  } catch (_) {
+    $("#aiPrompt").value = text;
+    $("#aiPrompt").select();
+    toast("Clipboard is not available. The text is selected in the box, so copy it with Ctrl+C.");
+  }
+}
+
+let helpDocId = null;
+function openHelp(focusAi) {
+  if (state.doc) {
+    $("#aiTo").max = $("#aiFrom").max = state.doc.pages.length;
+    if (helpDocId !== state.doc.id) { $("#aiFrom").value = 1; $("#aiTo").value = state.doc.pages.length; helpDocId = state.doc.id; }
+    if (!$("#aiTarget").value && $("#tgtLang").value) $("#aiTarget").value = $("#tgtLang").value;
+  }
+  refreshAiPrompt();
+  $("#helpDialog").showModal();
+  if (focusAi) $("#aiTitle").scrollIntoView({ block: "start" });
+}
+
+function initHelp() {
+  $("#btnHelp").addEventListener("click", () => openHelp(false));
+  $("#btnAi").addEventListener("click", () => openHelp(true));
+  for (const id of ["#aiTarget", "#aiSource", "#aiFrom", "#aiTo", "#aiOnlyTodo", "#aiContext", "#aiGlossary"]) {
+    $(id).addEventListener("input", refreshAiPrompt);
+  }
+  $("#aiCopyPrompt").addEventListener("click", () => copyText(aiPromptText() + "\n\n[paste the segments here]",
+    "Prompt copied. Add the segments (Copy all) after it, send it to the AI, then paste the answer into Import."));
+  $("#aiCopyAll").addEventListener("click", () => {
+    if (!state.doc) { toast("Open a PDF first.", "error"); return; }
+    const segs = aiSegments();
+    if (!segs.length) { toast("No segments in this selection.", "error"); return; }
+    copyText(`${aiPromptText()}\n\n${Engine.exportTxt(segs)}`,
+      `Prompt and ${segs.length} segments copied. Paste them into the AI chat, then paste its answer into Import.`);
+  });
+}
+
+initHelp();
 </script>
 </body>
 </html>

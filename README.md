@@ -26,6 +26,19 @@ segment list and the pages near the viewport are drawn. Redactions are merged in
 rectangles as possible. As a reference point, a 615-page document with 20,000 segments opens
 in about 3.5 s and rebuilds in about 7 s in headless Chromium on 4 cores.
 
+Extra features in the standalone version:
+
+* **⟳ update PDF** on a segment card (or <kbd>Ctrl</kbd>+<kbd>S</kbd> in its text box) writes that one
+  translation into the translated PDF immediately. Only its page is rebuilt from the original,
+  so it takes milliseconds, and it works before or after a full **Build PDF**.
+* **Help → Translate with AI** generates a prompt for ChatGPT, Claude or Gemini. The prompt
+  keeps the `[[n]]` markers and asks for translations that fit the original space, keep form
+  labels, and leave codes, numbers and paths unchanged. It can include document context, a
+  glossary and a page range, and it copies the prompt together with the segments; you paste
+  the AI's answer into **Import**.
+* Form and table layouts: label/value columns without borders, wrapped cells and bold
+  "Label:" + regular value pairs are detected as separate segments.
+
 How it differs from the server version: the built-in fonts cover Latin, Greek, Cyrillic,
 Chinese, Japanese and Korean. For other alphabets you can load your own font. Right-to-left and
 complex scripts (Arabic, Hebrew, Indic, Thai) are not shaped correctly in this version.
