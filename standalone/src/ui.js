@@ -430,6 +430,7 @@ function onLanguageChange() {
 }
 
 function closeDocument() {
+  closeFind();
   disposeOutput();
   state.doc = null;
   try { localStorage.removeItem(LS_LAST); } catch (_) { /* ignore */ }
@@ -836,6 +837,7 @@ function makeCard(id) {
     <div class="seg-src">${escapeHtml(s.text)}</div>
     <textarea rows="1" spellcheck="true" placeholder="${escapeHtml(t("card.placeholder"))}"></textarea>`;
   el.querySelector("textarea").value = state.translations[id] || "";
+  if (find.open) requestAnimationFrame(() => decorateCard(el, id)); // (once it has its size)
   return el;
 }
 
@@ -1284,7 +1286,7 @@ function init() {
     } else if (act === "style") {
       if (styleOpen.has(id)) styleOpen.delete(id); else styleOpen.add(id);
       refreshStylePanel(id);
-    } else if (e.target.classList.contains("seg-src")) {
+    } else if (e.target.closest(".seg-src")) { // (also on a highlighted search match)
       setActive(id, { scrollViewer: true, focus: true });
     }
   });

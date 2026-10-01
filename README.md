@@ -57,6 +57,7 @@ Extra features in the standalone version:
 * Fields can be moved and resized on the page (drag the box / its handles); size, font, bold,
   italic and colour can be set per field (**Aa** on a card).
 * Pages can be turned by 90° (↻ in the page toolbar).
+* Find and replace in translations (and find in the original): 🔍, Ctrl+F / Ctrl+H.
 * Bilingual download: a PDF with the original on odd and the translation on even pages; an EPUB /
   FB2 with each paragraph followed by its translation.
 * Password protection is removed (restrictions automatically, an open password after you enter it).

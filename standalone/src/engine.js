@@ -1492,7 +1492,9 @@ function layoutSegment(seg, text, fk, bounds, obs, opts, used, stats, leadEnd = 
     return search(Math.max(opts.minScale || 0, 0.02)) || search(0.02) || { k: 0.02, lines: wrap(tok, widths(W, 0.02), indent / (s0 * 0.02)) };
   };
   let W = (a1 - a0) * 1.01;
-  let { k, lines } = fitWidth(W);
+  // A size the user chose for this field is kept as it is: the text is wrapped at the box width
+  // and may run on below the box instead of being made smaller.
+  let { k, lines } = seg.exact_size ? { k: 1, lines: wrap(tok, widths(W, 1), indent / s0) } : fitWidth(W);
   if (k < 1 && obs && seg.lines > 1 && !seg.fixed) {
     // A wrapped paragraph or table cell may widen a little into free space before shrinking.
     const [e0, e1] = expandedSpan(seg, bounds, obs, 1.0 * seg.size);

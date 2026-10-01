@@ -300,6 +300,7 @@ kbd { font: 11.5px ui-monospace, monospace; border: 1px solid var(--border); bor
 .help-version { margin-top: 4px; }
 /* Narrow editor pane: icon-only secondary buttons (their titles explain them). */
 .editor-pane { container-type: inline-size; }
+.pane-toolbar #btnFind { padding: 0 8px; }
 @container (max-width: 780px) { /* the OCR and Copy buttons go icon-only first */
   .pane-toolbar #btnOcr span, .pane-toolbar #btnCopy span { display: none; }
   .pane-toolbar #btnOcr, .pane-toolbar #btnCopy { padding: 0 7px; }
@@ -406,3 +407,20 @@ body.box-dragging, body.box-dragging .box { cursor: grabbing !important; user-se
 /* ---- v1.09: turned pages, bilingual download ---- */
 .page-body { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); transform-origin: 50% 50%; }
 .bi-btn { padding: 0 9px; }
+
+/* ---- v1.10: find and replace ---- */
+.find-bar { display: flex; flex-direction: column; gap: 5px; padding: 6px 12px 8px; border-bottom: 1px solid var(--border); background: var(--surface-2); }
+.find-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.find-row input[type="search"], .find-row input[type="text"] { flex: 1; min-width: 140px; }
+.find-row .check { font-size: 12.5px; }
+#findText.no-match { border-color: var(--danger, #c62828); background: rgba(198, 40, 40, .06); }
+.find-count { min-width: 64px; text-align: right; }
+#findReplaceToggle.on, #btnFind.on { color: var(--accent); border-color: var(--accent); }
+mark.find { background: #ffe066; color: inherit; border-radius: 2px; padding: 0; }
+mark.find.cur { background: #ff9f1c; box-shadow: 0 0 0 1px #e07b00; }
+.seg { position: relative; }
+.ta-backdrop { position: absolute; left: 0; right: 0; padding: 8px 10px; border-top: 1px solid transparent; line-height: 1.45; white-space: pre-wrap;
+  overflow-wrap: break-word; word-break: break-word; overflow: hidden; color: transparent; background: var(--surface-2); pointer-events: none;
+  border-radius: 0 0 var(--radius) var(--radius); font: inherit; }
+.ta-backdrop mark.find { color: transparent; }
+.seg textarea.findable { background: transparent; position: relative; }

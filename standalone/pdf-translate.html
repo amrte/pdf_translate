@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="PDF Translate 1.09">
+  <meta name="generator" content="PDF Translate 1.10">
   <title>PDF Translate</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Cdefs%3E%3ClinearGradient id=%22g%22 x1=%220%22 y1=%220%22 x2=%221%22 y2=%221%22%3E%3Cstop offset=%220%22 stop-color=%22#4a6cf7%22/%3E%3Cstop offset=%221%22 stop-color=%22#2440b3%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=%2232%22 height=%2232%22 rx=%227%22 fill=%22url%28#g%29%22/%3E%3Cpath d=%22M8 4.5h9.5l6 6V23a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V6.5a2 2 0 0 1 2-2z%22 fill=%22#fff%22/%3E%3Cpath d=%22M17.5 4.5v4.8a1.2 1.2 0 0 0 1.2 1.2h4.8z%22 fill=%22#c7d2fe%22/%3E%3Crect x=%229%22 y=%2213%22 width=%229%22 height=%221.7%22 rx=%22.85%22 fill=%22#9aabf0%22/%3E%3Crect x=%229%22 y=%2216.6%22 width=%2211%22 height=%221.7%22 rx=%22.85%22 fill=%22#9aabf0%22/%3E%3Crect x=%229%22 y=%2220.2%22 width=%226%22 height=%221.7%22 rx=%22.85%22 fill=%22#9aabf0%22/%3E%3Ccircle cx=%2224%22 cy=%2224%22 r=%227%22 fill=%22#f59e0b%22 stroke=%22#fff%22 stroke-width=%221.6%22/%3E%3Cpath d=%22M20.4 21.7h4.6M27.6 26.3H23%22 fill=%22none%22 stroke=%22#fff%22 stroke-width=%221.6%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M24.6 19.4l3.5 2.3-3.5 2.3zM23.4 24l-3.5 2.3 3.5 2.3z%22 fill=%22#fff%22/%3E%3C/svg%3E">
   <style>
@@ -309,6 +309,7 @@ kbd { font: 11.5px ui-monospace, monospace; border: 1px solid var(--border); bor
 .help-version { margin-top: 4px; }
 /* Narrow editor pane: icon-only secondary buttons (their titles explain them). */
 .editor-pane { container-type: inline-size; }
+.pane-toolbar #btnFind { padding: 0 8px; }
 @container (max-width: 780px) { /* the OCR and Copy buttons go icon-only first */
   .pane-toolbar #btnOcr span, .pane-toolbar #btnCopy span { display: none; }
   .pane-toolbar #btnOcr, .pane-toolbar #btnCopy { padding: 0 7px; }
@@ -416,6 +417,23 @@ body.box-dragging, body.box-dragging .box { cursor: grabbing !important; user-se
 .page-body { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); transform-origin: 50% 50%; }
 .bi-btn { padding: 0 9px; }
 
+/* ---- v1.10: find and replace ---- */
+.find-bar { display: flex; flex-direction: column; gap: 5px; padding: 6px 12px 8px; border-bottom: 1px solid var(--border); background: var(--surface-2); }
+.find-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.find-row input[type="search"], .find-row input[type="text"] { flex: 1; min-width: 140px; }
+.find-row .check { font-size: 12.5px; }
+#findText.no-match { border-color: var(--danger, #c62828); background: rgba(198, 40, 40, .06); }
+.find-count { min-width: 64px; text-align: right; }
+#findReplaceToggle.on, #btnFind.on { color: var(--accent); border-color: var(--accent); }
+mark.find { background: #ffe066; color: inherit; border-radius: 2px; padding: 0; }
+mark.find.cur { background: #ff9f1c; box-shadow: 0 0 0 1px #e07b00; }
+.seg { position: relative; }
+.ta-backdrop { position: absolute; left: 0; right: 0; padding: 8px 10px; border-top: 1px solid transparent; line-height: 1.45; white-space: pre-wrap;
+  overflow-wrap: break-word; word-break: break-word; overflow: hidden; color: transparent; background: var(--surface-2); pointer-events: none;
+  border-radius: 0 0 var(--radius) var(--radius); font: inherit; }
+.ta-backdrop mark.find { color: transparent; }
+.seg textarea.findable { background: transparent; position: relative; }
+
   </style>
 </head>
 <body>
@@ -423,7 +441,7 @@ body.box-dragging, body.box-dragging .box { cursor: grabbing !important; user-se
   <div class="brand">
     <span class="logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><defs><linearGradient id="logoGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4a6cf7"/><stop offset="1" stop-color="#2440b3"/></linearGradient></defs><rect width="32" height="32" rx="7" fill="url(#logoGrad)"/><path d="M8 4.5h9.5l6 6V23a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V6.5a2 2 0 0 1 2-2z" fill="#fff"/><path d="M17.5 4.5v4.8a1.2 1.2 0 0 0 1.2 1.2h4.8z" fill="#c7d2fe"/><rect x="9" y="13" width="9" height="1.7" rx=".85" fill="#9aabf0"/><rect x="9" y="16.6" width="11" height="1.7" rx=".85" fill="#9aabf0"/><rect x="9" y="20.2" width="6" height="1.7" rx=".85" fill="#9aabf0"/><circle cx="24" cy="24" r="7" fill="#f59e0b" stroke="#fff" stroke-width="1.6"/><path d="M20.4 21.7h4.6M27.6 26.3H23" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/><path d="M24.6 19.4l3.5 2.3-3.5 2.3zM23.4 24l-3.5 2.3 3.5 2.3z" fill="#fff"/></svg></span>
     <span>PDF Translate</span>
-    <span class="version" id="appVersion">v1.09</span>
+    <span class="version" id="appVersion">v1.10</span>
   </div>
   <ol class="steps" id="steps">
     <li data-step="1"><span>1</span> <i data-i18n="step.extract">Extract text</i></li>
@@ -436,9 +454,9 @@ body.box-dragging, body.box-dragging .box { cursor: grabbing !important; user-se
       <button type="button" data-lang="de" title="Deutsch">DE</button>
       <button type="button" data-lang="en" title="English">EN</button>
     </div>
-    <button class="icon-btn top-fs" id="btnAppFullscreen" data-i18n-title="top.fullscreen"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9V3h6M21 9V3h-6M3 15v6h6M21 15v6h-6"/><rect x="8" y="8" width="8" height="8" rx="1"/></svg></button>
     <button class="btn ghost" id="btnHelp" data-i18n-title="help.btnTitle" data-i18n="help.btn">? Help</button>
     <button class="btn ghost" id="btnNew" hidden data-i18n="top.new">Open another PDF</button>
+    <button class="icon-btn top-fs" id="btnAppFullscreen" data-i18n-title="top.fullscreen"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9V3h6M21 9V3h-6M3 15v6h6M21 15v6h-6"/><rect x="8" y="8" width="8" height="8" rx="1"/></svg></button>
   </div>
 </header>
 
@@ -540,6 +558,9 @@ body.box-dragging, body.box-dragging .box { cursor: grabbing !important; user-se
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 15V3m0 0L8 7m4-4 4 4M5 21h14"/></svg>
         <span data-i18n="tb.import">Import</span>
       </button>
+      <button class="btn" id="btnFind" data-i18n-title="find.title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg>
+      </button>
       <button class="btn pdf-only" id="btnOcr" data-i18n-title="tb.ocrTitle">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/><path d="M8 9h8M8 12h8M8 15h5"/></svg>
         <span data-i18n="tb.ocr">OCR</span>
@@ -558,6 +579,30 @@ body.box-dragging, body.box-dragging .box { cursor: grabbing !important; user-se
       <button type="button" class="icon-btn clear-btn" id="btnClear" data-i18n-title="clear.title">
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v6M14 11v6"/></svg>
       </button>
+    </div>
+    <div class="find-bar" id="findBar" hidden>
+      <div class="find-row">
+        <input type="search" id="findText" data-i18n-placeholder="find.placeholder" autocomplete="off">
+        <span class="muted small find-count" id="findCount"></span>
+        <button type="button" class="icon-btn" id="findPrev" data-i18n-title="find.prev">‹</button>
+        <button type="button" class="icon-btn" id="findNext" data-i18n-title="find.next">›</button>
+        <button type="button" class="icon-btn" id="findReplaceToggle" data-i18n-title="find.replaceToggle">⇄</button>
+        <button type="button" class="icon-btn" id="findClose" data-i18n-title="find.close">×</button>
+      </div>
+      <div class="find-row">
+        <select id="findScope">
+          <option value="tr" data-i18n="find.scopeTr">In translations</option>
+          <option value="src" data-i18n="find.scopeSrc">In the original</option>
+          <option value="both" data-i18n="find.scopeBoth">In both</option>
+        </select>
+        <label class="check"><input type="checkbox" id="findCase"> <span data-i18n="find.case">Match case</span></label>
+        <label class="check"><input type="checkbox" id="findWord"> <span data-i18n="find.word">Whole word</span></label>
+      </div>
+      <div class="find-row" id="replaceRow" hidden>
+        <input type="text" id="replaceText" data-i18n-placeholder="find.replacePlaceholder" autocomplete="off">
+        <button type="button" class="btn" id="replaceOne" data-i18n="find.replace" data-i18n-title="find.replaceTitle">Replace</button>
+        <button type="button" class="btn" id="replaceAll" data-i18n="find.replaceAll" data-i18n-title="find.replaceAllTitle">Replace all</button>
+      </div>
     </div>
     <div class="filter-row">
       <input type="search" id="search" data-i18n-placeholder="filter.search">
@@ -687,7 +732,7 @@ body.box-dragging, body.box-dragging .box { cursor: grabbing !important; user-se
     <p class="muted small" id="aiStats"></p>
     <div class="ai-parts-head"><b data-i18n="ai.parts">Copy prompt + text</b> <span class="muted small" data-i18n="ai.partsHint"></span></div>
     <div class="ai-parts" id="aiParts"></div>
-    <p class="muted small help-version">PDF Translate v1.09</p>
+    <p class="muted small help-version">PDF Translate v1.10</p>
     <div class="modal-actions">
       <button value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
       <button type="button" class="btn" id="aiCopyPrompt" data-i18n="ai.copyPrompt">Copy prompt only</button>
@@ -879,6 +924,27 @@ const I18N = {
     "msg.chooseFile": "Bitte wählen Sie eine PDF-, EPUB- oder FB2-Datei.",
     "msg.loadingEngine": "PDF-Engine wird geladen…",
     "msg.opening": "Wird geöffnet…",
+    "find.title": "Suchen und ersetzen (Strg+F, Strg+H)",
+    "find.placeholder": "Suchen…",
+    "find.prev": "Vorheriger Treffer (Umschalt+Enter, Umschalt+F3)",
+    "find.next": "Nächster Treffer (Enter, F3)",
+    "find.replaceToggle": "Ersetzen ein-/ausblenden (Strg+H)",
+    "find.close": "Suche schließen (Esc)",
+    "find.scopeTr": "In Übersetzungen",
+    "find.scopeSrc": "Im Original",
+    "find.scopeBoth": "In beiden",
+    "find.case": "Groß/klein",
+    "find.word": "Ganzes Wort",
+    "find.replacePlaceholder": "Ersetzen durch…",
+    "find.replace": "Ersetzen",
+    "find.replaceTitle": "Diesen Treffer in der Übersetzung ersetzen und zum nächsten gehen (Enter)",
+    "find.replaceAll": "Alle ersetzen",
+    "find.replaceAllTitle": "Alle Treffer in allen Übersetzungen ersetzen (Strg+Enter); rückgängig mit Strg+Z",
+    "find.count": "{i} von {n}",
+    "find.none": "Keine Treffer",
+    "find.replaced": "{n} Treffer in {k} Übersetzung(en) ersetzt.",
+    "hist.replace": "Ersetzen",
+    "hist.replaceAll": "{n}× ersetzt",
     "nav.rotate": "Diese Seite um 90° drehen (mit Umschalt: gegen den Uhrzeigersinn). Wird in die PDF übernommen.",
     "hist.rotate": "Seite gedreht",
     "tb.bilingualTitle": "Zweisprachig herunterladen – PDF: ungerade Seiten im Original, gerade Seiten übersetzt; E-Book: jeder Absatz im Original, gefolgt von der Übersetzung",
@@ -888,7 +954,7 @@ const I18N = {
     "tb.ocrTitle": "Texterkennung für gescannte Seiten und Text in Bildern",
     "card.styleTitle": "Größe, Schrift, Fett/Kursiv und Farbe dieses Feldes. Den Rahmen auf der Seite ziehen verschiebt das Feld, die Griffe ändern seine Größe.",
     "st.size": "Größe",
-    "st.sizeTitle": "Schriftgröße der Übersetzung in pt (leer = wie Original)",
+    "st.sizeTitle": "Schriftgröße der Übersetzung in pt (leer = wie Original). Diese Größe wird genau verwendet, auch wenn der Text dann über den Rahmen hinausläuft.",
     "st.font": "Schrift",
     "st.fontOrig": "Schrift wie Original",
     "st.sans": "Serifenlos",
@@ -1152,6 +1218,27 @@ const I18N = {
     "msg.chooseFile": "Please choose a PDF, EPUB or FB2 file.",
     "msg.loadingEngine": "Loading the PDF engine…",
     "msg.opening": "Opening…",
+    "find.title": "Find and replace (Ctrl+F, Ctrl+H)",
+    "find.placeholder": "Find…",
+    "find.prev": "Previous match (Shift+Enter, Shift+F3)",
+    "find.next": "Next match (Enter, F3)",
+    "find.replaceToggle": "Show / hide replace (Ctrl+H)",
+    "find.close": "Close (Esc)",
+    "find.scopeTr": "In translations",
+    "find.scopeSrc": "In the original",
+    "find.scopeBoth": "In both",
+    "find.case": "Match case",
+    "find.word": "Whole word",
+    "find.replacePlaceholder": "Replace with…",
+    "find.replace": "Replace",
+    "find.replaceTitle": "Replace this match in the translation and go to the next one (Enter)",
+    "find.replaceAll": "Replace all",
+    "find.replaceAllTitle": "Replace every match in all translations (Ctrl+Enter); undo with Ctrl+Z",
+    "find.count": "{i} of {n}",
+    "find.none": "No matches",
+    "find.replaced": "{n} match(es) replaced in {k} translation(s).",
+    "hist.replace": "replace",
+    "hist.replaceAll": "{n}× replaced",
     "nav.rotate": "Turn this page by 90° (with Shift: counter-clockwise). Applied to the PDF.",
     "hist.rotate": "page turned",
     "tb.bilingualTitle": "Download both languages – PDF: odd pages original, even pages translated; e-book: each paragraph in the original, followed by its translation",
@@ -1161,7 +1248,7 @@ const I18N = {
     "tb.ocrTitle": "Text recognition for scanned pages and text in pictures",
     "card.styleTitle": "Size, font, bold/italic and colour of this field. Drag its box on the page to move it; drag the handles to resize it.",
     "st.size": "Size",
-    "st.sizeTitle": "Font size of the translation in pt (empty = as in the original)",
+    "st.sizeTitle": "Font size of the translation in pt (empty = as in the original). This size is used exactly, even if the text then runs past the box.",
     "st.font": "Font",
     "st.fontOrig": "Font as in the original",
     "st.sans": "Sans-serif",
@@ -2890,7 +2977,9 @@ function layoutSegment(seg, text, fk, bounds, obs, opts, used, stats, leadEnd = 
     return search(Math.max(opts.minScale || 0, 0.02)) || search(0.02) || { k: 0.02, lines: wrap(tok, widths(W, 0.02), indent / (s0 * 0.02)) };
   };
   let W = (a1 - a0) * 1.01;
-  let { k, lines } = fitWidth(W);
+  // A size the user chose for this field is kept as it is: the text is wrapped at the box width
+  // and may run on below the box instead of being made smaller.
+  let { k, lines } = seg.exact_size ? { k: 1, lines: wrap(tok, widths(W, 1), indent / s0) } : fitWidth(W);
   if (k < 1 && obs && seg.lines > 1 && !seg.fixed) {
     // A wrapped paragraph or table cell may widen a little into free space before shrinking.
     const [e0, e1] = expandedSpan(seg, bounds, obs, 1.0 * seg.size);
@@ -4685,6 +4774,7 @@ function onLanguageChange() {
 }
 
 function closeDocument() {
+  closeFind();
   disposeOutput();
   state.doc = null;
   try { localStorage.removeItem(LS_LAST); } catch (_) { /* ignore */ }
@@ -5091,6 +5181,7 @@ function makeCard(id) {
     <div class="seg-src">${escapeHtml(s.text)}</div>
     <textarea rows="1" spellcheck="true" placeholder="${escapeHtml(t("card.placeholder"))}"></textarea>`;
   el.querySelector("textarea").value = state.translations[id] || "";
+  if (find.open) requestAnimationFrame(() => decorateCard(el, id)); // (once it has its size)
   return el;
 }
 
@@ -5539,7 +5630,7 @@ function init() {
     } else if (act === "style") {
       if (styleOpen.has(id)) styleOpen.delete(id); else styleOpen.add(id);
       refreshStylePanel(id);
-    } else if (e.target.classList.contains("seg-src")) {
+    } else if (e.target.closest(".seg-src")) { // (also on a highlighted search match)
       setActive(id, { scrollViewer: true, focus: true });
     }
   });
@@ -6302,6 +6393,7 @@ function effSeg(s) {
   if (o.size && o.size > 0) {
     const k = o.size / s.size;
     e.size = o.size;
+    e.exact_size = true; // never made smaller to fit the box
     if (s.line_pitch) e.line_pitch = s.line_pitch * k;
     if (!o.bbox && s.rotation === 0 && k > 1) {
       // Bigger text gets a box that is taller by the same factor (downwards).
@@ -6445,7 +6537,7 @@ function stylePanelHtml(s) {
   const fonts = [["", "st.fontOrig"], ["sans-serif", "st.sans"], ["serif", "st.serif"], ["monospace", "st.mono"]];
   if (state.customFont || o.font === "custom") fonts.push(["custom", "st.custom"]);
   return `<div class="seg-style">
-    <label title="${escapeHtml(t("st.sizeTitle"))}">${t("st.size")} <input type="number" data-st="size" min="2" max="400" step="0.5" value="${o.size || ""}" placeholder="${Math.round(s.size * 10) / 10}"></label>
+    <label title="${escapeHtml(t("st.sizeTitle"))}">${t("st.size")} <input type="number" data-st="size" min="1" max="2000" step="0.5" value="${o.size || ""}" placeholder="${Math.round(s.size * 10) / 10}"></label>
     <select data-st="font" title="${escapeHtml(t("st.font"))}">${fonts.map(([v, k]) => `<option value="${v}"${(o.font || "") === v ? " selected" : ""}>${escapeHtml(t(k))}</option>`).join("")}</select>
     <button type="button" class="mini toggle${bold ? " on" : ""}" data-st="bold" title="${escapeHtml(t("st.bold"))}"><b>B</b></button>
     <button type="button" class="mini toggle${italic ? " on" : ""}" data-st="italic" title="${escapeHtml(t("st.italic"))}"><i>I</i></button>
@@ -6745,6 +6837,210 @@ function suggestOcr() {
   if (n) toast(t("ocr.suggest", { n }), "", { label: t("ocr.suggestAction"), run: openOcrDialog });
 }
 
+/* ------------------------------------------------------- find and replace */
+
+// Matches are {id, where: "src" | "tr", index, length}, in document order. They are highlighted
+// in the cards: in the source text with <mark>, in the translation box with a layer behind it.
+const find = { open: false, matches: [], cur: -1, timer: 0 };
+
+function findRegex() {
+  const q = $("#findText").value;
+  if (!q) return null;
+  let src = q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  if ($("#findWord").checked) src = `(?<![\\p{L}\\p{N}_])${src}(?![\\p{L}\\p{N}_])`;
+  return new RegExp(src, "gu" + ($("#findCase").checked ? "" : "i"));
+}
+
+function collectMatches() {
+  const re = findRegex(), scope = $("#findScope").value, out = [];
+  if (re && state.doc) {
+    for (const s of state.doc.segments) {
+      if (scope !== "tr") for (const m of s.text.matchAll(re)) if (m[0]) out.push({ id: s.id, where: "src", index: m.index, length: m[0].length });
+      const tr = state.translations[s.id] || "";
+      if (scope !== "src" && tr) for (const m of tr.matchAll(re)) if (m[0]) out.push({ id: s.id, where: "tr", index: m.index, length: m[0].length });
+    }
+  }
+  return out;
+}
+
+/** Search again (after typing, an option change or an edit), keeping the position if possible. */
+function refreshFind() {
+  if (!find.open) return;
+  const prev = find.matches[find.cur];
+  find.matches = collectMatches();
+  find.cur = prev ? find.matches.findIndex((m) => m.id === prev.id && m.where === prev.where && m.index >= prev.index) : -1;
+  if (find.cur < 0 && prev) find.cur = find.matches.findIndex((m) => m.id > prev.id);
+  updateFindCount();
+  for (const [id, el] of vl.rendered) decorateCard(el, id);
+}
+
+function updateFindCount() {
+  const n = find.matches.length;
+  $("#findCount").textContent = !$("#findText").value ? "" : n ? t("find.count", { i: find.cur >= 0 ? find.cur + 1 : 0, n }) : t("find.none");
+  $("#findText").classList.toggle("no-match", Boolean($("#findText").value) && !n);
+  const tr = find.matches.some((m) => m.where === "tr");
+  $("#replaceOne").disabled = !tr;
+  $("#replaceAll").disabled = !tr;
+}
+
+const markText = (text, ranges, cur) => {
+  let out = "", pos = 0;
+  for (const r of ranges) {
+    out += escapeHtml(text.slice(pos, r.index)) + `<mark class="find${r === cur ? " cur" : ""}">${escapeHtml(text.slice(r.index, r.index + r.length))}</mark>`;
+    pos = r.index + r.length;
+  }
+  return out + escapeHtml(text.slice(pos));
+};
+
+/** Show the matches of one card (or remove the highlights when the search is closed). */
+function decorateCard(el, id) {
+  const s = segById(id), src = el.querySelector(".seg-src"), ta = el.querySelector("textarea");
+  if (!s || !src || !ta) return;
+  const cur = find.matches[find.cur];
+  const mine = find.open ? find.matches.filter((m) => m.id === id) : [];
+  const inSrc = mine.filter((m) => m.where === "src"), inTr = mine.filter((m) => m.where === "tr");
+  src.innerHTML = inSrc.length ? markText(s.text, inSrc, cur) : escapeHtml(s.text);
+  let back = el.querySelector(".ta-backdrop");
+  if (!inTr.length) {
+    if (back) { back.remove(); ta.classList.remove("findable"); }
+    return;
+  }
+  if (!back) {
+    back = document.createElement("div");
+    back.className = "ta-backdrop";
+    ta.before(back);
+    ta.classList.add("findable");
+  }
+  // The layer wraps exactly like the box: same font, same width for the text (scroll bar or not).
+  const cs = getComputedStyle(ta);
+  back.style.font = cs.font;
+  back.style.letterSpacing = cs.letterSpacing;
+  back.style.overflowY = ta.scrollHeight > ta.clientHeight + 1 ? "scroll" : "hidden";
+  back.style.top = `${ta.offsetTop}px`;
+  back.style.height = `${ta.offsetHeight}px`;
+  back.innerHTML = markText(ta.value, inTr, cur) + "\n";
+  back.scrollTop = ta.scrollTop;
+}
+
+function openFind(replace) {
+  if (!state.doc) return;
+  find.open = true;
+  $("#findBar").hidden = false;
+  $("#btnFind").classList.add("on");
+  if (replace !== undefined) setReplaceMode(replace);
+  // A word selected in a translation box becomes the search text.
+  const sel = document.activeElement && document.activeElement.tagName === "TEXTAREA"
+    ? document.activeElement.value.slice(document.activeElement.selectionStart, document.activeElement.selectionEnd) : "";
+  if (sel && !sel.includes("\n")) $("#findText").value = sel;
+  $("#findText").focus();
+  $("#findText").select();
+  refreshFind();
+}
+
+function closeFind() {
+  find.open = false;
+  find.matches = [];
+  find.cur = -1;
+  $("#findBar").hidden = true;
+  $("#btnFind").classList.remove("on");
+  for (const [id, el] of vl.rendered) decorateCard(el, id);
+}
+
+function setReplaceMode(on) {
+  $("#replaceRow").hidden = !on;
+  $("#findReplaceToggle").classList.toggle("on", on);
+  if (on && $("#findScope").value === "src") $("#findScope").value = "tr"; // (only translations are replaced)
+}
+
+/** Go to the next (dir 1) or previous (dir -1) match: its card is shown and highlighted. */
+function gotoMatch(dir) {
+  const n = find.matches.length;
+  if (!n) return;
+  find.cur = find.cur < 0 ? (dir > 0 ? 0 : n - 1) : (find.cur + dir + n) % n;
+  const m = find.matches[find.cur];
+  if (!vl.pos.has(m.id)) { $("#search").value = ""; $("#filterStatus").value = "all"; $("#filterPage").value = "all"; applyFilter(); }
+  setActive(m.id, { scrollList: true, scrollViewer: true });
+  updateFindCount();
+  requestAnimationFrame(() => {
+    for (const [id, el] of vl.rendered) decorateCard(el, id);
+    const card = vl.rendered.get(m.id);
+    const mark = card && card.querySelector("mark.find.cur");
+    if (mark && m.where === "tr") { // scroll a long translation box to the match
+      const ta = card.querySelector("textarea"), back = card.querySelector(".ta-backdrop");
+      ta.scrollTop = Math.max(0, mark.offsetTop - ta.clientHeight / 2);
+      back.scrollTop = ta.scrollTop;
+    }
+  });
+}
+
+/** Replace the current match (or the next one in a translation), then go on to the next. */
+function replaceOne() {
+  if (!find.matches.length) return;
+  let i = find.cur;
+  if (i < 0 || find.matches[i].where !== "tr") {
+    const from = Math.max(0, i);
+    i = find.matches.findIndex((m, k) => k >= from && m.where === "tr");
+    if (i < 0) i = find.matches.findIndex((m) => m.where === "tr");
+    if (i < 0) return;
+    find.cur = i;
+    gotoMatch(0);
+    return; // the first press shows the match, the next one replaces it
+  }
+  const m = find.matches[i], before = state.translations[m.id] || "";
+  const after = before.slice(0, m.index) + $("#replaceText").value + before.slice(m.index + m.length);
+  writeTranslations({ [m.id]: after }, { [m.id]: before }, t("hist.replace"));
+  find.matches = collectMatches();
+  // the next match: the first one after the replaced text
+  const next = find.matches.findIndex((x) => x.id > m.id || (x.id === m.id && (x.where === "tr" && x.index >= m.index + $("#replaceText").value.length)));
+  find.cur = next >= 0 ? next - 1 : find.matches.length - 1;
+  if (find.matches.length) gotoMatch(1); else { updateFindCount(); for (const [id, el] of vl.rendered) decorateCard(el, id); }
+}
+
+function replaceAll() {
+  const re = findRegex();
+  if (!re) return;
+  const repl = $("#replaceText").value, before = {}, after = {};
+  let n = 0;
+  for (const [id, text] of Object.entries(state.translations)) {
+    if (!segById(id)) continue;
+    const out = text.replace(re, () => { n++; return repl; });
+    if (out !== text) { before[id] = text; after[id] = out; }
+  }
+  if (!n) { toast(t("find.none")); return; }
+  writeTranslations(after, before, t("hist.replaceAll", { n }));
+  find.cur = -1;
+  refreshFind();
+  toast(t("find.replaced", { n, k: Object.keys(after).length }), "ok");
+}
+
+/** Set several translations at once (undoable), updating the cards that are shown. */
+function writeTranslations(after, before, label) {
+  for (const [id, text] of Object.entries(after)) {
+    setTranslation(Number(id), text);
+    const el = vl.rendered.get(Number(id));
+    if (el) {
+      const ta = el.querySelector("textarea");
+      ta.value = text;
+      autoGrow(ta);
+      el.classList.toggle("pending", isPending(Number(id)));
+    }
+  }
+  recordTranslations(before, after, label);
+}
+
+function onFindKey(e) {
+  const k = e.key.toLowerCase();
+  if ((e.ctrlKey || e.metaKey) && !e.altKey && (k === "f" || k === "h") && state.doc && !document.querySelector("dialog[open]")) {
+    e.preventDefault();
+    openFind(k === "h" ? true : undefined);
+  } else if (k === "f3" && find.open) {
+    e.preventDefault();
+    gotoMatch(e.shiftKey ? -1 : 1);
+  } else if (k === "escape" && find.open && e.target.closest && e.target.closest("#findBar")) {
+    closeFind();
+  }
+}
+
 /* ------------------------------------------------------------------- setup */
 
 function initTools() {
@@ -6765,6 +7061,30 @@ function initTools() {
   $("#zoomPage").addEventListener("click", fitPage);
   $("#pageRotate").addEventListener("click", rotateCurrentPage);
   $("#btnDownloadBi").addEventListener("click", (e) => { e.preventDefault(); downloadBilingual(); });
+  $("#btnFind").addEventListener("click", () => (find.open ? closeFind() : openFind()));
+  $("#findClose").addEventListener("click", closeFind);
+  $("#findReplaceToggle").addEventListener("click", () => setReplaceMode($("#replaceRow").hidden));
+  $("#findText").addEventListener("input", () => { find.cur = -1; refreshFind(); });
+  $("#findText").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); gotoMatch(e.shiftKey ? -1 : 1); } });
+  $("#replaceText").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); if (e.ctrlKey || e.metaKey) replaceAll(); else replaceOne(); } });
+  for (const id of ["#findScope", "#findCase", "#findWord"]) $(id).addEventListener("change", () => { find.cur = -1; refreshFind(); });
+  $("#findScope").addEventListener("change", () => { if ($("#findScope").value === "src") setReplaceMode(false); });
+  $("#findPrev").addEventListener("click", () => gotoMatch(-1));
+  $("#findNext").addEventListener("click", () => gotoMatch(1));
+  $("#replaceOne").addEventListener("click", replaceOne);
+  $("#replaceAll").addEventListener("click", replaceAll);
+  document.addEventListener("keydown", onFindKey, true);
+  // Edits while searching update the matches (a little later, while typing).
+  list.addEventListener("input", (e) => {
+    if (!find.open || e.target.tagName !== "TEXTAREA") return;
+    clearTimeout(find.timer);
+    find.timer = setTimeout(refreshFind, 200);
+  });
+  list.addEventListener("scroll", (e) => {
+    if (e.target.tagName === "TEXTAREA" && e.target.previousElementSibling && e.target.previousElementSibling.classList.contains("ta-backdrop")) {
+      e.target.previousElementSibling.scrollTop = e.target.scrollTop;
+    }
+  }, true);
   $("#btnOcr").addEventListener("click", openOcrDialog);
   $("#ocrGo").addEventListener("click", (e) => { e.preventDefault(); $("#ocrDialog").close(); startOcr(); });
 }

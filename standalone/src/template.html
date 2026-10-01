@@ -28,9 +28,9 @@
       <button type="button" data-lang="de" title="Deutsch">DE</button>
       <button type="button" data-lang="en" title="English">EN</button>
     </div>
-    <button class="icon-btn top-fs" id="btnAppFullscreen" data-i18n-title="top.fullscreen"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9V3h6M21 9V3h-6M3 15v6h6M21 15v6h-6"/><rect x="8" y="8" width="8" height="8" rx="1"/></svg></button>
     <button class="btn ghost" id="btnHelp" data-i18n-title="help.btnTitle" data-i18n="help.btn">? Help</button>
     <button class="btn ghost" id="btnNew" hidden data-i18n="top.new">Open another PDF</button>
+    <button class="icon-btn top-fs" id="btnAppFullscreen" data-i18n-title="top.fullscreen"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9V3h6M21 9V3h-6M3 15v6h6M21 15v6h-6"/><rect x="8" y="8" width="8" height="8" rx="1"/></svg></button>
   </div>
 </header>
 
@@ -132,6 +132,9 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 15V3m0 0L8 7m4-4 4 4M5 21h14"/></svg>
         <span data-i18n="tb.import">Import</span>
       </button>
+      <button class="btn" id="btnFind" data-i18n-title="find.title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg>
+      </button>
       <button class="btn pdf-only" id="btnOcr" data-i18n-title="tb.ocrTitle">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/><path d="M8 9h8M8 12h8M8 15h5"/></svg>
         <span data-i18n="tb.ocr">OCR</span>
@@ -150,6 +153,30 @@
       <button type="button" class="icon-btn clear-btn" id="btnClear" data-i18n-title="clear.title">
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v6M14 11v6"/></svg>
       </button>
+    </div>
+    <div class="find-bar" id="findBar" hidden>
+      <div class="find-row">
+        <input type="search" id="findText" data-i18n-placeholder="find.placeholder" autocomplete="off">
+        <span class="muted small find-count" id="findCount"></span>
+        <button type="button" class="icon-btn" id="findPrev" data-i18n-title="find.prev">‹</button>
+        <button type="button" class="icon-btn" id="findNext" data-i18n-title="find.next">›</button>
+        <button type="button" class="icon-btn" id="findReplaceToggle" data-i18n-title="find.replaceToggle">⇄</button>
+        <button type="button" class="icon-btn" id="findClose" data-i18n-title="find.close">×</button>
+      </div>
+      <div class="find-row">
+        <select id="findScope">
+          <option value="tr" data-i18n="find.scopeTr">In translations</option>
+          <option value="src" data-i18n="find.scopeSrc">In the original</option>
+          <option value="both" data-i18n="find.scopeBoth">In both</option>
+        </select>
+        <label class="check"><input type="checkbox" id="findCase"> <span data-i18n="find.case">Match case</span></label>
+        <label class="check"><input type="checkbox" id="findWord"> <span data-i18n="find.word">Whole word</span></label>
+      </div>
+      <div class="find-row" id="replaceRow" hidden>
+        <input type="text" id="replaceText" data-i18n-placeholder="find.replacePlaceholder" autocomplete="off">
+        <button type="button" class="btn" id="replaceOne" data-i18n="find.replace" data-i18n-title="find.replaceTitle">Replace</button>
+        <button type="button" class="btn" id="replaceAll" data-i18n="find.replaceAll" data-i18n-title="find.replaceAllTitle">Replace all</button>
+      </div>
     </div>
     <div class="filter-row">
       <input type="search" id="search" data-i18n-placeholder="filter.search">

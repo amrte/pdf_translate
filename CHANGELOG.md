@@ -4,6 +4,18 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.10
+
+- **Font size above the limit**: a size set for a field (**Aa**) is now used exactly. The text is
+  no longer made smaller to fit the box; it wraps at the box width and may run on below it (move
+  or resize the box to make room).
+- The **full-screen button** for the whole app is now in the top-right corner.
+- **Find and replace** (🔍 button, Ctrl+F; Ctrl+H with replace): search the translations, the
+  original or both, optionally case-sensitive or whole words. Matches are highlighted in the
+  cards (also inside the translation boxes); Enter / Shift+Enter or F3 go to the next / previous
+  match, which is shown on the page as well. Replace one match at a time or all at once; both
+  can be undone.
+
 ## 1.09
 
 - **Turn pages**: new ↻ button in the page toolbar turns the current page by 90° clockwise (with
