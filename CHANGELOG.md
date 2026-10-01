@@ -4,6 +4,14 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.22
+
+- **New start page**: a larger drop zone with a big icon, a short title and badges for the formats
+  (PDF, Word, PowerPoint, Excel, EPUB, FB2) on a soft colour wash; below it the workflow cards, each
+  with an icon, and shorter texts. Still fits one screen from about 1280 × 700.
+- Removed the long description and the privacy line under the drop zone, and the step indicator
+  (1 Text extrahieren · 2 Übersetzen · 3 PDF erstellen) from the top bar.
+
 ## 1.21
 
 - **One search field**: the field above the list now does everything. Typing filters the list to the

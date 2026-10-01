@@ -460,7 +460,6 @@ function closeDocument() {
   document.title = "PDF Translate";
   document.body.classList.remove("is-book", "is-office");
   setDocFormat("PDF");
-  updateSteps();
 }
 
 /* --------------------------------------------------------------- viewer */
@@ -877,22 +876,8 @@ function updateProgress() {
   if (state.doc) for (const s of state.doc.segments) if (!s.skip) { total++; if (hasTr(s.id)) done++; }
   $("#progressText").textContent = t("progress", { done, total });
   $("#progressBar").style.width = total ? `${(done / total) * 100}%` : "0";
-  updateSteps(done > 0);
 }
 
-function updateSteps(any) {
-  const steps = [...document.querySelectorAll("#steps li")];
-  steps.forEach((li) => li.classList.remove("active", "done"));
-  if (!state.doc) { steps[0].classList.add("active"); return; }
-  steps[0].classList.add("done");
-  if (state.hasOutput) {
-    steps[1].classList.add("done");
-    steps[2].classList.add("done");
-  } else {
-    steps[1].classList.add(any ? "done" : "active");
-    if (any) steps[2].classList.add("active");
-  }
-}
 
 function applyFilter() {
   if (!state.doc) return;
@@ -1408,7 +1393,6 @@ function init() {
   });
   let last = null;
   try { last = localStorage.getItem(LS_LAST); } catch (_) { /* ignore */ }
-  updateSteps();
   if (last) {
     idbGet().then((saved) => {
       if (saved && saved.bytes) loadBytes(saved.bytes, saved.name, false, saved.id);
