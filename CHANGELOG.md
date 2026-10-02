@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.42
+
+- "Fit to width" now uses almost the whole page view: the margins left and right of the page are down to a few pixels.
+
 ## 1.41
 
 - The "Recently opened" row on the start screen no longer overlaps the drop area; it sits a few pixels below it.

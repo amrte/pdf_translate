@@ -135,7 +135,7 @@ code { font-size: 12.5px; background: var(--surface-2); border: 1px solid var(--
 /* Pages are centred with auto margins rather than align-items:center: when a zoomed page is
    wider than the viewer it then starts at the left edge instead of overflowing off-screen to
    the left, where it could not be scrolled to. */
-.pages { flex: 1; overflow: auto; scrollbar-gutter: stable; padding: 22px; display: flex; flex-direction: column; align-items: flex-start; gap: 22px; position: relative; }
+.pages { flex: 1; overflow: auto; scrollbar-gutter: stable; padding: 22px 6px; display: flex; flex-direction: column; align-items: flex-start; gap: 22px; position: relative; }
 .page { position: relative; background: #fff; box-shadow: var(--page-shadow); flex: none; margin: 0 auto; }
 .page img { display: block; width: 100%; height: 100%; user-select: none; -webkit-user-drag: none; }
 .page-label { position: absolute; top: -18px; left: 0; font-size: 11.5px; color: var(--muted); }
@@ -236,7 +236,6 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); ou
   .splitter { display: none; }
   .pane-toolbar, .filter-row { flex-wrap: wrap; }
   .filter-row .search-box { flex-basis: 100%; }
-  .pages { padding: 22px 12px; }
   .viewer-pane { border-right: 0; border-bottom: 1px solid var(--border); }
   }
 

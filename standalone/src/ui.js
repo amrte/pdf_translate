@@ -643,8 +643,11 @@ function closeDocument() {
 
 /* --------------------------------------------------------------- viewer */
 
+/** Horizontal room the page view keeps beside a page (its 6 px padding on each side). */
+const PAGE_SIDE = 12;
+
 function fitZoom() {
-  const avail = $("#pages").clientWidth - 48;
+  const avail = $("#pages").clientWidth - PAGE_SIDE;
   const widest = Math.max(...state.doc.pages.map((p, i) => (state.rotations[i] % 180 ? p.height : p.width)));
   const z = Math.floor((avail / (widest * 1.25)) * 10) / 10;
   return Math.min(1.5, Math.max(0.4, z || 1));
@@ -847,7 +850,7 @@ function zoomMin() {
   let fit = ZOOM_MIN;
   viewPages().forEach((_, i) => {
     const [w, h] = shownSize(i);
-    fit = Math.min(fit, (box.clientWidth - 48) / (w * 1.25), (box.clientHeight - 44) / (h * 1.25));
+    fit = Math.min(fit, (box.clientWidth - PAGE_SIDE) / (w * 1.25), (box.clientHeight - 44) / (h * 1.25));
   });
   return Math.max(0.02, Math.min(ZOOM_MIN, Math.floor(fit * 1000) / 1000));
 }
@@ -880,7 +883,7 @@ function setZoom(z, anchor) {
 function fitWidth() {
   const box = $("#pages");
   const widest = Math.max(...viewPages().map((p, i) => shownSize(i)[0]));
-  setZoom((box.clientWidth - (cmp.on ? 10 : 48)) / (widest * 1.25)); // (the comparison view has slim margins)
+  setZoom((box.clientWidth - (cmp.on ? 10 : PAGE_SIDE)) / (widest * 1.25));
   state.fitMode = true; // (follows the width when the view is resized)
 }
 

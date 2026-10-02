@@ -286,7 +286,7 @@ function toggleAppFullscreen() {
 function fitPage() {
   if (!state.doc) return;
   const box = $("#pages"), i = currentPageIndex(), [w, h] = shownSize(i);
-  const zw = (box.clientWidth - 48) / (w * 1.25), zh = (box.clientHeight - 44) / (h * 1.25);
+  const zw = (box.clientWidth - PAGE_SIDE) / (w * 1.25), zh = (box.clientHeight - 44) / (h * 1.25);
   setZoom(Math.min(zw, zh));
   requestAnimationFrame(() => goToPage(i));
 }
