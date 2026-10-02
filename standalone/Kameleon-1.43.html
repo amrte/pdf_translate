@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="Kameleon 1.42">
+  <meta name="generator" content="Kameleon 1.43">
   <meta name="description" content="Kameleon – Wechselt die Sprache, behält die Form. Changes language, keeps its shape.">
   <title>Kameleon</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2216%22 fill=%22%23287130%22/%3E%3Cg transform=%22translate(2.5 1) scale(0.9)%22 fill=%22%23ffffff%22 stroke=%22%23ffffff%22%3E%3Cpath d=%22M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6%22 fill=%22none%22 stroke-width=%223.8%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M21 43l-1 10M30 44v9M38 43l1 10%22 stroke-width=%223.6%22 stroke-linecap=%22round%22/%3E%3Cellipse cx=%2221%22 cy=%2225%22 rx=%227%22 ry=%227.5%22 stroke=%22none%22/%3E%3Cellipse cx=%2233%22 cy=%2223.5%22 rx=%227.5%22 ry=%228%22 stroke=%22none%22/%3E%3Cpath d=%22M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z%22 stroke=%22none%22/%3E%3Cpath d=%22M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z%22 stroke=%22none%22/%3E%3Cpath d=%22M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z%22 stroke=%22none%22/%3E%3Cpath d=%22M16 37l4-3 4 3 4-3 4 3 4-3 4 3%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%222.1%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3Cpath d=%22M41 33.2L58.6 30.4%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%221.5%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M58.5 33.6c4.5 1.4 6.2 5 4 8.4-1 1.6-3 1.6-3.6.1%22 fill=%22none%22 stroke-width=%222.6%22 stroke-linecap=%22round%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%224.4%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%222.7%22 stroke=%22none%22/%3E%3Ccircle cx=%2246.2%22 cy=%2226.7%22 r=%221.3%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Cpath d=%22M4 55.5c15-3 39-3 54 0%22 fill=%22none%22 stroke-width=%222.4%22 stroke-linecap=%22round%22/%3E%3C/g%3E%3C/svg%3E">
@@ -576,8 +576,8 @@ body.splitting .pages, body.splitting iframe { pointer-events: none; }
 /* The chameleon in the drop area opens its mouth while a file hovers over it, and bites when it lands. */
 .upload-view .dz-icon { width: 96px; height: 96px; display: grid; place-items: center; transition: transform .25s ease-out; }
 .dz-icon .kam { width: 100%; height: 100%; display: block; filter: drop-shadow(0 6px 14px rgba(40, 113, 48, .28)); }
-.kam-jaw { transform-box: view-box; transform-origin: 41px 34.2px; transition: transform .25s ease-out; }
-.kam-tongue { transform-box: view-box; transform-origin: 58.5px 33.6px; transform: scale(0); transition: transform .25s ease-out .05s; }
+.kam-jaw { transition: transform .25s ease-out; } /* (pivots sit at the origin of their groups, see the SVG) */
+.kam-tongue { transform: scale(0); transition: transform .25s ease-out .05s; }
 .kam-mouth { transition: opacity .2s; }
 .dropzone:hover .kam-mouth, .dropzone.over .kam-mouth, .dropzone:focus-within .kam-mouth { opacity: 0; }
 .kam-pupil { transition: transform .25s ease-out; }
@@ -652,7 +652,7 @@ body.is-image .page img { filter: var(--pic-filter, none); }
   <div class="brand">
     <span class="logo"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#287130"/><g transform="translate(2.5 1) scale(0.9)" fill="#ffffff" stroke="#ffffff"><path d="M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6" fill="none" stroke-width="3.8" stroke-linecap="round"/><path d="M21 43l-1 10M30 44v9M38 43l1 10" stroke-width="3.6" stroke-linecap="round"/><ellipse cx="21" cy="25" rx="7" ry="7.5" stroke="none"/><ellipse cx="33" cy="23.5" rx="7.5" ry="8" stroke="none"/><path d="M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z" stroke="none"/><path d="M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z" stroke="none"/><path d="M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z" stroke="none"/><path d="M16 37l4-3 4 3 4-3 4 3 4-3 4 3" fill="none" stroke="#287130" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M41 33.2L58.6 30.4" fill="none" stroke="#287130" stroke-width="1.5" stroke-linecap="round"/><path d="M58.5 33.6c4.5 1.4 6.2 5 4 8.4-1 1.6-3 1.6-3.6.1" fill="none" stroke-width="2.6" stroke-linecap="round"/><circle cx="45.5" cy="26.5" r="4.4" fill="#287130" stroke="none"/><circle cx="45.5" cy="26.5" r="2.7" stroke="none"/><circle cx="46.2" cy="26.7" r="1.3" fill="#287130" stroke="none"/><path d="M4 55.5c15-3 39-3 54 0" fill="none" stroke-width="2.4" stroke-linecap="round"/></g></svg></span>
     <span class="brand-name">Kameleon</span>
-    <span class="version" id="appVersion">v1.42</span>
+    <span class="version" id="appVersion">v1.43</span>
   </div>
   <div class="topbar-actions">
     <span class="doc-name" id="docName"></span>
@@ -679,13 +679,15 @@ body.is-image .page img { filter: var(--pic-filter, none); }
           <path d="M21 43l-1 10M30 44v9M38 43l1 10" stroke-width="3.6" stroke-linecap="round"/>
           <ellipse cx="21" cy="25" rx="7" ry="7.5" stroke="none"/><ellipse cx="33" cy="23.5" rx="7.5" ry="8" stroke="none"/>
           <path d="M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z" stroke="none"/>
-          <g class="kam-jaw">
+          <!-- The jaw turns about its hinge (41 34.2) and the tongue grows from the jaw tip (58.5 33.6):
+               each pivot is moved to the origin of its group, so no transform-origin is needed. -->
+          <g transform="translate(41 34.2)"><g class="kam-jaw"><g transform="translate(-41 -34.2)">
             <path d="M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z" stroke="none"/>
-            <path class="kam-tongue" d="M58.5 33.6c4.5 1.4 6.2 5 4 8.4-1 1.6-3 1.6-3.6.1" fill="none" stroke-width="2.6" stroke-linecap="round"/>
-          </g>
+            <g transform="translate(58.5 33.6)"><g class="kam-tongue"><path d="M0 0c4.5 1.4 6.2 5 4 8.4-1 1.6-3 1.6-3.6.1" fill="none" stroke-width="2.6" stroke-linecap="round"/></g></g>
+          </g></g></g>
           <path d="M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z" stroke="none"/>
           <path d="M16 37l4-3 4 3 4-3 4 3 4-3 4 3" fill="none" stroke="#287130" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/>
-          <path class="kam-mouth" d="M41 33.2L58.6 30.4" fill="none" stroke="#287130" stroke-width="1.5" stroke-linecap="round"/>
+          <path class="kam-mouth" d="M41.5 34.1L58.4 32.5" fill="none" stroke="#287130" stroke-width="1.5" stroke-linecap="round"/>
           <circle cx="45.5" cy="26.5" r="4.4" fill="#287130" stroke="none"/><circle cx="45.5" cy="26.5" r="2.7" stroke="none"/><circle class="kam-pupil" cx="46.2" cy="26.7" r="1.3" fill="#287130" stroke="none"/>
           <path d="M4 55.5c15-3 39-3 54 0" fill="none" stroke-width="2.4" stroke-linecap="round"/>
         </g>
@@ -1051,7 +1053,7 @@ body.is-image .page img { filter: var(--pic-filter, none); }
     </div>
     <input type="file" id="offlineZip" class="visually-hidden" accept=".zip,application/zip" multiple tabindex="-1">
     <input type="file" id="offlineFolder" class="visually-hidden" webkitdirectory multiple tabindex="-1">
-    <p class="muted small help-version help-part">Kameleon v1.42 · <span data-i18n="app.tagline"></span></p>
+    <p class="muted small help-version help-part">Kameleon v1.43 · <span data-i18n="app.tagline"></span></p>
     <div class="modal-actions">
       <button type="button" value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
       <button type="button" class="btn ai-part" id="aiCopyPrompt" data-i18n="ai.copyPrompt">Copy prompt only</button>
@@ -11984,7 +11986,7 @@ function initPicture() {
 // from its own browser cache before the network, so language files are written into that cache.
 // ======================================================================
 
-const APP_VERSION = "1.42";
+const APP_VERSION = "1.43";
 // (a change of library version makes a stored set outdated: it is then ignored)
 const OFFLINE_VERSION = `${MUPDF_URL} ${OCR_LIB}`;
 const CORE_SIMD = "tesseract-core-simd-lstm.wasm.js", CORE_PLAIN = "tesseract-core-lstm.wasm.js";

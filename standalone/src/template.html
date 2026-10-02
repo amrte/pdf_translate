@@ -43,13 +43,15 @@
           <path d="M21 43l-1 10M30 44v9M38 43l1 10" stroke-width="3.6" stroke-linecap="round"/>
           <ellipse cx="21" cy="25" rx="7" ry="7.5" stroke="none"/><ellipse cx="33" cy="23.5" rx="7.5" ry="8" stroke="none"/>
           <path d="M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z" stroke="none"/>
-          <g class="kam-jaw">
+          <!-- The jaw turns about its hinge (41 34.2) and the tongue grows from the jaw tip (58.5 33.6):
+               each pivot is moved to the origin of its group, so no transform-origin is needed. -->
+          <g transform="translate(41 34.2)"><g class="kam-jaw"><g transform="translate(-41 -34.2)">
             <path d="M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z" stroke="none"/>
-            <path class="kam-tongue" d="M58.5 33.6c4.5 1.4 6.2 5 4 8.4-1 1.6-3 1.6-3.6.1" fill="none" stroke-width="2.6" stroke-linecap="round"/>
-          </g>
+            <g transform="translate(58.5 33.6)"><g class="kam-tongue"><path d="M0 0c4.5 1.4 6.2 5 4 8.4-1 1.6-3 1.6-3.6.1" fill="none" stroke-width="2.6" stroke-linecap="round"/></g></g>
+          </g></g></g>
           <path d="M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z" stroke="none"/>
           <path d="M16 37l4-3 4 3 4-3 4 3 4-3 4 3" fill="none" stroke="#287130" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/>
-          <path class="kam-mouth" d="M41 33.2L58.6 30.4" fill="none" stroke="#287130" stroke-width="1.5" stroke-linecap="round"/>
+          <path class="kam-mouth" d="M41.5 34.1L58.4 32.5" fill="none" stroke="#287130" stroke-width="1.5" stroke-linecap="round"/>
           <circle cx="45.5" cy="26.5" r="4.4" fill="#287130" stroke="none"/><circle cx="45.5" cy="26.5" r="2.7" stroke="none"/><circle class="kam-pupil" cx="46.2" cy="26.7" r="1.3" fill="#287130" stroke="none"/>
           <path d="M4 55.5c15-3 39-3 54 0" fill="none" stroke-width="2.4" stroke-linecap="round"/>
         </g>

@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.43
+
+- The Kameleon's mouth line now lies exactly where its jaw opens, in the drop area and in the app icon. The jaw and tongue animation also no longer depends on a browser feature that Safari and Chrome treat differently, so the jaw turns about the same hinge everywhere.
+
 ## 1.42
 
 - "Fit to width" now uses almost the whole page view: the margins left and right of the page are down to a few pixels.
