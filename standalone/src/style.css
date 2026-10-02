@@ -656,3 +656,13 @@ body:not(.has-pages) .pages-only { display: none !important; }
 .pg-btns button:hover { border-color: var(--accent); color: var(--accent); }
 .pages-actions { align-items: center; flex-wrap: wrap; }
 .pages-actions .spacer { flex: 1; }
+
+/* ---------- v1.50: the Rainbow (a rare one) ---------- */
+html[data-accent="Rainbow"] { --rainbow: linear-gradient(90deg, #c1121f, #e36414, #c99a06, #2d8f4e, #1e6fb8, #6a3fa0); }
+html[data-accent="Rainbow"] .brand-name { background: var(--rainbow); -webkit-background-clip: text; background-clip: text; color: transparent; }
+html[data-accent="Rainbow"] .btn.primary, html[data-accent="Rainbow"] .btn.success, html[data-accent="Rainbow"] .progress-bar, html[data-accent="Rainbow"] .wf-num, html[data-accent="Rainbow"] .wf-last .wf-num {
+  background: var(--rainbow); color: #fff; border-color: transparent; text-shadow: 0 1px 2px rgba(0, 0, 0, .45);
+}
+html[data-accent="Rainbow"] .topbar { border-top: 3px solid transparent; border-image: var(--rainbow) 1; }
+html[data-accent="Rainbow"] svg [fill="#287130"] { fill: url(#kamRainbow); }
+html[data-accent="Rainbow"] svg [stroke="#287130"] { stroke: url(#kamRainbow); }

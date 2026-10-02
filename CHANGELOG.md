@@ -4,6 +4,11 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.50
+
+- The colour set is now 23 colours: Teal, Slate, Steel, Graphite and Aubergine are gone, the yellows Lemon, Mustard and Saffron are new, plus two rare ones: Black turns up once in about 500 starts, and the Rainbow, with the icon, name, buttons and progress bar in a rainbow gradient, once in about 1000. Both can be forced with `#accent=Black` or `#accent=Rainbow`.
+- The Kameleon's closed mouth line is a little shorter.
+
 ## 1.49
 
 - Kameleon changes colour: at every start the app picks one of 25 accent colours at random, for the icon, the name, buttons, highlights and the paper tint, in light and dark mode. A colour can be forced for a look with `?accent=Name` (or `#accent=7`) added to the file's address.
