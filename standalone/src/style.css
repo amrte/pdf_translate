@@ -1,14 +1,15 @@
 :root {
-  --bg: #f2f5f0;
+  --bg: color-mix(in srgb, var(--accent) 4%, #f4f4f3); /* paper with a hint of the accent */
   --surface: #ffffff;
   --surface-2: #f6f8f4;
   --border: #dde4da;
   --text: #1e2420;
   --muted: #5f6a61;
-  --accent: #287130;
-  --accent-soft: #e6f2e4;
-  --success: #287130;   /* one green: the same as the accent, for buttons, dots and progress */
-  --success-soft: #e6f2e4;
+  /* The accent is one of the app's colours, chosen at start-up (theme.js sets --accent-base). */
+  --accent: var(--accent-base, #287130);
+  --accent-soft: color-mix(in srgb, var(--accent) 11%, white);
+  --success: var(--accent);   /* one colour: the same as the accent, for buttons, dots and progress */
+  --success-soft: var(--accent-soft);
   --warn: #b26a00;
   --danger: #c0392b;
   --on-accent: #fff;   /* text on accent / success / danger fills */
@@ -22,20 +23,20 @@
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #141a16;
+    --bg: color-mix(in srgb, var(--accent) 5%, #16181a);
     --surface: #1c241e;
     --surface-2: #232c25;
     --border: #324039;
     --text: #e8ede8;
     --muted: #98a39a;
-    --accent: #7ccf7f;
-    --accent-soft: #253d2a;
-    --success: #7ccf7f;
-    --success-soft: #253d2a;
+    --accent: var(--accent-dark-base, #92d399);
+    --accent-soft: color-mix(in srgb, var(--accent) 16%, #16181a);
+    --success: var(--accent);
+    --success-soft: var(--accent-soft);
     --warn: #f0a640;
     --danger: #ff7b6b;
-    --on-accent: #0f1f10;
-    --on-success: #0f1f10;
+    --on-accent: #101417;
+    --on-success: #101417;
     --on-danger: #1c0f0d;
     --page-shadow: 0 1px 3px rgba(0, 0, 0, .5);
     color-scheme: dark;
@@ -64,8 +65,9 @@ code { font-size: 12.5px; background: var(--surface-2); border: 1px solid var(--
   flex-wrap: wrap;
 }
 .brand { display: flex; align-items: center; gap: 10px; font-weight: 650; font-size: 16px; }
-.brand-name { font-weight: 700; letter-spacing: .01em; color: var(--accent); }
-.brand-name, .brand .version { align-self: baseline; } /* the version number sits on the same baseline as the name */
+.brand-name { font-weight: 700; font-size: 18px; letter-spacing: .01em; color: var(--accent); }
+.brand-name, .brand .version { align-self: baseline; position: relative; top: 2px; } /* same baseline, a little lower next to the icon */
+svg [fill="#287130"] { fill: var(--accent); } svg [stroke="#287130"] { stroke: var(--accent); } /* the drawn icon in the colour of the day */
 .logo {
   display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 8px;
   background: var(--accent); color: var(--on-accent); font-size: 13px; font-weight: 700;
@@ -395,12 +397,12 @@ body.is-book .tool-rail { display: none; }
 .box { cursor: grab; }
 body.box-dragging, body.box-dragging .box { cursor: grabbing !important; user-select: none; }
 .box.custom { border-style: dashed; }
-.box .rh { position: absolute; width: 9px; height: 9px; background: #fff; border: 1.5px solid var(--accent, #2e7d32); border-radius: 2px; z-index: 3; }
+.box .rh { position: absolute; width: 9px; height: 9px; background: #fff; border: 1.5px solid var(--accent, var(--accent)); border-radius: 2px; z-index: 3; }
 .rh-nw { left: -5px; top: -5px; cursor: nwse-resize; } .rh-se { right: -5px; bottom: -5px; cursor: nwse-resize; }
 .rh-ne { right: -5px; top: -5px; cursor: nesw-resize; } .rh-sw { left: -5px; bottom: -5px; cursor: nesw-resize; }
 .rh-n { left: calc(50% - 5px); top: -5px; cursor: ns-resize; } .rh-s { left: calc(50% - 5px); bottom: -5px; cursor: ns-resize; }
 .rh-e { right: -5px; top: calc(50% - 5px); cursor: ew-resize; } .rh-w { left: -5px; top: calc(50% - 5px); cursor: ew-resize; }
-.mini.on { background: var(--accent-soft, #e6f2e4); border-color: var(--accent, #2e7d32); color: var(--accent, #2e7d32); }
+.mini.on { background: var(--accent-soft, var(--accent-soft)); border-color: var(--accent, var(--accent)); color: var(--accent, var(--accent)); }
 .seg-style { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 6px 10px; border-bottom: 1px solid var(--border); background: var(--surface-2); font-size: 12px; }
 .seg-style input[type="number"] { width: 64px; }
 .seg-style select { max-width: 150px; }
@@ -411,7 +413,7 @@ body.box-dragging, body.box-dragging .box { cursor: grabbing !important; user-se
 .ocr-range input[type=text] { width: 9em; height: 28px; padding: 0 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--text); font: inherit; margin-left: 4px; }
 .ocr-langs { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 2px 12px; margin-top: 4px; }
 .error-text { color: var(--danger, #c62828); font-weight: 600; }
-.top-fs.on { color: var(--accent, #2e7d32); }
+.top-fs.on { color: var(--accent, var(--accent)); }
 
 /* ---- v1.09: turned pages, bilingual download ---- */
 .page-body { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); transform-origin: 50% 50%; }
@@ -561,12 +563,12 @@ body.splitting .pages, body.splitting iframe { pointer-events: none; }
   width: min(1060px, 100%); /* as wide as the workflow below it (see .wf) */
   min-height: clamp(165px, 25vh, 260px); justify-content: center; gap: 12px;
   background: var(--surface); border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
-  box-shadow: 0 1px 2px rgba(20, 25, 40, .04), 0 10px 30px rgba(46, 125, 50, .08);
+  box-shadow: 0 1px 2px rgba(20, 25, 40, .04), 0 10px 30px color-mix(in srgb, var(--accent) 8%, transparent);
 }
-.upload-view .dropzone:hover, .upload-view .dropzone.over { box-shadow: 0 1px 2px rgba(20, 25, 40, .04), 0 12px 34px rgba(46, 125, 50, .16); }
+.upload-view .dropzone:hover, .upload-view .dropzone.over { box-shadow: 0 1px 2px rgba(20, 25, 40, .04), 0 12px 34px color-mix(in srgb, var(--accent) 16%, transparent); }
 /* The chameleon in the drop area opens its mouth while a file hovers over it, and bites when it lands. */
 .upload-view .dz-icon { width: 96px; height: 96px; display: grid; place-items: center; transition: transform .25s ease-out; }
-.dz-icon .kam { width: 100%; height: 100%; display: block; filter: drop-shadow(0 6px 14px rgba(40, 113, 48, .28)); }
+.dz-icon .kam { width: 100%; height: 100%; display: block; filter: drop-shadow(0 6px 14px color-mix(in srgb, var(--accent) 28%, transparent)); }
 .kam-jaw { transition: transform .25s ease-out; } /* (pivots sit at the origin of their groups, see the SVG) */
 .kam-tongue { transform: scale(0); transition: transform .25s ease-out .05s; }
 .kam-mouth { transition: opacity .2s; }

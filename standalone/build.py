@@ -18,7 +18,7 @@ def main() -> None:
         # The engine (PDF) and the e-book support run together in the workers.
         "ENGINE": "\n".join((SRC / f).read_text("utf-8") for f in ("engine.js", "ebook.js", "office.js", "slides.js", "pages.js", "legacy.js", "doc.js", "xls.js", "ppt.js")),
         # One module: interface, markup tools, field/OCR tools, then start-up.
-        "UI": "\n".join((SRC / f).read_text("utf-8") for f in ("ui.js", "markup.js", "tools.js", "picture.js", "offline.js", "pagesui.js", "main.js")).replace("{{VERSION}}", version),
+        "UI": "\n".join((SRC / f).read_text("utf-8") for f in ("ui.js", "markup.js", "tools.js", "picture.js", "offline.js", "pagesui.js", "theme.js", "main.js")).replace("{{VERSION}}", version),
     }
     for name in ("I18N", "ENGINE", "UI"):
         if "</script" in parts[name].lower():

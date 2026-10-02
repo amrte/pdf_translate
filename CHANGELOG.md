@@ -4,6 +4,11 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.49
+
+- Kameleon changes colour: at every start the app picks one of 25 accent colours at random, for the icon, the name, buttons, highlights and the paper tint, in light and dark mode. A colour can be forced for a look with `?accent=Name` (or `#accent=7`) added to the file's address.
+- The name in the top bar is a little larger and sits, with the version number, slightly lower next to the icon.
+
 ## 1.48
 
 - Pages of a PDF and slides of a presentation (PPTX, PPT) can be rearranged: the new "Arrange pages" button in the page view opens a grid of thumbnails where pages are dragged to another place, moved, swapped, removed, and blank pages or the pages of other files (PDF and pictures for a PDF, PPTX/PPT decks for a presentation) are inserted. Apply puts the file together anew and carries the translations of the kept pages over.

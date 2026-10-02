@@ -3,22 +3,23 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="Kameleon 1.48">
+  <meta name="generator" content="Kameleon 1.49">
   <meta name="description" content="Kameleon – Wechselt die Sprache, behält die Form. Changes language, keeps its shape.">
   <title>Kameleon</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2216%22 fill=%22%23287130%22/%3E%3Cg transform=%22translate(2.5 1) scale(0.9)%22 fill=%22%23ffffff%22 stroke=%22%23ffffff%22%3E%3Cpath d=%22M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6%22 fill=%22none%22 stroke-width=%223.8%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M21 43l-1 10M30 44v9M38 43l1 10%22 stroke-width=%223.6%22 stroke-linecap=%22round%22/%3E%3Cellipse cx=%2221%22 cy=%2225%22 rx=%227%22 ry=%227.5%22 stroke=%22none%22/%3E%3Cellipse cx=%2233%22 cy=%2223.5%22 rx=%227.5%22 ry=%228%22 stroke=%22none%22/%3E%3Cpath d=%22M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z%22 stroke=%22none%22/%3E%3Cpath d=%22M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z%22 stroke=%22none%22/%3E%3Cpath d=%22M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z%22 stroke=%22none%22/%3E%3Cpath d=%22M16 37l4-3 4 3 4-3 4 3 4-3 4 3%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%222.1%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3Cpath d=%22M41.5 34.1L58.4 32.5%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%221.5%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M58.5 33.6c4.5 1.4 6.2 5 4 8.4-1 1.6-3 1.6-3.6.1%22 fill=%22none%22 stroke-width=%222.6%22 stroke-linecap=%22round%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%224.4%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%222.7%22 stroke=%22none%22/%3E%3Ccircle cx=%2246.2%22 cy=%2226.7%22 r=%221.3%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Cpath d=%22M4 55.5c15-3 39-3 54 0%22 fill=%22none%22 stroke-width=%222.4%22 stroke-linecap=%22round%22/%3E%3C/g%3E%3C/svg%3E">
   <style>
 :root {
-  --bg: #f2f5f0;
+  --bg: color-mix(in srgb, var(--accent) 4%, #f4f4f3); /* paper with a hint of the accent */
   --surface: #ffffff;
   --surface-2: #f6f8f4;
   --border: #dde4da;
   --text: #1e2420;
   --muted: #5f6a61;
-  --accent: #287130;
-  --accent-soft: #e6f2e4;
-  --success: #287130;   /* one green: the same as the accent, for buttons, dots and progress */
-  --success-soft: #e6f2e4;
+  /* The accent is one of the app's colours, chosen at start-up (theme.js sets --accent-base). */
+  --accent: var(--accent-base, #287130);
+  --accent-soft: color-mix(in srgb, var(--accent) 11%, white);
+  --success: var(--accent);   /* one colour: the same as the accent, for buttons, dots and progress */
+  --success-soft: var(--accent-soft);
   --warn: #b26a00;
   --danger: #c0392b;
   --on-accent: #fff;   /* text on accent / success / danger fills */
@@ -32,20 +33,20 @@
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #141a16;
+    --bg: color-mix(in srgb, var(--accent) 5%, #16181a);
     --surface: #1c241e;
     --surface-2: #232c25;
     --border: #324039;
     --text: #e8ede8;
     --muted: #98a39a;
-    --accent: #7ccf7f;
-    --accent-soft: #253d2a;
-    --success: #7ccf7f;
-    --success-soft: #253d2a;
+    --accent: var(--accent-dark-base, #92d399);
+    --accent-soft: color-mix(in srgb, var(--accent) 16%, #16181a);
+    --success: var(--accent);
+    --success-soft: var(--accent-soft);
     --warn: #f0a640;
     --danger: #ff7b6b;
-    --on-accent: #0f1f10;
-    --on-success: #0f1f10;
+    --on-accent: #101417;
+    --on-success: #101417;
     --on-danger: #1c0f0d;
     --page-shadow: 0 1px 3px rgba(0, 0, 0, .5);
     color-scheme: dark;
@@ -74,8 +75,9 @@ code { font-size: 12.5px; background: var(--surface-2); border: 1px solid var(--
   flex-wrap: wrap;
 }
 .brand { display: flex; align-items: center; gap: 10px; font-weight: 650; font-size: 16px; }
-.brand-name { font-weight: 700; letter-spacing: .01em; color: var(--accent); }
-.brand-name, .brand .version { align-self: baseline; } /* the version number sits on the same baseline as the name */
+.brand-name { font-weight: 700; font-size: 18px; letter-spacing: .01em; color: var(--accent); }
+.brand-name, .brand .version { align-self: baseline; position: relative; top: 2px; } /* same baseline, a little lower next to the icon */
+svg [fill="#287130"] { fill: var(--accent); } svg [stroke="#287130"] { stroke: var(--accent); } /* the drawn icon in the colour of the day */
 .logo {
   display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 8px;
   background: var(--accent); color: var(--on-accent); font-size: 13px; font-weight: 700;
@@ -405,12 +407,12 @@ body.is-book .tool-rail { display: none; }
 .box { cursor: grab; }
 body.box-dragging, body.box-dragging .box { cursor: grabbing !important; user-select: none; }
 .box.custom { border-style: dashed; }
-.box .rh { position: absolute; width: 9px; height: 9px; background: #fff; border: 1.5px solid var(--accent, #2e7d32); border-radius: 2px; z-index: 3; }
+.box .rh { position: absolute; width: 9px; height: 9px; background: #fff; border: 1.5px solid var(--accent, var(--accent)); border-radius: 2px; z-index: 3; }
 .rh-nw { left: -5px; top: -5px; cursor: nwse-resize; } .rh-se { right: -5px; bottom: -5px; cursor: nwse-resize; }
 .rh-ne { right: -5px; top: -5px; cursor: nesw-resize; } .rh-sw { left: -5px; bottom: -5px; cursor: nesw-resize; }
 .rh-n { left: calc(50% - 5px); top: -5px; cursor: ns-resize; } .rh-s { left: calc(50% - 5px); bottom: -5px; cursor: ns-resize; }
 .rh-e { right: -5px; top: calc(50% - 5px); cursor: ew-resize; } .rh-w { left: -5px; top: calc(50% - 5px); cursor: ew-resize; }
-.mini.on { background: var(--accent-soft, #e6f2e4); border-color: var(--accent, #2e7d32); color: var(--accent, #2e7d32); }
+.mini.on { background: var(--accent-soft, var(--accent-soft)); border-color: var(--accent, var(--accent)); color: var(--accent, var(--accent)); }
 .seg-style { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 6px 10px; border-bottom: 1px solid var(--border); background: var(--surface-2); font-size: 12px; }
 .seg-style input[type="number"] { width: 64px; }
 .seg-style select { max-width: 150px; }
@@ -421,7 +423,7 @@ body.box-dragging, body.box-dragging .box { cursor: grabbing !important; user-se
 .ocr-range input[type=text] { width: 9em; height: 28px; padding: 0 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--text); font: inherit; margin-left: 4px; }
 .ocr-langs { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 2px 12px; margin-top: 4px; }
 .error-text { color: var(--danger, #c62828); font-weight: 600; }
-.top-fs.on { color: var(--accent, #2e7d32); }
+.top-fs.on { color: var(--accent, var(--accent)); }
 
 /* ---- v1.09: turned pages, bilingual download ---- */
 .page-body { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); transform-origin: 50% 50%; }
@@ -571,12 +573,12 @@ body.splitting .pages, body.splitting iframe { pointer-events: none; }
   width: min(1060px, 100%); /* as wide as the workflow below it (see .wf) */
   min-height: clamp(165px, 25vh, 260px); justify-content: center; gap: 12px;
   background: var(--surface); border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
-  box-shadow: 0 1px 2px rgba(20, 25, 40, .04), 0 10px 30px rgba(46, 125, 50, .08);
+  box-shadow: 0 1px 2px rgba(20, 25, 40, .04), 0 10px 30px color-mix(in srgb, var(--accent) 8%, transparent);
 }
-.upload-view .dropzone:hover, .upload-view .dropzone.over { box-shadow: 0 1px 2px rgba(20, 25, 40, .04), 0 12px 34px rgba(46, 125, 50, .16); }
+.upload-view .dropzone:hover, .upload-view .dropzone.over { box-shadow: 0 1px 2px rgba(20, 25, 40, .04), 0 12px 34px color-mix(in srgb, var(--accent) 16%, transparent); }
 /* The chameleon in the drop area opens its mouth while a file hovers over it, and bites when it lands. */
 .upload-view .dz-icon { width: 96px; height: 96px; display: grid; place-items: center; transition: transform .25s ease-out; }
-.dz-icon .kam { width: 100%; height: 100%; display: block; filter: drop-shadow(0 6px 14px rgba(40, 113, 48, .28)); }
+.dz-icon .kam { width: 100%; height: 100%; display: block; filter: drop-shadow(0 6px 14px color-mix(in srgb, var(--accent) 28%, transparent)); }
 .kam-jaw { transition: transform .25s ease-out; } /* (pivots sit at the origin of their groups, see the SVG) */
 .kam-tongue { transform: scale(0); transition: transform .25s ease-out .05s; }
 .kam-mouth { transition: opacity .2s; }
@@ -672,7 +674,7 @@ body:not(.has-pages) .pages-only { display: none !important; }
   <div class="brand">
     <span class="logo"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#287130"/><g transform="translate(2.5 1) scale(0.9)" fill="#ffffff" stroke="#ffffff"><path d="M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6" fill="none" stroke-width="3.8" stroke-linecap="round"/><path d="M21 43l-1 10M30 44v9M38 43l1 10" stroke-width="3.6" stroke-linecap="round"/><ellipse cx="21" cy="25" rx="7" ry="7.5" stroke="none"/><ellipse cx="33" cy="23.5" rx="7.5" ry="8" stroke="none"/><path d="M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z" stroke="none"/><path d="M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z" stroke="none"/><path d="M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z" stroke="none"/><path d="M16 37l4-3 4 3 4-3 4 3 4-3 4 3" fill="none" stroke="#287130" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M41.5 34.1L58.4 32.5" fill="none" stroke="#287130" stroke-width="1.5" stroke-linecap="round"/><path d="M58.5 33.6c4.5 1.4 6.2 5 4 8.4-1 1.6-3 1.6-3.6.1" fill="none" stroke-width="2.6" stroke-linecap="round"/><circle cx="45.5" cy="26.5" r="4.4" fill="#287130" stroke="none"/><circle cx="45.5" cy="26.5" r="2.7" stroke="none"/><circle cx="46.2" cy="26.7" r="1.3" fill="#287130" stroke="none"/><path d="M4 55.5c15-3 39-3 54 0" fill="none" stroke-width="2.4" stroke-linecap="round"/></g></svg></span>
     <span class="brand-name">Kameleon</span>
-    <span class="version" id="appVersion">v1.48</span>
+    <span class="version" id="appVersion">v1.49</span>
   </div>
   <div class="topbar-actions">
     <span class="doc-name" id="docName"></span>
@@ -1074,7 +1076,7 @@ body:not(.has-pages) .pages-only { display: none !important; }
     </div>
     <input type="file" id="offlineZip" class="visually-hidden" accept=".zip,application/zip" multiple tabindex="-1">
     <input type="file" id="offlineFolder" class="visually-hidden" webkitdirectory multiple tabindex="-1">
-    <p class="muted small help-version help-part">Kameleon v1.48 · <span data-i18n="app.tagline"></span></p>
+    <p class="muted small help-version help-part">Kameleon v1.49 · <span data-i18n="app.tagline"></span></p>
     <div class="modal-actions">
       <button type="button" value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
       <button type="button" class="btn ai-part" id="aiCopyPrompt" data-i18n="ai.copyPrompt">Copy prompt only</button>
@@ -13336,7 +13338,7 @@ function initPicture() {
 // from its own browser cache before the network, so language files are written into that cache.
 // ======================================================================
 
-const APP_VERSION = "1.48";
+const APP_VERSION = "1.49";
 // (a change of library version makes a stored set outdated: it is then ignored)
 const OFFLINE_VERSION = `${MUPDF_URL} ${OCR_LIB}`;
 const CORE_SIMD = "tesseract-core-simd-lstm.wasm.js", CORE_PLAIN = "tesseract-core-lstm.wasm.js";
@@ -13822,7 +13824,66 @@ function initPagesManager() {
   grid.addEventListener("drop", (e) => { const c = e.target.closest(".pg-card"); if (!c || dragFrom === null) return; e.preventDefault(); pmMove(dragFrom, Number(c.dataset.i)); dragFrom = null; });
 }
 
+/* ------------------------------------------------------------- the app's colour */
+// Kameleon changes colour: at every start one of these accents is chosen at random. Each entry
+// has the colour for the light theme and a lighter one for the dark theme (both checked for
+// contrast). A colour can be forced for a look with ?accent=Name or #accent=7 in the address.
+const ACCENTS = [
+  { name: "Forest", light: "#287130", dark: "#92d399" },
+  { name: "Emerald", light: "#0f7a5a", dark: "#7de8c8" },
+  { name: "Teal", light: "#0e6f74", dark: "#7ce3e9" },
+  { name: "Petrol", light: "#11627e", dark: "#7ecce7" },
+  { name: "Ocean", light: "#1c5fa8", dark: "#81b0e4" },
+  { name: "Royal", light: "#2a4fc2", dark: "#869cdf" },
+  { name: "Indigo", light: "#4138a6", dark: "#9690d5" },
+  { name: "Violet", light: "#6b2fa8", dark: "#b28cd9" },
+  { name: "Plum", light: "#8a2e8e", dark: "#d38fd6" },
+  { name: "Magenta", light: "#a8257a", dark: "#de87c0" },
+  { name: "Raspberry", light: "#b4245b", dark: "#e085a8" },
+  { name: "Crimson", light: "#b12a37", dark: "#dd8890" },
+  { name: "Brick", light: "#b7401f", dark: "#e39782" },
+  { name: "Rust", light: "#a7501a", dark: "#e5a780" },
+  { name: "Copper", light: "#955a12", dark: "#e9b87c" },
+  { name: "Bronze", light: "#7d6414", dark: "#e4cd81" },
+  { name: "Olive", light: "#5f6b14", dark: "#d5e283" },
+  { name: "Moss", light: "#46741c", dark: "#b1dd88" },
+  { name: "Pine", light: "#1f6b4a", dark: "#8dd8b7" },
+  { name: "Slate", light: "#3f5b8a", dark: "#99accc" },
+  { name: "Steel", light: "#4a6174", dark: "#a3b4c2" },
+  { name: "Graphite", light: "#4b5351", dark: "#afb6b4" },
+  { name: "Chocolate", light: "#6b4327", dark: "#d3ad92" },
+  { name: "Burgundy", light: "#7a1f3d", dark: "#db8aa5" },
+  { name: "Aubergine", light: "#5a2a6b", dark: "#c194d1" },
+];
+
+function applyAccent(i) {
+  const a = ACCENTS[((i % ACCENTS.length) + ACCENTS.length) % ACCENTS.length];
+  const root = document.documentElement;
+  root.style.setProperty("--accent-base", a.light);
+  root.style.setProperty("--accent-dark-base", a.dark);
+  root.dataset.accent = a.name;
+  // the favicon is the icon with the colour swapped in
+  const link = document.querySelector('link[rel="icon"]');
+  if (link) {
+    if (!link.dataset.template) link.dataset.template = link.href;
+    link.href = link.dataset.template.split("%23287130").join(encodeURIComponent(a.light));
+  }
+  return a;
+}
+
+function initTheme() {
+  const m = /[?#&]accent=([^&#]+)/.exec(location.href);
+  let i = -1;
+  if (m) {
+    const v = decodeURIComponent(m[1]);
+    i = /^\d+$/.test(v) ? Number(v) - 1 : ACCENTS.findIndex((a) => a.name.toLowerCase() === v.toLowerCase());
+  }
+  if (i < 0) i = Math.floor(Math.random() * ACCENTS.length);
+  applyAccent(i);
+}
+
 // Start-up (runs after ui.js, markup.js and tools.js have defined everything).
+initTheme(); // the colour of this start, before anything is drawn
 document.querySelectorAll(".lang-switch button").forEach((b) => b.addEventListener("click", () => setLanguage(b.dataset.lang)));
 document.addEventListener("languagechange", onLanguageChange);
 initMarkup();
