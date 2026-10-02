@@ -707,8 +707,9 @@ function openLaidOut(bytes, kind) {
 }
 
 /** Extract an e-book's segments and place them on the laid-out pages. */
-async function extractBook(bytes, kind, doc) {
-  const { book, segments } = await openBook(bytes, kind);
+async function extractBook(bytes, kind, doc, opened = null) {
+  // (an Office file was parsed for its preview already: that parse is reused)
+  const { book, segments } = opened || await openBook(bytes, kind);
   segments.forEach((s, i) => { s.id = i + 1; });
   const chars = bookChars(doc);
   const map = mapBook(chars, segments.map((s) => ({ id: s.id, hidden: s.hidden, text: shownText(s.text, s.tags) })));

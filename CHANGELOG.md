@@ -36,6 +36,44 @@ Fixes from a full audit of the code and the interface.
 - Export errors and the "password-protected PDFs are not supported" message (passwords are
   supported) are gone or translated.
 
+**Word, PowerPoint, Excel, EPUB, FB2**
+
+- A paragraph whose only letters come from a field (a PowerPoint date placeholder, for example)
+  no longer makes the whole file fail to open.
+- Zip entry names that are not flagged as UTF-8 keep their original bytes, so EPUBs and Office
+  files with non-ASCII part names keep all chapters and open correctly after saving.
+- When a translation drops one field marker (`<1/>`) but keeps another, the dropped one goes back
+  in its original order; before, Word fields could end up with their end before their start.
+- Characters that are not allowed in XML are removed from translations and exports, so Word, Excel
+  and translation tools accept the files.
+- EPUB: the full HTML entity set (`&eacute;`, `&auml;` …) is understood; `<br>` and `<img>` without
+  a closing slash no longer swallow the text after them when saving; a link with a stray `%` and
+  an EPUB without `lang` are handled; DRM-protected EPUBs are refused with a clear message.
+- Bilingual Word documents: the copied paragraph drops footnote and comment references and
+  anchored pictures, so there are no duplicate footnotes or ids.
+- Excel: cells with inline text beyond the preview limits stay translatable; an empty shared-string
+  cell no longer shows the first string.
+- Word content controls (form fields, cover pages) are translatable; a translation with several
+  styles inside one hyperlink or field keeps one hyperlink or field; documents whose main part is
+  not `word/document.xml` open; a literal `<1>` in the source text survives; the language attribute
+  is added where it was missing; damaged and ZIP64 archives give a clear message.
+
+**PDF engine**
+
+- Formula fields that were moved or resized on several pages of a PDF with shared resources no
+  longer all show the last page's formula.
+- Field updates (⟳, Ctrl+S) copy a page's fonts and pictures once instead of on every update, so
+  memory no longer grows with each update; saved files are smaller (fonts are subset on save).
+- An unreadable file no longer leaves a destroyed document in the engine; documents, pages and
+  fonts are freed when a build fails part-way; caches are cleared between documents.
+- Two translated single-line fields on one row (a label and its value, say) no longer run into
+  each other when both grow.
+- CSV import: a quote inside a cell no longer swallows the following rows; JSON import skips
+  invalid items instead of failing; broken-word widths include sub-/superscript sizes; a tiny or
+  truncated DOCX gives a clear message instead of a crash.
+- Office files are parsed once on open instead of twice.
+- Known engine messages are shown in the interface language.
+
 **Interface and accessibility**
 
 - The drop zone on the start page can be reached with the keyboard (Tab, then Enter opens the

@@ -819,14 +819,17 @@ async function extractPages(doc, pageList, onProgress) {
   let done = 0;
   for (const p of pageList) {
     const page = doc.loadPage(p);
-    const bounds = page.getBounds();
-    const width = bounds[2] - bounds[0], height = bounds[3] - bounds[1];
-    const graphics = pageGraphics(page);
-    const { seps } = graphics;
-    const protect = []; // text we never extract (skewed lines) must survive merged redactions
-    segments.push(...segmentPage(pageBlocks(page, bounds, seps), p, bounds, seps, protect));
-    pages[p] = { width, height, x0: bounds[0], y0: bounds[1], protect: protect.map((r) => r.map(round2)), graphics };
-    free(page);
+    try {
+      const bounds = page.getBounds();
+      const width = bounds[2] - bounds[0], height = bounds[3] - bounds[1];
+      const graphics = pageGraphics(page);
+      const { seps } = graphics;
+      const protect = []; // text we never extract (skewed lines) must survive merged redactions
+      segments.push(...segmentPage(pageBlocks(page, bounds, seps), p, bounds, seps, protect));
+      pages[p] = { width, height, x0: bounds[0], y0: bounds[1], protect: protect.map((r) => r.map(round2)), graphics };
+    } finally {
+      free(page);
+    }
     done++;
     if (onProgress) onProgress(done, pageList.length);
     if (done % 4 === 0) await tick();
@@ -971,7 +974,7 @@ function parseCsvRows(text, delim) {
     if (q) {
       if (c === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; }
       else cell += c;
-    } else if (c === '"') q = true;
+    } else if (c === '"' && !cell) q = true; // (a quote inside an unquoted cell is literal: 5" pipe)
     else if (c === delim) { row.push(cell); cell = ""; }
     else if (c === "\n" || c === "\r") {
       if (c === "\r" && text[i + 1] === "\n") i++;
@@ -1014,8 +1017,10 @@ function parseJson(data) {
   const items = Array.isArray(data) ? data : data && Array.isArray(data.segments) ? data.segments : null;
   if (items) {
     for (const it of items) {
+      if (!it || typeof it !== "object") continue;
+      const id = parseInt(it.id, 10);
       const v = String(it.target || it.translation || "").trim();
-      if (v && it.id != null) out[parseInt(it.id, 10)] = v;
+      if (v && Number.isFinite(id)) out[id] = v;
     }
   } else if (data && typeof data === "object") {
     for (const [k, v] of Object.entries(data)) if (/^\s*\d+\s*$/.test(k) && typeof v === "string" && v.trim()) out[parseInt(k, 10)] = v.trim();
@@ -1023,7 +1028,11 @@ function parseJson(data) {
   return out;
 }
 
-const xmlEsc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+// Characters XML 1.0 cannot carry (control characters, U+FFFE/FFFF, lone surrogates) are dropped;
+// a surrogate pair is matched first and kept.
+const XML_ILLEGAL_RE = /[\x00-\x08\x0B\x0C\x0E-\x1F\uFFFE\uFFFF]|[\uD800-\uDBFF][\uDC00-\uDFFF]|[\uD800-\uDFFF]/g;
+const xmlEsc = (s) => String(s).replace(XML_ILLEGAL_RE, (m) => (m.length === 2 ? m : ""))
+  .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 const attrEsc = (s) => xmlEsc(s).replace(/"/g, "&quot;");
 
 function exportXliff(segments, tr = {}, name = "", src = "en", tgt = "") {
@@ -1096,20 +1105,27 @@ function zipStore(files) {
 }
 
 async function unzipEntry(bytes, wanted) {
+  const bad = () => new Error("Not a valid .docx (zip) file.");
+  const need = (off, len) => { if (!(off >= 0 && len >= 0 && off + len <= bytes.length)) throw bad(); };
+  if (bytes.length < 22) throw bad();
   const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   let eocd = -1;
   for (let i = bytes.length - 22; i >= Math.max(0, bytes.length - 65557); i--) if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
-  if (eocd < 0) throw new Error("Not a valid .docx (zip) file.");
+  if (eocd < 0) throw bad();
   let p = dv.getUint32(eocd + 16, true);
   const count = dv.getUint16(eocd + 10, true);
   const dec = new TextDecoder();
   for (let i = 0; i < count; i++) {
+    need(p, 46);
     const method = dv.getUint16(p + 10, true), csize = dv.getUint32(p + 20, true);
     const nlen = dv.getUint16(p + 28, true), xlen = dv.getUint16(p + 30, true), clen = dv.getUint16(p + 32, true);
     const loc = dv.getUint32(p + 42, true);
+    need(p + 46, nlen + xlen + clen);
     const name = dec.decode(bytes.subarray(p + 46, p + 46 + nlen));
     if (name === wanted) {
+      need(loc, 30);
       const start = loc + 30 + dv.getUint16(loc + 26, true) + dv.getUint16(loc + 28, true);
+      need(start, csize);
       const raw = bytes.subarray(start, start + csize);
       if (method === 0) return raw;
       const stream = new Blob([raw]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
@@ -1297,6 +1313,11 @@ class FontKit {
     if (!e.ref) e.ref = this.doc.addFont(e.font);
     return e.ref;
   }
+  /** Free the font handles (the fonts already added to the document stay in it). */
+  dispose() {
+    for (const e of this.entries.values()) free(e.font);
+    this.entries.clear();
+  }
 }
 
 const WORD_EDGE_RE = /^[("'„“«‚‘\[{]+|[)"'”»’\]},.;:!?]+$/gu;
@@ -1327,7 +1348,6 @@ function inlineMarks(spans, info, color, size) {
   const seen = new Set();
   const out = [];
   for (const m of marked.values()) {
-    if (m.prefix) continue;
     if (plain.has(m[0]) || seen.has(m[0])) continue;
     seen.add(m[0]);
     out.push(m);
@@ -1413,8 +1433,9 @@ function wrap(tok, width, indent = 0) {
       if (!line.tokens.length && t.w > avail()) { // break an over-long word by characters
         let piece = { sp: false, glyphs: [], w: 0 };
         for (const g of t.glyphs) {
-          if (piece.glyphs.length && piece.w + g.adv > avail()) { line.tokens.push(piece); line.w = piece.w; push(); piece = { sp: false, glyphs: [], w: 0 }; }
-          piece.glyphs.push(g); piece.w += g.adv;
+          const adv = g.adv * (g.scale || 1);
+          if (piece.glyphs.length && piece.w + adv > avail()) { line.tokens.push(piece); line.w = piece.w; push(); piece = { sp: false, glyphs: [], w: 0 }; }
+          piece.glyphs.push(g); piece.w += adv;
         }
         t = piece;
       }
@@ -1435,7 +1456,8 @@ function obstaclesFor(graphics, segs) {
   const { seps, containers } = graphics;
   const edges = segs.map((s) => s.bbox).concat(seps);
   for (const c of containers) edges.push([c[0], c[1], c[0], c[3]], [c[2], c[1], c[2], c[3]], [c[0], c[1], c[2], c[1]], [c[0], c[3], c[2], c[3]]);
-  return { edges, containers };
+  // grown: segment bbox -> [a0, a1, rotation], the extent of its translation once laid out
+  return { edges, containers, grown: new Map() };
 }
 
 /** How far a single-line segment may grow along its reading direction: [a0, a1] in the local frame. */
@@ -1457,7 +1479,10 @@ function expandedSpan(seg, bounds, obs, gap = 0.4 * seg.size) {
   const h = r[3] - r[1], by0 = r[1] + 0.2 * h, by1 = r[3] - 0.2 * h;
   for (const e of obs.edges) {
     if (e === sb) continue;
-    const o = localBox(e, rot);
+    let o = localBox(e, rot);
+    // A neighbour laid out already may have grown into the gap: its translation is in the way too.
+    const g = obs.grown && obs.grown.get(e);
+    if (g && g[2] === rot) o = [Math.min(o[0], g[0]), o[1], Math.max(o[2], g[1]), o[3]];
     if (o[3] < by0 || o[1] > by1) continue;
     if (o[0] >= r[2] - 0.5) right = Math.min(right, o[0] - gap);
     if (o[2] <= r[0] + 0.5) left = Math.max(left, o[2] + gap);
@@ -1580,6 +1605,7 @@ function layoutSegment(seg, text, fk, bounds, obs, opts, used, stats, leadEnd = 
       const gaps = line.tokens.filter((t, j) => j > 0 && t.sp).length;
       if (gaps) extra = Math.max(0, spare) / gaps;
     }
+    const lineStart = a;
     line.tokens.forEach((t, j) => {
       if (j > 0 && t.sp) a += tok.spaceAdv * s + extra;
       let run = null;
@@ -1601,27 +1627,44 @@ function layoutSegment(seg, text, fk, bounds, obs, opts, used, stats, leadEnd = 
       }
       flush();
     });
-    if (lineEnds) lineEnds.push([a, b]);
+    if (lineEnds) lineEnds.push([a, b, lineStart]); // [end, baseline, start] along/across the reading direction
   });
   ops.push("ET");
   return ops.join("\n");
 }
 
+/**
+ * `parent[key]` as a dictionary this page may change: a dictionary other pages share (an
+ * indirect object, or one taken over from a shared or inherited dictionary) is copied first.
+ */
+function ownDict(doc, parent, key, shared) {
+  const cur = parent.get(key);
+  if (cur.isDictionary() && !cur.isIndirect() && !shared) return cur;
+  const copy = doc.newDictionary();
+  if (cur.isDictionary()) cur.forEach((v, k) => copy.put(k, v));
+  parent.put(key, copy);
+  return copy;
+}
+
 function appendContent(doc, page, content, used, xobjects = new Map()) {
   const pobj = page.getObject();
-  let res = pobj.get("Resources");
+  // Resources shared by several pages (inherited, or one indirect dictionary) get copied before
+  // this page's fonts and forms are added, so no other page sees them.
+  let res = pobj.get("Resources"), shared = false;
   if (res.isNull()) {
     const inherited = pobj.getInheritable("Resources");
     res = doc.newDictionary();
     if (!inherited.isNull()) inherited.forEach((v, k) => res.put(k, v));
     pobj.put("Resources", res);
+    shared = true;
+  } else if (res.isIndirect()) {
+    res = ownDict(doc, pobj, "Resources", true);
+    shared = true;
   }
-  let fonts = res.get("Font");
-  if (fonts.isNull()) { fonts = doc.newDictionary(); res.put("Font", fonts); }
+  const fonts = ownDict(doc, res, "Font", shared);
   for (const e of used) fonts.put(e.res, e.ref);
   if (xobjects.size) {
-    let xo = res.get("XObject");
-    if (xo.isNull()) { xo = doc.newDictionary(); res.put("XObject", xo); }
+    const xo = ownDict(doc, res, "XObject", shared);
     for (const [name, ref] of xobjects) xo.put(name, ref);
   }
   const inv = M.Matrix.invert(page.getTransform());
@@ -1699,57 +1742,70 @@ function translatePage(doc, index, fk, segs, translations, pageInfo, opts, stats
   stats.untranslated += segs.length - todo.length - scaled.length;
   if (!todo.length && !scaled.length) return;
   const page = doc.loadPage(index);
-  const bounds = page.getBounds();
-  let obs = null;
-  if (opts.expand) obs = obstaclesFor((pageInfo && pageInfo.graphics) || pageGraphics(page), segs);
-  const xobjects = new Map(), copies = [];
-  if (scaled.length) {
-    // The page as it is now, drawn again (clipped and scaled) for each formula.
-    xobjects.set("PTorig", pageForm(doc, page));
-    for (const s of scaled) {
-      const from = s.orig_bbox || s.bbox, to = s.bbox;
-      let k = 1;
-      if (s.exact_size && s.orig_size) k = s.size / s.orig_size;
-      else if (s.fixed) k = Math.min((to[2] - to[0]) / Math.max(1, from[2] - from[0]), (to[3] - to[1]) / Math.max(1, from[3] - from[1]));
-      const m = [k, 0, 0, k, to[0] - k * from[0], to[1] - k * from[1]];
-      const pad = 0.15 * (s.orig_size || s.size);
-      const clip = [from[0] - pad, from[1] - pad, from[2] - from[0] + 2 * pad, from[3] - from[1] + 2 * pad];
-      copies.push(`q ${m.map(fmt).join(" ")} cm ${clip.map(fmt).join(" ")} re W n ${page.getTransform().map(fmt).join(" ")} cm /PTorig Do Q`);
+  try {
+    const bounds = page.getBounds();
+    let obs = null;
+    if (opts.expand) obs = obstaclesFor((pageInfo && pageInfo.graphics) || pageGraphics(page), segs);
+    const xobjects = new Map(), copies = [];
+    if (scaled.length) {
+      // The page as it is now, drawn again (clipped and scaled) for each formula. The form's name
+      // is unique to the page: pages may share one resource dictionary.
+      const formName = `PTorig${index}`;
+      xobjects.set(formName, pageForm(doc, page));
+      for (const s of scaled) {
+        const from = s.orig_bbox || s.bbox, to = s.bbox;
+        let k = 1;
+        if (s.exact_size && s.orig_size) k = s.size / s.orig_size;
+        else if (s.fixed) k = Math.min((to[2] - to[0]) / Math.max(1, from[2] - from[0]), (to[3] - to[1]) / Math.max(1, from[3] - from[1]));
+        const m = [k, 0, 0, k, to[0] - k * from[0], to[1] - k * from[1]];
+        const pad = 0.15 * (s.orig_size || s.size);
+        const clip = [from[0] - pad, from[1] - pad, from[2] - from[0] + 2 * pad, from[3] - from[1] + 2 * pad];
+        copies.push(`q ${m.map(fmt).join(" ")} cm ${clip.map(fmt).join(" ")} re W n ${page.getTransform().map(fmt).join(" ")} cm /${formName} Do Q`);
+      }
+      // The formula's glyphs and the lines inside its box (fraction bars) go; nothing else does.
+      for (const s of scaled) {
+        const b = s.orig_bbox || s.bbox, pad = 0.15 * (s.orig_size || s.size);
+        page.createAnnotation("Redact").setRect([b[0] - pad, b[1] - pad, b[2] + pad, b[3] + pad]);
+      }
+      page.applyRedactions(false, 0, 1, 0); // keep images, remove line art inside, remove text
     }
-    // The formula's glyphs and the lines inside its box (fraction bars) go; nothing else does.
-    for (const s of scaled) {
-      const b = s.orig_bbox || s.bbox, pad = 0.15 * (s.orig_size || s.size);
-      page.createAnnotation("Redact").setRect([b[0] - pad, b[1] - pad, b[2] + pad, b[3] + pad]);
-    }
-    page.applyRedactions(false, 0, 1, 0); // keep images, remove line art inside, remove text
+    for (const r of redactionRects(todo, keep)) page.createAnnotation("Redact").setRect(r);
+    if (todo.length) page.applyRedactions(false, 0, 0, 0); // keep images, keep line art, remove text
+    const used = new Set();
+    const laid = []; // where the lines of translations laid out so far end, for lead-ins
+    // Patches of paper colour over scanned (OCR) text come first, under all translations.
+    const covers = todo.filter((seg) => seg.cover).map((seg) =>
+      `q ${rg(seg.bg || "#ffffff")} ${seg.cover.map(([x0, y0, x1, y1]) => `${fmt(x0)} ${fmt(y0)} ${fmt(x1 - x0)} ${fmt(y1 - y0)} re`).join(" ")} f Q`);
+    const content = covers.concat(copies, todo.map((seg) => {
+      const ends = [];
+      const ops = layoutSegment(seg, textOf(seg), fk, bounds, obs, opts, used, stats, seg.fixed ? null : leadInEnd(seg, laid), ends);
+      const right = localBox(seg.bbox, seg.rotation)[2];
+      for (const [a, b] of ends) laid.push({ rot: seg.rotation, end: a, base: b, right });
+      // Where the translation now reaches: a neighbour laid out later must not grow into it.
+      if (obs && ends.length) obs.grown.set(seg.bbox, [Math.min(...ends.map((e) => e[2])), Math.max(...ends.map((e) => e[0])), seg.rotation]);
+      return ops;
+    })).join("\n");
+    appendContent(doc, page, content, used, xobjects);
+    stats.replaced += todo.length + scaled.length;
+  } finally {
+    free(page);
   }
-  for (const r of redactionRects(todo, keep)) page.createAnnotation("Redact").setRect(r);
-  if (todo.length) page.applyRedactions(false, 0, 0, 0); // keep images, keep line art, remove text
-  const used = new Set();
-  const laid = []; // where the lines of translations laid out so far end, for lead-ins
-  // Patches of paper colour over scanned (OCR) text come first, under all translations.
-  const covers = todo.filter((seg) => seg.cover).map((seg) =>
-    `q ${rg(seg.bg || "#ffffff")} ${seg.cover.map(([x0, y0, x1, y1]) => `${fmt(x0)} ${fmt(y0)} ${fmt(x1 - x0)} ${fmt(y1 - y0)} re`).join(" ")} f Q`);
-  const content = covers.concat(copies, todo.map((seg) => {
-    const ends = [];
-    const ops = layoutSegment(seg, textOf(seg), fk, bounds, obs, opts, used, stats, seg.fixed ? null : leadInEnd(seg, laid), ends);
-    const right = localBox(seg.bbox, seg.rotation)[2];
-    for (const [a, b] of ends) laid.push({ rot: seg.rotation, end: a, base: b, right });
-    return ops;
-  })).join("\n");
-  appendContent(doc, page, content, used, xobjects);
-  stats.replaced += todo.length + scaled.length;
-  free(page);
 }
 
-/** The page's current content as a form XObject (in PDF user space, with the page's resources). */
-function pageForm(doc, page) {
-  const pobj = page.getObject();
+/** The page's content streams as one byte array. */
+function contentOf(pobj) {
   const contents = pobj.get("Contents"), parts = [];
   const read = (o) => { if (o.isStream()) { const b = o.readStream(); parts.push(b.asUint8Array().slice(), new Uint8Array([10])); free(b); } };
   if (contents.isArray()) for (let k = 0; k < contents.length; k++) read(contents.get(k)); else if (!contents.isNull()) read(contents);
   const data = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));
   parts.reduce((at, p) => (data.set(p, at), at + p.length), 0);
+  return data;
+}
+
+/** The page's current content as a form XObject (in PDF user space, with the page's resources). */
+function pageForm(doc, page) {
+  const pobj = page.getObject();
+  const data = contentOf(pobj);
   const box = pobj.getInheritable("MediaBox");
   const mb = box.isArray() ? [0, 1, 2, 3].map((k) => box.get(k).asNumber()) : [0, 0, 612, 792];
   // (a copy of the resources: the page's own get the form added to them afterwards)
@@ -1762,24 +1818,33 @@ function pageForm(doc, page) {
 
 /**
  * Re-translate a single page of an edited output document: the page is copied fresh from the
- * original, translated with the given translations, and swapped into `out`.
+ * original into `out` and translated there. `map` is out's graft map from the original, so the
+ * fonts, images and forms the pages share are copied once, however often pages are updated;
+ * `fk` is out's font kit, whose translation fonts all updated pages share (they are subsetted
+ * when the document is saved, see savePdf).
  */
-function updatePage(out, src, pno, segs, translations, pageInfo, opts) {
-  const tmp = new M.PDFDocument();
-  try {
-    tmp.graftPage(0, src, pno);
-    const fk = new FontKit(tmp, opts);
-    const stats = { replaced: 0, untranslated: 0, shrunk: [], missing: 0 };
-    translatePage(tmp, 0, fk, segs, translations, pageInfo, opts, stats);
-    stats.missing = fk.missing;
-    stats.missingChars = [...fk.missingChars].join("");
-    tmp.subsetFonts();
-    out.deletePage(pno);
-    out.graftPage(pno, tmp, 0);
-    return stats;
-  } finally {
-    free(tmp);
-  }
+function updatePage(out, src, pno, segs, translations, pageInfo, opts, map, fk) {
+  map.graftPage(pno, src, pno);
+  out.deletePage(pno + 1);
+  // The copy shares its content streams with the original's later copies: redaction works on
+  // the page's own stream.
+  const pobj = out.findPage(pno);
+  pobj.put("Contents", out.addStream(contentOf(pobj), {}));
+  fk.opts = opts; fk.missing = 0; fk.missingChars.clear();
+  const stats = { replaced: 0, untranslated: 0, shrunk: [], missing: 0 };
+  translatePage(out, pno, fk, segs, translations, pageInfo, opts, stats);
+  stats.missing = fk.missing;
+  stats.missingChars = [...fk.missingChars].join("");
+  return stats;
+}
+
+/** The same bytes (the interface sends a fresh copy of the custom font with every request). */
+function sameBytes(a, b) {
+  if (!a || !b) return !a && !b;
+  const x = a instanceof Uint8Array ? a : new Uint8Array(a), y = b instanceof Uint8Array ? b : new Uint8Array(b);
+  if (x.length !== y.length) return false;
+  for (let i = 0; i < x.length; i++) if (x[i] !== y[i]) return false;
+  return true;
 }
 
 /**
@@ -1791,27 +1856,31 @@ function updatePage(out, src, pno, segs, translations, pageInfo, opts) {
 async function buildTranslated(bytes, segments, translations, pages, opts, onProgress) {
   const doc = M.Document.openDocument(bytes, "application/pdf");
   const fk = new FontKit(doc, opts);
-  const stats = { replaced: 0, untranslated: 0, shrunk: [], missing: 0 };
-  const byPage = new Map();
-  for (const s of segments) {
-    if (!byPage.has(s.page)) byPage.set(s.page, []);
-    byPage.get(s.page).push(s);
+  try {
+    const stats = { replaced: 0, untranslated: 0, shrunk: [], missing: 0 };
+    const byPage = new Map();
+    for (const s of segments) {
+      if (!byPage.has(s.page)) byPage.set(s.page, []);
+      byPage.get(s.page).push(s);
+    }
+    let done = 0;
+    for (const [pno, segs] of byPage) {
+      translatePage(doc, pno, fk, segs, translations, pages[pno], opts, stats);
+      done++;
+      if (onProgress) onProgress(done, byPage.size);
+      if (done % 4 === 0) await tick();
+    }
+    stats.missing = fk.missing;
+    stats.missingChars = [...fk.missingChars].join("");
+    doc.subsetFonts();
+    const buf = doc.saveToBuffer("garbage,compress");
+    const out = buf.asUint8Array().slice();
+    free(buf);
+    return { bytes: out, stats };
+  } finally {
+    fk.dispose();
+    free(doc);
   }
-  let done = 0;
-  for (const [pno, segs] of byPage) {
-    translatePage(doc, pno, fk, segs, translations, pages[pno], opts, stats);
-    done++;
-    if (onProgress) onProgress(done, byPage.size);
-    if (done % 4 === 0) await tick();
-  }
-  stats.missing = fk.missing;
-  stats.missingChars = [...fk.missingChars].join("");
-  doc.subsetFonts();
-  const buf = doc.saveToBuffer("garbage,compress");
-  const out = buf.asUint8Array().slice();
-  free(buf);
-  free(doc);
-  return { bytes: out, stats };
 }
 
 const hexRgb = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
@@ -2149,12 +2218,15 @@ function savePdf(W, markups, rotations) {
   const turned = Object.values(rotations).some(Boolean);
   if (!W.edit && !markups.length && !turned) throw new Error("Nothing to save yet.");
   let doc = W.edit, temp = null;
-  if (markups.length || turned || !W.edit) {
+  // Fonts added by page updates (shared by all updated pages, see updatePage) and by text notes
+  // are embedded whole; the saved copy gets them subsetted.
+  const subset = Boolean(W.editFk) || markups.some((m) => m.type === "text");
+  if (markups.length || turned || !W.edit || subset) {
     let src = W.bytes;
     if (W.edit) { const b = W.edit.saveToBuffer(""); src = b.asUint8Array().slice(); free(b); }
     temp = doc = M.Document.openDocument(src.slice(), "application/pdf");
     addMarkups(doc, markups);
-    if (markups.some((m) => m.type === "text")) doc.subsetFonts();
+    if (subset) doc.subsetFonts();
     rotatePages(doc, rotations);
   }
   const buf = doc.saveToBuffer("garbage,compress");
@@ -2257,49 +2329,87 @@ function sideBySidePdf(W, markups, rotations) {
   }
 }
 
+/**
+ * An EPUB whose text files are encrypted (Adobe, LCP or other DRM) cannot be translated. Only
+ * obfuscated fonts (the IDPF and Adobe font mangling) are no DRM: the text stays readable.
+ */
+async function checkEpubDrm(bytes) {
+  let entry;
+  try { entry = zipEntries(bytes).find((e) => e.name === "META-INF/encryption.xml"); } catch (_) { return; } // (MuPDF reports a broken file)
+  if (!entry) return;
+  const xml = decodeXml(await zipRead(entry));
+  const fontAlgorithm = /idpf\.org\/2008\/embedding|ns\.adobe\.com\/pdf\/enc#RC/;
+  for (const [block] of xml.matchAll(/<(?:[\w.-]+:)?EncryptedData[\s>][\s\S]*?<\/(?:[\w.-]+:)?EncryptedData\s*>/g)) {
+    const uri = (/CipherReference[^>]*\bURI\s*=\s*["']([^"']*)["']/.exec(block) || [])[1] || "";
+    const algorithm = (/EncryptionMethod[^>]*\bAlgorithm\s*=\s*["']([^"']*)["']/.exec(block) || [])[1] || "";
+    if (fontAlgorithm.test(algorithm) || /\.(?:ttf|otf|woff2?)$/i.test(uri.split(/[?#]/)[0])) continue;
+    throw new Error("This EPUB is DRM-protected and cannot be translated.");
+  }
+}
+
 // ---------------------------------------------------------- worker protocol
 /**
  * Request handler shared by the Web Worker and the in-page fallback. It keeps an open copy of
  * the original PDF (for extraction and rendering) and of the latest translated PDF (preview).
  */
 function createHandler() {
-  // edit: the translated document (an editable PDF, or the laid-out translated e-book)
-  const W = { doc: null, bytes: null, edit: null, kind: "pdf", book: null, outBytes: null };
+  // edit: the translated document (an editable PDF, or the laid-out translated e-book);
+  // editMap/editFk: the graft map from the original and the font kit of an editable PDF
+  // (see updatePage); opened: the parse of an Office file made for its preview on "open".
+  const W = { doc: null, bytes: null, edit: null, editMap: null, editFk: null, kind: "pdf", book: null, opened: null, outBytes: null };
+  const dropEdit = () => {
+    if (W.editFk) W.editFk.dispose();
+    free(W.editMap); free(W.edit);
+    W.edit = W.editMap = W.editFk = null;
+  };
+  const setEdit = (doc) => { dropEdit(); W.edit = doc; W.editMap = doc.newGraftMap(); };
+  const clearCaches = () => { fontInfoCache.clear(); fontPtrCache.clear(); colorCache.clear(); };
   return async function handle(cmd, args = {}, progress = () => {}) {
     if (cmd === "init") {
       await initEngine();
       return { result: true };
     }
     if (cmd === "open") {
-      free(W.doc); free(W.edit); W.edit = null;
-      W.bytes = args.bytes;
-      W.kind = args.kind || "pdf";
-      W.book = null; W.outBytes = null;
-      if (W.kind !== "pdf") {
-        if (W.kind === "fb2") W.bytes = await unzipFb2(args.bytes); // .fb2.zip / .fbz
-        if (OFFICE_KINDS.has(W.kind)) {
-          const { book, segments } = await openOffice(W.bytes, W.kind);
-          segments.forEach((sg, i) => { sg.id = i + 1; });
-          W.book = book;
-          W.doc = openOfficePreview(book, segments, {}, W.kind);
-        } else W.doc = openLaidOut(W.bytes.slice(), W.kind);
-        return { result: W.doc.countPages() };
+      dropEdit(); free(W.doc);
+      W.doc = W.bytes = W.book = W.opened = W.outBytes = null;
+      clearCaches(); // (fonts of another document with the same names are analysed afresh)
+      const kind = args.kind || "pdf";
+      let bytes = args.bytes, doc, book = null, opened = null;
+      if (kind !== "pdf") {
+        if (kind === "fb2") bytes = await unzipFb2(args.bytes); // .fb2.zip / .fbz
+        if (kind === "epub") await checkEpubDrm(bytes);
+        if (OFFICE_KINDS.has(kind)) {
+          opened = await openOffice(bytes, kind);
+          opened.segments.forEach((sg, i) => { sg.id = i + 1; });
+          opened.bytes = bytes;
+          book = opened.book;
+          doc = openOfficePreview(book, opened.segments, {}, kind);
+        } else doc = openLaidOut(bytes.slice(), kind);
+      } else {
+        doc = M.Document.openDocument(bytes.slice(), "application/pdf");
+        if (doc.needsPassword && doc.needsPassword()) { free(doc); throw new Error("Password-protected PDFs are not supported."); }
       }
-      W.doc = M.Document.openDocument(args.bytes.slice(), "application/pdf");
-      if (W.doc.needsPassword && W.doc.needsPassword()) throw new Error("Password-protected PDFs are not supported.");
-      return { result: W.doc.countPages() };
+      // (only now: a failed open leaves no document in use)
+      W.doc = doc; W.bytes = bytes; W.kind = kind; W.book = book; W.opened = opened;
+      return { result: doc.countPages() };
     }
     if (cmd === "extract") return { result: await extractPages(W.doc, args.pages, progress) };
     if (cmd === "unlock") return { result: unlockPdf(args.bytes, args.password) };
     if (cmd === "ocrPage") {
       const page = W.doc.loadPage(args.page);
-      const bounds = page.getBounds();
-      const seps = pageGraphics(page).seps.concat(args.seps || []);
-      free(page);
-      return { result: segmentPage(ocrBlocks(args.lines, args.family), args.page, bounds, seps, []) };
+      try {
+        const bounds = page.getBounds();
+        const seps = pageGraphics(page).seps.concat(args.seps || []);
+        return { result: segmentPage(ocrBlocks(args.lines, args.family), args.page, bounds, seps, []) };
+      } finally {
+        free(page);
+      }
     }
     if (cmd === "extractBook") {
-      const { book, pages, segments } = await extractBook(W.bytes, W.kind, W.doc);
+      // An Office file was parsed for its preview on "open" already: that parse is passed on,
+      // so the file is not unzipped and parsed a second time.
+      const opened = W.opened && W.opened.bytes === W.bytes ? W.opened : null;
+      const { book, pages, segments } = await extractBook(W.bytes, W.kind, W.doc, opened);
       W.book = book;
       return { result: { pages, segments } };
     }
@@ -2314,20 +2424,23 @@ function createHandler() {
       if (!W.book) W.book = (await openBook(W.bytes, W.kind)).book;
       const result = await saveBook(W.book, W.bytes, args.segments, args.translations, args.opts || {});
       W.outBytes = result.bytes.slice();
-      free(W.edit);
+      dropEdit();
       W.edit = OFFICE_KINDS.has(W.kind) ? openOfficePreview(W.book, args.segments, args.translations, W.kind) : openLaidOut(result.bytes.slice(), W.kind);
       result.view = mapTranslated(W.edit, args.segments, args.translations);
       return { result, transfer: [result.bytes.buffer] };
     }
     if (cmd === "build") {
       const result = await buildTranslated(W.bytes.slice(), args.segments, args.translations, args.pages, args.opts, progress);
-      free(W.edit);
-      W.edit = M.Document.openDocument(result.bytes.slice(), "application/pdf");
+      setEdit(M.Document.openDocument(result.bytes.slice(), "application/pdf"));
       return { result, transfer: [result.bytes.buffer] };
     }
     if (cmd === "updatePage") {
-      if (!W.edit) W.edit = M.Document.openDocument(W.bytes.slice(), "application/pdf");
-      return { result: updatePage(W.edit, W.doc, args.page, args.segments, args.translations, args.pageInfo, args.opts) };
+      const opts = args.opts || {};
+      if (!W.edit) setEdit(M.Document.openDocument(W.bytes.slice(), "application/pdf"));
+      // One font kit per output document; a new custom font gets a new one.
+      if (W.editFk && !sameBytes(W.editFk.opts.customFont, opts.customFont)) { W.editFk.dispose(); W.editFk = null; }
+      if (!W.editFk) W.editFk = new FontKit(W.edit, opts);
+      return { result: updatePage(W.edit, W.doc, args.page, args.segments, args.translations, args.pageInfo, opts, W.editMap, W.editFk) };
     }
     if (cmd === "save" && W.kind !== "pdf") {
       if (!W.outBytes) throw new Error("Nothing to save yet.");
@@ -2349,13 +2462,14 @@ function createHandler() {
       return { result: bytes, transfer: [bytes.buffer] };
     }
     if (cmd === "resetOutput") {
-      free(W.edit);
-      W.edit = null; W.outBytes = null;
+      dropEdit();
+      W.outBytes = null;
       return { result: true };
     }
     if (cmd === "close") {
-      free(W.doc); free(W.edit);
-      W.doc = W.edit = W.bytes = W.book = W.outBytes = null;
+      dropEdit(); free(W.doc);
+      W.doc = W.bytes = W.book = W.opened = W.outBytes = null;
+      clearCaches();
       return { result: true };
     }
     throw new Error(`Unknown command ${cmd}`);

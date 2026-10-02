@@ -206,6 +206,18 @@ function saveBlob(blob, filename) {
   setTimeout(() => URL.revokeObjectURL(url), 5000);
 }
 
+// Known engine messages in the interface language; anything else (MuPDF's own messages) as it is.
+const ERROR_KEYS = [
+  [/DRM-protected/i, "err.drm"], [/not a valid (zip|\.docx)/i, "err.zip"], [/ZIP64/i, "err.zip64"],
+  [/No \.fb2 file/i, "err.noFb2"], [/no package file/i, "err.noOpf"], [/XLIFF file is not valid/i, "err.xliff"],
+  [/No document is open/i, "err.noDoc"], [/engine worker|worker stopped/i, "msg.workerStopped"],
+];
+function userError(err) {
+  const msg = String((err && err.message) || err || "");
+  const hit = ERROR_KEYS.find(([re]) => re.test(msg));
+  return hit ? t(hit[1]) : msg;
+}
+
 const stem = () => (state.doc.name || "document.pdf").replace(/\.(pdf|epub|fb2|fbz|fb2\.zip|zip|docx|pptx|xlsx)$/i, "") || "document";
 const escapeHtml = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 
@@ -282,7 +294,7 @@ async function openPdf(file) {
     if (state.doc) closeFind(); // (another file replaces the open one)
     await loadBytes(bytes, file.name, true);
   } catch (err) {
-    toast(t("msg.openFailed", { err: err.message || err }), "error");
+    toast(t("msg.openFailed", { err: userError(err) }), "error");
   } finally {
     $("#fileInput").value = "";
   }
@@ -365,7 +377,7 @@ async function loadBytes(bytes, name, remember, knownId = null) {
   } catch (err) {
     if (stale()) return;
     console.error(err);
-    toast(t("msg.openFailed", { err: err.message || err }), "error");
+    toast(t("msg.openFailed", { err: userError(err) }), "error");
   } finally {
     if (!stale()) setLoading("");
   }
@@ -1054,7 +1066,7 @@ function doExport() {
     else if (format === "xliff") saveBlob(new Blob([Engine.exportXliff(segs, tr, state.doc.name, "und", $("#tgtLang").value.trim())], { type: "application/xliff+xml" }), `${name}.xlf`);
     else if (format === "docx") saveBlob(Engine.exportDocx(segs, tr), `${name}.docx`);
   } catch (err) {
-    toast(t("msg.exportFailed", { err: err.message || err }), "error");
+    toast(t("msg.exportFailed", { err: userError(err) }), "error");
   }
 }
 
@@ -1137,7 +1149,7 @@ async function downloadOutput() {
     const type = MIME[kind];
     saveBlob(new Blob([state.outBytes], { type }), `${stem()}.translated.${kind}`);
   } catch (err) {
-    toast(t("msg.saveFailed", { err: err.message || err }), "error");
+    toast(t("msg.saveFailed", { err: userError(err) }), "error");
   } finally {
     busy("");
   }
@@ -1166,7 +1178,7 @@ async function downloadBilingual(layout = "pages") {
     const type = MIME[kind];
     saveBlob(new Blob([bytes], { type }), `${stem()}.bilingual.${kind}`);
   } catch (err) {
-    toast(t("msg.saveFailed", { err: err.message || err }), "error");
+    toast(t("msg.saveFailed", { err: userError(err) }), "error");
   } finally {
     busy("");
   }
@@ -1216,7 +1228,7 @@ function applyField(id) {
       document.querySelector(`.box[data-id="${id}"]`)?.scrollIntoView({ block: "nearest", behavior: "smooth" });
       if (stats.missing) toast(t("msg.fontMissing", { n: stats.missing, chars: stats.missingChars }), "error");
     } catch (err) {
-      toast(t("msg.updateFailed", { err: err.message || err }), "error");
+      toast(t("msg.updateFailed", { err: userError(err) }), "error");
     }
   });
   return applyChain;
@@ -1240,7 +1252,7 @@ async function applyBook(id) {
     const box = document.querySelector(`.box[data-id="${id}"]`);
     if (box) box.scrollIntoView({ block: "center", behavior: "smooth" }); else goToPage(page);
   } catch (err) {
-    toast(t("msg.updateFailed", { err: err.message || err }), "error");
+    toast(t("msg.updateFailed", { err: userError(err) }), "error");
   } finally {
     busy("");
   }
@@ -1297,7 +1309,7 @@ async function doBuild() {
     }
   } catch (err) {
     console.error(err);
-    toast(t("msg.buildFailed", { err: err.message || err }), "error");
+    toast(t("msg.buildFailed", { err: userError(err) }), "error");
   } finally {
     building = false;
     busy("");
@@ -1308,7 +1320,7 @@ async function doBuild() {
 async function chooseFont(file) {
   if (!file) return;
   let bytes;
-  try { bytes = new Uint8Array(await file.arrayBuffer()); } catch (err) { toast(t("msg.openFailed", { err: err.message || err }), "error"); return; }
+  try { bytes = new Uint8Array(await file.arrayBuffer()); } catch (err) { toast(t("msg.openFailed", { err: userError(err) }), "error"); return; }
   const sig = String.fromCharCode(...bytes.slice(0, 4));
   if (!(sig === "OTTO" || sig === "true" || sig === "ttcf" || (bytes[0] === 0 && bytes[1] === 1 && bytes[2] === 0 && bytes[3] === 0))) {
     state.customFont = null;

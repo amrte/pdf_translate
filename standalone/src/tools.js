@@ -435,7 +435,7 @@ async function startOcr() {
   } catch (err) {
     if (!ocrCancel) {
       console.error(err);
-      toast(t("ocr.failed", { err: err.message || err }), "error");
+      toast(t("ocr.failed", { err: userError(err) }), "error");
       return;
     }
   } finally {
