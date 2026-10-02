@@ -4,6 +4,11 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.36
+
+- **One button colour.** The download buttons, the "done" dots, the progress bar and the step-6
+  badge use the same green as every other primary button, instead of a separate teal.
+
 ## 1.35
 
 - **Several files at the same time.** Open the app in as many browser tabs as you like, each with

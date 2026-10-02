@@ -7,8 +7,8 @@
   --muted: #5f6a61;
   --accent: #287130;
   --accent-soft: #e6f2e4;
-  --success: #0b7a75;
-  --success-soft: #dff3f1;
+  --success: #287130;   /* one green: the same as the accent, for buttons, dots and progress */
+  --success-soft: #e6f2e4;
   --warn: #b26a00;
   --danger: #c0392b;
   --on-accent: #fff;   /* text on accent / success / danger fills */
@@ -30,12 +30,12 @@
     --muted: #98a39a;
     --accent: #7ccf7f;
     --accent-soft: #253d2a;
-    --success: #5fd1c6;
-    --success-soft: #183836;
+    --success: #7ccf7f;
+    --success-soft: #253d2a;
     --warn: #f0a640;
     --danger: #ff7b6b;
     --on-accent: #0f1f10;
-    --on-success: #0a1f1d;
+    --on-success: #0f1f10;
     --on-danger: #1c0f0d;
     --page-shadow: 0 1px 3px rgba(0, 0, 0, .5);
     color-scheme: dark;
