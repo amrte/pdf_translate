@@ -4,6 +4,12 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.31
+
+- **The chameleon greets your file.** The drop area shows a larger Kameleon instead of the generic
+  document icon. While a file is dragged over the area (or the mouse hovers over it), it opens
+  its mouth and puts out its tongue; when the file lands, it snaps.
+
 ## 1.30
 
 - **Offline libraries on your computer.** Help → "Working offline" now downloads the libraries

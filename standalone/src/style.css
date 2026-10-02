@@ -558,8 +558,20 @@ body.splitting .pages, body.splitting iframe { pointer-events: none; }
   box-shadow: 0 1px 2px rgba(20, 25, 40, .04), 0 10px 30px rgba(46, 125, 50, .08);
 }
 .upload-view .dropzone:hover, .upload-view .dropzone.over { box-shadow: 0 1px 2px rgba(20, 25, 40, .04), 0 12px 34px rgba(46, 125, 50, .16); }
-.upload-view .dz-icon { width: 66px; height: 66px; border-radius: 18px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); }
-.upload-view .dropzone:hover .dz-icon, .upload-view .dropzone.over .dz-icon, .upload-view .dropzone:focus-within .dz-icon { background: var(--accent); color: var(--on-accent); }
+/* The chameleon in the drop area opens its mouth while a file hovers over it, and bites when it lands. */
+.upload-view .dz-icon { width: 96px; height: 96px; display: grid; place-items: center; transition: transform .25s ease-out; }
+.dz-icon .kam { width: 100%; height: 100%; display: block; filter: drop-shadow(0 4px 10px rgba(138, 90, 43, .18)); }
+.kam-jaw { transform-box: view-box; transform-origin: 41px 34px; transition: transform .25s ease-out; }
+.kam-tongue { transform-box: view-box; transform-origin: 42px 35px; transform: scale(0); transition: transform .25s ease-out .05s; }
+.kam-pupil { transition: transform .25s ease-out; }
+.upload-view .dropzone:hover .dz-icon, .upload-view .dropzone.over .dz-icon, .upload-view .dropzone:focus-within .dz-icon { transform: scale(1.06); }
+.dropzone:hover .kam-jaw, .dropzone.over .kam-jaw, .dropzone:focus-within .kam-jaw { transform: rotate(24deg); }
+.dropzone.over .kam-jaw { transform: rotate(30deg); }
+.dropzone:hover .kam-tongue, .dropzone.over .kam-tongue, .dropzone:focus-within .kam-tongue { transform: scale(1); }
+.dropzone:hover .kam-pupil, .dropzone.over .kam-pupil, .dropzone:focus-within .kam-pupil { transform: translate(.6px, -.6px); }
+.dropzone.bite .kam-jaw { animation: kam-bite .55s ease-in-out both; }
+.dropzone.bite .kam-tongue { transform: scale(0); }
+@keyframes kam-bite { 0% { transform: rotate(30deg); } 35% { transform: rotate(0); } 55% { transform: rotate(14deg); } 100% { transform: rotate(0); } }
 .upload-view .dz-title { font-size: 20px; font-weight: 650; letter-spacing: -0.005em; }
 .dz-tagline { color: var(--muted); font-size: 13.5px; margin-top: -4px; }
 .upload-view .dz-formats { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }

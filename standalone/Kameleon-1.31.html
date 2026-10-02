@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="Kameleon 1.30">
+  <meta name="generator" content="Kameleon 1.31">
   <meta name="description" content="Kameleon – Wechselt die Sprache, behält die Form. Changes language, keeps its shape.">
   <title>Kameleon</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%227%22 fill=%22%23f2c94c%22/%3E%3Cpath d=%22M4 24.5c7-1 17-1 24 0%22 fill=%22none%22 stroke=%22%238a5a2b%22 stroke-width=%222.2%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M9.5 18.5c0-4.5 3.5-8 8-8h3.5c3.5 0 6 2.5 6 5.5 0 2.6-1.5 4.5-4 5.5h-9c-2.8 0-4.5-1.3-4.5-3z%22 fill=%22%234caf50%22/%3E%3Cpath d=%22M7.5 20.5c-2.3-.4-3.6 1.2-3.1 2.9.4 1.3 1.9 1.7 2.8.9.9-.8.6-2-.2-2.3%22 fill=%22none%22 stroke=%22%234caf50%22 stroke-width=%222.2%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M26.5 16c1.6-1.2 3.2-.2 3.4 1.2%22 fill=%22none%22 stroke=%22%234caf50%22 stroke-width=%222.4%22 stroke-linecap=%22round%22/%3E%3Ccircle cx=%2222.5%22 cy=%2214.5%22 r=%223.1%22 fill=%22%232e7d32%22/%3E%3Ccircle cx=%2222.5%22 cy=%2214.5%22 r=%221.9%22 fill=%22%23fff%22/%3E%3Ccircle cx=%2223%22 cy=%2214.6%22 r=%22.9%22 fill=%22%231b1b1b%22/%3E%3Cpath d=%22M13.5 15.5c.8-1.5 2.3-2 3.8-1.6M18.5 19.5h4%22 fill=%22none%22 stroke=%22%232e7d32%22 stroke-width=%221.3%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M13 21.5v2.6M19 21.5v2.6%22 stroke=%22%232e7d32%22 stroke-width=%221.8%22 stroke-linecap=%22round%22/%3E%3C/svg%3E">
@@ -568,8 +568,20 @@ body.splitting .pages, body.splitting iframe { pointer-events: none; }
   box-shadow: 0 1px 2px rgba(20, 25, 40, .04), 0 10px 30px rgba(46, 125, 50, .08);
 }
 .upload-view .dropzone:hover, .upload-view .dropzone.over { box-shadow: 0 1px 2px rgba(20, 25, 40, .04), 0 12px 34px rgba(46, 125, 50, .16); }
-.upload-view .dz-icon { width: 66px; height: 66px; border-radius: 18px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); }
-.upload-view .dropzone:hover .dz-icon, .upload-view .dropzone.over .dz-icon, .upload-view .dropzone:focus-within .dz-icon { background: var(--accent); color: var(--on-accent); }
+/* The chameleon in the drop area opens its mouth while a file hovers over it, and bites when it lands. */
+.upload-view .dz-icon { width: 96px; height: 96px; display: grid; place-items: center; transition: transform .25s ease-out; }
+.dz-icon .kam { width: 100%; height: 100%; display: block; filter: drop-shadow(0 4px 10px rgba(138, 90, 43, .18)); }
+.kam-jaw { transform-box: view-box; transform-origin: 41px 34px; transition: transform .25s ease-out; }
+.kam-tongue { transform-box: view-box; transform-origin: 42px 35px; transform: scale(0); transition: transform .25s ease-out .05s; }
+.kam-pupil { transition: transform .25s ease-out; }
+.upload-view .dropzone:hover .dz-icon, .upload-view .dropzone.over .dz-icon, .upload-view .dropzone:focus-within .dz-icon { transform: scale(1.06); }
+.dropzone:hover .kam-jaw, .dropzone.over .kam-jaw, .dropzone:focus-within .kam-jaw { transform: rotate(24deg); }
+.dropzone.over .kam-jaw { transform: rotate(30deg); }
+.dropzone:hover .kam-tongue, .dropzone.over .kam-tongue, .dropzone:focus-within .kam-tongue { transform: scale(1); }
+.dropzone:hover .kam-pupil, .dropzone.over .kam-pupil, .dropzone:focus-within .kam-pupil { transform: translate(.6px, -.6px); }
+.dropzone.bite .kam-jaw { animation: kam-bite .55s ease-in-out both; }
+.dropzone.bite .kam-tongue { transform: scale(0); }
+@keyframes kam-bite { 0% { transform: rotate(30deg); } 35% { transform: rotate(0); } 55% { transform: rotate(14deg); } 100% { transform: rotate(0); } }
 .upload-view .dz-title { font-size: 20px; font-weight: 650; letter-spacing: -0.005em; }
 .dz-tagline { color: var(--muted); font-size: 13.5px; margin-top: -4px; }
 .upload-view .dz-formats { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
@@ -624,7 +636,7 @@ body.is-image .page img { filter: var(--pic-filter, none); }
   <div class="brand">
     <span class="logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#f2c94c"/><path d="M4 24.5c7-1 17-1 24 0" fill="none" stroke="#8a5a2b" stroke-width="2.2" stroke-linecap="round"/><path d="M9.5 18.5c0-4.5 3.5-8 8-8h3.5c3.5 0 6 2.5 6 5.5 0 2.6-1.5 4.5-4 5.5h-9c-2.8 0-4.5-1.3-4.5-3z" fill="#4caf50"/><path d="M7.5 20.5c-2.3-.4-3.6 1.2-3.1 2.9.4 1.3 1.9 1.7 2.8.9.9-.8.6-2-.2-2.3" fill="none" stroke="#4caf50" stroke-width="2.2" stroke-linecap="round"/><path d="M26.5 16c1.6-1.2 3.2-.2 3.4 1.2" fill="none" stroke="#4caf50" stroke-width="2.4" stroke-linecap="round"/><circle cx="22.5" cy="14.5" r="3.1" fill="#2e7d32"/><circle cx="22.5" cy="14.5" r="1.9" fill="#fff"/><circle cx="23" cy="14.6" r=".9" fill="#1b1b1b"/><path d="M13.5 15.5c.8-1.5 2.3-2 3.8-1.6M18.5 19.5h4" fill="none" stroke="#2e7d32" stroke-width="1.3" stroke-linecap="round"/><path d="M13 21.5v2.6M19 21.5v2.6" stroke="#2e7d32" stroke-width="1.8" stroke-linecap="round"/></svg></span>
     <span class="brand-name">Kameleon</span>
-    <span class="version" id="appVersion">v1.30</span>
+    <span class="version" id="appVersion">v1.31</span>
   </div>
   <div class="topbar-actions">
     <span class="doc-name" id="docName"></span>
@@ -644,7 +656,23 @@ body.is-image .page img { filter: var(--pic-filter, none); }
   <label class="dropzone" id="dropzone">
     <input type="file" id="fileInput" class="visually-hidden" accept="application/pdf,.pdf,application/epub+zip,.epub,.fb2,.fbz,.zip,.docx,.pptx,.xlsx,.doc,.xls,.ppt,application/msword,application/vnd.ms-excel,application/vnd.ms-powerpoint,image/*,.png,.jpg,.jpeg,.gif,.bmp,.tif,.tiff,.webp,.avif,.heic">
     <div class="dz-icon">
-      <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 17v-6"/><path d="m9 14 3-3 3 3"/></svg>
+      <svg class="kam" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+        <rect width="64" height="64" rx="16" fill="#f2c94c"/>
+        <path d="M5 53c15-3 39-3 54 0" fill="none" stroke="#8a5a2b" stroke-width="3.6" stroke-linecap="round"/>
+        <path d="M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6" fill="none" stroke="#4caf50" stroke-width="3.6" stroke-linecap="round"/>
+        <path d="M23 43v8M35 43v8" stroke="#2e7d32" stroke-width="3.6" stroke-linecap="round"/>
+        <path d="M13 38c0-10 8.5-17 19-17h8c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z" fill="#4caf50"/>
+        <path d="M41 33.5L59 30.5 58.5 34.5 41.5 36.5z" fill="#7b2b2b"/>
+        <g class="kam-jaw">
+          <path d="M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z" fill="#43a047"/>
+          <path class="kam-tongue" d="M42 35q8 1.5 13 9" fill="none" stroke="#e8553f" stroke-width="2.6" stroke-linecap="round"/>
+        </g>
+        <path d="M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z" fill="#4caf50"/>
+        <circle cx="45.5" cy="26.5" r="4.4" fill="#2e7d32"/>
+        <circle cx="45.5" cy="26.5" r="2.7" fill="#fff"/>
+        <circle class="kam-pupil" cx="46.2" cy="26.7" r="1.3" fill="#1b1b1b"/>
+        <path d="M26 28c1-2.2 3.2-3 5.2-2.4" fill="none" stroke="#2e7d32" stroke-width="1.4" stroke-linecap="round"/>
+      </svg>
     </div>
     <div class="dz-title" data-i18n="upload.title">Drop a document here or <u>choose a file</u></div>
     <div class="dz-tagline" data-i18n="app.tagline"></div>
@@ -1005,7 +1033,7 @@ body.is-image .page img { filter: var(--pic-filter, none); }
     </div>
     <input type="file" id="offlineZip" class="visually-hidden" accept=".zip,application/zip" multiple tabindex="-1">
     <input type="file" id="offlineFolder" class="visually-hidden" webkitdirectory multiple tabindex="-1">
-    <p class="muted small help-version help-part">Kameleon v1.30 · <span data-i18n="app.tagline"></span></p>
+    <p class="muted small help-version help-part">Kameleon v1.31 · <span data-i18n="app.tagline"></span></p>
     <div class="modal-actions">
       <button type="button" value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
       <button type="button" class="btn ai-part" id="aiCopyPrompt" data-i18n="ai.copyPrompt">Copy prompt only</button>
@@ -9514,7 +9542,12 @@ async function chooseFont(file) {
 function setupDropzone(zone, onFile) {
   ["dragenter", "dragover"].forEach((ev) => zone.addEventListener(ev, (e) => { e.preventDefault(); zone.classList.add("over"); }));
   ["dragleave", "drop"].forEach((ev) => zone.addEventListener(ev, (e) => { e.preventDefault(); zone.classList.remove("over"); }));
-  zone.addEventListener("drop", (e) => { e.stopPropagation(); onFile(e.dataTransfer.files[0]); });
+  zone.addEventListener("drop", (e) => {
+    e.stopPropagation();
+    zone.classList.add("bite"); // the chameleon snaps at the dropped file
+    setTimeout(() => zone.classList.remove("bite"), 700);
+    onFile(e.dataTransfer.files[0]);
+  });
 }
 
 function init() {
@@ -11692,7 +11725,7 @@ function initPicture() {
 // from its own browser cache before the network, so language files are written into that cache.
 // ======================================================================
 
-const APP_VERSION = "1.30";
+const APP_VERSION = "1.31";
 // (a change of library version makes a stored set outdated: it is then ignored)
 const OFFLINE_VERSION = `${MUPDF_URL} ${OCR_LIB}`;
 const CORE_SIMD = "tesseract-core-simd-lstm.wasm.js", CORE_PLAIN = "tesseract-core-lstm.wasm.js";

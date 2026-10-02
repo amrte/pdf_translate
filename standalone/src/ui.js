@@ -1424,7 +1424,12 @@ async function chooseFont(file) {
 function setupDropzone(zone, onFile) {
   ["dragenter", "dragover"].forEach((ev) => zone.addEventListener(ev, (e) => { e.preventDefault(); zone.classList.add("over"); }));
   ["dragleave", "drop"].forEach((ev) => zone.addEventListener(ev, (e) => { e.preventDefault(); zone.classList.remove("over"); }));
-  zone.addEventListener("drop", (e) => { e.stopPropagation(); onFile(e.dataTransfer.files[0]); });
+  zone.addEventListener("drop", (e) => {
+    e.stopPropagation();
+    zone.classList.add("bite"); // the chameleon snaps at the dropped file
+    setTimeout(() => zone.classList.remove("bite"), 700);
+    onFile(e.dataTransfer.files[0]);
+  });
 }
 
 function init() {
