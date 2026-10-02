@@ -4,6 +4,59 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.23
+
+Fixes from a full audit of the code and the interface.
+
+**Dialogs and files**
+
+- **Enter confirms a dialog** instead of cancelling it: the password of a protected PDF, the
+  language in Export, the e-book language in Build. Before, Enter in those fields closed the dialog
+  as if Cancel had been pressed, so a protected PDF silently did not open.
+- A dialog that was confirmed earlier no longer carries that answer over to its next use.
+- Dropping a Word, PowerPoint, Excel, EPUB or FB2 file onto the open workspace opens it (before only
+  PDFs were accepted there; the start page accepted everything).
+- Only the most recent file load counts: a file dropped while the last session is still being
+  restored replaces that load instead of mixing with it. Files cannot be opened while a document is
+  being built.
+- Closing or replacing a document forgets everything that belonged to it: comparison view, open
+  style panels, pending field updates, markups, undo history, translations in memory. The last edit
+  before closing is saved even when ✕ is pressed within half a second.
+- Opening another file while the comparison view is on no longer restores the previous document's
+  zoom into the new one; the new file fits the width as usual.
+- Cancelling OCR before the first page is finished keeps the built document and the undo history
+  (before, both were discarded). Cancel now stops at once, also during the download of the
+  recognition engine.
+- If the browser storage is full, the app says so once instead of silently no longer saving
+  translations.
+- When the clipboard is unavailable, the copied source text shown in the Import window is no longer
+  imported as translations by accident.
+- A crashed engine worker is replaced and the document is reloaded into it; the message is shown
+  in the interface language.
+- Export errors and the "password-protected PDFs are not supported" message (passwords are
+  supported) are gone or translated.
+
+**Interface and accessibility**
+
+- The drop zone on the start page can be reached with the keyboard (Tab, then Enter opens the
+  file picker) and shows a focus ring.
+- Messages and the busy overlay are announced to screen readers; every search, filter, page and
+  translation field has an accessible name; dialogs are labelled by their titles; the colour
+  swatches say their colour; the Download buttons are real buttons.
+- The border between pages and fields can be moved with the arrow keys when it has the focus.
+- Dark mode: search highlights use dark text on yellow; text on the blue, green and red fills and
+  the active language switch meet the contrast minimum. Light mode: the muted grey and the green
+  Download button are a little darker for the same reason.
+- The top bar wraps on very narrow screens instead of running off the edge.
+- Smaller fixes: the find highlights follow undo/redo of Replace all; Replace all cannot be
+  triggered with Ctrl+Enter while its button is disabled; "whole word" search works in browsers
+  without look-behind; the size field is capped at 500 pt; the full-screen button of the top bar
+  leaves the view-only layout cleanly, and Esc leaves it also when the browser refused full screen;
+  dragging a field keeps working when the mouse leaves the window; keyboard shortcuts are ignored
+  while the busy overlay is shown; Ctrl+F in a text-note editor no longer closes the note; the
+  resize handles of the active field are above the markups; reduced-motion settings are respected;
+  texts that said "PDF" now say "document" where other formats apply.
+
 ## 1.22
 
 - **New start page**: a larger drop zone with a big icon, a short title and badges for the formats

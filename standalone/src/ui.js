@@ -75,15 +75,16 @@ class RemoteWorker {
     };
     this.w.onerror = (e) => {
       e.preventDefault();
-      const err = new Error(e.message || "The PDF engine worker failed to start.");
+      const err = new Error(e.message || t("msg.workerStopped"));
       for (const p of this.pending.values()) p.reject(err);
       this.pending.clear();
       this.load = 0;
       this.dead = true;
+      pool.onDead(this);
     };
   }
   call(cmd, args = {}, transfer = [], onProgress = null) {
-    if (this.dead) return Promise.reject(new Error("The PDF engine worker stopped."));
+    if (this.dead) return Promise.reject(new Error(t("msg.workerStopped")));
     return new Promise((resolve, reject) => {
       const id = ++this.seq;
       this.pending.set(id, { resolve, reject, onProgress });
@@ -135,7 +136,28 @@ const pool = {
     while (this.workers.length < n) this.spawn();
     const results = await Promise.allSettled(this.workers.map((w) => w.ready));
     this.workers = this.workers.filter((w, i) => results[i].status === "fulfilled");
-    if (!this.workers.length) throw new Error("The PDF engine could not start.");
+    if (!this.workers.length) throw new Error(t("msg.engineFailed"));
+  },
+  /** A crashed worker is replaced, and the open document is loaded into the replacement. */
+  async onDead(w) {
+    const i = this.workers.indexOf(w);
+    if (i < 0 || !this.ready) return;
+    this.workers.splice(i, 1);
+    w.terminate && w.terminate();
+    const first = i === 0; // worker 0 held the editable translated document, which is lost
+    try {
+      const fresh = this.spawn();
+      await fresh.ready;
+      if (first) { this.workers.pop(); this.workers.unshift(fresh); }
+      if (state.doc && state.srcBytes) await fresh.call("open", { bytes: state.srcBytes, kind: state.doc.kind });
+    } catch (_) { /* no replacement: the remaining workers carry on */ }
+    if (first && state.doc) {
+      disposeOutput();
+      setBuilt(false);
+      if (state.variant === "translated") setVariant("original");
+    }
+    busy("");
+    toast(t("msg.workerCrashed"), "error");
   },
   leastBusy(exclude) {
     const list = this.workers.filter((w) => w !== exclude);
@@ -162,6 +184,12 @@ function toast(message, kind = "", action = null) {
 }
 
 /** Show a busy overlay with `text` (hidden when empty); `onCancel` adds a Cancel button. */
+/** Open a pop-up window; the result of its previous use is forgotten first. */
+function openModal(dlg) {
+  dlg.returnValue = "";
+  dlg.showModal();
+}
+
 function busy(text, onCancel = null) {
   $("#busyText").textContent = text || "";
   $("#busy").hidden = !text;
@@ -186,12 +214,25 @@ async function sha256(bytes) {
   return [...new Uint8Array(hash)].slice(0, 12).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-let saveTimer = null;
+let saveTimer = null, storageWarned = false;
+function storeTranslations() {
+  if (!state.doc) return;
+  try {
+    localStorage.setItem(lsKey(state.doc.id), JSON.stringify(state.translations));
+  } catch (_) { // quota exceeded or private mode: say so once per document
+    if (!storageWarned) { storageWarned = true; toast(t("msg.storageFull"), "error"); }
+  }
+}
 function persist() {
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => {
-    try { localStorage.setItem(lsKey(state.doc.id), JSON.stringify(state.translations)); } catch (_) { /* quota / private mode */ }
-  }, 400);
+  saveTimer = setTimeout(() => { saveTimer = null; storeTranslations(); }, 400);
+}
+/** Write pending translation changes now (before the document changes). */
+function flushPersist() {
+  if (!saveTimer) return;
+  clearTimeout(saveTimer);
+  saveTimer = null;
+  storeTranslations();
 }
 
 const hasTr = (id) => Boolean((state.translations[id] || "").trim());
@@ -207,20 +248,20 @@ function idb() {
   });
 }
 
-async function idbPut(value) {
+async function idbPut(value, key = "last") {
   try {
     const db = await idb();
     const tx = db.transaction("files", "readwrite");
-    tx.objectStore("files").put(value, "last");
+    tx.objectStore("files").put(value, key);
     await new Promise((r) => { tx.oncomplete = r; tx.onerror = r; });
   } catch (_) { /* storage unavailable: the session simply won't be restored */ }
 }
 
-async function idbGet() {
+async function idbGet(key = "last") {
   try {
     const db = await idb();
     return await new Promise((resolve) => {
-      const req = db.transaction("files").objectStore("files").get("last");
+      const req = db.transaction("files").objectStore("files").get(key);
       req.onsuccess = () => resolve(req.result || null);
       req.onerror = () => resolve(null);
     });
@@ -235,10 +276,16 @@ async function openPdf(file) {
     toast(t("msg.chooseFile"), "error");
     return;
   }
-  const bytes = new Uint8Array(await file.arrayBuffer());
-  if (state.doc) closeFind(); // (another file replaces the open one)
-  await loadBytes(bytes, file.name, true);
-  $("#fileInput").value = "";
+  if (building) { toast(t("msg.waitBuild"), "error"); return; }
+  try {
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    if (state.doc) closeFind(); // (another file replaces the open one)
+    await loadBytes(bytes, file.name, true);
+  } catch (err) {
+    toast(t("msg.openFailed", { err: err.message || err }), "error");
+  } finally {
+    $("#fileInput").value = "";
+  }
 }
 
 function setLoading(text) {
@@ -267,10 +314,17 @@ async function extractAll(pageCount, onProgress) {
   return { pages, segments: raw };
 }
 
+// Only the most recently started load may finish: a file dropped while the last session is being
+// restored (or while another file loads) replaces that load instead of mixing with it.
+let loadSeq = 0;
+
 async function loadBytes(bytes, name, remember, knownId = null) {
+  const seq = ++loadSeq;
+  const stale = () => seq !== loadSeq;
   setLoading(t("msg.loadingEngine"));
   try {
     await pool.start();
+    if (stale()) return;
     // (an unlocked PDF keeps the id of the protected file, so its translations are found again)
     const id = knownId || await sha256(bytes);
     const kind = Engine.detectKind(bytes, name);
@@ -279,11 +333,12 @@ async function loadBytes(bytes, name, remember, knownId = null) {
       let password = "";
       for (;;) {
         const u = await pool.workers[0].call("unlock", { bytes, password });
+        if (stale()) return;
         if (u.status === "plain") break;
         if (u.status === "unlocked") { bytes = u.bytes; toast(t("msg.unlocked"), "ok"); break; }
         setLoading("");
         password = await askPassword(name, u.status === "wrong");
-        if (password === null) return;
+        if (password === null || stale()) return;
         setLoading(t("msg.opening"));
       }
     }
@@ -291,23 +346,28 @@ async function loadBytes(bytes, name, remember, knownId = null) {
     // An e-book is read in one worker; the others only draw its pages.
     const mb = bytes.length / 1048576;
     await pool.ensure(kind !== "pdf" ? 2 : mb > 150 ? 1 : mb > 60 ? 2 : pool.maxSize);
+    if (stale()) return;
     setLoading(t("msg.opening"));
     const counts = await pool.all("open", () => ({ bytes, kind }));
+    if (stale()) return;
     const pageCount = counts[0];
     const started = performance.now();
     const { pages, segments } = kind === "pdf"
-      ? await extractAll(pageCount, (i, n) => setLoading(t("msg.extracting", { i, n })))
+      ? await extractAll(pageCount, (i, n) => { if (!stale()) setLoading(t("msg.extracting", { i, n })); })
       : (setLoading(t("msg.readingBook")), await pool.workers[0].call("extractBook"));
+    if (stale()) return;
     console.info(`Extracted ${segments.length} segments from ${pageCount} pages in ${Math.round(performance.now() - started)} ms using ${pool.workers.length} worker(s)`);
     if (remember) idbPut({ name, bytes, id });
     const restored = kind === "pdf" ? await restoreOcr(id, segments, pages) : { segments, ocr: null };
+    if (stale()) return;
     openDocument({ id, name, kind, pages, segments: restored.segments, ocr: restored.ocr }, bytes);
     suggestOcr();
   } catch (err) {
+    if (stale()) return;
     console.error(err);
-    toast(/password/i.test(err.message) ? t("msg.password") : t("msg.openFailed", { err: err.message || err }), "error");
+    toast(t("msg.openFailed", { err: err.message || err }), "error");
   } finally {
-    setLoading("");
+    if (!stale()) setLoading("");
   }
 }
 
@@ -321,10 +381,13 @@ function disposeOutput() {
 }
 
 function openDocument(doc, bytes) {
+  flushPersist();
   disposeOutput();
+  setCompare(false);
+  resetToolsState();
+  storageWarned = false;
   state.doc = doc;
   state.srcBytes = bytes;
-  setCompare(false);
   state.variant = "original";
   state.activeId = null;
   state.shrunk = new Set();
@@ -439,13 +502,29 @@ function onLanguageChange() {
   for (const [, el] of vl.rendered) { el.remove(); ro.unobserve(el); }
   vl.rendered.clear();
   applyFilter();
+  $("#btnFullscreen").title = t(document.body.classList.contains("viewer-only") ? "view.exitFullscreen" : "view.fullscreen");
+  updateFindCount();
   if ($("#helpDialog").open) refreshAiPrompt();
 }
 
 function closeDocument() {
+  flushPersist();
   closeFind();
+  setCompare(false);
+  resetToolsState();
   disposeOutput();
+  loadSeq++; // (a load that is still running belongs to no document any more)
   state.doc = null;
+  state.srcBytes = null;
+  state.translations = {};
+  state.activeId = null;
+  state.shrunk = new Set();
+  state.markups = [];
+  state.overrides = {};
+  state.rotations = {};
+  segIndex.clear();
+  resetHistory();
+  busy("");
   try { localStorage.removeItem(LS_LAST); } catch (_) { /* ignore */ }
   pool.all("close").catch(() => {});
   observer.disconnect();
@@ -585,7 +664,7 @@ function renderPages() {
   visiblePages.clear();
   // The picture, boxes and markups are in .page-body, which is turned for pages the user rotated.
   const html = viewPages().map((page, i) =>
-    `<div class="page" data-page="${i}"><span class="page-label">${t("page.n", { n: i + 1 })}</span><div class="page-body"><img alt=""></div></div>`).join("");
+    `<div class="page" data-page="${i}"><span class="page-label">${t("page.n", { n: i + 1 })}</span><div class="page-body"><img alt="${t("page.n", { n: i + 1 })}"></div></div>`).join("");
   wrap.innerHTML = html;
   wrap.querySelectorAll(".page").forEach((el) => sizePage(el));
   segsByPage = new Map();
@@ -853,7 +932,7 @@ function makeCard(id) {
     </div>
     ${styleOpen.has(id) && !isBook() ? stylePanelHtml(s) : ""}
     <div class="seg-src">${escapeHtml(s.text)}</div>
-    <textarea rows="1" spellcheck="true" placeholder="${escapeHtml(t("card.placeholder"))}"></textarea>`;
+    <textarea rows="1" spellcheck="true" placeholder="${escapeHtml(t("card.placeholder"))}" aria-label="${escapeHtml(t("card.aria", { n: id }))}"></textarea>`;
   el.querySelector("textarea").value = state.translations[id] || "";
   if (find.open) requestAnimationFrame(() => decorateCard(el, id)); // (once it has its size)
   return el;
@@ -956,7 +1035,8 @@ async function copyAll() {
     toast(t("msg.copied", { n: segs.length }), "ok");
   } catch (_) {
     $("#pasteArea").value = text;
-    $("#importDialog").showModal();
+    $("#pasteArea").dataset.fallback = "1"; // (cleared again unless the user imports on purpose)
+    openModal($("#importDialog"));
     $("#pasteArea").select();
     toast(t("msg.noClipboard"));
   }
@@ -974,7 +1054,7 @@ function doExport() {
     else if (format === "xliff") saveBlob(new Blob([Engine.exportXliff(segs, tr, state.doc.name, "und", $("#tgtLang").value.trim())], { type: "application/xliff+xml" }), `${name}.xlf`);
     else if (format === "docx") saveBlob(Engine.exportDocx(segs, tr), `${name}.docx`);
   } catch (err) {
-    toast(err.message, "error");
+    toast(t("msg.exportFailed", { err: err.message || err }), "error");
   }
 }
 
@@ -1073,7 +1153,7 @@ function askBilingual() {
   try { layout = localStorage.getItem("pdftr:bi-layout") || "side"; } catch (_) { /* storage blocked */ }
   const radio = document.querySelector(`input[name="biLayout"][value="${layout}"]`);
   if (radio) radio.checked = true;
-  $("#biDialog").showModal();
+  openModal($("#biDialog"));
 }
 
 async function downloadBilingual(layout = "pages") {
@@ -1183,7 +1263,7 @@ async function doBuild() {
   try {
     const started = performance.now();
     const translations = {};
-    for (const [id, t] of Object.entries(state.translations)) if (segIndex.has(Number(id)) && t.trim()) translations[id] = t;
+    for (const [id, text] of Object.entries(state.translations)) if (segIndex.has(Number(id)) && text.trim()) translations[id] = text;
     const result = await pool.workers[0].call("build", {
       segments: state.doc.segments.map(effSeg),
       translations,
@@ -1227,7 +1307,8 @@ async function doBuild() {
 
 async function chooseFont(file) {
   if (!file) return;
-  const bytes = new Uint8Array(await file.arrayBuffer());
+  let bytes;
+  try { bytes = new Uint8Array(await file.arrayBuffer()); } catch (err) { toast(t("msg.openFailed", { err: err.message || err }), "error"); return; }
   const sig = String.fromCharCode(...bytes.slice(0, 4));
   if (!(sig === "OTTO" || sig === "true" || sig === "ttcf" || (bytes[0] === 0 && bytes[1] === 1 && bytes[2] === 0 && bytes[3] === 0))) {
     state.customFont = null;
@@ -1261,7 +1342,7 @@ function init() {
   document.addEventListener("drop", (e) => {
     e.preventDefault();
     const file = e.dataTransfer?.files?.[0];
-    if (file && /\.pdf$/i.test(file.name) && !document.querySelector("dialog[open]")) openPdf(file);
+    if (file && !document.querySelector("dialog[open]")) openPdf(file); // (every supported format)
   });
 
   $("#viewOriginal").addEventListener("click", () => { setCompare(false); setVariant("original"); });
@@ -1311,7 +1392,7 @@ function init() {
     const id = Number(card.dataset.id);
     const act = e.target.dataset.act;
     if (act === "copy") {
-      navigator.clipboard?.writeText(segById(id).text).then(() => toast(t("msg.sourceCopied")));
+      navigator.clipboard?.writeText(segById(id).text).then(() => toast(t("msg.sourceCopied"))).catch(() => toast(t("msg.noClipboard"), "error"));
     } else if (act === "same") {
       const ta = card.querySelector("textarea");
       const before = state.translations[id] || "";
@@ -1352,7 +1433,10 @@ function init() {
     if (e.target.value !== "all") document.querySelector(`.page[data-page="${e.target.value}"]`)?.scrollIntoView({ behavior: "smooth" });
   });
 
-  $("#btnExport").addEventListener("click", () => $("#exportDialog").showModal());
+  // Cancel buttons are plain buttons, so Enter in a text field submits the dialog with OK.
+  document.querySelectorAll('dialog.modal button[type="button"][value="cancel"]').forEach((b) =>
+    b.addEventListener("click", () => b.closest("dialog").close("cancel")));
+  $("#btnExport").addEventListener("click", () => openModal($("#exportDialog")));
   $("#exportDialog").addEventListener("close", () => { if ($("#exportDialog").returnValue === "ok") doExport(); });
   $("#btnCopy").addEventListener("click", copyAll);
   $("#btnClear").addEventListener("click", clearAllTranslations);
@@ -1361,15 +1445,20 @@ function init() {
   }
   applyLanguageDefaults();
 
-  $("#btnImport").addEventListener("click", () => $("#importDialog").showModal());
+  $("#btnImport").addEventListener("click", () => openModal($("#importDialog")));
   setupDropzone($("#importDrop"), importFile);
   $("#importFile").addEventListener("change", (e) => importFile(e.target.files[0]));
-  $("#importDialog").addEventListener("close", () => { if ($("#importDialog").returnValue === "ok") importPasted(); });
+  $("#importDialog").addEventListener("close", () => {
+    const fallback = $("#pasteArea").dataset.fallback;
+    delete $("#pasteArea").dataset.fallback;
+    if ($("#importDialog").returnValue === "ok") importPasted();
+    else if (fallback) $("#pasteArea").value = ""; // the copied source text is not an import
+  });
 
   $("#btnDownload").addEventListener("click", (e) => { e.preventDefault(); downloadOutput(); });
   $("#btnBuild").addEventListener("click", () => {
     $("#fontUploadRow").hidden = $("#fontMode").value !== "custom";
-    $("#buildDialog").showModal();
+    openModal($("#buildDialog"));
   });
   $("#fontMode").addEventListener("change", (e) => { $("#fontUploadRow").hidden = e.target.value !== "custom"; });
   $("#fontFile").addEventListener("change", (e) => chooseFont(e.target.files[0]));
@@ -1394,8 +1483,8 @@ function init() {
   let last = null;
   try { last = localStorage.getItem(LS_LAST); } catch (_) { /* ignore */ }
   if (last) {
-    idbGet().then((saved) => {
-      if (saved && saved.bytes) loadBytes(saved.bytes, saved.name, false, saved.id);
+    idbGet().then((saved) => { // (unless the user has opened a file in the meantime)
+      if (saved && saved.bytes && !loadSeq && !state.doc) loadBytes(saved.bytes, saved.name, false, saved.id);
     });
   }
 }
@@ -1484,7 +1573,7 @@ function openHelp(focusAi) {
   const dlg = $("#helpDialog");
   dlg.classList.toggle("mode-ai", focusAi);
   dlg.classList.toggle("mode-help", !focusAi);
-  dlg.showModal();
+  openModal(dlg);
   dlg.scrollTop = 0;
 }
 

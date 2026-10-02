@@ -147,6 +147,7 @@ function onBoxDown(e) {
   const pageEl = box.closest(".page"), id = Number(box.dataset.id), s = segById(id);
   if (!s) return;
   boxDrag.cur = { id, box, pageEl, handle: e.target.dataset.h || null, start: pagePoint(pageEl, e), orig: shownBox(s).slice(), moved: false };
+  try { box.setPointerCapture(e.pointerId); } catch (_) { /* not a pointer event */ }
   if (boxDrag.cur.handle) { e.preventDefault(); e.stopPropagation(); }
 }
 
@@ -183,6 +184,7 @@ function onBoxUp() {
   boxDrag.justDragged = true; // the click that follows must not count as a click on the box
   setTimeout(() => { boxDrag.justDragged = false; }, 300);
   const s = segById(d.id);
+  if (!s) return;
   const same = d.bbox.every((v, i) => Math.abs(v - s.bbox[i]) < 0.3);
   setOverride(d.id, { bbox: same ? null : d.bbox }, t(d.handle ? "hist.resize" : "hist.move"));
   if (state.activeId !== d.id) setActive(d.id, { scrollList: true });
@@ -191,6 +193,17 @@ function onBoxUp() {
 /* ------------------------------------------------------ style of one field */
 
 const styleOpen = new Set(); // cards whose style panel is open
+
+/** Forget what belongs to the previous document (when a file is opened or closed). */
+function resetToolsState() {
+  styleOpen.clear();
+  for (const timer of applyTimers.values()) clearTimeout(timer);
+  applyTimers.clear();
+  boxDrag.cur = null;
+  document.body.classList.remove("box-dragging");
+  cmp.savedZoom = null;
+  cmp.expect = { main: null, cmp: null };
+}
 
 function stylePanelHtml(s) {
   const o = state.overrides[s.id] || {};
@@ -243,7 +256,7 @@ function onStyleInput(e) {
   const id = Number(el.closest(".seg").dataset.id), s = segById(id);
   const st = el.dataset.st;
   if (st === "size") {
-    const v = Number(el.value);
+    const v = Math.min(500, Number(el.value) || 0);
     // The field shows the original size rounded to 0.1 pt; that value means "as in the original".
     setOverride(id, { size: v > 0 && Math.abs(v - Math.round(s.size * 10) / 10) > 0.001 ? v : null }, t("hist.field"), "size");
   } else if (st === "font") setOverride(id, { font: el.value || null }, t("hist.field"));
@@ -264,7 +277,7 @@ function onStyleClick(e) {
 /* ------------------------------------------------- full screen and fit page */
 
 function toggleAppFullscreen() {
-  document.body.classList.remove("viewer-only");
+  if (document.body.classList.contains("viewer-only")) toggleFullscreen(false);
   if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
   else document.documentElement.requestFullscreen().catch(() => toast(t("msg.noFullscreen"), "error"));
 }
@@ -315,7 +328,7 @@ function askPassword(name, wrong) {
     $("#pwWrong").hidden = !wrong;
     $("#pwInput").value = "";
     dlg.onclose = () => resolve(dlg.returnValue === "ok" ? $("#pwInput").value : null);
-    dlg.showModal();
+    openModal(dlg);
     $("#pwInput").focus();
   });
 }
@@ -328,22 +341,6 @@ const OCR_CORE = "https://cdn.jsdelivr.net/npm/tesseract.js-core@6.0.0";
 const OCR_LANG_PATH = ""; // "" = the language data on jsDelivr (@tesseract.js-data/<lang>)
 const OCR_LANGS = ["eng", "deu", "fra", "ukr", "fin", "chi_sim", "chi_tra"];
 const LS_OCR = "pdftr:ocr-options";
-
-function idbSet(key, value) {
-  return idb().then((db) => new Promise((resolve) => {
-    const tx = db.transaction("files", "readwrite");
-    tx.objectStore("files").put(value, key);
-    tx.oncomplete = resolve; tx.onerror = resolve;
-  })).catch(() => {});
-}
-
-function idbGetKey(key) {
-  return idb().then((db) => new Promise((resolve) => {
-    const req = db.transaction("files").objectStore("files").get(key);
-    req.onsuccess = () => resolve(req.result || null);
-    req.onerror = () => resolve(null);
-  })).catch(() => null);
-}
 
 /** Pages with no text but a picture covering much of the page (scans). */
 function scannedPages() {
@@ -385,7 +382,7 @@ function openOcrDialog() {
   $("#ocrPagesAll").checked = scans === 0;
   $("#ocrScanCount").textContent = t("ocr.scanCount", { n: scans });
   $("#ocrFamily").value = saved.family || "serif";
-  $("#ocrDialog").showModal();
+  openModal($("#ocrDialog"));
 }
 
 let ocrCancel = false;
@@ -398,29 +395,35 @@ async function startOcr() {
   const pages = $("#ocrPagesEmpty").checked ? scannedPages() : state.doc.pages.map((p, i) => i);
   if (!pages.length) { toast(t("ocr.none")); return; }
   ocrCancel = false;
-  const doc = state.doc;
+  const doc = state.doc, results = {};
   let worker = null;
+  // Cancel stops the recognition at once (a running step fails, which is fine); the pages that
+  // are finished are kept.
+  const cancel = () => { ocrCancel = true; if (worker) worker.terminate().catch(() => {}); };
   try {
-    busy(t("ocr.loading"), () => { ocrCancel = true; });
+    busy(t("ocr.loading"), cancel);
     const T = await import(OCR_LIB);
+    if (ocrCancel) return;
     const createWorker = T.createWorker || (T.default && T.default.createWorker);
     worker = await createWorker(langs.join("+"), 1, {
       workerPath: OCR_WORKER, corePath: OCR_CORE, workerBlobURL: true, ...(OCR_LANG_PATH ? { langPath: OCR_LANG_PATH } : {}),
     });
+    if (ocrCancel) return;
     await worker.setParameters({ tessedit_pageseg_mode: "11" }); // sparse text: table cells and labels too
-    const results = {};
     for (const [k, p] of pages.entries()) {
       if (ocrCancel || state.doc !== doc) break;
-      busy(t("ocr.page", { i: k + 1, n: pages.length }), () => { ocrCancel = true; });
+      busy(t("ocr.page", { i: k + 1, n: pages.length }), cancel);
       const page = doc.pages[p];
       const zoom = Math.min(3, 3600 / Math.max(page.width, page.height));
       const buf = await pool.workers[0].call("render", { page: p, zoom, variant: "original" });
+      if (ocrCancel) break;
       const blob = new Blob([buf], { type: "image/png" });
       const first = (await worker.recognize(blob, {}, { blocks: true })).data;
       // Rows Tesseract was unsure of are read again as single lines.
       await worker.setParameters({ tessedit_pageseg_mode: "7" });
       const data = await Engine.refineOcr(first, async (rectangle) => (await worker.recognize(blob, { rectangle }, { blocks: true })).data);
       await worker.setParameters({ tessedit_pageseg_mode: "11" });
+      if (ocrCancel || state.doc !== doc) break;
       const img = await imageDataOf(blob);
       const { blocks, seps } = Engine.ocrToBlocks(data, zoom, [page.x0, page.y0], (box) => Engine.sampleColors(img, box));
       let segs = blocks.length ? await pool.workers[0].call("ocrPage", { page: p, lines: blocks, seps, family }) : [];
@@ -429,16 +432,21 @@ async function startOcr() {
       segs = segs.filter((s) => !text.some((b) => overlapShare(s.bbox, b) > 0.3));
       results[p] = { segs, seps };
     }
-    if (state.doc !== doc) return;
-    const added = addOcrResults(results);
-    toast(ocrCancel ? t("ocr.cancelled", { n: added }) : t("ocr.done", { n: added, p: Object.keys(results).length }), "ok");
   } catch (err) {
-    console.error(err);
-    toast(t("ocr.failed", { err: err.message || err }), "error");
+    if (!ocrCancel) {
+      console.error(err);
+      toast(t("ocr.failed", { err: err.message || err }), "error");
+      return;
+    }
   } finally {
     if (worker) worker.terminate().catch(() => {});
     busy("");
   }
+  if (state.doc !== doc) return;
+  // Nothing recognised (cancelled early, or empty pages): the document stays as it is.
+  const found = Object.values(results).reduce((n, r) => n + r.segs.length, 0);
+  const added = found ? addOcrResults(results) : 0;
+  toast(ocrCancel ? t("ocr.cancelled", { n: added }) : t("ocr.done", { n: added, p: Object.keys(results).length }), "ok");
 }
 
 /** Share of box a that overlaps box b. */
@@ -484,7 +492,7 @@ function addOcrResults(results) {
   state.overrides = move(state.overrides);
   doc.segments = merged;
   doc.ocr = ocr;
-  idbSet(`ocr:${doc.id}`, ocr);
+  idbPut(ocr, `ocr:${doc.id}`);
   persist();
   saveOverrides();
   // The translated PDF used the old numbers: it is built again on the next Build.
@@ -505,7 +513,7 @@ function addOcrResults(results) {
 
 /** On opening a document: OCR results from an earlier session. */
 async function restoreOcr(id, segments, pages) {
-  const ocr = await idbGetKey(`ocr:${id}`);
+  const ocr = await idbGet(`ocr:${id}`);
   if (!ocr || !Object.keys(ocr).length) return { segments, ocr: null };
   const merged = mergeOcr(segments, ocr, pages);
   merged.forEach((s, i) => { s.id = i + 1; });
@@ -529,9 +537,13 @@ const find = { open: false, matches: [], cur: -1, timer: 0 };
 function findRegex() {
   const q = $("#search").value;
   if (!q) return null;
-  let src = q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  if ($("#findWord").checked) src = `(?<![\\p{L}\\p{N}_])${src}(?![\\p{L}\\p{N}_])`;
-  return new RegExp(src, "gu" + ($("#findCase").checked ? "" : "i"));
+  const src = q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), flags = "gu" + ($("#findCase").checked ? "" : "i");
+  if (!$("#findWord").checked) return new RegExp(src, flags);
+  try {
+    return new RegExp(`(?<![\\p{L}\\p{N}_])${src}(?![\\p{L}\\p{N}_])`, flags);
+  } catch (_) { // no lookbehind (older Safari): word boundaries
+    return new RegExp(`\\b${src}\\b`, flags);
+  }
 }
 
 function collectMatches() {
@@ -691,7 +703,7 @@ function replaceOne() {
 
 function replaceAll() {
   const re = findRegex();
-  if (!re) return;
+  if (!re || $("#replaceAll").disabled) return;
   const repl = $("#replaceText").value, before = {}, after = {};
   let n = 0;
   for (const [id, text] of Object.entries(state.translations)) {
@@ -723,7 +735,7 @@ function writeTranslations(after, before, label) {
 
 function onFindKey(e) {
   const k = e.key.toLowerCase();
-  if ((e.ctrlKey || e.metaKey) && !e.altKey && (k === "f" || k === "h") && state.doc && !document.querySelector("dialog[open]")) {
+  if ((e.ctrlKey || e.metaKey) && !e.altKey && (k === "f" || k === "h") && state.doc && !document.querySelector("dialog[open]") && !e.target.closest(".mk-editor")) {
     e.preventDefault();
     openFind(k === "h" ? true : undefined);
   } else if (k === "f3" && find.open) {
@@ -743,6 +755,7 @@ function initTools() {
   pages.addEventListener("pointerdown", onBoxDown);
   window.addEventListener("pointermove", onBoxMove);
   window.addEventListener("pointerup", onBoxUp);
+  window.addEventListener("pointercancel", onBoxUp);
   pages.addEventListener("click", (e) => {
     if (boxDrag.justDragged) { boxDrag.justDragged = false; e.stopPropagation(); e.preventDefault(); }
   }, true);
@@ -817,7 +830,10 @@ function setCompare(on) {
     $("#pagesCmp").innerHTML = "";
     for (const url of cmp.cache.values()) URL.revokeObjectURL(url);
     cmp.cache.clear();
-    if (cmp.savedZoom) requestAnimationFrame(() => setZoom(cmp.savedZoom));
+    // The zoom from before the comparison comes back, unless another document is open by then.
+    const z = cmp.savedZoom, doc = state.doc;
+    cmp.savedZoom = null;
+    if (z) requestAnimationFrame(() => { if (doc && state.doc === doc) setZoom(z); });
   }
 }
 
@@ -1084,6 +1100,16 @@ function initLayout() {
   };
   split.addEventListener("pointerup", end);
   split.addEventListener("pointercancel", end);
+  split.addEventListener("keydown", (e) => { // arrow keys move the border too
+    const step = e.key === "ArrowLeft" ? -0.02 : e.key === "ArrowRight" ? 0.02 : 0;
+    if (!step) return;
+    e.preventDefault();
+    const cols = getComputedStyle(wv).gridTemplateColumns.split(" ").map(parseFloat);
+    const share = Math.min(0.8, Math.max(0.2, cols[0] / (cols[0] + cols[2]) + step));
+    setSplit(share);
+    try { localStorage.setItem(SPLIT_KEY, String(share)); } catch (_) { /* storage blocked */ }
+    if (state.doc) fitWidth();
+  });
   split.addEventListener("dblclick", () => { // back to the default layout
     setSplit(null);
     try { localStorage.removeItem(SPLIT_KEY); } catch (_) { /* storage blocked */ }

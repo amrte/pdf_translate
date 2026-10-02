@@ -19,7 +19,7 @@
   </div>
   <div class="topbar-actions">
     <span class="doc-name" id="docName"></span>
-    <div class="lang-switch" role="group" aria-label="Language / Sprache">
+    <div class="lang-switch" role="group" data-i18n-aria="lang.switch">
       <button type="button" data-lang="de" title="Deutsch">DE</button>
       <button type="button" data-lang="en" title="English">EN</button>
     </div>
@@ -33,12 +33,12 @@
 <!-- Upload screen -->
 <main id="uploadView" class="upload-view">
   <label class="dropzone" id="dropzone">
-    <input type="file" id="fileInput" accept="application/pdf,.pdf,application/epub+zip,.epub,.fb2,.fbz,.zip,.docx,.pptx,.xlsx" hidden>
+    <input type="file" id="fileInput" class="visually-hidden" accept="application/pdf,.pdf,application/epub+zip,.epub,.fb2,.fbz,.zip,.docx,.pptx,.xlsx">
     <div class="dz-icon">
       <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 17v-6"/><path d="m9 14 3-3 3 3"/></svg>
     </div>
     <div class="dz-title" data-i18n="upload.title">Drop a document here or <u>choose a file</u></div>
-    <div class="dz-formats" aria-label="PDF, Word, PowerPoint, Excel, EPUB, FB2">
+    <div class="dz-formats">
       <span class="fmt" style="--f: #d64545">PDF</span><span class="fmt" style="--f: #2b6be0">Word</span><span class="fmt" style="--f: #d9752b">PowerPoint</span><span class="fmt" style="--f: #1f8a4c">Excel</span><span class="fmt" style="--f: #8a5cd1">EPUB</span><span class="fmt" style="--f: #8a5cd1">FB2</span>
     </div>
     <div class="dz-progress" id="uploadProgress" hidden><div class="spinner"></div> <span id="uploadProgressText"></span></div>
@@ -92,7 +92,7 @@
 <main id="workView" class="work-view" hidden>
   <section class="viewer-pane">
     <div class="pane-toolbar">
-      <div class="seg-toggle" role="tablist">
+      <div class="seg-toggle">
         <button class="active" data-variant="original" id="viewOriginal" data-i18n="view.original">Original</button>
         <button data-variant="translated" id="viewTranslated" disabled data-i18n="view.translated">Translated</button>
         <button id="viewCompare" disabled data-i18n="view.compare" data-i18n-title="view.compareTitle">Compare</button>
@@ -101,7 +101,7 @@
       <div class="spacer"></div>
       <div class="page-nav">
         <button class="icon-btn" id="pagePrev" data-i18n-title="nav.prev">‹</button>
-        <input id="pageInput" type="number" min="1" value="1" data-i18n-title="nav.page">
+        <input id="pageInput" type="number" min="1" value="1" data-i18n-title="nav.page" data-i18n-aria="nav.page">
         <span id="pageCount" class="muted">/ 1</span>
         <button class="icon-btn" id="pageNext" data-i18n-title="nav.next">›</button>
       </div>
@@ -129,12 +129,12 @@
       <button type="button" class="tool" data-tool="eraser" data-i18n-title="tool.eraser"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20H9L4 15l9.5-9.5a2 2 0 0 1 2.8 0l3.2 3.2a2 2 0 0 1 0 2.8L12 19"/><path d="M8 11l6 6"/></svg></button>
       <div class="rail-sep"></div>
       <div class="swatches">
-        <button type="button" class="swatch" data-color="#e53935" style="--c:#e53935" data-i18n-title="tool.color"></button>
-        <button type="button" class="swatch" data-color="#1e66f5" style="--c:#1e66f5" data-i18n-title="tool.color"></button>
-        <button type="button" class="swatch" data-color="#2e9d4f" style="--c:#2e9d4f" data-i18n-title="tool.color"></button>
-        <button type="button" class="swatch" data-color="#ffd400" style="--c:#ffd400" data-i18n-title="tool.color"></button>
-        <button type="button" class="swatch" data-color="#f57c00" style="--c:#f57c00" data-i18n-title="tool.color"></button>
-        <button type="button" class="swatch" data-color="#222222" style="--c:#222222" data-i18n-title="tool.color"></button>
+        <button type="button" class="swatch" data-color="#e53935" style="--c:#e53935" data-i18n-title="color.red"></button>
+        <button type="button" class="swatch" data-color="#1e66f5" style="--c:#1e66f5" data-i18n-title="color.blue"></button>
+        <button type="button" class="swatch" data-color="#2e9d4f" style="--c:#2e9d4f" data-i18n-title="color.green"></button>
+        <button type="button" class="swatch" data-color="#ffd400" style="--c:#ffd400" data-i18n-title="color.yellow"></button>
+        <button type="button" class="swatch" data-color="#f57c00" style="--c:#f57c00" data-i18n-title="color.orange"></button>
+        <button type="button" class="swatch" data-color="#222222" style="--c:#222222" data-i18n-title="color.black"></button>
       </div>
       <div class="widths">
         <button type="button" class="width-btn" data-width="1" data-i18n-title="tool.width"><span style="height:1px"></span></button>
@@ -150,7 +150,7 @@
     <div class="pages translated cmp-pages" id="pagesCmp" hidden></div>
     </div>
   </section>
-  <div class="splitter" id="splitter" data-i18n-title="layout.splitter"></div>
+  <div class="splitter" id="splitter" tabindex="0" role="separator" aria-orientation="vertical" data-i18n-title="layout.splitter" data-i18n-aria="layout.splitter"></div>
 
   <section class="editor-pane">
     <div class="pane-toolbar wrap">
@@ -182,8 +182,8 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="m9 14 2 2 4-4"/></svg>
         <span data-i18n="tb.build">Build PDF</span>
       </button>
-      <a class="btn success" id="btnDownload" hidden href="#" data-i18n="tb.download" data-i18n-title="tb.downloadTitle">Download</a>
-      <a class="btn success bi-btn" id="btnDownloadBi" hidden href="#" data-i18n-title="tb.bilingualTitle"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="8" height="16" rx="1"/><rect x="13" y="4" width="8" height="16" rx="1"/><path d="M5.5 9h3M5.5 12h3M15.5 9h3M15.5 12h3"/></svg></a>
+      <button type="button" class="btn success" id="btnDownload" hidden data-i18n="tb.download" data-i18n-title="tb.downloadTitle">Download</button>
+      <button type="button" class="btn success bi-btn" id="btnDownloadBi" hidden data-i18n-title="tb.bilingualTitle"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="8" height="16" rx="1"/><rect x="13" y="4" width="8" height="16" rx="1"/><path d="M5.5 9h3M5.5 12h3M15.5 9h3M15.5 12h3"/></svg></button>
     </div>
     <div class="progress-row">
       <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
@@ -194,23 +194,23 @@
     </div>
     <div class="filter-row">
       <div class="search-box">
-        <input type="search" id="search" data-i18n-placeholder="filter.search" autocomplete="off">
+        <input type="search" id="search" data-i18n-placeholder="filter.search" data-i18n-aria="filter.search" autocomplete="off">
         <span class="muted small find-count" id="findCount"></span>
         <button type="button" class="icon-btn" id="findPrev" data-i18n-title="find.prev">‹</button>
         <button type="button" class="icon-btn" id="findNext" data-i18n-title="find.next">›</button>
         <button type="button" class="icon-btn" id="findReplaceToggle" data-i18n-title="find.replaceToggle">⇄</button>
       </div>
-      <select id="filterStatus">
+      <select id="filterStatus" data-i18n-aria="filter.statusAria">
         <option value="all" data-i18n="filter.all">All</option>
         <option value="todo" data-i18n="filter.todo">Untranslated</option>
         <option value="done" data-i18n="filter.done">Translated</option>
         <option value="numbers" data-i18n="filter.numbers">Numbers only (kept)</option>
       </select>
-      <select id="filterPage"><option value="all" data-i18n="filter.allPages">All pages</option></select>
+      <select id="filterPage" data-i18n-aria="filter.pageAria"><option value="all" data-i18n="filter.allPages">All pages</option></select>
     </div>
     <div class="find-bar" id="findBar" hidden>
       <div class="find-row">
-        <select id="findScope">
+        <select id="findScope" data-i18n-aria="find.scopeAria">
           <option value="both" data-i18n="find.scopeBoth" selected>In both</option>
           <option value="tr" data-i18n="find.scopeTr">In translations</option>
           <option value="src" data-i18n="find.scopeSrc">In the original</option>
@@ -220,7 +220,7 @@
         <button type="button" class="icon-btn find-close" id="findClose" data-i18n-title="find.close">×</button>
       </div>
       <div class="find-row" id="replaceRow">
-        <input type="text" id="replaceText" data-i18n-placeholder="find.replacePlaceholder" autocomplete="off">
+        <input type="text" id="replaceText" data-i18n-placeholder="find.replacePlaceholder" data-i18n-aria="find.replacePlaceholder" autocomplete="off">
         <button type="button" class="btn" id="replaceOne" data-i18n="find.replace" data-i18n-title="find.replaceTitle">Replace</button>
         <button type="button" class="btn" id="replaceAll" data-i18n="find.replaceAll" data-i18n-title="find.replaceAllTitle">Replace all</button>
       </div>
@@ -230,9 +230,9 @@
 </main>
 
 <!-- Export dialog -->
-<dialog id="exportDialog" class="modal">
+<dialog id="exportDialog" class="modal" aria-labelledby="exportTitle">
   <form method="dialog">
-    <h2 data-i18n="export.title">Export for an external translator</h2>
+    <h2 id="exportTitle" data-i18n="export.title">Export for an external translator</h2>
     <p class="muted" data-i18n="export.text"></p>
     <div class="formats">
       <label class="format"><input type="radio" name="fmt" value="txt" checked>
@@ -251,16 +251,16 @@
     </div>
     <label class="check"><input type="checkbox" id="includeTranslations"> <span data-i18n="export.include">Include translations already entered</span></label>
     <div class="modal-actions">
-      <button value="cancel" class="btn ghost" data-i18n="common.cancel">Cancel</button>
+      <button type="button" value="cancel" class="btn ghost" data-i18n="common.cancel">Cancel</button>
       <button value="ok" class="btn primary" id="exportGo" data-i18n="common.download">Download</button>
     </div>
   </form>
 </dialog>
 
 <!-- Bilingual PDF dialog -->
-<dialog id="biDialog" class="modal">
+<dialog id="biDialog" class="modal" aria-labelledby="biTitle">
   <form method="dialog">
-    <h2 data-i18n="bi.title">Download both languages</h2>
+    <h2 id="biTitle" data-i18n="bi.title">Download both languages</h2>
     <div class="formats">
       <label class="format"><input type="radio" name="biLayout" value="side" checked>
         <b data-i18n="bi.side">Side by side on one page</b><span data-i18n="bi.sideHint"></span></label>
@@ -268,35 +268,35 @@
         <b data-i18n="bi.pages">Alternating pages</b><span data-i18n="bi.pagesHint"></span></label>
     </div>
     <div class="modal-actions">
-      <button value="cancel" class="btn ghost" data-i18n="common.cancel">Cancel</button>
+      <button type="button" value="cancel" class="btn ghost" data-i18n="common.cancel">Cancel</button>
       <button value="ok" class="btn primary" data-i18n="common.download">Download</button>
     </div>
   </form>
 </dialog>
 
 <!-- Import dialog -->
-<dialog id="importDialog" class="modal wide">
+<dialog id="importDialog" class="modal wide" aria-labelledby="importTitle">
   <form method="dialog">
-    <h2 data-i18n="import.title">Import translation</h2>
+    <h2 id="importTitle" data-i18n="import.title">Import translation</h2>
     <label class="dropzone small" id="importDrop">
       <input type="file" id="importFile" accept=".txt,.docx,.xlf,.xliff,.csv,.tsv,.json" hidden>
       <div class="dz-title" data-i18n="import.drop">Drop the translated file here or <u>choose a file</u></div>
       <div class="dz-sub">.txt · .docx · .xlf / .xliff · .csv · .json</div>
     </label>
     <div class="or" data-i18n="import.or"></div>
-    <textarea id="pasteArea" rows="10" data-i18n-placeholder="import.placeholder"></textarea>
+    <textarea id="pasteArea" data-i18n-aria="import.pasteAria" rows="10" data-i18n-placeholder="import.placeholder"></textarea>
     <label class="check"><input type="checkbox" id="importOverwrite" checked> <span data-i18n="import.overwrite">Replace translations already entered</span></label>
     <div class="modal-actions">
-      <button value="cancel" class="btn ghost" data-i18n="common.cancel">Cancel</button>
+      <button type="button" value="cancel" class="btn ghost" data-i18n="common.cancel">Cancel</button>
       <button value="ok" class="btn primary" id="importGo" data-i18n="import.go">Import pasted text</button>
     </div>
   </form>
 </dialog>
 
 <!-- Build dialog -->
-<dialog id="buildDialog" class="modal">
+<dialog id="buildDialog" class="modal" aria-labelledby="buildTitle">
   <form method="dialog">
-    <h2 data-i18n="build.title">Rebuild the PDF</h2>
+    <h2 id="buildTitle" data-i18n="build.title">Rebuild the PDF</h2>
     <p class="muted pdf-only" data-i18n="build.text"></p>
     <p class="muted book-only ebook-only" data-i18n="build.bookText"></p>
     <p class="muted office-only" data-i18n="build.officeText"></p>
@@ -326,17 +326,17 @@
     <p class="muted small" data-i18n="build.fontsNote"></p>
     </div>
     <div class="modal-actions">
-      <button value="cancel" class="btn ghost" data-i18n="common.cancel">Cancel</button>
+      <button type="button" value="cancel" class="btn ghost" data-i18n="common.cancel">Cancel</button>
       <button value="ok" class="btn primary" id="buildGo" data-i18n="tb.build">Build PDF</button>
     </div>
   </form>
 </dialog>
 
 <!-- Help + AI prompt dialog -->
-<dialog id="helpDialog" class="modal xwide">
+<dialog id="helpDialog" class="modal xwide" aria-labelledby="helpTitle">
   <form method="dialog">
     <div class="help-part">
-    <h2 data-i18n="help.title">Help</h2>
+    <h2 id="helpTitle" data-i18n="help.title">Help</h2>
     <div class="wf in-help" id="wfHelp"></div>
     <p class="muted small" data-i18n="help.shortcuts"></p>
     <p class="muted small" data-i18n="help.markup"></p>
@@ -356,41 +356,41 @@
     <label class="field"><span><span data-i18n="ai.glossary"></span> <span class="muted" data-i18n="ai.glossaryHint"></span></span>
       <textarea id="aiGlossary" rows="2" data-i18n-placeholder="ai.glossaryPh"></textarea>
     </label>
-    <textarea id="aiPrompt" rows="12" readonly></textarea>
+    <textarea id="aiPrompt" data-i18n-aria="ai.promptAria" rows="12" readonly></textarea>
     <p class="muted small" id="aiStats"></p>
     <div class="ai-parts-head"><b data-i18n="ai.parts">Copy prompt + text</b> <span class="muted small" data-i18n="ai.partsHint"></span></div>
     <div class="ai-parts" id="aiParts"></div>
     </div>
     <p class="muted small help-version help-part">PDF Translate v{{VERSION}}</p>
     <div class="modal-actions">
-      <button value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
+      <button type="button" value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
       <button type="button" class="btn ai-part" id="aiCopyPrompt" data-i18n="ai.copyPrompt">Copy prompt only</button>
     </div>
   </form>
 </dialog>
 
-<div class="toast-stack" id="toasts"></div>
-<div class="busy" id="busy" hidden><div class="busy-box"><div class="spinner"></div><span id="busyText"></span><button type="button" class="btn ghost" id="busyCancel" hidden data-i18n="common.cancel">Cancel</button></div></div>
+<div class="toast-stack" id="toasts" role="status" aria-live="polite"></div>
+<div class="busy" id="busy" role="status" aria-live="polite" hidden><div class="busy-box"><div class="spinner"></div><span id="busyText"></span><button type="button" class="btn ghost" id="busyCancel" hidden data-i18n="common.cancel">Cancel</button></div></div>
 
 <!-- Password dialog -->
-<dialog id="pwDialog" class="modal">
+<dialog id="pwDialog" class="modal" aria-labelledby="pwTitle">
   <form method="dialog">
-    <h2 data-i18n="pw.title">Password-protected PDF</h2>
+    <h2 id="pwTitle" data-i18n="pw.title">Password-protected PDF</h2>
     <p class="muted"><b id="pwName"></b></p>
     <p class="muted" data-i18n="pw.text"></p>
     <p class="error-text" id="pwWrong" hidden data-i18n="pw.wrong"></p>
     <label class="field"><span data-i18n="pw.label">Password</span> <input type="password" id="pwInput" autocomplete="off"></label>
     <div class="modal-actions">
-      <button value="cancel" class="btn ghost" data-i18n="common.cancel">Cancel</button>
+      <button type="button" value="cancel" class="btn ghost" data-i18n="common.cancel">Cancel</button>
       <button value="ok" class="btn primary" data-i18n="pw.ok">Open</button>
     </div>
   </form>
 </dialog>
 
 <!-- OCR dialog -->
-<dialog id="ocrDialog" class="modal">
+<dialog id="ocrDialog" class="modal" aria-labelledby="ocrTitle">
   <form method="dialog">
-    <h2 data-i18n="ocr.title">Text recognition (OCR)</h2>
+    <h2 id="ocrTitle" data-i18n="ocr.title">Text recognition (OCR)</h2>
     <p class="muted" data-i18n="ocr.text"></p>
     <div class="field"><span data-i18n="ocr.langs">Languages in the document</span><div class="ocr-langs" id="ocrLangs"></div></div>
     <div class="field"><span data-i18n="ocr.pages">Pages</span>
@@ -402,7 +402,7 @@
     </label>
     <p class="muted small" data-i18n="ocr.note"></p>
     <div class="modal-actions">
-      <button value="cancel" class="btn ghost" data-i18n="common.cancel">Cancel</button>
+      <button type="button" value="cancel" class="btn ghost" data-i18n="common.cancel">Cancel</button>
       <button value="ok" class="btn primary" id="ocrGo" data-i18n="ocr.start">Recognise</button>
     </div>
   </form>

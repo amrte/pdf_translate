@@ -71,6 +71,7 @@ function recordTranslations(before, after, label) {
     }
     persist();
     refreshCards();
+    refreshFind(); // (the search highlights follow the restored text)
   };
   pushHistory({ label, undo: () => apply(before), redo: () => apply(after) });
 }
@@ -447,7 +448,7 @@ async function toggleFullscreen(force) {
 
 function isTyping(e) {
   const tag = e.target.tagName;
-  return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || e.target.isContentEditable || document.querySelector("dialog[open]");
+  return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || e.target.isContentEditable || document.querySelector("dialog[open]") || !$("#busy").hidden;
 }
 
 function onKeyDown(e) {
@@ -464,7 +465,12 @@ function onKeyDown(e) {
   else if (k === "home") { e.preventDefault(); goToPage(0); }
   else if (k === "end") { e.preventDefault(); goToPage(viewPages().length - 1); }
   else if ((k === "delete" || k === "backspace") && mk.selected !== null) { e.preventDefault(); deleteMarkup(mk.selected); }
-  else if (k === "escape") { if (mk.draft) { const p = mk.draft.page; mk.draft = null; renderMarkups(p); } setTool("select"); select(null); clearActive(); }
+  else if (k === "escape") {
+    if (mk.draft) { const p = mk.draft.page; mk.draft = null; renderMarkups(p); }
+    setTool("select"); select(null); clearActive();
+    // (Esc leaves the view-only layout also when the browser refused full screen)
+    if (document.body.classList.contains("viewer-only") && !document.fullscreenElement) toggleFullscreen(false);
+  }
   else if (k === "f" && !e.shiftKey) toggleFullscreen();
   else if (TOOL_KEYS[k] && !e.shiftKey && !isBook()) setTool(TOOL_KEYS[k]); // no markups on e-books
 }
