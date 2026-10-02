@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.28
+
+- **More OCR languages:** Polish, Czech, Slovak, Hungarian and Bulgarian.
+
 ## 1.27
 
 - **Pictures can be translated.** A JPG, PNG, GIF, BMP, TIFF, WebP, AVIF or HEIC file opens as a

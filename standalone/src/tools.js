@@ -339,7 +339,7 @@ const OCR_LIB = "https://cdn.jsdelivr.net/npm/tesseract.js@6.0.1/dist/tesseract.
 const OCR_WORKER = "https://cdn.jsdelivr.net/npm/tesseract.js@6.0.1/dist/worker.min.js";
 const OCR_CORE = "https://cdn.jsdelivr.net/npm/tesseract.js-core@6.0.0";
 const OCR_LANG_PATH = ""; // "" = the language data on jsDelivr (@tesseract.js-data/<lang>)
-const OCR_LANGS = ["eng", "deu", "fra", "spa", "por", "nld", "swe", "ukr", "fin", "chi_sim", "chi_tra"];
+const OCR_LANGS = ["eng", "deu", "fra", "spa", "por", "nld", "swe", "pol", "ces", "slk", "hun", "bul", "ukr", "fin", "chi_sim", "chi_tra"];
 const LS_OCR = "pdftr:ocr-options";
 
 /** Pages with no text but a picture covering much of the page (scans). */
