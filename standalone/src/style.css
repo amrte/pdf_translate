@@ -476,6 +476,12 @@ body.splitting .pages, body.splitting iframe { pointer-events: none; }
 /* ---------- v1.18: workflow overview (start page and Help), close button ---------- */
 .wf { width: min(1060px, 100%); container-type: inline-size; display: grid; gap: 14px; }
 .wf-title { margin: 0; font-size: 18px; text-align: center; }
+.wf-fold { display: inline-flex; align-items: center; gap: 6px; background: none; border: 0; padding: 4px 10px; border-radius: 8px; font: inherit; font-weight: inherit; color: inherit; cursor: pointer; }
+.wf-fold:hover { background: var(--surface-2); }
+.wf-fold:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.wf-chevron { color: var(--muted); transition: transform .2s; }
+.wf.folded .wf-chevron { transform: rotate(-90deg); }
+.wf.folded .wf-flow { display: none; }
 .wf.in-help .wf-title { display: none; }
 .wf-flow { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
 .wf-step { position: relative; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 14px 13px; display: grid; gap: 10px; align-content: start; min-width: 0; text-align: left; }

@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.38
+
+- The workflow on the start screen can be folded: click its title to hide or show the six steps. The first start shows the workflow; from the second start on it is folded, and whatever you choose last is remembered for the next start.
+
 ## 1.37
 
 - The app now says "Segments" everywhere it used to say "Fields": the "Segments" checkbox on the main screen (shows the segment boxes on the page), "Segments per part" in the AI dialog, and the part buttons, counts and hints there.

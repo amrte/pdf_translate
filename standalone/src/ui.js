@@ -1439,6 +1439,28 @@ function setupDropzone(zone, onFile) {
   });
 }
 
+// The workflow on the start page can be folded. The first start shows it; from the second start
+// on it is folded, unless the user unfolded it the last time (the choice is remembered).
+const LS_WF = "pdftr:wf-folded";
+function initWorkflowFold() {
+  let folded = false;
+  try {
+    const v = localStorage.getItem(LS_WF);
+    if (v === null) localStorage.setItem(LS_WF, "1"); // first start: open now, folded next time
+    else folded = v === "1";
+  } catch (_) { /* storage blocked: always open */ }
+  const apply = () => {
+    $("#wfStart").classList.toggle("folded", folded);
+    $("#wfFold").setAttribute("aria-expanded", String(!folded));
+  };
+  apply();
+  $("#wfFold").addEventListener("click", () => {
+    folded = !folded;
+    apply();
+    try { localStorage.setItem(LS_WF, folded ? "1" : "0"); } catch (_) { /* storage blocked */ }
+  });
+}
+
 function init() {
   setupDropzone($("#dropzone"), openPdf);
   $("#fileInput").addEventListener("change", (e) => openPdf(e.target.files[0]));
@@ -1446,8 +1468,9 @@ function init() {
   $("#btnNew").addEventListener("click", () => $("#fileInput").click());
   $("#btnClose").addEventListener("click", closeDocument);
   // The workflow overview of the start page is shown in Help too.
-  $("#wfHelp").innerHTML = $("#wfStart").innerHTML.replace(' id="wfTitle"', "");
+  $("#wfHelp").innerHTML = $("#wfStart").innerHTML.replace(' id="wfTitle"', "").replace(' id="wfFold"', "").replace(' id="wfFlow"', "");
   applyI18n($("#wfHelp"));
+  initWorkflowFold();
 
   document.addEventListener("dragover", (e) => e.preventDefault());
   document.addEventListener("drop", (e) => {

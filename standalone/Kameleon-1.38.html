@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="Kameleon 1.37">
+  <meta name="generator" content="Kameleon 1.38">
   <meta name="description" content="Kameleon – Wechselt die Sprache, behält die Form. Changes language, keeps its shape.">
   <title>Kameleon</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2216%22 fill=%22%23287130%22/%3E%3Cg transform=%22translate(2.5 1) scale(0.9)%22 fill=%22%23ffffff%22 stroke=%22%23ffffff%22%3E%3Cpath d=%22M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6%22 fill=%22none%22 stroke-width=%223.8%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M21 43l-1 10M30 44v9M38 43l1 10%22 stroke-width=%223.6%22 stroke-linecap=%22round%22/%3E%3Cellipse cx=%2221%22 cy=%2225%22 rx=%227%22 ry=%227.5%22 stroke=%22none%22/%3E%3Cellipse cx=%2233%22 cy=%2223.5%22 rx=%227.5%22 ry=%228%22 stroke=%22none%22/%3E%3Cpath d=%22M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z%22 stroke=%22none%22/%3E%3Cpath d=%22M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z%22 stroke=%22none%22/%3E%3Cpath d=%22M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z%22 stroke=%22none%22/%3E%3Cpath d=%22M16 37l4-3 4 3 4-3 4 3 4-3 4 3%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%222.1%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3Cpath d=%22M41 33.2L58.6 30.4%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%221.5%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M58.5 33.6c4.5 1.4 6.2 5 4 8.4-1 1.6-3 1.6-3.6.1%22 fill=%22none%22 stroke-width=%222.6%22 stroke-linecap=%22round%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%224.4%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%222.7%22 stroke=%22none%22/%3E%3Ccircle cx=%2246.2%22 cy=%2226.7%22 r=%221.3%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Cpath d=%22M4 55.5c15-3 39-3 54 0%22 fill=%22none%22 stroke-width=%222.4%22 stroke-linecap=%22round%22/%3E%3C/g%3E%3C/svg%3E">
@@ -486,6 +486,12 @@ body.splitting .pages, body.splitting iframe { pointer-events: none; }
 /* ---------- v1.18: workflow overview (start page and Help), close button ---------- */
 .wf { width: min(1060px, 100%); container-type: inline-size; display: grid; gap: 14px; }
 .wf-title { margin: 0; font-size: 18px; text-align: center; }
+.wf-fold { display: inline-flex; align-items: center; gap: 6px; background: none; border: 0; padding: 4px 10px; border-radius: 8px; font: inherit; font-weight: inherit; color: inherit; cursor: pointer; }
+.wf-fold:hover { background: var(--surface-2); }
+.wf-fold:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.wf-chevron { color: var(--muted); transition: transform .2s; }
+.wf.folded .wf-chevron { transform: rotate(-90deg); }
+.wf.folded .wf-flow { display: none; }
 .wf.in-help .wf-title { display: none; }
 .wf-flow { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
 .wf-step { position: relative; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 14px 13px; display: grid; gap: 10px; align-content: start; min-width: 0; text-align: left; }
@@ -647,7 +653,7 @@ body.is-image .page img { filter: var(--pic-filter, none); }
   <div class="brand">
     <span class="logo"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#287130"/><g transform="translate(2.5 1) scale(0.9)" fill="#ffffff" stroke="#ffffff"><path d="M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6" fill="none" stroke-width="3.8" stroke-linecap="round"/><path d="M21 43l-1 10M30 44v9M38 43l1 10" stroke-width="3.6" stroke-linecap="round"/><ellipse cx="21" cy="25" rx="7" ry="7.5" stroke="none"/><ellipse cx="33" cy="23.5" rx="7.5" ry="8" stroke="none"/><path d="M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z" stroke="none"/><path d="M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z" stroke="none"/><path d="M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z" stroke="none"/><path d="M16 37l4-3 4 3 4-3 4 3 4-3 4 3" fill="none" stroke="#287130" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M41 33.2L58.6 30.4" fill="none" stroke="#287130" stroke-width="1.5" stroke-linecap="round"/><path d="M58.5 33.6c4.5 1.4 6.2 5 4 8.4-1 1.6-3 1.6-3.6.1" fill="none" stroke-width="2.6" stroke-linecap="round"/><circle cx="45.5" cy="26.5" r="4.4" fill="#287130" stroke="none"/><circle cx="45.5" cy="26.5" r="2.7" stroke="none"/><circle cx="46.2" cy="26.7" r="1.3" fill="#287130" stroke="none"/><path d="M4 55.5c15-3 39-3 54 0" fill="none" stroke-width="2.4" stroke-linecap="round"/></g></svg></span>
     <span class="brand-name">Kameleon</span>
-    <span class="version" id="appVersion">v1.37</span>
+    <span class="version" id="appVersion">v1.38</span>
   </div>
   <div class="topbar-actions">
     <span class="doc-name" id="docName"></span>
@@ -701,7 +707,8 @@ body.is-image .page img { filter: var(--pic-filter, none); }
   <div class="recent" id="recent" hidden><span class="recent-label" data-i18n="recent.title">Recently opened:</span><div class="recent-list" id="recentList"></div></div>
   <!-- The workflow (also copied into Help); the buttons look as they do in the app. -->
   <section class="wf" id="wfStart" aria-labelledby="wfTitle">
-    <h2 class="wf-title" id="wfTitle" data-i18n="wf.title">The workflow</h2>
+    <h2 class="wf-title" id="wfTitle"><button type="button" class="wf-fold" id="wfFold" aria-controls="wfFlow" aria-expanded="true" data-i18n-title="wf.foldTitle"><span data-i18n="wf.title">The workflow</span><svg class="wf-chevron" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button></h2>
+    <ol class="wf-flow" id="wfFlow">
     <ol class="wf-flow">
       <li class="wf-step">
         <div class="wf-head"><span class="wf-num">1</span><h3 data-i18n="wf.1.title"></h3></div>
@@ -1046,7 +1053,7 @@ body.is-image .page img { filter: var(--pic-filter, none); }
     </div>
     <input type="file" id="offlineZip" class="visually-hidden" accept=".zip,application/zip" multiple tabindex="-1">
     <input type="file" id="offlineFolder" class="visually-hidden" webkitdirectory multiple tabindex="-1">
-    <p class="muted small help-version help-part">Kameleon v1.37 · <span data-i18n="app.tagline"></span></p>
+    <p class="muted small help-version help-part">Kameleon v1.38 · <span data-i18n="app.tagline"></span></p>
     <div class="modal-actions">
       <button type="button" value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
       <button type="button" class="btn ai-part" id="aiCopyPrompt" data-i18n="ai.copyPrompt">Copy prompt only</button>
@@ -1109,6 +1116,7 @@ const I18N = {
     "top.closeTitle": "Datei schließen und zur Startseite zurück (die Übersetzungen bleiben im Browser gespeichert)",
     "app.tagline": "Wechselt die Sprache, behält die Form.",
     "wf.title": "Der Arbeitsablauf",
+    "wf.foldTitle": "Arbeitsablauf ein- oder ausklappen",
     "wf.1.title": "Dokument öffnen",
     "wf.1.text": "Jeder Absatz, jede Beschriftung und Tabellenzelle wird ein nummeriertes Segment. Gescannte Seiten: <b>OCR</b>.",
     "wf.1.drop": "Datei hier ablegen oder <u>Datei auswählen</u>",
@@ -1506,6 +1514,7 @@ const I18N = {
     "top.closeTitle": "Close the file and go back to the start page (the translations stay saved in the browser)",
     "app.tagline": "Changes language, keeps its shape.",
     "wf.title": "The workflow",
+    "wf.foldTitle": "Show or hide the workflow",
     "wf.1.title": "Open the document",
     "wf.1.text": "Every paragraph, label and table cell becomes a numbered segment. Scanned pages: <b>OCR</b>.",
     "wf.1.drop": "Drop a file here or <u>choose a file</u>",
@@ -9668,6 +9677,28 @@ function setupDropzone(zone, onFile) {
   });
 }
 
+// The workflow on the start page can be folded. The first start shows it; from the second start
+// on it is folded, unless the user unfolded it the last time (the choice is remembered).
+const LS_WF = "pdftr:wf-folded";
+function initWorkflowFold() {
+  let folded = false;
+  try {
+    const v = localStorage.getItem(LS_WF);
+    if (v === null) localStorage.setItem(LS_WF, "1"); // first start: open now, folded next time
+    else folded = v === "1";
+  } catch (_) { /* storage blocked: always open */ }
+  const apply = () => {
+    $("#wfStart").classList.toggle("folded", folded);
+    $("#wfFold").setAttribute("aria-expanded", String(!folded));
+  };
+  apply();
+  $("#wfFold").addEventListener("click", () => {
+    folded = !folded;
+    apply();
+    try { localStorage.setItem(LS_WF, folded ? "1" : "0"); } catch (_) { /* storage blocked */ }
+  });
+}
+
 function init() {
   setupDropzone($("#dropzone"), openPdf);
   $("#fileInput").addEventListener("change", (e) => openPdf(e.target.files[0]));
@@ -9675,8 +9706,9 @@ function init() {
   $("#btnNew").addEventListener("click", () => $("#fileInput").click());
   $("#btnClose").addEventListener("click", closeDocument);
   // The workflow overview of the start page is shown in Help too.
-  $("#wfHelp").innerHTML = $("#wfStart").innerHTML.replace(' id="wfTitle"', "");
+  $("#wfHelp").innerHTML = $("#wfStart").innerHTML.replace(' id="wfTitle"', "").replace(' id="wfFold"', "").replace(' id="wfFlow"', "");
   applyI18n($("#wfHelp"));
+  initWorkflowFold();
 
   document.addEventListener("dragover", (e) => e.preventDefault());
   document.addEventListener("drop", (e) => {
@@ -11935,7 +11967,7 @@ function initPicture() {
 // from its own browser cache before the network, so language files are written into that cache.
 // ======================================================================
 
-const APP_VERSION = "1.37";
+const APP_VERSION = "1.38";
 // (a change of library version makes a stored set outdated: it is then ignored)
 const OFFLINE_VERSION = `${MUPDF_URL} ${OCR_LIB}`;
 const CORE_SIMD = "tesseract-core-simd-lstm.wasm.js", CORE_PLAIN = "tesseract-core-lstm.wasm.js";
