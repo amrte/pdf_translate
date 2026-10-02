@@ -363,6 +363,13 @@
     <div class="ai-parts-head"><b data-i18n="ai.parts">Copy prompt + text</b> <span class="muted small" data-i18n="ai.partsHint"></span></div>
     <div class="ai-parts" id="aiParts"></div>
     </div>
+    <div class="help-part offline-part">
+      <h3 class="offline-title" data-i18n="offline.title">Working offline</h3>
+      <p class="muted small" data-i18n="offline.text"></p>
+      <p class="small" id="offlineStatus"></p>
+      <div class="field"><span data-i18n="offline.langsTitle"></span><div class="ocr-langs" id="offlineLangs"></div></div>
+      <div class="wf-row offline-actions"><button type="button" class="btn" id="offlineDownload" data-i18n="offline.download"></button><button type="button" class="btn ghost" id="offlineRemove" hidden data-i18n="offline.remove"></button></div>
+    </div>
     <p class="muted small help-version help-part">Kameleon v{{VERSION}} · <span data-i18n="app.tagline"></span></p>
     <div class="modal-actions">
       <button type="button" value="cancel" class="btn ghost" data-i18n="common.close">Close</button>

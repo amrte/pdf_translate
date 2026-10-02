@@ -50,6 +50,9 @@ numbers stay as they are, and you download a new file in the same format. The vi
 preview of the text (the document as one flow, one page per slide, one page per sheet), not the
 exact Office layout.
 
+**Offline:** Help → "Working offline" stores the document engine and the text recognition library
+(about 15 MB) plus the chosen OCR languages in the browser, so the app runs without a connection.
+
 **Pictures** (JPG, PNG, GIF, BMP, TIFF, WebP, AVIF, HEIC) open as a one-page document whose text
 is read with OCR; the translation is saved as a picture of the same size and format.
 

@@ -261,6 +261,10 @@ kbd { font: 11.5px ui-monospace, monospace; border: 1px solid var(--border); bor
 .ai-grid .range { display: flex; align-items: center; gap: 6px; font-weight: 400; }
 .ai-grid .range input { width: 80px; }
 #helpDialog { max-height: calc(100vh - 40px); }
+.offline-part { border-top: 1px solid var(--border); padding-top: 14px; gap: 8px; }
+.offline-title { margin: 0; font-size: 15px; }
+.offline-part .ocr-langs { grid-template-columns: repeat(auto-fill, minmax(175px, 1fr)); }
+.offline-actions .btn { pointer-events: auto; height: 32px; }
 #helpDialog h2 + .modal-actions { flex-wrap: wrap; }
 .page .box.skip { border: 1px dotted rgba(120, 120, 120, .45); background: transparent; }
 .page .box.skip:hover { background: rgba(120, 120, 120, .08); }

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="Kameleon 1.28">
+  <meta name="generator" content="Kameleon 1.29">
   <meta name="description" content="Kameleon – Wechselt die Sprache, behält die Form. Changes language, keeps its shape.">
   <title>Kameleon</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%227%22 fill=%22%23f2c94c%22/%3E%3Cpath d=%22M4 24.5c7-1 17-1 24 0%22 fill=%22none%22 stroke=%22%238a5a2b%22 stroke-width=%222.2%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M9.5 18.5c0-4.5 3.5-8 8-8h3.5c3.5 0 6 2.5 6 5.5 0 2.6-1.5 4.5-4 5.5h-9c-2.8 0-4.5-1.3-4.5-3z%22 fill=%22%234caf50%22/%3E%3Cpath d=%22M7.5 20.5c-2.3-.4-3.6 1.2-3.1 2.9.4 1.3 1.9 1.7 2.8.9.9-.8.6-2-.2-2.3%22 fill=%22none%22 stroke=%22%234caf50%22 stroke-width=%222.2%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M26.5 16c1.6-1.2 3.2-.2 3.4 1.2%22 fill=%22none%22 stroke=%22%234caf50%22 stroke-width=%222.4%22 stroke-linecap=%22round%22/%3E%3Ccircle cx=%2222.5%22 cy=%2214.5%22 r=%223.1%22 fill=%22%232e7d32%22/%3E%3Ccircle cx=%2222.5%22 cy=%2214.5%22 r=%221.9%22 fill=%22%23fff%22/%3E%3Ccircle cx=%2223%22 cy=%2214.6%22 r=%22.9%22 fill=%22%231b1b1b%22/%3E%3Cpath d=%22M13.5 15.5c.8-1.5 2.3-2 3.8-1.6M18.5 19.5h4%22 fill=%22none%22 stroke=%22%232e7d32%22 stroke-width=%221.3%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M13 21.5v2.6M19 21.5v2.6%22 stroke=%22%232e7d32%22 stroke-width=%221.8%22 stroke-linecap=%22round%22/%3E%3C/svg%3E">
@@ -271,6 +271,10 @@ kbd { font: 11.5px ui-monospace, monospace; border: 1px solid var(--border); bor
 .ai-grid .range { display: flex; align-items: center; gap: 6px; font-weight: 400; }
 .ai-grid .range input { width: 80px; }
 #helpDialog { max-height: calc(100vh - 40px); }
+.offline-part { border-top: 1px solid var(--border); padding-top: 14px; gap: 8px; }
+.offline-title { margin: 0; font-size: 15px; }
+.offline-part .ocr-langs { grid-template-columns: repeat(auto-fill, minmax(175px, 1fr)); }
+.offline-actions .btn { pointer-events: auto; height: 32px; }
 #helpDialog h2 + .modal-actions { flex-wrap: wrap; }
 .page .box.skip { border: 1px dotted rgba(120, 120, 120, .45); background: transparent; }
 .page .box.skip:hover { background: rgba(120, 120, 120, .08); }
@@ -596,7 +600,7 @@ body.splitting .pages, body.splitting iframe { pointer-events: none; }
   <div class="brand">
     <span class="logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#f2c94c"/><path d="M4 24.5c7-1 17-1 24 0" fill="none" stroke="#8a5a2b" stroke-width="2.2" stroke-linecap="round"/><path d="M9.5 18.5c0-4.5 3.5-8 8-8h3.5c3.5 0 6 2.5 6 5.5 0 2.6-1.5 4.5-4 5.5h-9c-2.8 0-4.5-1.3-4.5-3z" fill="#4caf50"/><path d="M7.5 20.5c-2.3-.4-3.6 1.2-3.1 2.9.4 1.3 1.9 1.7 2.8.9.9-.8.6-2-.2-2.3" fill="none" stroke="#4caf50" stroke-width="2.2" stroke-linecap="round"/><path d="M26.5 16c1.6-1.2 3.2-.2 3.4 1.2" fill="none" stroke="#4caf50" stroke-width="2.4" stroke-linecap="round"/><circle cx="22.5" cy="14.5" r="3.1" fill="#2e7d32"/><circle cx="22.5" cy="14.5" r="1.9" fill="#fff"/><circle cx="23" cy="14.6" r=".9" fill="#1b1b1b"/><path d="M13.5 15.5c.8-1.5 2.3-2 3.8-1.6M18.5 19.5h4" fill="none" stroke="#2e7d32" stroke-width="1.3" stroke-linecap="round"/><path d="M13 21.5v2.6M19 21.5v2.6" stroke="#2e7d32" stroke-width="1.8" stroke-linecap="round"/></svg></span>
     <span class="brand-name">Kameleon</span>
-    <span class="version" id="appVersion">v1.28</span>
+    <span class="version" id="appVersion">v1.29</span>
   </div>
   <div class="topbar-actions">
     <span class="doc-name" id="docName"></span>
@@ -943,7 +947,14 @@ body.splitting .pages, body.splitting iframe { pointer-events: none; }
     <div class="ai-parts-head"><b data-i18n="ai.parts">Copy prompt + text</b> <span class="muted small" data-i18n="ai.partsHint"></span></div>
     <div class="ai-parts" id="aiParts"></div>
     </div>
-    <p class="muted small help-version help-part">Kameleon v1.28 · <span data-i18n="app.tagline"></span></p>
+    <div class="help-part offline-part">
+      <h3 class="offline-title" data-i18n="offline.title">Working offline</h3>
+      <p class="muted small" data-i18n="offline.text"></p>
+      <p class="small" id="offlineStatus"></p>
+      <div class="field"><span data-i18n="offline.langsTitle"></span><div class="ocr-langs" id="offlineLangs"></div></div>
+      <div class="wf-row offline-actions"><button type="button" class="btn" id="offlineDownload" data-i18n="offline.download"></button><button type="button" class="btn ghost" id="offlineRemove" hidden data-i18n="offline.remove"></button></div>
+    </div>
+    <p class="muted small help-version help-part">Kameleon v1.29 · <span data-i18n="app.tagline"></span></p>
     <div class="modal-actions">
       <button type="button" value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
       <button type="button" class="btn ai-part" id="aiCopyPrompt" data-i18n="ai.copyPrompt">Copy prompt only</button>
@@ -1230,6 +1241,21 @@ const I18N = {
     "ocr.suggest": "{n} Seite(n) ohne auswählbaren Text (gescannt?).",
     "ocr.suggestAction": "Texterkennung…",
     "ocr.noLang": "Bitte mindestens eine Sprache wählen.",
+    "offline.title": "Offline arbeiten",
+    "offline.text": "Die App lädt bei jedem Start die Dokument-Engine (MuPDF, ca. 10 MB) und bei der ersten Texterkennung Tesseract (ca. 4 MB) aus dem Internet. Beide lassen sich im Browser speichern; danach läuft die App ohne Verbindung. Die Sprachdaten der Texterkennung werden für die gewählten Sprachen mitgeladen. Die Ablage gilt für diesen Browser auf diesem Gerät.",
+    "offline.none": "Noch nichts gespeichert – die Bibliotheken werden aus dem Internet geladen.",
+    "offline.stored": "Gespeichert am {date} ({mb} MB). Texterkennung offline: {langs}.",
+    "offline.noLangs": "keine Sprachen",
+    "offline.outdated": "Die gespeicherten Bibliotheken gehören zu einer älteren Version der App und werden nicht mehr benutzt – bitte erneut herunterladen.",
+    "offline.langsTitle": "Sprachen der Texterkennung mitladen",
+    "offline.download": "Bibliotheken herunterladen",
+    "offline.again": "Erneut herunterladen",
+    "offline.remove": "Gespeicherte Bibliotheken löschen",
+    "offline.fetching": "Bibliotheken werden geladen ({i} von {n}): {name} – {mb} MB",
+    "offline.langs": "Sprachdaten der Texterkennung werden geladen: {langs}…",
+    "offline.done": "Für die Offline-Nutzung gespeichert ({mb} MB). Ab dem nächsten Start werden die Bibliotheken aus dem Browser geladen.",
+    "offline.failed": "Herunterladen fehlgeschlagen: {err}",
+    "offline.removed": "Die gespeicherten Bibliotheken wurden gelöscht; sie werden wieder aus dem Internet geladen.",
     "ocrlang.eng": "Englisch",
     "ocrlang.deu": "Deutsch",
     "ocrlang.fra": "Französisch",
@@ -1580,6 +1606,21 @@ const I18N = {
     "ocr.suggest": "{n} page(s) without selectable text (scanned?).",
     "ocr.suggestAction": "Recognise text…",
     "ocr.noLang": "Please choose at least one language.",
+    "offline.title": "Working offline",
+    "offline.text": "At every start the app loads the document engine (MuPDF, about 10 MB) from the internet, and Tesseract (about 4 MB) when text recognition is first used. Both can be stored in the browser; the app then runs without a connection. The language data for text recognition is fetched for the chosen languages. The copies belong to this browser on this device.",
+    "offline.none": "Nothing stored yet – the libraries are loaded from the internet.",
+    "offline.stored": "Stored on {date} ({mb} MB). Text recognition offline: {langs}.",
+    "offline.noLangs": "no languages",
+    "offline.outdated": "The stored libraries belong to an older version of the app and are no longer used – please download them again.",
+    "offline.langsTitle": "Text recognition languages to include",
+    "offline.download": "Download the libraries",
+    "offline.again": "Download again",
+    "offline.remove": "Delete the stored libraries",
+    "offline.fetching": "Loading the libraries ({i} of {n}): {name} – {mb} MB",
+    "offline.langs": "Loading text recognition data: {langs}…",
+    "offline.done": "Stored for offline use ({mb} MB). From the next start the libraries are loaded from the browser.",
+    "offline.failed": "Download failed: {err}",
+    "offline.removed": "The stored libraries were deleted; they are loaded from the internet again.",
     "ocrlang.eng": "English",
     "ocrlang.deu": "German",
     "ocrlang.fra": "French",
@@ -1871,8 +1912,8 @@ const boxOf = (pts) => {
 const quadBox = (q) => boxOf([[q[0], q[1]], [q[2], q[3]], [q[4], q[5]], [q[6], q[7]]]);
 const free = (o) => { try { o && o.destroy && o.destroy(); } catch (_) { /* already freed */ } };
 
-async function initEngine(module) {
-  if (!M) M = module || await import(MUPDF_URL);
+async function initEngine(module, url = null) {
+  if (!M) M = module || await import(url || MUPDF_URL); // (url: a stored copy of the library, see offline.js)
   return M;
 }
 
@@ -4273,7 +4314,7 @@ function createHandler() {
   const clearCaches = () => { fontInfoCache.clear(); fontPtrCache.clear(); colorCache.clear(); };
   return async function handle(cmd, args = {}, progress = () => {}) {
     if (cmd === "init") {
-      await initEngine();
+      await initEngine(null, args.mupdfUrl || null);
       return { result: true };
     }
     if (cmd === "open") {
@@ -7947,8 +7988,8 @@ async function pptToPptx(cfb) {
 // the segment list is virtualised so documents with thousands of segments stay fast.
 // ======================================================================
 const ENGINE_SRC = document.getElementById("engine-src").textContent;
-const { Engine, createHandler, LEGACY_KINDS, LEGACY_TO_MODERN } = await import(URL.createObjectURL(new Blob(
-  [ENGINE_SRC, "\nexport { Engine, createHandler, LEGACY_KINDS, LEGACY_TO_MODERN };\n"], { type: "text/javascript" })));
+const { Engine, createHandler, LEGACY_KINDS, LEGACY_TO_MODERN, MUPDF_URL } = await import(URL.createObjectURL(new Blob(
+  [ENGINE_SRC, "\nexport { Engine, createHandler, LEGACY_KINDS, LEGACY_TO_MODERN, MUPDF_URL };\n"], { type: "text/javascript" })));
 // Workers are classic scripts (module workers are refused on file:// pages); the engine
 // loads MuPDF with a dynamic import(), which classic workers support.
 const WORKER_URL = URL.createObjectURL(new Blob([ENGINE_SRC], { type: "text/javascript" }));
@@ -8050,24 +8091,29 @@ const pool = {
       try { w = new RemoteWorker(WORKER_URL); } catch (_) { this.local = true; }
     }
     if (this.local) w = new LocalWorker();
-    w.ready = w.call("init");
+    w.ready = w.call("init", { mupdfUrl: (this.libs && this.libs.mupdfUrl) || null }); // (stored copy of MuPDF, if any)
     this.workers.push(w);
     return w;
   },
   /** Start the first worker; fall back to the page itself if module workers fail. */
   start() {
     if (!this.ready) {
-      const first = this.spawn();
-      this.ready = first.ready.catch(async (err) => {
-        if (this.local) throw err;
-        console.warn("Worker failed, running the engine in the page instead:", err);
-        first.terminate && first.terminate();
-        this.workers = [];
-        this.local = true;
-        this.maxSize = 1;
-        const w = this.spawn();
-        await w.ready;
-      }).catch((err) => {
+      this.ready = (async () => {
+        this.libs = await offlineLibs(); // the libraries stored for offline use, when the user saved them
+        const first = this.spawn();
+        try {
+          await first.ready;
+        } catch (err) {
+          if (this.local) throw err;
+          console.warn("Worker failed, running the engine in the page instead:", err);
+          first.terminate && first.terminate();
+          this.workers = [];
+          this.local = true;
+          this.maxSize = 1;
+          const w = this.spawn();
+          await w.ready;
+        }
+      })().catch((err) => {
         this.ready = null;
         throw new Error(t("msg.engineFailed") + " " + (err.message || ""));
       });
@@ -8211,6 +8257,15 @@ async function idbPut(value, key = "last") {
     tx.objectStore("files").put(value, key);
     await new Promise((r) => { tx.oncomplete = r; tx.onerror = r; });
   } catch (_) { /* storage unavailable: the session simply won't be restored */ }
+}
+
+async function idbDel(key) {
+  try {
+    const db = await idb();
+    const tx = db.transaction("files", "readwrite");
+    tx.objectStore("files").delete(key);
+    await new Promise((r) => { tx.oncomplete = r; tx.onerror = r; });
+  } catch (_) { /* nothing stored */ }
 }
 
 async function idbGet(key = "last") {
@@ -9584,6 +9639,7 @@ function openHelp(focusAi) {
   const dlg = $("#helpDialog");
   dlg.classList.toggle("mode-ai", focusAi);
   dlg.classList.toggle("mode-help", !focusAi);
+  if (!focusAi) refreshOfflineStatus();
   openModal(dlg);
   dlg.scrollTop = 0;
 }
@@ -10579,6 +10635,14 @@ function ocrPageChoice() {
 
 let ocrCancel = false;
 
+/** Options for a Tesseract worker: from the stored copies (offline use) or from the network. */
+function ocrWorkerOptions(stored) {
+  return {
+    workerPath: stored ? stored.worker : OCR_WORKER, corePath: stored ? stored.core : OCR_CORE, workerBlobURL: !stored,
+    ...(OCR_LANG_PATH ? { langPath: OCR_LANG_PATH } : {}),
+  };
+}
+
 async function startOcr() {
   const langs = [...document.querySelectorAll("#ocrLangs input:checked")].map((i) => i.value);
   if (!langs.length) { toast(t("ocr.noLang"), "error"); return; }
@@ -10594,12 +10658,11 @@ async function startOcr() {
   const cancel = () => { ocrCancel = true; if (worker) worker.terminate().catch(() => {}); };
   try {
     busy(t("ocr.loading"), cancel);
-    const T = await import(OCR_LIB);
+    const libs = await offlineLibs(), stored = libs && libs.ocr; // Tesseract saved for offline use, if any
+    const T = await import(stored ? stored.lib : OCR_LIB);
     if (ocrCancel) return;
     const createWorker = T.createWorker || (T.default && T.default.createWorker);
-    worker = await createWorker(langs.join("+"), 1, {
-      workerPath: OCR_WORKER, corePath: OCR_CORE, workerBlobURL: true, ...(OCR_LANG_PATH ? { langPath: OCR_LANG_PATH } : {}),
-    });
+    worker = await createWorker(langs.join("+"), 1, ocrWorkerOptions(stored));
     if (ocrCancel) return;
     await worker.setParameters({ tessedit_pageseg_mode: "11" }); // sparse text: table cells and labels too
     for (const [k, p] of pages.entries()) {
@@ -11330,11 +11393,168 @@ function initLayout() {
   document.addEventListener("languagechange", () => { $("#railFold").title = t(rail.classList.contains("folded") ? "tool.unfold" : "tool.fold"); });
 }
 
+// ======================================================================
+// Offline use. The app loads two libraries from the internet: MuPDF (the document engine, at
+// every start) and Tesseract (text recognition, on first use). Both can be stored in the
+// browser (IndexedDB); stored copies are used instead of the network from then on. MuPDF's
+// files refer to each other by relative path, so the stored texts are rewritten to point at
+// the stored copies before they are loaded from blob: URLs.
+// ======================================================================
+
+// (a change of library version makes a stored set outdated: it is then ignored)
+const OFFLINE_VERSION = `${MUPDF_URL} ${OCR_LIB}`;
+const OFFLINE_FILES = [
+  ["mupdf.js", MUPDF_URL],
+  ["mupdf-wasm.js", MUPDF_URL.replace(/mupdf\.js$/, "mupdf-wasm.js")],
+  ["mupdf-wasm.wasm", MUPDF_URL.replace(/mupdf\.js$/, "mupdf-wasm.wasm")],
+  ["tesseract.esm.min.js", OCR_LIB],
+  ["worker.min.js", OCR_WORKER],
+  ["tesseract-core.wasm.js", null], // the build that fits this browser is chosen when downloading
+];
+const libKey = (name) => `lib:${name}`;
+// Does the browser run WebAssembly SIMD? (the same probe Tesseract uses to choose its build)
+const WASM_SIMD = WebAssembly.validate(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 5, 1, 96, 0, 1, 123, 3, 2, 1, 0, 10, 10, 1, 8, 0, 65, 0, 253, 15, 253, 98, 11]));
+const OCR_CORE_FILE = `tesseract-core${WASM_SIMD ? "-simd" : ""}-lstm.wasm.js`;
+
+let offlineLibsPromise = null;
+
+/** {mupdfUrl, ocr: {lib, worker, core} | null, manifest} from the stored copies, or null. */
+function offlineLibs() {
+  if (!offlineLibsPromise) offlineLibsPromise = loadOfflineLibs().catch((err) => { console.warn("Stored libraries not usable:", err); return null; });
+  return offlineLibsPromise;
+}
+
+async function loadOfflineLibs() {
+  const manifest = await idbGet(libKey("manifest"));
+  if (!manifest || manifest.version !== OFFLINE_VERSION) return null;
+  const data = {};
+  for (const [name] of OFFLINE_FILES) data[name] = await idbGet(libKey(name));
+  if (!data["mupdf.js"] || !data["mupdf-wasm.js"] || !data["mupdf-wasm.wasm"]) return null;
+  const dec = new TextDecoder();
+  const blobUrl = (content, type) => URL.createObjectURL(new Blob([content], { type }));
+  const wasmUrl = blobUrl(data["mupdf-wasm.wasm"], "application/wasm");
+  const glue = dec.decode(data["mupdf-wasm.js"]).replace('new URL("mupdf-wasm.wasm",import.meta.url).href', JSON.stringify(wasmUrl));
+  if (!glue.includes(wasmUrl)) return null; // not the expected build of the library: use the network
+  const glueUrl = blobUrl(glue, "text/javascript");
+  const main = dec.decode(data["mupdf.js"]).replace(/from\s+"\.\/mupdf-wasm\.js"/, `from ${JSON.stringify(glueUrl)}`);
+  if (!main.includes(glueUrl)) return null;
+  const libs = { mupdfUrl: blobUrl(main, "text/javascript"), ocr: null, manifest };
+  if (data["tesseract.esm.min.js"] && data["worker.min.js"] && data["tesseract-core.wasm.js"]) {
+    // The worker script loads its core with importScripts(corePath), which a worker cannot do from a
+    // blob: URL on a file: page. The core defines the global TesseractCore, and the worker skips the
+    // loading when that global exists, so core and worker are stored as one script instead.
+    const worker = dec.decode(data["tesseract-core.wasm.js"]) + "\n;\n" + dec.decode(data["worker.min.js"]);
+    libs.ocr = { lib: blobUrl(data["tesseract.esm.min.js"], "text/javascript"), worker: blobUrl(worker, "text/javascript"), core: OCR_CORE };
+  }
+  return libs;
+}
+
+async function fetchWithProgress(url, onProgress) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText}: ${url}`);
+  if (!res.body) return res.arrayBuffer();
+  const reader = res.body.getReader(), chunks = [];
+  let got = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value); got += value.length;
+    onProgress(got);
+  }
+  const out = new Uint8Array(got);
+  let o = 0;
+  for (const c of chunks) { out.set(c, o); o += c.length; }
+  return out.buffer;
+}
+
+const mbOf = (bytes) => (bytes / 1048576).toFixed(1);
+
+/** Download the libraries into the browser; `langs` are OCR languages to fetch into Tesseract's cache. */
+async function downloadOfflineLibs(langs) {
+  const files = OFFLINE_FILES.map(([name, url]) => [name, url || `${OCR_CORE}/${OCR_CORE_FILE}`]);
+  let total = 0;
+  try {
+    for (const [i, [name, url]] of files.entries()) {
+      busy(t("offline.fetching", { i: i + 1, n: files.length, name, mb: "0.0" }));
+      const buf = await fetchWithProgress(url, (got) => busy(t("offline.fetching", { i: i + 1, n: files.length, name, mb: mbOf(got) })));
+      total += buf.byteLength;
+      await idbPut(buf, libKey(name));
+    }
+    const manifest = { version: OFFLINE_VERSION, date: Date.now(), bytes: total, langs: [] };
+    await idbPut(manifest, libKey("manifest"));
+    offlineLibsPromise = null;
+    const libs = await offlineLibs();
+    if (!libs) throw new Error("The stored libraries could not be read back.");
+    if (langs.length && libs.ocr) {
+      // Tesseract keeps language data in its own browser cache: loading the languages once stores them.
+      busy(t("offline.langs", { langs: langs.map((l) => t("ocrlang." + l)).join(", ") }));
+      const T = await import(libs.ocr.lib);
+      const createWorker = T.createWorker || (T.default && T.default.createWorker);
+      const w = await createWorker(langs.join("+"), 1, ocrWorkerOptions(libs.ocr));
+      await w.terminate();
+      manifest.langs = langs;
+      await idbPut(manifest, libKey("manifest"));
+    }
+    toast(t("offline.done", { mb: mbOf(total) }), "ok");
+  } catch (err) {
+    console.error(err);
+    toast(t("offline.failed", { err: userError(err) }), "error");
+  } finally {
+    busy("");
+    refreshOfflineStatus();
+  }
+}
+
+async function removeOfflineLibs() {
+  for (const [name] of OFFLINE_FILES) await idbDel(libKey(name));
+  await idbDel(libKey("manifest"));
+  offlineLibsPromise = null;
+  toast(t("offline.removed"), "ok");
+  refreshOfflineStatus();
+}
+
+/** The "Working offline" part of the Help dialog: what is stored, and the language choice. */
+async function refreshOfflineStatus() {
+  const el = $("#offlineStatus");
+  if (!el) return;
+  const m = await idbGet(libKey("manifest"));
+  if (!m) el.textContent = t("offline.none");
+  else if (m.version !== OFFLINE_VERSION) el.textContent = t("offline.outdated");
+  else {
+    const langs = (m.langs || []).map((l) => t("ocrlang." + l)).join(", ");
+    el.textContent = t("offline.stored", { date: new Date(m.date).toLocaleDateString(LANG === "de" ? "de-DE" : "en-GB"), mb: mbOf(m.bytes), langs: langs || t("offline.noLangs") });
+  }
+  $("#offlineRemove").hidden = !m;
+  $("#offlineDownload").textContent = t(m ? "offline.again" : "offline.download");
+}
+
+function renderOfflineLangs() {
+  let saved = {};
+  try { saved = JSON.parse(localStorage.getItem(LS_OCR) || "{}"); } catch (_) { /* default */ }
+  const checked = new Set((saved.langs && saved.langs.length) ? saved.langs : (LANG === "de" ? ["deu", "eng"] : ["eng"]));
+  const current = new Set([...document.querySelectorAll("#offlineLangs input:checked")].map((i) => i.value));
+  const on = current.size ? current : checked;
+  $("#offlineLangs").innerHTML = OCR_LANGS.map((l) =>
+    `<label class="check"><input type="checkbox" value="${l}"${on.has(l) ? " checked" : ""}> ${escapeHtml(t("ocrlang." + l))}</label>`).join("");
+}
+
+function initOffline() {
+  renderOfflineLangs();
+  document.addEventListener("languagechange", () => { renderOfflineLangs(); if ($("#helpDialog").open) refreshOfflineStatus(); });
+  $("#offlineDownload").addEventListener("click", () => {
+    const langs = [...document.querySelectorAll("#offlineLangs input:checked")].map((i) => i.value);
+    $("#helpDialog").close("cancel"); // (the progress box would be hidden behind the dialog)
+    downloadOfflineLibs(langs);
+  });
+  $("#offlineRemove").addEventListener("click", () => removeOfflineLibs());
+}
+
 // Start-up (runs after ui.js, markup.js and tools.js have defined everything).
 document.querySelectorAll(".lang-switch button").forEach((b) => b.addEventListener("click", () => setLanguage(b.dataset.lang)));
 document.addEventListener("languagechange", onLanguageChange);
 initMarkup();
 initTools();
+initOffline();
 init();
 
 </script>

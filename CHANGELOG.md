@@ -4,6 +4,14 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.29
+
+- **Working offline.** The Help dialog has a new section "Working offline": one click downloads
+  the document engine and the text recognition library (about 15 MB) plus the language data for
+  the chosen OCR languages into the browser. From then on the app starts and recognises text
+  without an internet connection. The section shows what is stored and when, and the copies can
+  be deleted again. After an update of the app the stored copies are refreshed with one click.
+
 ## 1.28
 
 - **More OCR languages:** Polish, Czech, Slovak, Hungarian and Bulgarian.

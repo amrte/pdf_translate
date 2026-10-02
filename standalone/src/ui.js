@@ -3,8 +3,8 @@
 // the segment list is virtualised so documents with thousands of segments stay fast.
 // ======================================================================
 const ENGINE_SRC = document.getElementById("engine-src").textContent;
-const { Engine, createHandler, LEGACY_KINDS, LEGACY_TO_MODERN } = await import(URL.createObjectURL(new Blob(
-  [ENGINE_SRC, "\nexport { Engine, createHandler, LEGACY_KINDS, LEGACY_TO_MODERN };\n"], { type: "text/javascript" })));
+const { Engine, createHandler, LEGACY_KINDS, LEGACY_TO_MODERN, MUPDF_URL } = await import(URL.createObjectURL(new Blob(
+  [ENGINE_SRC, "\nexport { Engine, createHandler, LEGACY_KINDS, LEGACY_TO_MODERN, MUPDF_URL };\n"], { type: "text/javascript" })));
 // Workers are classic scripts (module workers are refused on file:// pages); the engine
 // loads MuPDF with a dynamic import(), which classic workers support.
 const WORKER_URL = URL.createObjectURL(new Blob([ENGINE_SRC], { type: "text/javascript" }));
@@ -106,24 +106,29 @@ const pool = {
       try { w = new RemoteWorker(WORKER_URL); } catch (_) { this.local = true; }
     }
     if (this.local) w = new LocalWorker();
-    w.ready = w.call("init");
+    w.ready = w.call("init", { mupdfUrl: (this.libs && this.libs.mupdfUrl) || null }); // (stored copy of MuPDF, if any)
     this.workers.push(w);
     return w;
   },
   /** Start the first worker; fall back to the page itself if module workers fail. */
   start() {
     if (!this.ready) {
-      const first = this.spawn();
-      this.ready = first.ready.catch(async (err) => {
-        if (this.local) throw err;
-        console.warn("Worker failed, running the engine in the page instead:", err);
-        first.terminate && first.terminate();
-        this.workers = [];
-        this.local = true;
-        this.maxSize = 1;
-        const w = this.spawn();
-        await w.ready;
-      }).catch((err) => {
+      this.ready = (async () => {
+        this.libs = await offlineLibs(); // the libraries stored for offline use, when the user saved them
+        const first = this.spawn();
+        try {
+          await first.ready;
+        } catch (err) {
+          if (this.local) throw err;
+          console.warn("Worker failed, running the engine in the page instead:", err);
+          first.terminate && first.terminate();
+          this.workers = [];
+          this.local = true;
+          this.maxSize = 1;
+          const w = this.spawn();
+          await w.ready;
+        }
+      })().catch((err) => {
         this.ready = null;
         throw new Error(t("msg.engineFailed") + " " + (err.message || ""));
       });
@@ -267,6 +272,15 @@ async function idbPut(value, key = "last") {
     tx.objectStore("files").put(value, key);
     await new Promise((r) => { tx.oncomplete = r; tx.onerror = r; });
   } catch (_) { /* storage unavailable: the session simply won't be restored */ }
+}
+
+async function idbDel(key) {
+  try {
+    const db = await idb();
+    const tx = db.transaction("files", "readwrite");
+    tx.objectStore("files").delete(key);
+    await new Promise((r) => { tx.oncomplete = r; tx.onerror = r; });
+  } catch (_) { /* nothing stored */ }
 }
 
 async function idbGet(key = "last") {
@@ -1640,6 +1654,7 @@ function openHelp(focusAi) {
   const dlg = $("#helpDialog");
   dlg.classList.toggle("mode-ai", focusAi);
   dlg.classList.toggle("mode-help", !focusAi);
+  if (!focusAi) refreshOfflineStatus();
   openModal(dlg);
   dlg.scrollTop = 0;
 }

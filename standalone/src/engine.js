@@ -35,8 +35,8 @@ const boxOf = (pts) => {
 const quadBox = (q) => boxOf([[q[0], q[1]], [q[2], q[3]], [q[4], q[5]], [q[6], q[7]]]);
 const free = (o) => { try { o && o.destroy && o.destroy(); } catch (_) { /* already freed */ } };
 
-async function initEngine(module) {
-  if (!M) M = module || await import(MUPDF_URL);
+async function initEngine(module, url = null) {
+  if (!M) M = module || await import(url || MUPDF_URL); // (url: a stored copy of the library, see offline.js)
   return M;
 }
 
@@ -2437,7 +2437,7 @@ function createHandler() {
   const clearCaches = () => { fontInfoCache.clear(); fontPtrCache.clear(); colorCache.clear(); };
   return async function handle(cmd, args = {}, progress = () => {}) {
     if (cmd === "init") {
-      await initEngine();
+      await initEngine(null, args.mupdfUrl || null);
       return { result: true };
     }
     if (cmd === "open") {

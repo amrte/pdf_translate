@@ -411,6 +411,14 @@ function ocrPageChoice() {
 
 let ocrCancel = false;
 
+/** Options for a Tesseract worker: from the stored copies (offline use) or from the network. */
+function ocrWorkerOptions(stored) {
+  return {
+    workerPath: stored ? stored.worker : OCR_WORKER, corePath: stored ? stored.core : OCR_CORE, workerBlobURL: !stored,
+    ...(OCR_LANG_PATH ? { langPath: OCR_LANG_PATH } : {}),
+  };
+}
+
 async function startOcr() {
   const langs = [...document.querySelectorAll("#ocrLangs input:checked")].map((i) => i.value);
   if (!langs.length) { toast(t("ocr.noLang"), "error"); return; }
@@ -426,12 +434,11 @@ async function startOcr() {
   const cancel = () => { ocrCancel = true; if (worker) worker.terminate().catch(() => {}); };
   try {
     busy(t("ocr.loading"), cancel);
-    const T = await import(OCR_LIB);
+    const libs = await offlineLibs(), stored = libs && libs.ocr; // Tesseract saved for offline use, if any
+    const T = await import(stored ? stored.lib : OCR_LIB);
     if (ocrCancel) return;
     const createWorker = T.createWorker || (T.default && T.default.createWorker);
-    worker = await createWorker(langs.join("+"), 1, {
-      workerPath: OCR_WORKER, corePath: OCR_CORE, workerBlobURL: true, ...(OCR_LANG_PATH ? { langPath: OCR_LANG_PATH } : {}),
-    });
+    worker = await createWorker(langs.join("+"), 1, ocrWorkerOptions(stored));
     if (ocrCancel) return;
     await worker.setParameters({ tessedit_pageseg_mode: "11" }); // sparse text: table cells and labels too
     for (const [k, p] of pages.entries()) {
