@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.37
+
+- The app now says "Segments" everywhere it used to say "Fields": the "Segments" checkbox on the main screen (shows the segment boxes on the page), "Segments per part" in the AI dialog, and the part buttons, counts and hints there.
+
 ## 1.36
 
 - **One button colour.** The download buttons, the "done" dots, the progress bar and the step-6
