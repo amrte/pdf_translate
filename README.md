@@ -95,7 +95,7 @@ Extra features in the standalone version:
   side by side, landscape pages one above the other) or on alternating pages; an EPUB / FB2 / DOCX /
   PPTX with each paragraph followed by its translation; an XLSX with both in each cell.
 * Password protection is removed (restrictions automatically, an open password after you enter it).
-* **OCR** for scanned pages (English, German, French, Ukrainian, Finnish, Chinese) with Tesseract.js,
+* **OCR** for scanned pages (English, German, French, Ukrainian, Finnish, Greek, Arabic, Japanese, Chinese and more) with Tesseract.js,
   loaded on demand from cdn.jsdelivr.net; the translation is set on a patch of the paper colour.
 * Fields with no letters (numbers, amounts, dates such as `30.09.2026`, times, `-`) need no
   translation. They are left out of exports, Copy, the AI prompt and the progress count, keep

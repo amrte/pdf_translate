@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.59
+
+- OCR: Arabic and Japanese are available as languages (the language data is fetched on first use, or stored with the libraries for offline use like the other languages).
+
 ## 1.58
 
 - Presentations: speaker notes are now handled as what they are. The notes a slide carries (shown in the preview as the grey page after the slide) are labelled "speaker notes" in the segment list, "Translate with AI" leaves them out unless the new tickbox "Include speaker notes" is ticked, and the slide manager shows which slides carry notes and offers "Remove speaker notes" – Apply then strips all notes from the file, and the grey notes pages disappear.
