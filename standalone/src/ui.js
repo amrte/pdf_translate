@@ -10,7 +10,9 @@ const { Engine, createHandler, LEGACY_KINDS, LEGACY_TO_MODERN, MUPDF_URL, zipEnt
 const WORKER_URL = URL.createObjectURL(new Blob([ENGINE_SRC], { type: "text/javascript" }));
 
 const $ = (sel) => document.querySelector(sel);
-const LS_LAST = "pdftr:last";
+const LS_RECENT = "pdftr:recent"; // the documents kept for reopening: [{id, name, at, size}]
+const SS_DOC = "pdftr:tab-doc"; // the document open in this tab (sessionStorage: every tab has its own)
+const RECENT_MAX = 8, RECENT_BYTES = 300 * 1048576;
 const lsKey = (id) => `pdftr:tr:${id}`;
 const GAP = 10; // px between segment cards
 
@@ -231,11 +233,13 @@ async function sha256(bytes) {
   return [...new Uint8Array(hash)].slice(0, 12).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-let saveTimer = null, storageWarned = false;
+let saveTimer = null, storageWarned = false, persistedJson = ""; // (persistedJson: what this tab last read or wrote)
 function storeTranslations() {
   if (!state.doc) return;
   try {
-    localStorage.setItem(lsKey(state.doc.id), JSON.stringify(state.translations));
+    const json = JSON.stringify(state.translations);
+    localStorage.setItem(lsKey(state.doc.id), json);
+    persistedJson = json;
   } catch (_) { // quota exceeded or private mode: say so once per document
     if (!storageWarned) { storageWarned = true; toast(t("msg.storageFull"), "error"); }
   }
@@ -401,7 +405,7 @@ async function loadBytes(bytes, name, remember, knownId = null) {
       : (setLoading(t("msg.readingBook")), await pool.workers[0].call("extractBook"));
     if (stale()) return;
     console.info(`Extracted ${segments.length} segments from ${pageCount} pages in ${Math.round(performance.now() - started)} ms using ${pool.workers.length} worker(s)`);
-    if (remember) idbPut({ name, bytes: image ? original : bytes, id }); // (a picture is stored as it was)
+    if (remember) rememberDocument(name, image ? original : bytes, id); else touchRecent(id); // (a picture is stored as it was)
     const restored = kind === "pdf" ? await restoreOcr(id, segments, pages) : { segments, ocr: null };
     if (stale()) return;
     openDocument({ id, name, kind, pages, segments: restored.segments, ocr: restored.ocr, image }, bytes);
@@ -485,11 +489,13 @@ function openDocument(doc, bytes) {
   segIndex.clear();
   for (const s of doc.segments) segIndex.set(s.id, s);
   try {
-    state.translations = JSON.parse(localStorage.getItem(lsKey(doc.id)) || "{}");
-    localStorage.setItem(LS_LAST, doc.id);
+    persistedJson = localStorage.getItem(lsKey(doc.id)) || "{}";
+    state.translations = JSON.parse(persistedJson);
   } catch (_) {
     state.translations = {};
+    persistedJson = "";
   }
+  try { sessionStorage.setItem(SS_DOC, doc.id); } catch (_) { /* no session storage: no restore on reload */ }
   $("#uploadView").hidden = true;
   $("#workView").hidden = false;
   $("#btnNew").hidden = false;
@@ -618,7 +624,7 @@ function closeDocument() {
   segIndex.clear();
   resetHistory();
   busy("");
-  try { localStorage.removeItem(LS_LAST); } catch (_) { /* ignore */ }
+  try { sessionStorage.removeItem(SS_DOC); } catch (_) { /* ignore */ }
   pool.all("close").catch(() => {});
   observer.disconnect();
   clearImageCache();
@@ -1580,15 +1586,107 @@ function init() {
     }, 150);
   });
 
-  // Start the engine right away, and restore the last session.
+  // Start the engine right away. A reloaded tab gets its own document back; a new tab shows the
+  // start page with the recently opened documents, so several files can be open side by side.
   startEngine();
-  let last = null;
-  try { last = localStorage.getItem(LS_LAST); } catch (_) { /* ignore */ }
-  if (last) {
-    idbGet().then((saved) => { // (unless the user has opened a file in the meantime)
+  $("#recentList").addEventListener("click", (e) => {
+    const b = e.target.closest("button");
+    if (!b) return;
+    if (b.classList.contains("recent-x")) forgetDocument(b.dataset.id); else openRecent(b.dataset.id);
+  });
+  window.addEventListener("storage", onStorageFromOtherTab);
+  migrateLastDocument().then(() => {
+    renderRecent();
+    let tabDoc = null;
+    try { tabDoc = sessionStorage.getItem(SS_DOC); } catch (_) { /* ignore */ }
+    if (!tabDoc) return;
+    idbGet(`doc:${tabDoc}`).then((saved) => { // (unless the user has opened a file in the meantime)
       if (saved && saved.bytes && !loadSeq && !state.doc) loadBytes(saved.bytes, saved.name, false, saved.id);
     });
+  });
+}
+
+/* ---------------------------------------------------------- recent documents */
+
+function readRecent() {
+  try { return JSON.parse(localStorage.getItem(LS_RECENT) || "[]"); } catch (_) { return []; }
+}
+function writeRecent(list) {
+  try { localStorage.setItem(LS_RECENT, JSON.stringify(list)); } catch (_) { /* storage blocked */ }
+}
+
+/** Keep a document for reopening (IndexedDB), newest first; the oldest go when the list is full. */
+async function rememberDocument(name, bytes, id) {
+  await idbPut({ name, bytes, id }, `doc:${id}`);
+  const list = readRecent().filter((r) => r.id !== id);
+  list.unshift({ id, name, at: Date.now(), size: bytes.length });
+  const keep = [], drop = [];
+  let total = 0;
+  for (const r of list) { total += r.size || 0; (keep.length < RECENT_MAX && total <= RECENT_BYTES ? keep : drop).push(r); }
+  writeRecent(keep);
+  for (const r of drop) idbDel(`doc:${r.id}`);
+  renderRecent();
+}
+
+function touchRecent(id) {
+  const list = readRecent(), i = list.findIndex((r) => r.id === id);
+  if (i < 0) return;
+  const [r] = list.splice(i, 1);
+  list.unshift({ ...r, at: Date.now() });
+  writeRecent(list);
+  renderRecent();
+}
+
+async function forgetDocument(id) {
+  writeRecent(readRecent().filter((r) => r.id !== id));
+  await idbDel(`doc:${id}`);
+  renderRecent();
+}
+
+async function openRecent(id) {
+  const saved = await idbGet(`doc:${id}`);
+  if (!saved || !saved.bytes) { toast(t("recent.gone"), "error"); forgetDocument(id); return; }
+  loadBytes(saved.bytes, saved.name, false, saved.id);
+}
+
+function renderRecent() {
+  const list = readRecent(), box = $("#recent");
+  if (!box) return;
+  box.hidden = !list.length;
+  $("#recentList").innerHTML = list.map((r) => `<span class="recent-item"><button type="button" class="recent-open" data-id="${r.id}" title="${escapeHtml(r.name)}">${escapeHtml(r.name)}</button><button type="button" class="recent-x" data-id="${r.id}" title="${escapeHtml(t("recent.remove"))}" aria-label="${escapeHtml(t("recent.remove"))}">×</button></span>`).join("");
+}
+
+/** Earlier versions kept one "last" document: it becomes the first entry of the list. */
+async function migrateLastDocument() {
+  const legacy = await idbGet("last");
+  if (!legacy || !legacy.bytes || !legacy.id) return;
+  await rememberDocument(legacy.name || "document.pdf", legacy.bytes, legacy.id);
+  await idbDel("last");
+  try { localStorage.removeItem("pdftr:last"); } catch (_) { /* ignore */ }
+}
+
+/**
+ * The same document in two tabs: when the other tab saves its translations, the segments it
+ * changed are taken over here (this tab's own unsaved edits stay and are saved as usual).
+ */
+function onStorageFromOtherTab(e) {
+  if (!state.doc || e.key === null) { if (e.key === LS_RECENT) renderRecent(); return; }
+  if (e.key === LS_RECENT) { renderRecent(); return; }
+  if (e.key !== lsKey(state.doc.id) || e.newValue === null || e.newValue === persistedJson) return;
+  let incoming, base;
+  try { incoming = JSON.parse(e.newValue); base = JSON.parse(persistedJson || "{}"); } catch (_) { return; }
+  let changed = 0;
+  for (const id of new Set([...Object.keys(incoming), ...Object.keys(base)])) {
+    if ((incoming[id] || "") === (base[id] || "")) continue; // not touched by the other tab
+    if ((state.translations[id] || "") === (incoming[id] || "")) continue;
+    if (incoming[id]) state.translations[id] = incoming[id]; else delete state.translations[id];
+    changed++;
   }
+  persistedJson = e.newValue;
+  if (!changed) return;
+  refreshCards();
+  updateProgress();
+  toast(t("msg.syncedTabs", { n: changed }));
 }
 
 

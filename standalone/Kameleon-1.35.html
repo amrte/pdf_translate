@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="Kameleon 1.34">
+  <meta name="generator" content="Kameleon 1.35">
   <meta name="description" content="Kameleon – Wechselt die Sprache, behält die Form. Changes language, keeps its shape.">
   <title>Kameleon</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2216%22 fill=%22%23287130%22/%3E%3Cg transform=%22translate(2.5 1) scale(0.9)%22 fill=%22%23ffffff%22 stroke=%22%23ffffff%22%3E%3Cpath d=%22M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6%22 fill=%22none%22 stroke-width=%223.8%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M21 43l-1 10M30 44v9M38 43l1 10%22 stroke-width=%223.6%22 stroke-linecap=%22round%22/%3E%3Cellipse cx=%2221%22 cy=%2225%22 rx=%227%22 ry=%227.5%22 stroke=%22none%22/%3E%3Cellipse cx=%2233%22 cy=%2223.5%22 rx=%227.5%22 ry=%228%22 stroke=%22none%22/%3E%3Cpath d=%22M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z%22 stroke=%22none%22/%3E%3Cpath d=%22M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z%22 stroke=%22none%22/%3E%3Cpath d=%22M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z%22 stroke=%22none%22/%3E%3Cpath d=%22M16 37l4-3 4 3 4-3 4 3 4-3 4 3%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%222.1%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3Cpath d=%22M41 33.2L58.6 30.4%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%221.5%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M58.5 33.6c4.5 1.4 6.2 5 4 8.4-1 1.6-3 1.6-3.6.1%22 fill=%22none%22 stroke-width=%222.6%22 stroke-linecap=%22round%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%224.4%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%222.7%22 stroke=%22none%22/%3E%3Ccircle cx=%2246.2%22 cy=%2226.7%22 r=%221.3%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Cpath d=%22M4 55.5c15-3 39-3 54 0%22 fill=%22none%22 stroke-width=%222.4%22 stroke-linecap=%22round%22/%3E%3C/g%3E%3C/svg%3E">
@@ -609,6 +609,15 @@ body.splitting .pages, body.splitting iframe { pointer-events: none; }
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
 
+/* ---------- recently opened documents (start page) ---------- */
+.recent { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px 10px; font-size: 13px; color: var(--muted); margin-top: -16px; max-width: min(1400px, 100%); }
+.recent-list { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.recent-item { display: inline-flex; align-items: stretch; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); overflow: hidden; }
+.recent-open { border: 0; background: none; font: inherit; font-weight: 550; color: var(--text); padding: 4px 9px; cursor: pointer; max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.recent-open:hover { background: var(--accent-soft); color: var(--accent); }
+.recent-x { border: 0; border-left: 1px solid var(--border); background: none; color: var(--muted); padding: 0 8px; cursor: pointer; font: inherit; font-size: 15px; line-height: 1; }
+.recent-x:hover { color: var(--danger); background: var(--surface-2); }
+
 /* ---------- picture tools (an opened picture: brightness, contrast, greyscale, rotation, crop) ---------- */
 .pic-only { display: none !important; }
 body.is-image .tool.pic-only { display: grid !important; }
@@ -638,7 +647,7 @@ body.is-image .page img { filter: var(--pic-filter, none); }
   <div class="brand">
     <span class="logo"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#287130"/><g transform="translate(2.5 1) scale(0.9)" fill="#ffffff" stroke="#ffffff"><path d="M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6" fill="none" stroke-width="3.8" stroke-linecap="round"/><path d="M21 43l-1 10M30 44v9M38 43l1 10" stroke-width="3.6" stroke-linecap="round"/><ellipse cx="21" cy="25" rx="7" ry="7.5" stroke="none"/><ellipse cx="33" cy="23.5" rx="7.5" ry="8" stroke="none"/><path d="M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z" stroke="none"/><path d="M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z" stroke="none"/><path d="M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z" stroke="none"/><path d="M16 37l4-3 4 3 4-3 4 3 4-3 4 3" fill="none" stroke="#287130" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M41 33.2L58.6 30.4" fill="none" stroke="#287130" stroke-width="1.5" stroke-linecap="round"/><path d="M58.5 33.6c4.5 1.4 6.2 5 4 8.4-1 1.6-3 1.6-3.6.1" fill="none" stroke-width="2.6" stroke-linecap="round"/><circle cx="45.5" cy="26.5" r="4.4" fill="#287130" stroke="none"/><circle cx="45.5" cy="26.5" r="2.7" stroke="none"/><circle cx="46.2" cy="26.7" r="1.3" fill="#287130" stroke="none"/><path d="M4 55.5c15-3 39-3 54 0" fill="none" stroke-width="2.4" stroke-linecap="round"/></g></svg></span>
     <span class="brand-name">Kameleon</span>
-    <span class="version" id="appVersion">v1.34</span>
+    <span class="version" id="appVersion">v1.35</span>
   </div>
   <div class="topbar-actions">
     <span class="doc-name" id="docName"></span>
@@ -689,6 +698,7 @@ body.is-image .page img { filter: var(--pic-filter, none); }
       <button type="button" class="btn" id="engineLoadFolder" data-i18n="offline.loadFolder"></button>
     </div>
   </label>
+  <div class="recent" id="recent" hidden><span class="recent-label" data-i18n="recent.title">Recently opened:</span><div class="recent-list" id="recentList"></div></div>
   <!-- The workflow (also copied into Help); the buttons look as they do in the app. -->
   <section class="wf" id="wfStart" aria-labelledby="wfTitle">
     <h2 class="wf-title" id="wfTitle" data-i18n="wf.title">The workflow</h2>
@@ -1036,7 +1046,7 @@ body.is-image .page img { filter: var(--pic-filter, none); }
     </div>
     <input type="file" id="offlineZip" class="visually-hidden" accept=".zip,application/zip" multiple tabindex="-1">
     <input type="file" id="offlineFolder" class="visually-hidden" webkitdirectory multiple tabindex="-1">
-    <p class="muted small help-version help-part">Kameleon v1.34 · <span data-i18n="app.tagline"></span></p>
+    <p class="muted small help-version help-part">Kameleon v1.35 · <span data-i18n="app.tagline"></span></p>
     <div class="modal-actions">
       <button type="button" value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
       <button type="button" class="btn ai-part" id="aiCopyPrompt" data-i18n="ai.copyPrompt">Copy prompt only</button>
@@ -1118,6 +1128,10 @@ const I18N = {
     "wf.6.both": "<b>Beide Sprachen</b>: nebeneinander, auf abwechselnden Seiten oder Absatz für Absatz.",
 
     "upload.title": "Dokument hier ablegen oder <u>Datei auswählen</u>",
+    "recent.title": "Zuletzt geöffnet:",
+    "recent.remove": "Aus der Liste entfernen",
+    "recent.gone": "Diese Datei ist nicht mehr gespeichert – bitte erneut öffnen.",
+    "msg.syncedTabs": "{n} Übersetzung(en) aus einem anderen Tab übernommen.",
     "upload.engine": "PDF-Engine wird geladen (ca. 4 MB, nur beim ersten Mal)…",
 
     "view.original": "Original",
@@ -1511,6 +1525,10 @@ const I18N = {
     "wf.6.both": "<b>Both languages</b>: side by side, on alternating pages, or paragraph by paragraph.",
 
     "upload.title": "Drop a document here or <u>choose a file</u>",
+    "recent.title": "Recently opened:",
+    "recent.remove": "Remove from the list",
+    "recent.gone": "This file is no longer stored – please open it again.",
+    "msg.syncedTabs": "{n} translation(s) taken over from another tab.",
     "upload.engine": "Loading the PDF engine (about 4 MB, the first time only)…",
 
     "view.original": "Original",
@@ -8221,7 +8239,9 @@ const { Engine, createHandler, LEGACY_KINDS, LEGACY_TO_MODERN, MUPDF_URL, zipEnt
 const WORKER_URL = URL.createObjectURL(new Blob([ENGINE_SRC], { type: "text/javascript" }));
 
 const $ = (sel) => document.querySelector(sel);
-const LS_LAST = "pdftr:last";
+const LS_RECENT = "pdftr:recent"; // the documents kept for reopening: [{id, name, at, size}]
+const SS_DOC = "pdftr:tab-doc"; // the document open in this tab (sessionStorage: every tab has its own)
+const RECENT_MAX = 8, RECENT_BYTES = 300 * 1048576;
 const lsKey = (id) => `pdftr:tr:${id}`;
 const GAP = 10; // px between segment cards
 
@@ -8442,11 +8462,13 @@ async function sha256(bytes) {
   return [...new Uint8Array(hash)].slice(0, 12).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-let saveTimer = null, storageWarned = false;
+let saveTimer = null, storageWarned = false, persistedJson = ""; // (persistedJson: what this tab last read or wrote)
 function storeTranslations() {
   if (!state.doc) return;
   try {
-    localStorage.setItem(lsKey(state.doc.id), JSON.stringify(state.translations));
+    const json = JSON.stringify(state.translations);
+    localStorage.setItem(lsKey(state.doc.id), json);
+    persistedJson = json;
   } catch (_) { // quota exceeded or private mode: say so once per document
     if (!storageWarned) { storageWarned = true; toast(t("msg.storageFull"), "error"); }
   }
@@ -8612,7 +8634,7 @@ async function loadBytes(bytes, name, remember, knownId = null) {
       : (setLoading(t("msg.readingBook")), await pool.workers[0].call("extractBook"));
     if (stale()) return;
     console.info(`Extracted ${segments.length} segments from ${pageCount} pages in ${Math.round(performance.now() - started)} ms using ${pool.workers.length} worker(s)`);
-    if (remember) idbPut({ name, bytes: image ? original : bytes, id }); // (a picture is stored as it was)
+    if (remember) rememberDocument(name, image ? original : bytes, id); else touchRecent(id); // (a picture is stored as it was)
     const restored = kind === "pdf" ? await restoreOcr(id, segments, pages) : { segments, ocr: null };
     if (stale()) return;
     openDocument({ id, name, kind, pages, segments: restored.segments, ocr: restored.ocr, image }, bytes);
@@ -8696,11 +8718,13 @@ function openDocument(doc, bytes) {
   segIndex.clear();
   for (const s of doc.segments) segIndex.set(s.id, s);
   try {
-    state.translations = JSON.parse(localStorage.getItem(lsKey(doc.id)) || "{}");
-    localStorage.setItem(LS_LAST, doc.id);
+    persistedJson = localStorage.getItem(lsKey(doc.id)) || "{}";
+    state.translations = JSON.parse(persistedJson);
   } catch (_) {
     state.translations = {};
+    persistedJson = "";
   }
+  try { sessionStorage.setItem(SS_DOC, doc.id); } catch (_) { /* no session storage: no restore on reload */ }
   $("#uploadView").hidden = true;
   $("#workView").hidden = false;
   $("#btnNew").hidden = false;
@@ -8829,7 +8853,7 @@ function closeDocument() {
   segIndex.clear();
   resetHistory();
   busy("");
-  try { localStorage.removeItem(LS_LAST); } catch (_) { /* ignore */ }
+  try { sessionStorage.removeItem(SS_DOC); } catch (_) { /* ignore */ }
   pool.all("close").catch(() => {});
   observer.disconnect();
   clearImageCache();
@@ -9791,15 +9815,107 @@ function init() {
     }, 150);
   });
 
-  // Start the engine right away, and restore the last session.
+  // Start the engine right away. A reloaded tab gets its own document back; a new tab shows the
+  // start page with the recently opened documents, so several files can be open side by side.
   startEngine();
-  let last = null;
-  try { last = localStorage.getItem(LS_LAST); } catch (_) { /* ignore */ }
-  if (last) {
-    idbGet().then((saved) => { // (unless the user has opened a file in the meantime)
+  $("#recentList").addEventListener("click", (e) => {
+    const b = e.target.closest("button");
+    if (!b) return;
+    if (b.classList.contains("recent-x")) forgetDocument(b.dataset.id); else openRecent(b.dataset.id);
+  });
+  window.addEventListener("storage", onStorageFromOtherTab);
+  migrateLastDocument().then(() => {
+    renderRecent();
+    let tabDoc = null;
+    try { tabDoc = sessionStorage.getItem(SS_DOC); } catch (_) { /* ignore */ }
+    if (!tabDoc) return;
+    idbGet(`doc:${tabDoc}`).then((saved) => { // (unless the user has opened a file in the meantime)
       if (saved && saved.bytes && !loadSeq && !state.doc) loadBytes(saved.bytes, saved.name, false, saved.id);
     });
+  });
+}
+
+/* ---------------------------------------------------------- recent documents */
+
+function readRecent() {
+  try { return JSON.parse(localStorage.getItem(LS_RECENT) || "[]"); } catch (_) { return []; }
+}
+function writeRecent(list) {
+  try { localStorage.setItem(LS_RECENT, JSON.stringify(list)); } catch (_) { /* storage blocked */ }
+}
+
+/** Keep a document for reopening (IndexedDB), newest first; the oldest go when the list is full. */
+async function rememberDocument(name, bytes, id) {
+  await idbPut({ name, bytes, id }, `doc:${id}`);
+  const list = readRecent().filter((r) => r.id !== id);
+  list.unshift({ id, name, at: Date.now(), size: bytes.length });
+  const keep = [], drop = [];
+  let total = 0;
+  for (const r of list) { total += r.size || 0; (keep.length < RECENT_MAX && total <= RECENT_BYTES ? keep : drop).push(r); }
+  writeRecent(keep);
+  for (const r of drop) idbDel(`doc:${r.id}`);
+  renderRecent();
+}
+
+function touchRecent(id) {
+  const list = readRecent(), i = list.findIndex((r) => r.id === id);
+  if (i < 0) return;
+  const [r] = list.splice(i, 1);
+  list.unshift({ ...r, at: Date.now() });
+  writeRecent(list);
+  renderRecent();
+}
+
+async function forgetDocument(id) {
+  writeRecent(readRecent().filter((r) => r.id !== id));
+  await idbDel(`doc:${id}`);
+  renderRecent();
+}
+
+async function openRecent(id) {
+  const saved = await idbGet(`doc:${id}`);
+  if (!saved || !saved.bytes) { toast(t("recent.gone"), "error"); forgetDocument(id); return; }
+  loadBytes(saved.bytes, saved.name, false, saved.id);
+}
+
+function renderRecent() {
+  const list = readRecent(), box = $("#recent");
+  if (!box) return;
+  box.hidden = !list.length;
+  $("#recentList").innerHTML = list.map((r) => `<span class="recent-item"><button type="button" class="recent-open" data-id="${r.id}" title="${escapeHtml(r.name)}">${escapeHtml(r.name)}</button><button type="button" class="recent-x" data-id="${r.id}" title="${escapeHtml(t("recent.remove"))}" aria-label="${escapeHtml(t("recent.remove"))}">×</button></span>`).join("");
+}
+
+/** Earlier versions kept one "last" document: it becomes the first entry of the list. */
+async function migrateLastDocument() {
+  const legacy = await idbGet("last");
+  if (!legacy || !legacy.bytes || !legacy.id) return;
+  await rememberDocument(legacy.name || "document.pdf", legacy.bytes, legacy.id);
+  await idbDel("last");
+  try { localStorage.removeItem("pdftr:last"); } catch (_) { /* ignore */ }
+}
+
+/**
+ * The same document in two tabs: when the other tab saves its translations, the segments it
+ * changed are taken over here (this tab's own unsaved edits stay and are saved as usual).
+ */
+function onStorageFromOtherTab(e) {
+  if (!state.doc || e.key === null) { if (e.key === LS_RECENT) renderRecent(); return; }
+  if (e.key === LS_RECENT) { renderRecent(); return; }
+  if (e.key !== lsKey(state.doc.id) || e.newValue === null || e.newValue === persistedJson) return;
+  let incoming, base;
+  try { incoming = JSON.parse(e.newValue); base = JSON.parse(persistedJson || "{}"); } catch (_) { return; }
+  let changed = 0;
+  for (const id of new Set([...Object.keys(incoming), ...Object.keys(base)])) {
+    if ((incoming[id] || "") === (base[id] || "")) continue; // not touched by the other tab
+    if ((state.translations[id] || "") === (incoming[id] || "")) continue;
+    if (incoming[id]) state.translations[id] = incoming[id]; else delete state.translations[id];
+    changed++;
   }
+  persistedJson = e.newValue;
+  if (!changed) return;
+  refreshCards();
+  updateProgress();
+  toast(t("msg.syncedTabs", { n: changed }));
 }
 
 
@@ -11819,7 +11935,7 @@ function initPicture() {
 // from its own browser cache before the network, so language files are written into that cache.
 // ======================================================================
 
-const APP_VERSION = "1.34";
+const APP_VERSION = "1.35";
 // (a change of library version makes a stored set outdated: it is then ignored)
 const OFFLINE_VERSION = `${MUPDF_URL} ${OCR_LIB}`;
 const CORE_SIMD = "tesseract-core-simd-lstm.wasm.js", CORE_PLAIN = "tesseract-core-lstm.wasm.js";

@@ -4,6 +4,14 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.35
+
+- **Several files at the same time.** Open the app in as many browser tabs as you like, each with
+  its own document. A reloaded tab gets its own document back; a new tab shows the start page
+  with a **"Recently opened"** list of the last eight documents, so any of them is one click
+  away (the × removes an entry). The same document in two tabs stays in step: translations saved
+  in one tab appear in the other.
+
 ## 1.34
 
 - **Import: translations that begin with a quotation mark and an inline tag are no longer

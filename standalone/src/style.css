@@ -599,6 +599,15 @@ body.splitting .pages, body.splitting iframe { pointer-events: none; }
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
 
+/* ---------- recently opened documents (start page) ---------- */
+.recent { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px 10px; font-size: 13px; color: var(--muted); margin-top: -16px; max-width: min(1400px, 100%); }
+.recent-list { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.recent-item { display: inline-flex; align-items: stretch; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); overflow: hidden; }
+.recent-open { border: 0; background: none; font: inherit; font-weight: 550; color: var(--text); padding: 4px 9px; cursor: pointer; max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.recent-open:hover { background: var(--accent-soft); color: var(--accent); }
+.recent-x { border: 0; border-left: 1px solid var(--border); background: none; color: var(--muted); padding: 0 8px; cursor: pointer; font: inherit; font-size: 15px; line-height: 1; }
+.recent-x:hover { color: var(--danger); background: var(--surface-2); }
+
 /* ---------- picture tools (an opened picture: brightness, contrast, greyscale, rotation, crop) ---------- */
 .pic-only { display: none !important; }
 body.is-image .tool.pic-only { display: grid !important; }

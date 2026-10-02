@@ -29,6 +29,10 @@ const I18N = {
     "wf.6.both": "<b>Beide Sprachen</b>: nebeneinander, auf abwechselnden Seiten oder Absatz für Absatz.",
 
     "upload.title": "Dokument hier ablegen oder <u>Datei auswählen</u>",
+    "recent.title": "Zuletzt geöffnet:",
+    "recent.remove": "Aus der Liste entfernen",
+    "recent.gone": "Diese Datei ist nicht mehr gespeichert – bitte erneut öffnen.",
+    "msg.syncedTabs": "{n} Übersetzung(en) aus einem anderen Tab übernommen.",
     "upload.engine": "PDF-Engine wird geladen (ca. 4 MB, nur beim ersten Mal)…",
 
     "view.original": "Original",
@@ -422,6 +426,10 @@ const I18N = {
     "wf.6.both": "<b>Both languages</b>: side by side, on alternating pages, or paragraph by paragraph.",
 
     "upload.title": "Drop a document here or <u>choose a file</u>",
+    "recent.title": "Recently opened:",
+    "recent.remove": "Remove from the list",
+    "recent.gone": "This file is no longer stored – please open it again.",
+    "msg.syncedTabs": "{n} translation(s) taken over from another tab.",
     "upload.engine": "Loading the PDF engine (about 4 MB, the first time only)…",
 
     "view.original": "Original",
