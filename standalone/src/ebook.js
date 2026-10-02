@@ -28,26 +28,42 @@ function detectKind(bytes, name = "") {
 
 // --------------------------------------------------------------------- zip
 
-/** Entries of a zip file: {name, method, crc, csize, size, raw (compressed bytes)}. */
+/**
+ * Entries of a zip file: {name, nameBytes, utf8Name, method, crc, csize, size, raw (compressed
+ * bytes)}. Names are decoded as UTF-8 when they are valid UTF-8 (whether or not the entry says
+ * so), otherwise as Latin-1; the original bytes are kept so that an entry copied unchanged keeps
+ * its name byte for byte.
+ */
 function zipEntries(bytes) {
   const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const bad = () => new Error("Not a valid zip file.");
+  const need = (off, len) => { if (!(off >= 0 && len >= 0 && off + len <= bytes.length)) throw bad(); };
+  if (bytes.length < 22) throw bad();
   let eocd = -1;
   for (let i = bytes.length - 22; i >= Math.max(0, bytes.length - 65557); i--) if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
-  if (eocd < 0) throw new Error("Not a valid zip file.");
+  if (eocd < 0) throw bad();
   let p = dv.getUint32(eocd + 16, true);
   const count = dv.getUint16(eocd + 10, true);
-  const utf8 = new TextDecoder(), latin = new TextDecoder("latin1");
+  if (count === 0xffff || p === 0xffffffff) throw new Error("ZIP64 archives are not supported.");
+  const utf8 = new TextDecoder("utf-8", { fatal: true }), latin = new TextDecoder("latin1");
   const out = [];
   for (let i = 0; i < count; i++) {
+    need(p, 46);
     if (dv.getUint32(p, true) !== 0x02014b50) break;
-    const flags = dv.getUint16(p + 8, true), method = dv.getUint16(p + 10, true);
+    const method = dv.getUint16(p + 10, true);
     const crc = dv.getUint32(p + 16, true), csize = dv.getUint32(p + 20, true), size = dv.getUint32(p + 24, true);
     const nlen = dv.getUint16(p + 28, true), xlen = dv.getUint16(p + 30, true), clen = dv.getUint16(p + 32, true);
     const loc = dv.getUint32(p + 42, true);
-    const nameBytes = bytes.subarray(p + 46, p + 46 + nlen);
-    const name = (flags & 0x800 ? utf8 : latin).decode(nameBytes);
+    if (csize === 0xffffffff || size === 0xffffffff || loc === 0xffffffff) throw new Error("ZIP64 archives are not supported.");
+    need(p + 46, nlen + xlen + clen);
+    const nameBytes = bytes.slice(p + 46, p + 46 + nlen);
+    let name, utf8Name = true;
+    try { name = utf8.decode(nameBytes); } catch (_) { name = latin.decode(nameBytes); utf8Name = false; }
+    need(loc, 30);
+    if (dv.getUint32(loc, true) !== 0x04034b50) throw bad();
     const start = loc + 30 + dv.getUint16(loc + 26, true) + dv.getUint16(loc + 28, true);
-    out.push({ name, method, crc, csize, size, raw: bytes.subarray(start, start + csize) });
+    need(start, csize);
+    out.push({ name, nameBytes, utf8Name, method, crc, csize, size, raw: bytes.subarray(start, start + csize) });
     p += 46 + nlen + xlen + clen;
   }
   return out;
@@ -66,7 +82,8 @@ async function zipRead(entry) {
 
 /**
  * Write a zip. Entries are {name, raw, method, crc, csize, size} (copied as they are) or
- * {name, data, store} (compressed here unless `store`).
+ * {name, data, store} (compressed here unless `store`). An entry read by zipEntries keeps its
+ * original name bytes (`nameBytes`); only names of new entries are encoded (as UTF-8).
  */
 async function zipWrite(entries) {
   const enc = new TextEncoder();
@@ -83,14 +100,15 @@ async function zipWrite(entries) {
       }
       csize = raw.length;
     }
-    const name = enc.encode(e.name);
+    const name = e.nameBytes || enc.encode(e.name);
+    const flags = e.nameBytes && !e.utf8Name ? 0 : 0x0800; // 0x800: the name is UTF-8
     const local = new DataView(new ArrayBuffer(30));
-    local.setUint32(0, 0x04034b50, true); local.setUint16(4, 20, true); local.setUint16(6, 0x0800, true); local.setUint16(8, method, true);
+    local.setUint32(0, 0x04034b50, true); local.setUint16(4, 20, true); local.setUint16(6, flags, true); local.setUint16(8, method, true);
     local.setUint32(14, crc, true); local.setUint32(18, csize, true); local.setUint32(22, size, true);
     local.setUint16(26, name.length, true);
     parts.push(new Uint8Array(local.buffer), name, raw);
     const cd = new DataView(new ArrayBuffer(46));
-    cd.setUint32(0, 0x02014b50, true); cd.setUint16(4, 20, true); cd.setUint16(6, 20, true); cd.setUint16(8, 0x0800, true); cd.setUint16(10, method, true);
+    cd.setUint32(0, 0x02014b50, true); cd.setUint16(4, 20, true); cd.setUint16(6, 20, true); cd.setUint16(8, flags, true); cd.setUint16(10, method, true);
     cd.setUint32(16, crc, true); cd.setUint32(20, csize, true); cd.setUint32(24, size, true);
     cd.setUint16(28, name.length, true); cd.setUint32(42, offset, true);
     central.push(new Uint8Array(cd.buffer), name);
@@ -130,32 +148,68 @@ function encodeXml(text) {
   return new TextEncoder().encode(text.replace(/^(<\?xml[^>]*encoding\s*=\s*)(["'])[^"']*\2/i, "$1$2UTF-8$2"));
 }
 
-const NAMED_ENTITIES = {
-  amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: "\u00a0", shy: "\u00ad", ndash: "–", mdash: "—",
-  hellip: "…", laquo: "«", raquo: "»", lsquo: "‘", rsquo: "’", ldquo: "“", rdquo: "”", bdquo: "„", sbquo: "‚",
-  copy: "©", reg: "®", trade: "™", deg: "°", middot: "·", bull: "•", times: "×", euro: "€", thinsp: "\u2009",
-  ensp: "\u2002", emsp: "\u2003", zwnj: "\u200c", zwj: "\u200d", lrm: "\u200e", rlm: "\u200f", sect: "§", para: "¶",
-};
+/** The HTML 4 / XHTML named character references (Latin-1, special and symbol sets). */
+const NAMED_ENTITIES = (() => {
+  const table = { amp: 38, lt: 60, gt: 62, quot: 34, apos: 39 };
+  // Latin-1: consecutive code points from U+00A0.
+  ("nbsp iexcl cent pound curren yen brvbar sect uml copy ordf laquo not shy reg macr deg plusmn sup2 sup3 acute micro para middot cedil sup1 ordm raquo "
+    + "frac14 frac12 frac34 iquest Agrave Aacute Acirc Atilde Auml Aring AElig Ccedil Egrave Eacute Ecirc Euml Igrave Iacute Icirc Iuml ETH Ntilde Ograve Oacute "
+    + "Ocirc Otilde Ouml times Oslash Ugrave Uacute Ucirc Uuml Yacute THORN szlig agrave aacute acirc atilde auml aring aelig ccedil egrave eacute ecirc euml "
+    + "igrave iacute icirc iuml eth ntilde ograve oacute ocirc otilde ouml divide oslash ugrave uacute ucirc uuml yacute thorn yuml").split(" ")
+    .forEach((n, i) => { table[n] = 0xa0 + i; });
+  // Greek letters: consecutive from U+0391 / U+03B1 (no capital at U+03A2; sigmaf there in lower case).
+  "Alpha Beta Gamma Delta Epsilon Zeta Eta Theta Iota Kappa Lambda Mu Nu Xi Omicron Pi Rho - Sigma Tau Upsilon Phi Chi Psi Omega".split(" ")
+    .forEach((n, i) => { if (n !== "-") { table[n] = 0x391 + i; table[n.toLowerCase()] = 0x3b1 + i; } });
+  table.sigmaf = 0x3c2;
+  // Special and symbol sets: "name code" pairs (codes in hex).
+  ("OElig 152 oelig 153 Scaron 160 scaron 161 Yuml 178 fnof 192 circ 2c6 tilde 2dc thetasym 3d1 upsih 3d2 piv 3d6 ensp 2002 emsp 2003 thinsp 2009 "
+    + "zwnj 200c zwj 200d lrm 200e rlm 200f ndash 2013 mdash 2014 lsquo 2018 rsquo 2019 sbquo 201a ldquo 201c rdquo 201d bdquo 201e dagger 2020 "
+    + "Dagger 2021 bull 2022 hellip 2026 permil 2030 prime 2032 Prime 2033 lsaquo 2039 rsaquo 203a oline 203e frasl 2044 euro 20ac image 2111 "
+    + "weierp 2118 real 211c trade 2122 alefsym 2135 larr 2190 uarr 2191 rarr 2192 darr 2193 harr 2194 crarr 21b5 lArr 21d0 uArr 21d1 rArr 21d2 "
+    + "dArr 21d3 hArr 21d4 forall 2200 part 2202 exist 2203 empty 2205 nabla 2207 isin 2208 notin 2209 ni 220b prod 220f sum 2211 minus 2212 "
+    + "lowast 2217 radic 221a prop 221d infin 221e ang 2220 and 2227 or 2228 cap 2229 cup 222a int 222b there4 2234 sim 223c cong 2245 asymp 2248 "
+    + "ne 2260 equiv 2261 le 2264 ge 2265 sub 2282 sup 2283 nsub 2284 sube 2286 supe 2287 oplus 2295 otimes 2297 perp 22a5 sdot 22c5 lceil 2308 "
+    + "rceil 2309 lfloor 230a rfloor 230b lang 2329 rang 232a loz 25ca spades 2660 clubs 2663 hearts 2665 diams 2666").split(" ")
+    .forEach((x, i, a) => { if (i % 2 === 0) table[x] = parseInt(a[i + 1], 16); });
+  for (const k of Object.keys(table)) table[k] = String.fromCodePoint(table[k]);
+  return table;
+})();
+
+/** Allowed in XML 1.0 text: not a control character (other than tab, LF, CR), not a surrogate, not U+FFFE/U+FFFF. */
+const xmlCharOk = (cp) => (cp >= 0x20 || cp === 9 || cp === 10 || cp === 13) && !(cp >= 0xd800 && cp <= 0xdfff) && cp !== 0xfffe && cp !== 0xffff && cp <= 0x10ffff;
 
 function decodeEntities(s) {
   if (!s.includes("&")) return s;
   return s.replace(/&(#x[0-9a-f]+|#\d+|[a-z][a-z0-9]*);/gi, (all, e) => {
     if (e[0] === "#") {
       const cp = e[1] === "x" || e[1] === "X" ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);
-      try { return String.fromCodePoint(cp); } catch (_) { return all; }
+      return xmlCharOk(cp) ? String.fromCodePoint(cp) : ""; // (a character XML may not hold is left out)
     }
     const v = NAMED_ENTITIES[e] ?? NAMED_ENTITIES[e.toLowerCase()];
     return v === undefined ? all : v;
   });
 }
 
-const escapeXmlText = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+/** Characters XML 1.0 may not hold: control characters, U+FFFE/U+FFFF and lone surrogates. */
+const XML_ILLEGAL = /[\x00-\x08\x0b\x0c\x0e-\x1f￾￿]|[\ud800-\udbff](?![\udc00-\udfff])|(?<![\ud800-\udbff])[\udc00-\udfff]/g;
+const escapeXmlText = (s) => s.replace(XML_ILLEGAL, "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+/**
+ * A literal "<1>", "</2>" or "<3/>" in a text would look like one of a segment's tag markers: it
+ * is shown as ‹1›, ‹/2›, ‹3/› in the segment text and turned back when written out.
+ */
+const escapeMarkers = (s) => (s.includes("<") ? s.replace(/<(\/?\d+\/?)>/g, "‹$1›") : s);
+const unescapeMarkers = (s) => (s.includes("‹") ? s.replace(/‹(\/?\d+\/?)›/g, "<$1>") : s);
+
+/** HTML elements that never have content: in (X)HTML-ish files "<br>" without a slash is complete. */
+const HTML_VOID = new Set(["area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"]);
 
 /**
  * A forgiving XML scanner that keeps source offsets: elements {name (local, lower case), s, cs,
- * ce, e, kids} where [cs, ce) is the content; text {text: true, s, e}.
+ * ce, e, kids} where [cs, ce) is the content; text {text: true, s, e}. Elements named in `voids`
+ * are taken as empty even when their start tag has no slash.
  */
-function parseXml(src) {
+function parseXml(src, voids = null) {
   const root = { name: "#root", s: 0, cs: 0, ce: src.length, e: src.length, kids: [], parent: null };
   let cur = root, i = 0;
   const n = src.length;
@@ -195,7 +249,7 @@ function parseXml(src) {
         const qname = m ? m[1] : "";
         const el = { name: localName(qname), qname, s: lt, cs: end, kids: [], parent: cur };
         cur.kids.push(el);
-        if (src[end - 2] === "/") { el.ce = end; el.e = end; el.empty = true; } else cur = el;
+        if (src[end - 2] === "/" || (voids && voids.has(el.name))) { el.ce = end; el.e = end; el.empty = true; } else cur = el;
       }
     }
     i = end;
@@ -294,7 +348,7 @@ function makeSegment(src, run, rules, out, tag, block = null) {
   }
   const walk = (k) => {
     if (k.other) return;
-    if (k.text) { text += k.cdata ? src.slice(k.s + 9, k.e - 3) : decodeEntities(src.slice(k.s, k.e)); return; }
+    if (k.text) { text += escapeMarkers(k.cdata ? src.slice(k.s + 9, k.e - 3) : decodeEntities(src.slice(k.s, k.e))); return; }
     if (rules.br && k.name === rules.br) { text += "\ue000"; return; }
     const n = next++;
     // Images, anchors and footnote references ("1", "[2]", "*": no letters) are kept whole and
@@ -329,7 +383,7 @@ function markupOf(translation, tags, rules) {
     else {
       const id = Number(m[2]);
       if (!tags[id]) pieces.push({ text: m[0] }); // not ours: keep as text
-      else pieces.push({ id, close: !!m[1], empty: !!m[3] });
+      else if (!tags[id].initial) pieces.push({ id, close: !!m[1], empty: !!m[3] }); // (the drop cap's tag is applied below)
     }
     last = re.lastIndex;
   }
@@ -342,33 +396,49 @@ function markupOf(translation, tags, rules) {
     const top = stack.length ? stack[stack.length - 1] : -1;
     if (top >= 0 && pieces[top].id === p.id) { stack.pop(); keep.add(top); keep.add(i); }
   });
-  const used = new Set();
-  let out = "";
+  const used = new Set(), out = [];
   pieces.forEach((p, i) => {
-    if (p.text !== undefined) { out += escapeXmlText(p.text); return; }
-    if (p.br) { out += rules.br ? "<br/>" : " "; return; }
+    if (p.text !== undefined) { out.push({ xml: escapeXmlText(unescapeMarkers(p.text)) }); return; }
+    if (p.br) { out.push({ xml: rules.br ? "<br/>" : " " }); return; }
     const tag = tags[p.id];
-    if (p.empty) { if (tag.empty) { out += tag.empty; used.add(p.id); } return; }
+    if (p.empty) { if (tag.empty) { out.push({ xml: tag.empty, id: p.id }); used.add(p.id); } return; }
     if (!keep.has(i) || tag.empty) return;
-    out += p.close ? tag.close : tag.open;
+    out.push(p.close ? { xml: tag.close } : { xml: tag.open, id: p.id });
     used.add(p.id);
   });
-  // Footnote references, images and anchors the translator dropped are put back at the end.
-  for (const [id, tag] of Object.entries(tags)) if (tag.keep && !used.has(Number(id))) out += tag.empty;
+  restoreDropped(out, tags, used);
+  let xml = out.map((o) => o.xml).join("");
   // The drop cap goes on the translation's first letter.
   const initial = Object.values(tags).find((tag) => tag.initial);
   if (initial) {
-    const m = /^((?:<[^>]*>|&[^;]*;|[^\p{L}<&])*)(\p{L})/u.exec(out);
-    if (m) out = m[1] + initial.open + m[2] + initial.close + out.slice(m[0].length);
+    const m = /^((?:<[^>]*>|&[^;]*;|[^\p{L}<&])*)(\p{L})/u.exec(xml);
+    if (m) xml = m[1] + initial.open + m[2] + initial.close + xml.slice(m[0].length);
   }
-  return out;
+  return xml;
+}
+
+/**
+ * Footnote references, images, anchors and field characters the translator dropped are put back
+ * where they were: before the first kept tag with a higher number, else at the end. `out` is a
+ * list of {xml, id?}; `extra(id)` adds fields to the entries put back.
+ */
+function restoreDropped(out, tags, used, extra = () => ({})) {
+  for (const id of Object.keys(tags).map(Number).sort((a, b) => a - b)) {
+    if (!tags[id].keep || used.has(id)) continue;
+    let at = out.findIndex((o) => o.id > id);
+    if (at < 0) at = out.length;
+    out.splice(at, 0, { xml: tags[id].empty, id, ...extra(id) });
+    used.add(id);
+  }
 }
 
 // ------------------------------------------------------------------- books
 
 const dirOf = (p) => (p.includes("/") ? p.slice(0, p.lastIndexOf("/") + 1) : "");
 function resolvePath(base, href) {
-  const parts = (dirOf(base) + decodeURIComponent(href.split("#")[0])).split("/");
+  let ref = href.split("#")[0];
+  try { ref = decodeURIComponent(ref); } catch (_) { /* not percent-encoded: taken as it is */ }
+  const parts = (dirOf(base) + ref).split("/");
   const out = [];
   for (const p of parts) { if (p === "..") out.pop(); else if (p !== "." && p !== "") out.push(p); }
   return out.join("/");
@@ -424,7 +494,7 @@ async function openBook(bytes, kind) {
   }
   const segments = [];
   files.forEach((f, fi) => {
-    const root = parseXml(f.src);
+    const root = parseXml(f.src, f.type === "xhtml" ? HTML_VOID : null);
     const segs = [];
     const desc = f.type === "fb2" ? findAll(root, (k) => k.name === "description")[0] : null;
     const descEnd = desc ? desc.e : -1;
@@ -487,7 +557,7 @@ async function saveBook(book, bytes, segments, translations, opts = {}) {
   } else {
     const entries = [];
     for (const e of book.entries) {
-      if (changed.has(e.name)) entries.push({ name: e.name, data: encodeXml(changed.get(e.name)), store: e.name === "mimetype" });
+      if (changed.has(e.name)) entries.push({ ...e, data: encodeXml(changed.get(e.name)), store: e.name === "mimetype" });
       else if (e.name === "mimetype") entries.unshift({ ...e, data: await zipRead(e), store: true });
       else entries.push(e);
     }
@@ -531,7 +601,9 @@ function setBookLanguage(src, type, lang) {
   if (!code) return src;
   if (type === "opf") return src.replace(/(<dc:language\b[^>]*>)[^<]*(<\/dc:language>)/i, `$1${code}$2`);
   if (type === "xhtml") {
-    return src.replace(/<html\b[^>]*>/i, (tag) => tag.replace(/(\s(?:xml:)?lang\s*=\s*)(["'])[^"']*\2/gi, `$1$2${code}$2`));
+    return src.replace(/<html\b[^>]*>/i, (tag) => (/\s(?:xml:)?lang\s*=/i.test(tag)
+      ? tag.replace(/(\s(?:xml:)?lang\s*=\s*)(["'])[^"']*\2/gi, `$1$2${code}$2`)
+      : tag.replace(/\s*\/?>$/, (end) => ` lang="${code}" xml:lang="${code}"${end.trim()}`)));
   }
   if (type === "fb2") return src.replace(/(<title-info>[\s\S]*?<lang>)[^<]*(<\/lang>)/, `$1${code}$2`);
   return src;
@@ -579,7 +651,8 @@ function lineOf(chars, i) {
   return lo;
 }
 
-const matchKey = (s) => s.replace(/<\/?\d+\/?>/g, "").replace(/[\s\u00ad]/g, "").toLowerCase();
+// (an escaped "\u20391\u203a" is matched as the "<1>" the reader sees)
+const matchKey = (s) => unescapeMarkers(s.replace(/<\/?\d+\/?>/g, "")).replace(/[\s\u00ad]/g, "").toLowerCase();
 
 /** A segment's text as the reader sees it: placeholders replaced by what they show ("1"). */
 function shownText(text, tags) {

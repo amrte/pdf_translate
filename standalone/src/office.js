@@ -15,13 +15,36 @@ const OFFICE_MIME = {
 const OFFICE_LAYOUT = { docx: [595, 842, 10], pptx: [720, 540, 12], xlsx: [842, 595, 11] };
 const XLSX_MAX_ROWS = 2000, XLSX_MAX_COLS = 50;
 
-/** "docx", "pptx" or "xlsx" from the parts of a zip, or null. */
+/** Content types of the main parts, and the usual paths (used when the package has no _rels/.rels). */
+const OFFICE_MAIN_TYPE = {
+  docx: /application\/vnd\.(?:openxmlformats-officedocument\.wordprocessingml\.document|ms-word\.(?:document|template)\.macroEnabled|openxmlformats-officedocument\.wordprocessingml\.template)\.main\+xml/,
+  pptx: /application\/vnd\.(?:openxmlformats-officedocument\.presentationml\.(?:presentation|slideshow|template)|ms-powerpoint\.\w+\.macroEnabled)\.main\+xml/,
+  xlsx: /application\/vnd\.(?:openxmlformats-officedocument\.spreadsheetml\.(?:sheet|template)|ms-excel\.\w+\.macroEnabled)\.main\+xml/,
+};
+const OFFICE_MAIN_PATH = { docx: "word/document.xml", pptx: "ppt/presentation.xml", xlsx: "xl/workbook.xml" };
+
+/**
+ * "docx", "pptx" or "xlsx" from the parts of a zip, or null. (Synchronous, so the compressed
+ * package relationships cannot be read here: the kind comes from [Content_Types].xml when that
+ * part is stored uncompressed, else from the names of the parts; openOffice then resolves the
+ * main part itself.)
+ */
 function officeKindOf(bytes) {
   try {
-    const names = new Set(zipEntries(bytes).map((e) => e.name));
-    if (names.has("word/document.xml")) return "docx";
-    if (names.has("ppt/presentation.xml")) return "pptx";
-    if (names.has("xl/workbook.xml")) return "xlsx";
+    const entries = zipEntries(bytes);
+    const ct = entries.find((e) => e.name === "[Content_Types].xml");
+    if (ct && ct.method === 0) {
+      const types = new TextDecoder().decode(ct.raw);
+      for (const kind of Object.keys(OFFICE_MAIN_TYPE)) if (OFFICE_MAIN_TYPE[kind].test(types)) return kind;
+    }
+    const names = entries.map((e) => e.name);
+    for (const kind of Object.keys(OFFICE_MAIN_PATH)) {
+      const main = OFFICE_MAIN_PATH[kind];
+      if (names.some((n) => n === main || new RegExp(`^${main.replace(/\.xml$/, "")}\\d*\\.xml$`).test(n))) return kind;
+    }
+    if (names.some((n) => n.startsWith("word/"))) return "docx";
+    if (names.some((n) => n.startsWith("ppt/"))) return "pptx";
+    if (names.some((n) => n.startsWith("xl/"))) return "xlsx";
   } catch (_) { /* not a zip */ }
   return null;
 }
@@ -77,12 +100,12 @@ function oxParagraph(src, p, ctx) {
     const rpr = rprEl ? src.slice(rprEl.s, rprEl.e) : "";
     const style = { rpr, wraps, open: src.slice(r.s, r.cs), close: src.slice(r.ce, r.e), q: r.qname };
     style.key = wraps.map((w) => w.open).join("") + "|" + runKey(rpr);
-    const atom = (xml, shown = "") => add({ t: "atom", xml: style.open + rpr + xml + style.close, shown }, top);
+    const atom = (xml, shown = "") => add({ t: "atom", xml: style.open + rpr + xml + style.close, shown, wraps }, top);
     for (const k of r.kids) {
       if (k.text || k.other || OX_DROP.has(k.name)) continue;
       if (k.name === "t") {
         style.tq = k.qname;
-        add({ t: "text", text: plainOf(src, k.kids), style }, top);
+        add({ t: "text", text: escapeMarkers(plainOf(src, k.kids)), style }, top);
       } else if ((k.name === "br" || k.name === "cr") && !/type\s*=\s*["'](page|column)/.test(src.slice(k.s, k.cs))) {
         add({ t: "br", style }, top);
       } else if (k.name === "nobreakhyphen") add({ t: "text", text: "\u2011", style }, top);
@@ -101,7 +124,7 @@ function oxParagraph(src, p, ctx) {
     }
     if (k.name === "r") { run(k, wraps, top); return; }
     if (k.name === "t" && plainT) {
-      add({ t: "text", text: plainOf(src, k.kids), style: { rpr: "", wraps, key: "|", plain: true, tq: k.qname } }, top);
+      add({ t: "text", text: escapeMarkers(plainOf(src, k.kids)), style: { rpr: "", wraps, key: "|", plain: true, tq: k.qname } }, top);
       return;
     }
     if (k.name === "br" && k.qname.includes(":")) { // DrawingML line break <a:br><a:rPr/></a:br>
@@ -116,8 +139,17 @@ function oxParagraph(src, p, ctx) {
       for (const c of k.kids) if (!(c.kids && /pr$/.test(c.name))) visit(c, [...wraps, w], top);
       return;
     }
-    // Anything else (a DrawingML field <a:fld>, math, a content control) is kept as it is.
-    add({ t: "atom", xml: src.slice(k.s, k.e), shown: k.name === "fld" ? plainOf(src, k.kids).trim() : "" }, top);
+    // A run-level content control: <w:sdt><w:sdtPr/>…<w:sdtContent>runs</w:sdtContent></w:sdt>
+    // is a wrapper around its content's runs.
+    const content = k.name === "sdt" && !hasDeep(k, OX_BLOCK) ? firstNamed(k, "sdtcontent") : null;
+    if (content && content.kids) {
+      const props = k.kids.filter((c) => c.kids && /pr$/.test(c.name)).map((c) => src.slice(c.s, c.e)).join("");
+      const w = { open: src.slice(k.s, k.cs) + props + src.slice(content.s, content.cs), close: src.slice(content.ce, content.e) + src.slice(k.ce, k.e) };
+      for (const c of content.kids) visit(c, [...wraps, w], top);
+      return;
+    }
+    // Anything else (a DrawingML field <a:fld>, math, an empty content control) is kept as it is.
+    add({ t: "atom", xml: src.slice(k.s, k.e), shown: k.name === "fld" ? plainOf(src, k.kids).trim() : "", wraps }, top);
   };
   for (const k of p.kids) visit(k, [], k);
   flush();
@@ -153,11 +185,12 @@ function oxSegment(src, p, toks, s, e, ctx) {
   const list = [];
   for (const tk of toks) {
     const prev = list[list.length - 1];
-    if (tk.t === "atom" && prev && prev.t === "atom") list[list.length - 1] = { ...prev, xml: prev.xml + tk.xml, shown: prev.shown + tk.shown };
+    if (tk.t === "atom" && prev && prev.t === "atom" && oxWrapKey(prev.wraps) === oxWrapKey(tk.wraps)) list[list.length - 1] = { ...prev, xml: prev.xml + tk.xml, shown: prev.shown + tk.shown };
     else list.push(tk);
   }
   const plain = list.map((tk) => (tk.t === "text" ? tk.text : tk.t === "br" ? "\n" : tk.t === "atom" ? tk.shown : "")).join("");
-  if (!hasLetters(plain)) return plain.trim() ? [escapeXmlText(plain).replace(/\n/g, "<br/>")] : [];
+  // No text of its own (only fields such as a slide's date, or line breaks): shown, not translated.
+  if (!hasLetters(plain) || !list.some((tk) => tk.t === "text")) return plain.trim() ? [escapeXmlText(plain).replace(/\n/g, "<br/>")] : [];
   // The style with the most text is the paragraph's own; other styles become <n>…</n>.
   const weight = new Map();
   for (const tk of list) if (tk.t === "text") weight.set(tk.style.key, (weight.get(tk.style.key) || 0) + tk.text.length);
@@ -174,6 +207,7 @@ function oxSegment(src, p, toks, s, e, ctx) {
       close();
       const n = next++;
       tags[n] = { empty: tk.xml, keep: true, ...(tk.shown.trim() ? { text: tk.shown } : {}) };
+      if (tk.wraps && tk.wraps.length) styles[n] = { wraps: tk.wraps }; // (the link or field the atom sits in)
       text += `<${n}/>`;
       continue;
     }
@@ -228,33 +262,71 @@ function oxMarkup(translation, seg, opts = {}) {
   if (ox.fmt === "x" && ox.base.plain) {
     // A plain spreadsheet string: one <t>, no formatting.
     let plainText = "";
-    for (const p of pieces) plainText += p.text !== undefined ? p.text : p.br ? "\n" : p.empty && tags[p.id].text ? tags[p.id].text : "";
+    for (const p of pieces) plainText += p.text !== undefined ? unescapeMarkers(p.text) : p.br ? "\n" : p.empty && tags[p.id].text ? tags[p.id].text : "";
     const tq = ox.base.tq || "t";
     return `${ox.pre.join("")}<${tq} xml:space="preserve">${escapeXmlText(plainText)}</${tq}>${ox.post.join("")}`;
   }
-  const used = new Set(), open = [];
-  let out = "";
+  const used = new Set(), open = [], out = []; // out: [{xml, id?, wraps?}]
   const styleNow = () => (open.length && ox.styles[open[open.length - 1]]) || ox.base;
+  const atomWraps = (id) => ({ wraps: (ox.styles[id] || {}).wraps });
   pieces.forEach((p, i) => {
-    if (p.text !== undefined) { out += oxRun(styleNow(), p.text, ox.fmt, opts); return; }
-    if (p.br) { out += oxBreak(styleNow(), ox.fmt, opts); return; }
+    if (p.text !== undefined) { const st = styleNow(); out.push({ xml: oxRun(st, unescapeMarkers(p.text), ox.fmt, opts), wraps: st.wraps }); return; }
+    if (p.br) { const st = styleNow(); out.push({ xml: oxBreak(st, ox.fmt, opts), wraps: st.wraps }); return; }
     const tag = tags[p.id];
-    if (p.empty) { if (tag.empty) { out += tag.empty; used.add(p.id); } return; }
+    if (p.empty) { if (tag.empty) { out.push({ xml: tag.empty, id: p.id, ...atomWraps(p.id) }); used.add(p.id); } return; }
     if (!keep.has(i) || tag.empty) return;
-    if (p.close) { const k = open.lastIndexOf(p.id); if (k >= 0) open.splice(k, 1); } else open.push(p.id);
+    if (p.close) { const k = open.lastIndexOf(p.id); if (k >= 0) open.splice(k, 1); } else { open.push(p.id); out.push({ xml: "", id: p.id }); }
   });
-  for (const [id, tag] of Object.entries(tags)) if (tag.keep && !used.has(Number(id))) out += tag.empty;
-  return ox.pre.join("") + out + ox.post.join("");
+  restoreDropped(out, tags, used, atomWraps);
+  return ox.pre.join("") + oxWrapped(out) + ox.post.join("");
 }
 
+const oxWrapKey = (wraps) => (wraps || []).map((w) => w.open + "\u0001" + w.close).join("\u0002");
+const oxWrapIn = (xml, wraps) => (wraps || []).reduceRight((inner, w) => w.open + inner + w.close, xml);
+
+/**
+ * Join runs (and atoms) and put each stretch of neighbours that sit in the same links, fields or
+ * insertions into one copy of those wrapper elements.
+ */
+function oxWrapped(list) {
+  let xml = "", group = null, key = null;
+  const flush = () => { if (group) xml += oxWrapIn(group.xml, group.wraps); group = null; };
+  for (const o of list) {
+    if (!o.xml) continue;
+    const k = oxWrapKey(o.wraps);
+    if (group && k === key) group.xml += o.xml;
+    else { flush(); group = { xml: o.xml, wraps: o.wraps }; key = k; }
+  }
+  flush();
+  return xml;
+}
+
+/**
+ * Run properties with the target language. In Word's rPr, w:lang goes after w:em and before
+ * w:eastAsianLayout, w:specVanish, w:oMath and w:rPrChange; a run without properties gets some.
+ */
 function withLang(rpr, fmt, lang) {
   const code = (lang || "").replace(/[^A-Za-z0-9-]/g, "");
-  if (!code || !rpr) return rpr;
-  if (fmt === "w") return rpr.replace(/(<w:lang\b[^>]*\bw:val=")[^"]*"/, `$1${code}"`);
-  if (fmt === "a") return rpr.replace(/^(<a:rPr\b[^>]*?\slang=")[^"]*"/, `$1${code}"`);
+  if (!code) return rpr;
+  if (fmt === "w") {
+    if (!rpr) return `<w:rPr><w:lang w:val="${code}"/></w:rPr>`;
+    if (/<w:lang\b[^>]*\bw:val="/.test(rpr)) return rpr.replace(/(<w:lang\b[^>]*\bw:val=")[^"]*"/, `$1${code}"`);
+    if (/<w:lang\b/.test(rpr)) return rpr.replace(/<w:lang\b/, `<w:lang w:val="${code}"`);
+    const langEl = `<w:lang w:val="${code}"/>`;
+    if (/<w:rPr\s*\/>/.test(rpr)) return rpr.replace(/<w:rPr\s*\/>/, `<w:rPr>${langEl}</w:rPr>`);
+    const after = /<w:(?:eastAsianLayout|specVanish|oMath|rPrChange)\b/.exec(rpr);
+    const at = after ? after.index : rpr.lastIndexOf("</w:rPr>");
+    return at < 0 ? rpr : rpr.slice(0, at) + langEl + rpr.slice(at);
+  }
+  if (fmt === "a") {
+    if (!rpr) return `<a:rPr lang="${code}"/>`;
+    if (/^<a:rPr\b[^>]*?\slang="/.test(rpr)) return rpr.replace(/^(<a:rPr\b[^>]*?\slang=")[^"]*"/, `$1${code}"`);
+    return rpr.replace(/^<a:rPr\b/, `<a:rPr lang="${code}"`);
+  }
   return rpr;
 }
 
+/** One run (without the wrapper elements around it: oxWrapped adds those). */
 function oxRun(style, text, fmt, opts) {
   if (!text) return "";
   const rpr = withLang(style.rpr, fmt, opts.lang);
@@ -262,8 +334,7 @@ function oxRun(style, text, fmt, opts) {
   const tq = style.tq || q.replace(/r$/, "t");
   const runOpen = style.open || `<${q}>`, runClose = style.close || `</${q}>`;
   const t = fmt === "a" ? `<${tq}>${escapeXmlText(text)}</${tq}>` : `<${tq} xml:space="preserve">${escapeXmlText(text)}</${tq}>`;
-  const run = `${runOpen.endsWith("/>") ? `<${q}>` : runOpen}${rpr}${t}${runOpen.endsWith("/>") ? `</${q}>` : runClose}`;
-  return (style.wraps || []).reduceRight((inner, w) => w.open + inner + w.close, run);
+  return `${runOpen.endsWith("/>") ? `<${q}>` : runOpen}${rpr}${t}${runOpen.endsWith("/>") ? `</${q}>` : runClose}`;
 }
 
 function oxBreak(style, fmt, opts) {
@@ -275,23 +346,41 @@ function oxBreak(style, fmt, opts) {
     return rpr ? `<${bq}>${rpr}</${bq}>` : `<${bq}/>`;
   }
   const runOpen = style.open && !style.open.endsWith("/>") ? style.open : `<${q}>`;
-  return (style.wraps || []).reduceRight((inner, w) => w.open + inner + w.close, `${runOpen}${rpr}<${q.replace(/r$/, "br")}/></${q}>`);
+  return `${runOpen}${rpr}<${q.replace(/r$/, "br")}/></${q}>`;
+}
+
+/** Elements that must not be repeated in a paragraph's bilingual copy. */
+const OX_COPY_DROP = new Set(["footnotereference", "endnotereference", "commentreference", "commentrangestart", "commentrangeend", "bookmarkstart", "bookmarkend"]);
+
+/** Remove the elements `pred` selects (outermost ones) from a piece of XML. */
+function oxStrip(xml, pred) {
+  const root = parseXml(xml);
+  const ranges = [];
+  const walk = (el) => { for (const k of el.kids || []) if (k.kids) { if (pred(k)) ranges.push([k.s, k.e]); else walk(k); } };
+  walk(root);
+  if (!ranges.length) return xml;
+  let out = "", pos = 0;
+  for (const [s, e] of ranges) { out += xml.slice(pos, s); pos = e; }
+  return out + xml.slice(pos);
 }
 
 /**
- * Bilingual file: a paragraph is repeated with the translation (without numbering, bookmarks
- * and paragraph ids); a spreadsheet cell holds the original and the translation on two lines.
+ * Bilingual file: a paragraph is repeated with the translation (without numbering, bookmarks,
+ * comments, notes, anchored drawings and paragraph ids: those stay with the original); a
+ * spreadsheet cell holds the original and the translation on two lines.
  */
 function oxBilingual(seg, f, tr, opts) {
+  // (a run that held only a dropped reference goes as a whole)
+  const emptied = (r) => r.kids.some((c) => c.kids && OX_COPY_DROP.has(c.name)) && r.kids.every((c) => !c.kids || c.name === "rpr" || OX_COPY_DROP.has(c.name));
+  const once = (xml) => (seg.ox.fmt === "w" ? oxStrip(xml, (k) => OX_COPY_DROP.has(k.name) || (k.name === "r" && (hasDeep(k, OX_BLOCK) || emptied(k)))) : xml);
   if (!seg.block && seg.ox.base.plain) return { s: seg.s, e: seg.e, text: oxMarkup(`${seg.text}\n${tr}`, seg, opts) };
-  if (!seg.block) return { s: seg.s, e: seg.e, text: oxMarkup(seg.text, seg, {}) + oxBreak(seg.ox.base, seg.ox.fmt, {}) + oxMarkup(tr, seg, opts) };
+  if (!seg.block) return { s: seg.s, e: seg.e, text: oxMarkup(seg.text, seg, {}) + oxWrapIn(oxBreak(seg.ox.base, seg.ox.fmt, {}), seg.ox.base.wraps) + once(oxMarkup(tr, seg, opts)) };
   const b = seg.block;
   const inner = f.src.slice(b.s + b.open.length, seg.s) + oxMarkup(tr, seg, opts) + f.src.slice(seg.e, b.e - b.close.length);
   const copy = (b.open + inner + b.close)
     .replace(/\s(?:w14:paraId|w14:textId)="[^"]*"/g, "")
-    .replace(/<w:bookmark(?:Start|End)\b[^>]*\/>/g, "")
     .replace(/<w:numPr>[\s\S]*?<\/w:numPr>/g, "");
-  return { s: b.e, e: b.e, text: copy };
+  return { s: b.e, e: b.e, text: once(copy) };
 }
 
 // ------------------------------------------------------------------ parts
@@ -418,9 +507,20 @@ async function openOffice(bytes, kind) {
     return { fi: files.length - 1, src, root: parseXml(src) };
   };
   const pageBreak = '<div class="pb"></div>';
+  // The main part (word/document.xml, ppt/presentation.xml, xl/workbook.xml, or another name) from
+  // the package relationships, else from the content types, else the usual path.
+  const rootRel = Object.values(oxRels(await text("_rels/.rels"), "")).find((r) => /\/officeDocument$/i.test(r.type));
+  let mainPath = rootRel && byName.has(rootRel.target) ? rootRel.target : null;
+  if (!mainPath) {
+    const ct = (await text("[Content_Types].xml")) || "";
+    for (const o of findAll(parseXml(ct), (k) => k.name === "override")) {
+      if (OFFICE_MAIN_TYPE[kind].test(xmlAttr(ct, o, "ContentType") || "")) { mainPath = (xmlAttr(ct, o, "PartName") || "").replace(/^\//, ""); break; }
+    }
+  }
+  if (!mainPath || !byName.has(mainPath)) mainPath = OFFICE_MAIN_PATH[kind];
 
   if (kind === "docx") {
-    const rels = await relsOf("word/document.xml");
+    const rels = await relsOf(mainPath);
     const parts = Object.values(rels);
     const ofType = (re) => parts.filter((r) => re.test(r.type)).map((r) => r.target).sort();
     const section = async (path, cls, tag) => {
@@ -439,12 +539,12 @@ async function openOffice(bytes, kind) {
       if (chunks.some((c) => typeof c === "object" || /\w/.test(c.replace(/<[^>]*>/g, "")))) preview.push(cls ? `<div class="${cls}">` : "", ...chunks, cls ? "</div>" : "");
     };
     for (const h of ofType(/\/header$/)) await section(h, "hdr", "header");
-    await section("word/document.xml", "", "p");
+    await section(mainPath, "", "p");
     for (const n of ofType(/\/(footnotes|endnotes)$/)) await section(n, "notes", "footnote");
     for (const h of ofType(/\/footer$/)) await section(h, "ftr", "footer");
   } else if (kind === "pptx") {
-    const pres = await text("ppt/presentation.xml");
-    const rels = await relsOf("ppt/presentation.xml");
+    const pres = await text(mainPath);
+    const rels = await relsOf(mainPath);
     const presRoot = parseXml(pres || "");
     const slides = findAll(presRoot, (k) => k.name === "sldid").map((k) => rels[xmlAttr(pres, k, "r:id")]).filter(Boolean).map((r) => r.target);
     for (const [i, path] of slides.entries()) {
@@ -463,7 +563,7 @@ async function openOffice(bytes, kind) {
       }
     }
   } else {
-    const wbPath = "xl/workbook.xml";
+    const wbPath = mainPath;
     const wb = await text(wbPath);
     const rels = await relsOf(wbPath);
     const sstRel = Object.values(rels).find((r) => /\/sharedStrings$/.test(r.type));
@@ -482,21 +582,24 @@ async function openOffice(bytes, kind) {
       preview.push(`<h2>${label(sh.name)}</h2><table>`);
       const data = findAll(f.root, (k) => k.name === "sheetdata")[0];
       const rows = data ? kidsNamed(data, "row") : [];
-      for (const row of rows.slice(0, XLSX_MAX_ROWS)) {
+      for (const [ri, row] of rows.entries()) {
         const cells = [];
         for (const c of kidsNamed(row, "c")) {
           const col = colIndex(xmlAttr(f.src, c, "r"));
-          if (col < 0 || col >= XLSX_MAX_COLS) continue;
           const type = xmlAttr(f.src, c, "t") || "n";
+          // Beyond the preview's size only inline strings matter: they are still translated (as
+          // hidden segments, like shared strings no shown cell uses).
+          const shown = ri < XLSX_MAX_ROWS && col >= 0 && col < XLSX_MAX_COLS;
+          if (!shown && type !== "inlineStr") continue;
           const v = firstNamed(c, "v"), vText = v ? plainOf(f.src, v.kids) : "";
           let chunks = [];
-          if (type === "s") chunks = sstChunks[+vText] || [];
+          if (type === "s") chunks = v ? sstChunks[+vText] || [] : [];
           else if (type === "inlineStr") {
             const is = firstNamed(c, "is");
             if (is) chunks = oxParagraph(f.src, is, { file: f.fi, out: segments, tag: "cell" });
           } else if (type === "b") chunks = [vText === "1" ? "TRUE" : "FALSE"];
           else if (vText) chunks = [escapeXmlText(vText)];
-          cells[col] = chunks;
+          if (shown) cells[col] = chunks;
         }
         if (!cells.length) continue;
         preview.push("<tr>");
@@ -559,7 +662,7 @@ function oxSegHtml(seg, text) {
   let out = "", depth = 0;
   const re = /<(\/?)(\d+)(\/?)>|\n/g;
   let lastAt = 0, m;
-  const esc = escapeXmlText;
+  const esc = (s) => escapeXmlText(unescapeMarkers(s)); // (a literal "<1>" in the text is shown as such)
   while ((m = re.exec(text))) {
     out += esc(text.slice(lastAt, m.index));
     lastAt = re.lastIndex;
