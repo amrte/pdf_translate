@@ -4,6 +4,15 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.25
+
+- **New name and look: Kameleon.** The app is now called Kameleon ("Wechselt die Sprache,
+  behält die Form" / "Changes language, keeps its shape"), with a chameleon icon and a warmer
+  colour scheme in green and yellow, in light and dark mode. Saved files name Kameleon as the
+  author of their annotations.
+- **Start screen:** the drop area is as wide as the workflow overview below it, and the workflow
+  steps are numbered again.
+
 ## 1.24
 
 - **Word, Excel and PowerPoint 97–2003 files** (`.doc`, `.xls`, `.ppt`) can be opened. They are

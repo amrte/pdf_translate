@@ -1919,7 +1919,7 @@ function addMarkups(doc, markups) {
       a = page.createAnnotation("FreeText");
       a.setRect([m.x0, m.y0, m.x0 + m.w, m.y0 + m.h]); a.setContents(m.text);
       a.setDefaultAppearance("Helv", m.size, rgb); a.setBorderWidth(0);
-      a.setAuthor("PDF Translate");
+      a.setAuthor("Kameleon");
       a.update();
       // MuPDF's own appearance uses plain Helvetica, which lacks signs such as ≥ or ✓; draw it
       // with the same font fallback as the translations instead. The text stays editable.
@@ -1929,7 +1929,7 @@ function addMarkups(doc, markups) {
       free(a);
       continue;
     }
-    if (a) { a.setAuthor("PDF Translate"); a.update(); free(a); }
+    if (a) { a.setAuthor("Kameleon"); a.update(); free(a); }
   }
   for (const p of pages.values()) free(p);
 }

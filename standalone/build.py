@@ -32,7 +32,7 @@ def main() -> None:
         raise SystemExit(f"unreplaced placeholders: {leftover}")
     out = HERE / "pdf-translate.html"
     out.write_text(html, "utf-8")
-    print(f"PDF Translate v{version}: wrote {out.relative_to(ROOT)} ({len(html):,} bytes)")
+    print(f"Kameleon v{version}: wrote {out.relative_to(ROOT)} ({len(html):,} bytes)")
 
 
 if __name__ == "__main__":

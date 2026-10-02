@@ -1,4 +1,4 @@
-# PDF Translate – notes for contributors
+# Kameleon (formerly PDF Translate) – notes for contributors
 
 ## Versioning (required for every update)
 

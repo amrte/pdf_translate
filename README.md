@@ -1,4 +1,7 @@
-# PDF Translate
+# Kameleon
+
+*Wechselt die Sprache, behält die Form. / Changes language, keeps its shape.*
+Formerly called PDF Translate; the generated file is still `standalone/pdf-translate.html`.
 
 A small web app for translating PDF documents **without losing their layout**:
 

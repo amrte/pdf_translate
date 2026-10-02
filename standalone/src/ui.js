@@ -428,7 +428,7 @@ function openDocument(doc, bytes) {
   document.body.classList.toggle("is-book", isBook());
   document.body.classList.toggle("is-office", isOffice());
   setDocFormat(FORMAT_LABEL[doc.kind || "pdf"]);
-  document.title = `${doc.name} · PDF Translate`;
+  document.title = `${doc.name} · Kameleon`;
 
   loadOverrides();
   loadRotations();
@@ -556,7 +556,7 @@ function closeDocument() {
   $("#btnNew").hidden = true;
   $("#btnClose").hidden = true;
   $("#docName").textContent = "";
-  document.title = "PDF Translate";
+  document.title = "Kameleon";
   document.body.classList.remove("is-book", "is-office");
   setDocFormat("PDF");
 }
