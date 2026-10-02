@@ -87,6 +87,100 @@ function runKey(rpr) {
  * Turn a paragraph into preview chunks and segments. Returns [string | {seg}]: the paragraph's
  * text as HTML pieces, with {seg: index} where a segment is shown.
  */
+/* ---------------------------------------------------------------- Symbol font, Office Math */
+
+/** The Symbol font's codes (also at U+F000 + code) as Unicode. */
+const SYMBOL_CHARS = (() => {
+  const m = {};
+  const put = (from, str) => { let i = from; for (const ch of str) { m[i++] = ch; } };
+  put(0x22, "∀"); put(0x24, "∃"); put(0x27, "∍"); put(0x2a, "∗"); put(0x2d, "−"); put(0x40, "≅");
+  put(0x41, "ΑΒΧΔΕΦΓΗΙϑΚΛΜΝΟΠΘΡΣΤΥςΩΞΨΖ"); put(0x5c, "∴"); put(0x5e, "⊥");
+  put(0x61, "αβχδεφγηιϕκλμνοπθρστυϖωξψζ"); put(0x7e, "∼");
+  put(0xa0, "€ϒ′≤⁄∞ƒ♣♦♥♠↔←↑→↓°±″≥×∝∂•÷≠≡≈…⏐⎯↵ℵℑℜ℘⊗⊕∅∩∪⊃⊇⊄⊂⊆∈∉∠∇®©™∏√⋅¬∧∨⇔⇐⇑⇒⇓◊〈®©™∑⎛⎜⎝⎡⎢⎣⎧⎨⎩⎪");
+  put(0xf1, "〉∫⌠⎮⌡⎞⎟⎠⎤⎥⎦⎫⎬⎭");
+  return m;
+})();
+const symbolChar = (code) => SYMBOL_CHARS[code >= 0xf000 && code <= 0xf0ff ? code - 0xf000 : code];
+const usesSymbolFont = (rpr) => /<(?:a:sym|a:latin|a:cs|a:ea)\b[^>]*typeface="Symbol"|<w:rFonts\b[^>]*(?:w:ascii|w:hAnsi)="Symbol"|<w:sym\b/.test(rpr || "");
+/** Text of a run in the Symbol font (or with Symbol codes in the private use area) as Unicode. */
+function symbolText(text, rpr) {
+  const symbol = usesSymbolFont(rpr);
+  let out = "";
+  for (const ch of text) {
+    const cp = ch.codePointAt(0);
+    const mapped = (symbol || (cp >= 0xf000 && cp <= 0xf0ff)) ? symbolChar(cp) : null;
+    out += mapped || ch;
+  }
+  return out;
+}
+/** A run's properties without the Symbol font: translated text is Unicode and must not be drawn with it. */
+function withoutSymbolFont(rpr) {
+  if (!rpr || !usesSymbolFont(rpr)) return rpr;
+  return rpr.replace(/<a:sym\b[^>]*\/>/g, "").replace(/<a:(latin|cs|ea)\b[^>]*typeface="Symbol"[^>]*\/>/g, "").replace(/<w:rFonts\b[^>]*="Symbol"[^>]*\/>/g, "");
+}
+
+const SUP = { 0: "⁰", 1: "¹", 2: "²", 3: "³", 4: "⁴", 5: "⁵", 6: "⁶", 7: "⁷", 8: "⁸", 9: "⁹", "+": "⁺", "-": "⁻", "−": "⁻", "(": "⁽", ")": "⁾", n: "ⁿ" };
+const SUB = { 0: "₀", 1: "₁", 2: "₂", 3: "₃", 4: "₄", 5: "₅", 6: "₆", 7: "₇", 8: "₈", 9: "₉", "+": "₊", "-": "₋", "−": "₋", "(": "₍", ")": "₎" };
+/** A superscript or subscript: small digits where fonts have them, else ^i / _i, or ^(…) / _(…). */
+const scriptOf = (text, table, mark) => {
+  const t = text.trim();
+  if (!t) return "";
+  const chars = [...t];
+  if (chars.every((c) => table[c])) return chars.map((c) => table[c]).join("");
+  return /^[\p{L}\p{N}]{1,2}$/u.test(t) ? `${mark}${t}` : `${mark}(${t})`;
+};
+const mathWrap = (t) => (/^[\p{L}\p{N}.,]*$/u.test(t.trim()) && t.trim().length <= 3 ? t.trim() : `(${t.trim()})`);
+
+/**
+ * An Office Math (OMML) equation as readable linear text: fractions as a/b, superscripts and
+ * subscripts with Unicode digits where possible, roots, sums, integrals, brackets, matrices.
+ * The equation itself stays in the file untouched; this is what the segment and the preview show.
+ */
+function ommlText(src, el) {
+  const kids = (e, name) => (e.kids || []).filter((k) => k.kids && k.name === name);
+  const first = (e, name) => kids(e, name)[0];
+  const text = (e) => (e ? lin(e) : "");
+  const attr = (e, name) => (e ? xmlAttr(src, e, name) : null);
+  const lin = (e) => {
+    if (!e) return "";
+    if (e.text) return decodeEntities(src.slice(e.s, e.e));
+    switch (e.name) {
+      case "t": return plainOf(src, e.kids || []);
+      case "r": return (e.kids || []).filter((k) => k.kids && k.name === "t").map(lin).join("");
+      case "f": { const n = text(first(e, "num")), d = text(first(e, "den")); return `${mathWrap(n)}/${mathWrap(d)}`; }
+      case "ssup": return `${text(first(e, "e"))}${scriptOf(text(first(e, "sup")), SUP, "^")}`;
+      case "ssub": return `${text(first(e, "e"))}${scriptOf(text(first(e, "sub")), SUB, "_")}`;
+      case "ssubsup": return `${text(first(e, "e"))}${scriptOf(text(first(e, "sub")), SUB, "_")}${scriptOf(text(first(e, "sup")), SUP, "^")}`;
+      case "spre": return `${scriptOf(text(first(e, "sub")), SUB, "_")}${scriptOf(text(first(e, "sup")), SUP, "^")}${text(first(e, "e"))}`;
+      case "rad": { const deg = text(first(e, "deg")).trim(); return `${deg ? scriptOf(deg, SUP, "^") : ""}√${mathWrap(text(first(e, "e")))}`; }
+      case "nary": {
+        const pr = first(e, "narypr"), chr = attr(pr && first(pr, "chr"), "m:val") || "∫";
+        const sub = text(first(e, "sub")).trim(), sup = text(first(e, "sup")).trim();
+        return `${chr}${sub ? scriptOf(sub, SUB, "_") : ""}${sup ? scriptOf(sup, SUP, "^") : ""} ${text(first(e, "e"))}`;
+      }
+      case "d": {
+        const pr = first(e, "dpr");
+        const beg = attr(pr && first(pr, "begchr"), "m:val") ?? "(", end = attr(pr && first(pr, "endchr"), "m:val") ?? ")", sep = attr(pr && first(pr, "sepchr"), "m:val") ?? ",";
+        return `${beg}${kids(e, "e").map(lin).join(`${sep} `)}${end}`;
+      }
+      case "func": return `${text(first(e, "fname"))}${mathWrap(text(first(e, "e")))}`;
+      case "limlow": return `${text(first(e, "e"))}${scriptOf(text(first(e, "lim")), SUB, "_")}`;
+      case "limupp": return `${text(first(e, "e"))}${scriptOf(text(first(e, "lim")), SUP, "^")}`;
+      case "acc": { const pr = first(e, "accpr"), chr = attr(pr && first(pr, "chr"), "m:val") || "̂"; const t = text(first(e, "e")); return t.length === 1 ? t + chr : `${chr}(${t})`; }
+      case "bar": return `‾(${text(first(e, "e"))})`;
+      case "eqarr": return kids(e, "e").map(lin).join("; ");
+      case "m": if (!kids(e, "mr").length) break; // (a14:m wraps the equation; m:m is a matrix)
+        return `[${kids(e, "mr").map((row) => kids(row, "e").map(lin).join(", ")).join("; ")}]`;
+      case "omathpara": return kids(e, "omath").map(lin).join(" ");
+      case "fallback": return "";
+      default: break;
+    }
+    return (e.kids || []).filter((k) => k.kids || k.text).filter((k) => !k.kids || !/pr$/.test(k.name)).map(lin).join("");
+  };
+  return lin(el).replace(/\s+/g, " ").trim();
+}
+const hasMath = (el) => Boolean(el.kids && (el.name === "omath" || el.name === "omathpara" || findAll(el, (k) => k.name === "omath")[0]));
+
 function oxParagraph(src, p, ctx) {
   const chunks = [];
   let toks = [], first = -1, last = -1;
@@ -106,7 +200,10 @@ function oxParagraph(src, p, ctx) {
       if (k.text || k.other || OX_DROP.has(k.name)) continue;
       if (k.name === "t") {
         style.tq = k.qname;
-        add({ t: "text", text: escapeMarkers(plainOf(src, k.kids)), style }, top);
+        add({ t: "text", text: escapeMarkers(symbolText(plainOf(src, k.kids), rpr)), style }, top);
+      } else if (k.name === "sym") { // <w:sym w:font="Symbol" w:char="F05E"/>: shown as the character it stands for
+        const code = parseInt(xmlAttr(src, k, "w:char") || "", 16);
+        atom(src.slice(k.s, k.e), (/Symbol/i.test(xmlAttr(src, k, "w:font") || "") ? symbolChar(code) : "") || (code ? String.fromCodePoint(code >= 0xf000 ? code - 0xf000 : code) : ""));
       } else if ((k.name === "br" || k.name === "cr") && !/type\s*=\s*["'](page|column)/.test(src.slice(k.s, k.cs))) {
         add({ t: "br", style }, top);
       } else if (k.name === "nobreakhyphen") add({ t: "text", text: "\u2011", style }, top);
@@ -150,7 +247,7 @@ function oxParagraph(src, p, ctx) {
       return;
     }
     // Anything else (a DrawingML field <a:fld>, math, an empty content control) is kept as it is.
-    add({ t: "atom", xml: src.slice(k.s, k.e), shown: k.name === "fld" ? plainOf(src, k.kids).trim() : "", wraps }, top);
+    add({ t: "atom", xml: src.slice(k.s, k.e), shown: k.name === "fld" ? plainOf(src, k.kids).trim() : hasMath(k) ? ommlText(src, k) : "", wraps }, top);
   };
   for (const k of p.kids) visit(k, [], k);
   flush();
@@ -331,7 +428,7 @@ function withLang(rpr, fmt, lang) {
 /** One run (without the wrapper elements around it: oxWrapped adds those). */
 function oxRun(style, text, fmt, opts) {
   if (!text) return "";
-  const rpr = withLang(style.rpr, fmt, opts.lang);
+  const rpr = withLang(withoutSymbolFont(style.rpr), fmt, opts.lang);
   const q = style.q || (fmt === "a" ? "a:r" : fmt === "w" ? "w:r" : "r");
   const tq = style.tq || q.replace(/r$/, "t");
   const runOpen = style.open || `<${q}>`, runClose = style.close || `</${q}>`;

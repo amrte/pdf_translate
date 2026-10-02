@@ -292,8 +292,10 @@ function readBlocks(page, bounds, seps, options) {
       const qb = [Math.min(quad[0], quad[2], quad[4], quad[6]), Math.min(quad[1], quad[3], quad[5], quad[7]),
         Math.max(quad[0], quad[2], quad[4], quad[6]), Math.max(quad[1], quad[3], quad[5], quad[7])];
       if (qb[2] < bounds[0] || qb[0] > bounds[2] || qb[3] < bounds[1] || qb[1] > bounds[3]) return; // off-page
-      const blank = c === " " || !c.trim();
       const info = fontInfo(font);
+      // A Symbol font with its own encoding gives private-use codes: the characters they stand for (α, ⊥, ≤ …)
+      if (c.length === 1) { const cp = c.charCodeAt(0); if (cp >= 0xf020 && cp <= 0xf0ff && /symbol/i.test(info.name)) c = symbolChar(cp) || c; }
+      const blank = c === " " || !c.trim();
       const lig = c === "\ufffd" && Math.abs(line.dir[0]) > 0.99 ? ligatureGuess(font, info, (qb[2] - qb[0]) / size) : null;
       free(font); // release the per-character wrapper right away instead of waiting for GC
       const ck = color.length === 3 ? ((color[0] * 255) << 16) + ((color[1] * 255) << 8) + (color[2] * 255 | 0) : color.join(",");

@@ -4,6 +4,12 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.55
+
+- Equations in PowerPoint and Word files (Office Math) are now shown: the segment and the slide preview show them as readable text – fractions as a/b, powers and indices with small digits, roots, sums, integrals, brackets, matrices – and the equation itself stays in the file untouched.
+- Greek letters and mathematical signs set in the old Symbol font (⊥, α, β, ≤, ∞ …) are read as the characters they stand for – in PDFs as well as in Office files – in segments and in the preview; a translated Office run leaves the Symbol font behind so that its text shows correctly.
+- OCR: Greek is available as a language.
+
 ## 1.54
 
 - Presentations: a field moved or resized inside a scaled group now moves by the right amount, in the preview and in the saved file.
