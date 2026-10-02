@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.46
+
+- PowerPoint: slides are now shown as they look. The preview draws each slide with its background, the shapes and pictures of the slide, its layout and its master, tables, and the text in its real place, size and colour; the "Translated" view sets the translations into the same boxes and shrinks them to fit where needed. SmartArt diagrams are drawn from the copy PowerPoint stores (their text is shown, not yet translated); charts appear as a placeholder box. Speaker notes follow each slide on a page of their own. Decks that cannot be drawn fall back to the former text preview.
+
 ## 1.45
 
 - PowerPoint preview: each slide now shows its text first and its pictures below it, smaller than before and at most six per slide (the rest are counted). Pictures no longer push a slide's text onto a following page, so the preview pages follow the slides more closely.

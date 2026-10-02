@@ -16,7 +16,7 @@ def main() -> None:
         "STYLE": (SRC / "style.css").read_text("utf-8"),
         "I18N": (SRC / "i18n.js").read_text("utf-8").replace("{{VERSION}}", version),
         # The engine (PDF) and the e-book support run together in the workers.
-        "ENGINE": "\n".join((SRC / f).read_text("utf-8") for f in ("engine.js", "ebook.js", "office.js", "legacy.js", "doc.js", "xls.js", "ppt.js")),
+        "ENGINE": "\n".join((SRC / f).read_text("utf-8") for f in ("engine.js", "ebook.js", "office.js", "slides.js", "legacy.js", "doc.js", "xls.js", "ppt.js")),
         # One module: interface, markup tools, field/OCR tools, then start-up.
         "UI": "\n".join((SRC / f).read_text("utf-8") for f in ("ui.js", "markup.js", "tools.js", "picture.js", "offline.js", "main.js")).replace("{{VERSION}}", version),
     }

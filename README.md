@@ -46,9 +46,9 @@ Paragraphs, headings, list items, table cells, text boxes, headers, footers, foo
 speaker notes and spreadsheet text cells become segments; text with its own formatting (bold,
 italic, colour, links) is marked `<1>…</1>`, fields, tabs and footnote references `<2/>`. The
 translations are written back into the file's own XML, so styles, images, charts, formulas and
-numbers stay as they are, and you download a new file in the same format. The viewer shows a simple
-preview of the text (the document as one flow, one page per slide, one page per sheet), not the
-exact Office layout.
+numbers stay as they are, and you download a new file in the same format. PowerPoint slides are
+shown as they look (background, shapes, pictures, tables, text in place); Word and Excel files get a
+simple preview of the text (the document as one flow, one page per sheet), not the exact layout.
 
 **Offline:** Help → "Working offline" downloads the document engine, the text recognition library and
 the chosen OCR languages as a ZIP (about 20 MB). Without internet, load that ZIP or its folder on the
