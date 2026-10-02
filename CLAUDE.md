@@ -7,7 +7,8 @@
 - Add a section for the new version at the top of `CHANGELOG.md` describing the change in
   user-facing terms.
 - Rebuild the standalone app after changing `VERSION` or anything in `standalone/src/`:
-  `python standalone/build.py` (it embeds the version into `standalone/pdf-translate.html`).
+  `python standalone/build.py` (it writes `standalone/Kameleon-<version>.html`, named after the
+  version, and removes the previous build; commit the new file and the removal together).
 
 ## Layout
 
@@ -19,9 +20,10 @@
   `legacy.js` (OLE compound file reader; converts .doc/.xls/.ppt to the modern format on open),
   `doc.js`, `xls.js`, `ppt.js` (the three converters: Word 97–2003 → DOCX, BIFF8 → XLSX, PowerPoint 97–2003 → PPTX),
   `icon.svg` (app icon; the template embeds it as favicon and logo), `ui.js` (interface), `markup.js` (markup tools, page navigation, undo/redo), `tools.js`
-  (moving/resizing fields, per-field style, full screen, passwords, OCR, comparison view), `offline.js`
+  (moving/resizing fields, per-field style, full screen, passwords, OCR, comparison view), `picture.js`
+  (brightness, contrast, rotation and crop for an opened picture), `offline.js`
   (libraries stored in the browser for offline use), `main.js`
-  (start-up). `standalone/pdf-translate.html` is generated – do not edit it by hand.
+  (start-up). `standalone/Kameleon-<version>.html` is generated – do not edit it by hand.
 - `app.py`, `pdf_engine.py`, `static/` – the older server version (Flask + PyMuPDF).
 - `tests/` – pytest suite for the server version: `python -m pytest -q`.
 

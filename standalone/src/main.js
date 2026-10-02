@@ -3,5 +3,6 @@ document.querySelectorAll(".lang-switch button").forEach((b) => b.addEventListen
 document.addEventListener("languagechange", onLanguageChange);
 initMarkup();
 initTools();
+initPicture();
 initOffline();
 init();

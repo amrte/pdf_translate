@@ -3,8 +3,8 @@
 // the segment list is virtualised so documents with thousands of segments stay fast.
 // ======================================================================
 const ENGINE_SRC = document.getElementById("engine-src").textContent;
-const { Engine, createHandler, LEGACY_KINDS, LEGACY_TO_MODERN, MUPDF_URL } = await import(URL.createObjectURL(new Blob(
-  [ENGINE_SRC, "\nexport { Engine, createHandler, LEGACY_KINDS, LEGACY_TO_MODERN, MUPDF_URL };\n"], { type: "text/javascript" })));
+const { Engine, createHandler, LEGACY_KINDS, LEGACY_TO_MODERN, MUPDF_URL, zipEntries, zipRead, zipWrite } = await import(URL.createObjectURL(new Blob(
+  [ENGINE_SRC, "\nexport { Engine, createHandler, LEGACY_KINDS, LEGACY_TO_MODERN, MUPDF_URL, zipEntries, zipRead, zipWrite };\n"], { type: "text/javascript" })));
 // Workers are classic scripts (module workers are refused on file:// pages); the engine
 // loads MuPDF with a dynamic import(), which classic workers support.
 const WORKER_URL = URL.createObjectURL(new Blob([ENGINE_SRC], { type: "text/javascript" }));
@@ -447,6 +447,21 @@ async function imageBlob(pdfBytes) {
   }
 }
 
+/** Start (or, after a failure, restart) the engine; without internet the start page offers the stored libraries. */
+function startEngine() {
+  const status = $("#engineStatus");
+  status.hidden = false;
+  status.classList.remove("error");
+  status.innerHTML = `<div class="spinner"></div> <span>${escapeHtml(t("upload.engine"))}</span>`;
+  $("#engineOffline").hidden = true;
+  if (pool.ready === null) { for (const w of pool.workers) w.terminate && w.terminate(); pool.workers = []; }
+  return pool.start().then(() => { status.hidden = true; }).catch((err) => {
+    status.textContent = err.message;
+    status.classList.add("error");
+    $("#engineOffline").hidden = false;
+  });
+}
+
 function disposeOutput() {
   state.outBytes = null;
   state.hasOutput = false;
@@ -483,6 +498,8 @@ function openDocument(doc, bytes) {
   $("#docName").title = doc.name;
   document.body.classList.toggle("is-book", isBook());
   document.body.classList.toggle("is-office", isOffice());
+  document.body.classList.toggle("is-image", Boolean(doc.image));
+  picDocumentChanged();
   setDocFormat(doc.image ? doc.image.label : FORMAT_LABEL[doc.kind || "pdf"]);
   document.title = `${doc.name} · Kameleon`;
 
@@ -613,7 +630,8 @@ function closeDocument() {
   $("#btnClose").hidden = true;
   $("#docName").textContent = "";
   document.title = "Kameleon";
-  document.body.classList.remove("is-book", "is-office");
+  document.body.classList.remove("is-book", "is-office", "is-image");
+  picDocumentChanged();
   setDocFormat("PDF");
 }
 
@@ -1557,10 +1575,7 @@ function init() {
   });
 
   // Start the engine right away, and restore the last session.
-  pool.start().then(() => { $("#engineStatus").hidden = true; }).catch((err) => {
-    $("#engineStatus").textContent = err.message;
-    $("#engineStatus").classList.add("error");
-  });
+  startEngine();
   let last = null;
   try { last = localStorage.getItem(LS_LAST); } catch (_) { /* ignore */ }
   if (last) {

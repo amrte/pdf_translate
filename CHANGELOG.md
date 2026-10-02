@@ -4,6 +4,22 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.30
+
+- **Offline libraries on your computer.** Help → "Working offline" now downloads the libraries
+  as a ZIP file (`Kameleon-offline-<version>.zip`, with the chosen OCR languages). Without
+  internet, that ZIP or its unpacked folder is loaded with one click, in Help or directly on the
+  start page when the engine cannot be fetched. Storing in the browser is optional ("keep loaded
+  files in the browser"), so nothing has to live in the browser cache.
+- **Picture tools.** When a picture is open, the left rail has a new button that opens a panel
+  with brightness, contrast, greyscale, rotation in 90° steps and a crop area dragged on the
+  page. Brightness, contrast and greyscale show in the preview at once; "Apply" changes the
+  picture and starts the text recognition again.
+- **The app file is named after its version** (`Kameleon-1.30.html`), so downloads of different
+  versions can be told apart.
+- The version number in the top bar is plain text without a frame.
+- The text recognition languages are listed alphabetically.
+
 ## 1.29
 
 - **Working offline.** The Help dialog has a new section "Working offline": one click downloads

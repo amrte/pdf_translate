@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="Kameleon 1.29">
+  <meta name="generator" content="Kameleon 1.30">
   <meta name="description" content="Kameleon – Wechselt die Sprache, behält die Form. Changes language, keeps its shape.">
   <title>Kameleon</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%227%22 fill=%22%23f2c94c%22/%3E%3Cpath d=%22M4 24.5c7-1 17-1 24 0%22 fill=%22none%22 stroke=%22%238a5a2b%22 stroke-width=%222.2%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M9.5 18.5c0-4.5 3.5-8 8-8h3.5c3.5 0 6 2.5 6 5.5 0 2.6-1.5 4.5-4 5.5h-9c-2.8 0-4.5-1.3-4.5-3z%22 fill=%22%234caf50%22/%3E%3Cpath d=%22M7.5 20.5c-2.3-.4-3.6 1.2-3.1 2.9.4 1.3 1.9 1.7 2.8.9.9-.8.6-2-.2-2.3%22 fill=%22none%22 stroke=%22%234caf50%22 stroke-width=%222.2%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M26.5 16c1.6-1.2 3.2-.2 3.4 1.2%22 fill=%22none%22 stroke=%22%234caf50%22 stroke-width=%222.4%22 stroke-linecap=%22round%22/%3E%3Ccircle cx=%2222.5%22 cy=%2214.5%22 r=%223.1%22 fill=%22%232e7d32%22/%3E%3Ccircle cx=%2222.5%22 cy=%2214.5%22 r=%221.9%22 fill=%22%23fff%22/%3E%3Ccircle cx=%2223%22 cy=%2214.6%22 r=%22.9%22 fill=%22%231b1b1b%22/%3E%3Cpath d=%22M13.5 15.5c.8-1.5 2.3-2 3.8-1.6M18.5 19.5h4%22 fill=%22none%22 stroke=%22%232e7d32%22 stroke-width=%221.3%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M13 21.5v2.6M19 21.5v2.6%22 stroke=%22%232e7d32%22 stroke-width=%221.8%22 stroke-linecap=%22round%22/%3E%3C/svg%3E">
@@ -123,7 +123,7 @@ code { font-size: 12.5px; background: var(--surface-2); border: 1px solid var(--
 /* ---------- workspace ---------- */
 .work-view { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1.15fr) 6px minmax(380px, 1fr); }
 .viewer-pane, .editor-pane { display: flex; flex-direction: column; min-height: 0; }
-.viewer-pane { border-right: 1px solid var(--border); }
+.viewer-pane { border-right: 1px solid var(--border); position: relative; }
 .editor-pane { background: var(--surface); }
 .pane-toolbar {
   display: flex; align-items: center; gap: 8px; padding: 9px 12px;
@@ -253,6 +253,8 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); ou
 /* ---------- standalone additions ---------- */
 .engine-status { font-size: 12.5px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
 .engine-status.error { color: var(--danger); font-weight: 600; }
+.engine-offline { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px; font-size: 13px; color: var(--text); margin-top: 6px; }
+.engine-offline .btn { height: 30px; font-size: 13px; }
 /* virtualised segment list */
 .segments { position: relative; overflow-anchor: none; }
 .vl-inner { position: relative; }
@@ -299,7 +301,7 @@ kbd { font: 11.5px ui-monospace, monospace; border: 1px solid var(--border); bor
 .lang-switch { display: inline-flex; border: 1px solid var(--border); border-radius: 7px; overflow: hidden; }
 .lang-switch button { border: 0; background: transparent; color: var(--muted); font: inherit; font-size: 12px; font-weight: 600; padding: 3px 8px; cursor: pointer; }
 .lang-switch button.active { background: var(--accent-soft); color: var(--accent); }
-.version { font-size: 11px; color: var(--muted); font-weight: 500; padding: 1px 6px; border: 1px solid var(--border); border-radius: 5px; }
+.version { font-size: 11px; color: var(--muted); font-weight: 500; }
 .help-version { margin-top: 4px; }
 .help-part, .ai-part { display: flex; flex-direction: column; gap: 12px; }
 p.help-part, button.ai-part { display: block; }
@@ -593,6 +595,28 @@ body.splitting .pages, body.splitting iframe { pointer-events: none; }
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
 
+/* ---------- picture tools (an opened picture: brightness, contrast, greyscale, rotation, crop) ---------- */
+.pic-only { display: none !important; }
+body.is-image .tool.pic-only { display: grid !important; }
+body.is-image .rail-sep.pic-only { display: block !important; }
+body.is-image .page img { filter: var(--pic-filter, none); }
+.pic-panel {
+  position: absolute; left: 48px; top: 50px; z-index: 6; width: 280px; padding: 12px 14px; display: grid; gap: 10px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--page-shadow);
+}
+.pic-head { display: flex; align-items: center; justify-content: space-between; }
+.pic-head b { font-size: 14px; }
+.pic-x { position: static; width: 26px; height: 26px; }
+.pic-row { display: grid; grid-template-columns: 78px 1fr 46px; align-items: center; gap: 8px; font-size: 13px; }
+.pic-row input[type=range] { width: 100%; margin: 0; accent-color: var(--accent); }
+.pic-row output { text-align: right; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.pic-row .btn { height: 28px; padding: 0 9px; font-size: 12.5px; }
+.pic-buttons { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.pic-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.pic-crop-layer { position: absolute; inset: 0; z-index: 5; }
+.pic-crop-layer.active { cursor: crosshair; }
+.pic-crop-rect { position: absolute; border: 2px dashed var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); box-shadow: 0 0 0 9999px rgba(0, 0, 0, .25); pointer-events: none; }
+
   </style>
 </head>
 <body>
@@ -600,7 +624,7 @@ body.splitting .pages, body.splitting iframe { pointer-events: none; }
   <div class="brand">
     <span class="logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#f2c94c"/><path d="M4 24.5c7-1 17-1 24 0" fill="none" stroke="#8a5a2b" stroke-width="2.2" stroke-linecap="round"/><path d="M9.5 18.5c0-4.5 3.5-8 8-8h3.5c3.5 0 6 2.5 6 5.5 0 2.6-1.5 4.5-4 5.5h-9c-2.8 0-4.5-1.3-4.5-3z" fill="#4caf50"/><path d="M7.5 20.5c-2.3-.4-3.6 1.2-3.1 2.9.4 1.3 1.9 1.7 2.8.9.9-.8.6-2-.2-2.3" fill="none" stroke="#4caf50" stroke-width="2.2" stroke-linecap="round"/><path d="M26.5 16c1.6-1.2 3.2-.2 3.4 1.2" fill="none" stroke="#4caf50" stroke-width="2.4" stroke-linecap="round"/><circle cx="22.5" cy="14.5" r="3.1" fill="#2e7d32"/><circle cx="22.5" cy="14.5" r="1.9" fill="#fff"/><circle cx="23" cy="14.6" r=".9" fill="#1b1b1b"/><path d="M13.5 15.5c.8-1.5 2.3-2 3.8-1.6M18.5 19.5h4" fill="none" stroke="#2e7d32" stroke-width="1.3" stroke-linecap="round"/><path d="M13 21.5v2.6M19 21.5v2.6" stroke="#2e7d32" stroke-width="1.8" stroke-linecap="round"/></svg></span>
     <span class="brand-name">Kameleon</span>
-    <span class="version" id="appVersion">v1.29</span>
+    <span class="version" id="appVersion">v1.30</span>
   </div>
   <div class="topbar-actions">
     <span class="doc-name" id="docName"></span>
@@ -629,6 +653,10 @@ body.splitting .pages, body.splitting iframe { pointer-events: none; }
     </div>
     <div class="dz-progress" id="uploadProgress" hidden><div class="spinner"></div> <span id="uploadProgressText"></span></div>
     <div class="engine-status" id="engineStatus"><div class="spinner"></div> <span data-i18n="upload.engine">Loading the PDF engine…</span></div>
+    <div class="engine-offline" id="engineOffline" hidden><span data-i18n="offline.startHint"></span>
+      <button type="button" class="btn" id="engineLoadZip" data-i18n="offline.loadZip"></button>
+      <button type="button" class="btn" id="engineLoadFolder" data-i18n="offline.loadFolder"></button>
+    </div>
   </label>
   <!-- The workflow (also copied into Help); the buttons look as they do in the app. -->
   <section class="wf" id="wfStart" aria-labelledby="wfTitle">
@@ -704,6 +732,8 @@ body.splitting .pages, body.splitting iframe { pointer-events: none; }
     <div class="viewer-body">
     <div class="tool-rail" id="toolRail">
       <button type="button" class="rail-fold" id="railFold" data-i18n-title="tool.fold"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
+      <button type="button" class="tool pic-only" id="btnPicture" data-i18n-title="pic.title"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 12h3M11 12h9M4 17h12M20 17h0"/><circle cx="16" cy="7" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="18" cy="17" r="2"/></svg></button>
+      <div class="rail-sep pic-only"></div>
       <button type="button" class="tool active" data-tool="select" data-i18n-title="tool.select"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3l14 8-6 2-3 6z"/></svg></button>
       <button type="button" class="tool" data-tool="rect" data-i18n-title="tool.rect"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="6" width="16" height="12" rx="1"/></svg></button>
       <button type="button" class="tool" data-tool="ellipse" data-i18n-title="tool.ellipse"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="12" rx="9" ry="6.5"/></svg></button>
@@ -731,6 +761,16 @@ body.splitting .pages, body.splitting iframe { pointer-events: none; }
       <button type="button" class="tool" id="btnUndo" disabled data-i18n-title="tool.undo"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg></button>
       <button type="button" class="tool" id="btnRedo" disabled data-i18n-title="tool.redo"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14l5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h3"/></svg></button>
       <button type="button" class="tool" id="btnClearMarkups" data-i18n-title="tool.clear"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button>
+    </div>
+    <div class="pic-panel" id="picPanel" hidden>
+      <div class="pic-head"><b data-i18n="pic.title">Edit picture</b><button type="button" class="modal-x pic-x" id="picClose" data-i18n-title="common.close">×</button></div>
+      <label class="pic-row"><span data-i18n="pic.brightness">Brightness</span><input type="range" id="picBright" min="50" max="150" value="100"><output id="picBrightOut">100%</output></label>
+      <label class="pic-row"><span data-i18n="pic.contrast">Contrast</span><input type="range" id="picContrast" min="50" max="150" value="100"><output id="picContrastOut">100%</output></label>
+      <label class="check"><input type="checkbox" id="picGray"> <span data-i18n="pic.gray">Greyscale</span></label>
+      <div class="pic-row"><span data-i18n="pic.rotate">Rotate</span><span class="pic-buttons"><button type="button" class="btn" id="picRotL" data-i18n-title="pic.rotL">⟲ 90°</button><button type="button" class="btn" id="picRotR" data-i18n-title="pic.rotR">⟳ 90°</button></span><output id="picRotOut"></output></div>
+      <div class="pic-row"><span data-i18n="pic.cropLabel">Crop</span><span class="pic-buttons"><button type="button" class="btn" id="picCrop" data-i18n="pic.crop">Choose area</button></span><output id="picCropOut"></output></div>
+      <p class="muted small" id="picHint" data-i18n="pic.hint"></p>
+      <div class="pic-actions"><button type="button" class="btn ghost" id="picReset" data-i18n="pic.reset">Reset</button><button type="button" class="btn primary" id="picApply" data-i18n="pic.apply">Apply</button></div>
     </div>
     <div class="pages" id="pages"></div>
     <div class="pages translated cmp-pages" id="pagesCmp" hidden></div>
@@ -952,9 +992,20 @@ body.splitting .pages, body.splitting iframe { pointer-events: none; }
       <p class="muted small" data-i18n="offline.text"></p>
       <p class="small" id="offlineStatus"></p>
       <div class="field"><span data-i18n="offline.langsTitle"></span><div class="ocr-langs" id="offlineLangs"></div></div>
-      <div class="wf-row offline-actions"><button type="button" class="btn" id="offlineDownload" data-i18n="offline.download"></button><button type="button" class="btn ghost" id="offlineRemove" hidden data-i18n="offline.remove"></button></div>
+      <div class="wf-row offline-actions">
+        <button type="button" class="btn primary" id="offlineZipBtn" data-i18n="offline.zip"></button>
+        <button type="button" class="btn" id="offlineLoadZip" data-i18n="offline.loadZip"></button>
+        <button type="button" class="btn" id="offlineLoadFolder" data-i18n="offline.loadFolder"></button>
+      </div>
+      <label class="check"><input type="checkbox" id="offlineRemember"> <span data-i18n="offline.remember"></span></label>
+      <div class="wf-row offline-actions">
+        <button type="button" class="btn ghost" id="offlineDownload" data-i18n="offline.download"></button>
+        <button type="button" class="btn ghost" id="offlineRemove" hidden data-i18n="offline.remove"></button>
+      </div>
     </div>
-    <p class="muted small help-version help-part">Kameleon v1.29 · <span data-i18n="app.tagline"></span></p>
+    <input type="file" id="offlineZip" class="visually-hidden" accept=".zip,application/zip" multiple tabindex="-1">
+    <input type="file" id="offlineFolder" class="visually-hidden" webkitdirectory multiple tabindex="-1">
+    <p class="muted small help-version help-part">Kameleon v1.30 · <span data-i18n="app.tagline"></span></p>
     <div class="modal-actions">
       <button type="button" value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
       <button type="button" class="btn ai-part" id="aiCopyPrompt" data-i18n="ai.copyPrompt">Copy prompt only</button>
@@ -1242,20 +1293,30 @@ const I18N = {
     "ocr.suggestAction": "Texterkennung…",
     "ocr.noLang": "Bitte mindestens eine Sprache wählen.",
     "offline.title": "Offline arbeiten",
-    "offline.text": "Die App lädt bei jedem Start die Dokument-Engine (MuPDF, ca. 10 MB) und bei der ersten Texterkennung Tesseract (ca. 4 MB) aus dem Internet. Beide lassen sich im Browser speichern; danach läuft die App ohne Verbindung. Die Sprachdaten der Texterkennung werden für die gewählten Sprachen mitgeladen. Die Ablage gilt für diesen Browser auf diesem Gerät.",
-    "offline.none": "Noch nichts gespeichert – die Bibliotheken werden aus dem Internet geladen.",
-    "offline.stored": "Gespeichert am {date} ({mb} MB). Texterkennung offline: {langs}.",
+    "offline.text": "Beim Start lädt die App die Dokument-Engine (MuPDF, ca. 10 MB) aus dem Internet, bei der ersten Texterkennung dazu Tesseract (ca. 4 MB) und die Sprachdaten. Für die Arbeit ohne Internet laden Sie die Bibliotheken einmal als ZIP auf den Computer. Ohne Verbindung wählen Sie dann diese ZIP-Datei oder den entpackten Ordner – hier oder auf der Startseite; die Dateien bleiben auf Ihrem Rechner. Wahlweise merkt sich der Browser die geladenen Dateien, dann startet die App von selbst offline.",
+    "offline.none": "Im Browser ist nichts gespeichert.",
+    "offline.stored": "Im Browser gespeichert am {date} ({mb} MB). Texterkennung: {langs}.",
+    "offline.folder": "Bibliotheken aus Ordner/ZIP geladen (diese Sitzung). Texterkennung: {langs}.",
     "offline.noLangs": "keine Sprachen",
-    "offline.outdated": "Die gespeicherten Bibliotheken gehören zu einer älteren Version der App und werden nicht mehr benutzt – bitte erneut herunterladen.",
-    "offline.langsTitle": "Sprachen der Texterkennung mitladen",
-    "offline.download": "Bibliotheken herunterladen",
-    "offline.again": "Erneut herunterladen",
-    "offline.remove": "Gespeicherte Bibliotheken löschen",
+    "offline.outdated": "Die im Browser gespeicherten Bibliotheken gehören zu einer älteren Version der App und werden nicht mehr benutzt – bitte erneut laden.",
+    "offline.langsTitle": "Sprachen der Texterkennung mitnehmen",
+    "offline.zip": "Als ZIP auf den Computer laden",
+    "offline.loadZip": "ZIP-Datei laden…",
+    "offline.loadFolder": "Ordner laden…",
+    "offline.remember": "Geladene Dateien im Browser merken – dann startet die App ohne Nachfrage offline",
+    "offline.download": "Direkt im Browser speichern (aus dem Internet)",
+    "offline.remove": "Im Browser gespeicherte Bibliotheken löschen",
+    "offline.startHint": "Kein Internet? Bibliotheken aus einer gespeicherten ZIP oder einem Ordner laden:",
     "offline.fetching": "Bibliotheken werden geladen ({i} von {n}): {name} – {mb} MB",
-    "offline.langs": "Sprachdaten der Texterkennung werden geladen: {langs}…",
-    "offline.done": "Für die Offline-Nutzung gespeichert ({mb} MB). Ab dem nächsten Start werden die Bibliotheken aus dem Browser geladen.",
-    "offline.failed": "Herunterladen fehlgeschlagen: {err}",
-    "offline.removed": "Die gespeicherten Bibliotheken wurden gelöscht; sie werden wieder aus dem Internet geladen.",
+    "offline.zipping": "ZIP wird erstellt…",
+    "offline.storing": "Wird im Browser gespeichert…",
+    "offline.reading": "Dateien werden gelesen…",
+    "offline.zipDone": "{name} gespeichert ({mb} MB). Die ZIP kann direkt geladen werden, Entpacken ist nicht nötig.",
+    "offline.done": "Im Browser gespeichert. Ab dem nächsten Start werden die Bibliotheken von dort geladen.",
+    "offline.loaded": "Bibliotheken aus {n} Datei(en) geladen.",
+    "offline.missing": "Es fehlen: {names}. Bitte die ZIP aus „Als ZIP auf den Computer laden“ oder deren Ordner wählen.",
+    "offline.failed": "Fehlgeschlagen: {err}",
+    "offline.removed": "Die im Browser gespeicherten Bibliotheken wurden gelöscht.",
     "ocrlang.eng": "Englisch",
     "ocrlang.deu": "Deutsch",
     "ocrlang.fra": "Französisch",
@@ -1311,6 +1372,23 @@ const I18N = {
     "nav.prev": "Vorherige Seite (Bild ↑)",
     "nav.next": "Nächste Seite (Bild ↓)",
     "nav.page": "Zu Seite springen",
+    "pic.title": "Bild bearbeiten",
+    "pic.brightness": "Helligkeit",
+    "pic.contrast": "Kontrast",
+    "pic.gray": "Graustufen",
+    "pic.rotate": "Drehen",
+    "pic.rotL": "Nach links drehen",
+    "pic.rotR": "Nach rechts drehen",
+    "pic.cropLabel": "Ausschnitt",
+    "pic.crop": "Bereich wählen",
+    "pic.cropActive": "Ziehen Sie den gewünschten Ausschnitt auf dem Bild auf.",
+    "pic.cropSet": "gewählt",
+    "pic.hint": "Helligkeit, Kontrast und Graustufen sind sofort in der Vorschau zu sehen. „Anwenden“ ändert das Bild und startet die Texterkennung neu.",
+    "pic.reset": "Zurücksetzen",
+    "pic.apply": "Anwenden",
+    "pic.confirm": "Erkannte Texte und Übersetzungen dieses Bildes gehen beim Anwenden verloren. Fortfahren?",
+    "pic.working": "Bild wird bearbeitet…",
+    "pic.failed": "Das Bild konnte nicht bearbeitet werden: {err}",
     "tool.select": "Auswählen, verschieben, löschen (V)",
     "tool.rect": "Rechteck (R)",
     "tool.ellipse": "Ellipse (O)",
@@ -1607,20 +1685,30 @@ const I18N = {
     "ocr.suggestAction": "Recognise text…",
     "ocr.noLang": "Please choose at least one language.",
     "offline.title": "Working offline",
-    "offline.text": "At every start the app loads the document engine (MuPDF, about 10 MB) from the internet, and Tesseract (about 4 MB) when text recognition is first used. Both can be stored in the browser; the app then runs without a connection. The language data for text recognition is fetched for the chosen languages. The copies belong to this browser on this device.",
-    "offline.none": "Nothing stored yet – the libraries are loaded from the internet.",
-    "offline.stored": "Stored on {date} ({mb} MB). Text recognition offline: {langs}.",
+    "offline.text": "At every start the app loads the document engine (MuPDF, about 10 MB) from the internet, and Tesseract (about 4 MB) plus language data when text recognition is first used. For work without internet, download the libraries once as a ZIP to your computer. Without a connection, choose that ZIP file or its unpacked folder – here or on the start page; the files stay on your machine. Optionally the browser keeps the loaded files, so the app starts offline on its own.",
+    "offline.none": "Nothing is stored in the browser.",
+    "offline.stored": "Stored in the browser on {date} ({mb} MB). Text recognition: {langs}.",
+    "offline.folder": "Libraries loaded from folder/ZIP (this session). Text recognition: {langs}.",
     "offline.noLangs": "no languages",
-    "offline.outdated": "The stored libraries belong to an older version of the app and are no longer used – please download them again.",
+    "offline.outdated": "The libraries stored in the browser belong to an older version of the app and are no longer used – please load them again.",
     "offline.langsTitle": "Text recognition languages to include",
-    "offline.download": "Download the libraries",
-    "offline.again": "Download again",
-    "offline.remove": "Delete the stored libraries",
+    "offline.zip": "Download as ZIP to this computer",
+    "offline.loadZip": "Load ZIP file…",
+    "offline.loadFolder": "Load folder…",
+    "offline.remember": "Keep loaded files in the browser – the app then starts offline without asking",
+    "offline.download": "Store in the browser directly (from the internet)",
+    "offline.remove": "Delete the libraries stored in the browser",
+    "offline.startHint": "No internet? Load the libraries from a saved ZIP or folder:",
     "offline.fetching": "Loading the libraries ({i} of {n}): {name} – {mb} MB",
-    "offline.langs": "Loading text recognition data: {langs}…",
-    "offline.done": "Stored for offline use ({mb} MB). From the next start the libraries are loaded from the browser.",
-    "offline.failed": "Download failed: {err}",
-    "offline.removed": "The stored libraries were deleted; they are loaded from the internet again.",
+    "offline.zipping": "Creating the ZIP…",
+    "offline.storing": "Storing in the browser…",
+    "offline.reading": "Reading the files…",
+    "offline.zipDone": "{name} saved ({mb} MB). The ZIP can be loaded as it is, no unpacking needed.",
+    "offline.done": "Stored in the browser. From the next start the libraries are loaded from there.",
+    "offline.loaded": "Libraries loaded from {n} file(s).",
+    "offline.missing": "Missing: {names}. Please choose the ZIP from “Download as ZIP” or its folder.",
+    "offline.failed": "Failed: {err}",
+    "offline.removed": "The libraries stored in the browser were deleted.",
     "ocrlang.eng": "English",
     "ocrlang.deu": "German",
     "ocrlang.fra": "French",
@@ -1676,6 +1764,23 @@ const I18N = {
     "nav.prev": "Previous page (Page Up)",
     "nav.next": "Next page (Page Down)",
     "nav.page": "Go to page",
+    "pic.title": "Edit picture",
+    "pic.brightness": "Brightness",
+    "pic.contrast": "Contrast",
+    "pic.gray": "Greyscale",
+    "pic.rotate": "Rotate",
+    "pic.rotL": "Rotate left",
+    "pic.rotR": "Rotate right",
+    "pic.cropLabel": "Crop",
+    "pic.crop": "Choose area",
+    "pic.cropActive": "Drag the area you want to keep on the picture.",
+    "pic.cropSet": "chosen",
+    "pic.hint": "Brightness, contrast and greyscale show in the preview at once. “Apply” changes the picture and starts text recognition again.",
+    "pic.reset": "Reset",
+    "pic.apply": "Apply",
+    "pic.confirm": "The recognised text and translations of this picture are lost when applying. Continue?",
+    "pic.working": "Editing the picture…",
+    "pic.failed": "The picture could not be edited: {err}",
     "tool.select": "Select, move, delete (V)",
     "tool.rect": "Rectangle (R)",
     "tool.ellipse": "Ellipse (O)",
@@ -7988,8 +8093,8 @@ async function pptToPptx(cfb) {
 // the segment list is virtualised so documents with thousands of segments stay fast.
 // ======================================================================
 const ENGINE_SRC = document.getElementById("engine-src").textContent;
-const { Engine, createHandler, LEGACY_KINDS, LEGACY_TO_MODERN, MUPDF_URL } = await import(URL.createObjectURL(new Blob(
-  [ENGINE_SRC, "\nexport { Engine, createHandler, LEGACY_KINDS, LEGACY_TO_MODERN, MUPDF_URL };\n"], { type: "text/javascript" })));
+const { Engine, createHandler, LEGACY_KINDS, LEGACY_TO_MODERN, MUPDF_URL, zipEntries, zipRead, zipWrite } = await import(URL.createObjectURL(new Blob(
+  [ENGINE_SRC, "\nexport { Engine, createHandler, LEGACY_KINDS, LEGACY_TO_MODERN, MUPDF_URL, zipEntries, zipRead, zipWrite };\n"], { type: "text/javascript" })));
 // Workers are classic scripts (module workers are refused on file:// pages); the engine
 // loads MuPDF with a dynamic import(), which classic workers support.
 const WORKER_URL = URL.createObjectURL(new Blob([ENGINE_SRC], { type: "text/javascript" }));
@@ -8432,6 +8537,21 @@ async function imageBlob(pdfBytes) {
   }
 }
 
+/** Start (or, after a failure, restart) the engine; without internet the start page offers the stored libraries. */
+function startEngine() {
+  const status = $("#engineStatus");
+  status.hidden = false;
+  status.classList.remove("error");
+  status.innerHTML = `<div class="spinner"></div> <span>${escapeHtml(t("upload.engine"))}</span>`;
+  $("#engineOffline").hidden = true;
+  if (pool.ready === null) { for (const w of pool.workers) w.terminate && w.terminate(); pool.workers = []; }
+  return pool.start().then(() => { status.hidden = true; }).catch((err) => {
+    status.textContent = err.message;
+    status.classList.add("error");
+    $("#engineOffline").hidden = false;
+  });
+}
+
 function disposeOutput() {
   state.outBytes = null;
   state.hasOutput = false;
@@ -8468,6 +8588,8 @@ function openDocument(doc, bytes) {
   $("#docName").title = doc.name;
   document.body.classList.toggle("is-book", isBook());
   document.body.classList.toggle("is-office", isOffice());
+  document.body.classList.toggle("is-image", Boolean(doc.image));
+  picDocumentChanged();
   setDocFormat(doc.image ? doc.image.label : FORMAT_LABEL[doc.kind || "pdf"]);
   document.title = `${doc.name} · Kameleon`;
 
@@ -8598,7 +8720,8 @@ function closeDocument() {
   $("#btnClose").hidden = true;
   $("#docName").textContent = "";
   document.title = "Kameleon";
-  document.body.classList.remove("is-book", "is-office");
+  document.body.classList.remove("is-book", "is-office", "is-image");
+  picDocumentChanged();
   setDocFormat("PDF");
 }
 
@@ -9542,10 +9665,7 @@ function init() {
   });
 
   // Start the engine right away, and restore the last session.
-  pool.start().then(() => { $("#engineStatus").hidden = true; }).catch((err) => {
-    $("#engineStatus").textContent = err.message;
-    $("#engineStatus").classList.add("error");
-  });
+  startEngine();
   let last = null;
   try { last = localStorage.getItem(LS_LAST); } catch (_) { /* ignore */ }
   if (last) {
@@ -10565,6 +10685,8 @@ const OCR_CORE = "https://cdn.jsdelivr.net/npm/tesseract.js-core@6.0.0";
 const OCR_LANG_PATH = ""; // "" = the language data on jsDelivr (@tesseract.js-data/<lang>)
 const OCR_LANGS = ["eng", "deu", "fra", "spa", "por", "nld", "swe", "pol", "ces", "slk", "hun", "bul", "ukr", "fin", "chi_sim", "chi_tra"];
 const LS_OCR = "pdftr:ocr-options";
+/** The OCR languages in alphabetical order of their names in the interface language. */
+const sortedOcrLangs = () => [...OCR_LANGS].sort((a, b) => t("ocrlang." + a).localeCompare(t("ocrlang." + b), LANG));
 
 /** Pages with no text but a picture covering much of the page (scans). */
 function scannedPages() {
@@ -10599,7 +10721,7 @@ function openOcrDialog() {
   let saved = {};
   try { saved = JSON.parse(localStorage.getItem(LS_OCR) || "{}"); } catch (_) { /* default */ }
   const langs = saved.langs || (LANG === "de" ? ["deu", "eng"] : ["eng"]);
-  $("#ocrLangs").innerHTML = OCR_LANGS.map((l) =>
+  $("#ocrLangs").innerHTML = sortedOcrLangs().map((l) =>
     `<label class="check"><input type="checkbox" value="${l}"${langs.includes(l) ? " checked" : ""}> ${escapeHtml(t("ocrlang." + l))}</label>`).join("");
   const scans = scannedPages().length;
   $("#ocrPagesEmpty").checked = scans > 0;
@@ -11394,56 +11516,238 @@ function initLayout() {
 }
 
 // ======================================================================
-// Offline use. The app loads two libraries from the internet: MuPDF (the document engine, at
-// every start) and Tesseract (text recognition, on first use). Both can be stored in the
-// browser (IndexedDB); stored copies are used instead of the network from then on. MuPDF's
-// files refer to each other by relative path, so the stored texts are rewritten to point at
-// the stored copies before they are loaded from blob: URLs.
+// Picture tools. For an opened picture the left rail gets a button that opens a small panel:
+// brightness, contrast and greyscale (shown live in the preview), rotation in steps of 90° and a
+// crop area dragged on the page. "Apply" renders the edited picture and opens it again, which
+// starts the text recognition afresh (the recognised text of the old picture would not fit).
 // ======================================================================
 
+const PIC_DEFAULT = { bright: 100, contrast: 100, gray: false, rotate: 0, crop: null }; // crop: page fractions [x0, y0, x1, y1]
+const picEdit = { ...PIC_DEFAULT };
+let picCropMode = false;
+
+const picFilter = () => `brightness(${picEdit.bright / 100}) contrast(${picEdit.contrast / 100})${picEdit.gray ? " grayscale(1)" : ""}`;
+const picIsDefault = () => picEdit.bright === 100 && picEdit.contrast === 100 && !picEdit.gray && !picEdit.rotate && !picEdit.crop;
+
+/** Show the edit state in the panel and in the preview. */
+function picSync() {
+  $("#picBright").value = picEdit.bright; $("#picBrightOut").textContent = `${picEdit.bright}%`;
+  $("#picContrast").value = picEdit.contrast; $("#picContrastOut").textContent = `${picEdit.contrast}%`;
+  $("#picGray").checked = picEdit.gray;
+  $("#picRotOut").textContent = picEdit.rotate ? `${picEdit.rotate}°` : "";
+  $("#picCropOut").textContent = picEdit.crop ? t("pic.cropSet") : "";
+  $("#picCrop").classList.toggle("primary", picCropMode);
+  $("#picHint").textContent = picCropMode ? t("pic.cropActive") : t("pic.hint");
+  $("#picApply").disabled = picIsDefault();
+  document.documentElement.style.setProperty("--pic-filter", picIsDefault() || picFilter() === "brightness(1) contrast(1)" ? "none" : picFilter());
+  picDrawCrop();
+}
+
+/** The crop layer over the (single) page: catches the drag in crop mode and shows the chosen area. */
+function picLayer(create) {
+  const page = document.querySelector("#pages .page");
+  if (!page) return null;
+  let layer = page.querySelector(".pic-crop-layer");
+  if (!layer && create) {
+    layer = document.createElement("div");
+    layer.className = "pic-crop-layer";
+    page.append(layer);
+  }
+  return layer;
+}
+
+function picDrawCrop() {
+  const layer = picLayer(picCropMode || Boolean(picEdit.crop));
+  if (!layer) return;
+  layer.classList.toggle("active", picCropMode);
+  layer.style.pointerEvents = picCropMode ? "auto" : "none";
+  let rect = layer.querySelector(".pic-crop-rect");
+  if (!picEdit.crop) { rect && rect.remove(); if (!picCropMode) layer.remove(); return; }
+  if (!rect) { rect = document.createElement("div"); rect.className = "pic-crop-rect"; layer.append(rect); }
+  const [x0, y0, x1, y1] = picEdit.crop;
+  Object.assign(rect.style, { left: `${x0 * 100}%`, top: `${y0 * 100}%`, width: `${(x1 - x0) * 100}%`, height: `${(y1 - y0) * 100}%` });
+}
+
+// (registered on the document in the capture phase: the markup tools catch pointer events on
+// the pages before they reach the layer)
+function picCropStart(e) {
+  if (!picCropMode || e.button !== 0) return;
+  const layer = e.target.closest && e.target.closest(".pic-crop-layer");
+  if (!layer) return;
+  const box = layer.getBoundingClientRect();
+  const frac = (ev) => [Math.min(1, Math.max(0, (ev.clientX - box.left) / box.width)), Math.min(1, Math.max(0, (ev.clientY - box.top) / box.height))];
+  const start = frac(e);
+  e.preventDefault(); e.stopPropagation();
+  layer.setPointerCapture(e.pointerId);
+  const move = (ev) => {
+    const [x, y] = frac(ev);
+    picEdit.crop = [Math.min(start[0], x), Math.min(start[1], y), Math.max(start[0], x), Math.max(start[1], y)];
+    picDrawCrop();
+  };
+  const up = (ev) => {
+    layer.removeEventListener("pointermove", move); layer.removeEventListener("pointerup", up); layer.removeEventListener("pointercancel", up);
+    move(ev);
+    const c = picEdit.crop;
+    if (!c || c[2] - c[0] < 0.02 || c[3] - c[1] < 0.02) picEdit.crop = null; // a click or a sliver: no crop
+    picCropMode = false;
+    picSync();
+  };
+  layer.addEventListener("pointermove", move); layer.addEventListener("pointerup", up); layer.addEventListener("pointercancel", up);
+}
+
+function picReset() {
+  Object.assign(picEdit, PIC_DEFAULT);
+  picCropMode = false;
+  picSync();
+}
+
+function picOpenPanel(open) {
+  $("#picPanel").hidden = !open;
+  if (!open) { picCropMode = false; picSync(); }
+}
+
+/** Called when a document is opened or closed: the edits belong to one picture. */
+function picDocumentChanged() {
+  Object.assign(picEdit, PIC_DEFAULT);
+  picCropMode = false;
+  const panel = $("#picPanel");
+  if (panel) { panel.hidden = true; picSync(); }
+}
+
+/** Brightness, contrast and greyscale on raw pixels (for browsers without canvas filters). */
+function picFilterPixels(data) {
+  const b = picEdit.bright / 100, c = picEdit.contrast / 100;
+  for (let i = 0; i < data.length; i += 4) {
+    let r = data[i] * b, g = data[i + 1] * b, bl = data[i + 2] * b;
+    r = (r - 128) * c + 128; g = (g - 128) * c + 128; bl = (bl - 128) * c + 128;
+    if (picEdit.gray) { const y = 0.2126 * r + 0.7152 * g + 0.0722 * bl; r = g = bl = y; }
+    data[i] = r < 0 ? 0 : r > 255 ? 255 : r; data[i + 1] = g < 0 ? 0 : g > 255 ? 255 : g; data[i + 2] = bl < 0 ? 0 : bl > 255 ? 255 : bl;
+  }
+}
+
+/** Render the edited picture and open it as the document (same name, new content). */
+async function picApply() {
+  const doc = state.doc, img = doc && doc.image;
+  if (!img || picIsDefault()) return;
+  if (doc.segments.length && !window.confirm(t("pic.confirm"))) return;
+  busy(t("pic.working"));
+  try {
+    const page = doc.pages[0];
+    const png = await pool.workers[0].call("render", { page: 0, zoom: img.width / page.width, variant: "original" });
+    const bmp = await createImageBitmap(new Blob([png], { type: "image/png" }));
+    try {
+      const c = picEdit.crop || [0, 0, 1, 1];
+      const sx = Math.round(c[0] * bmp.width), sy = Math.round(c[1] * bmp.height);
+      const sw = Math.max(1, Math.round((c[2] - c[0]) * bmp.width)), sh = Math.max(1, Math.round((c[3] - c[1]) * bmp.height));
+      const rot = ((picEdit.rotate % 360) + 360) % 360, swap = rot === 90 || rot === 270;
+      const canvas = new OffscreenCanvas(swap ? sh : sw, swap ? sw : sh), ctx = canvas.getContext("2d");
+      const hasFilter = "filter" in ctx;
+      if (hasFilter) ctx.filter = picFilter();
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.rotate((rot * Math.PI) / 180);
+      ctx.drawImage(bmp, sx, sy, sw, sh, -sw / 2, -sh / 2, sw, sh);
+      if (!hasFilter) { ctx.setTransform(1, 0, 0, 1, 0, 0); const d = ctx.getImageData(0, 0, canvas.width, canvas.height); picFilterPixels(d.data); ctx.putImageData(d, 0, 0); }
+      const blob = await canvas.convertToBlob(img.format === "jpeg" ? { type: "image/jpeg", quality: 0.95 } : { type: "image/png" });
+      const bytes = new Uint8Array(await blob.arrayBuffer());
+      picOpenPanel(false);
+      await loadBytes(bytes, doc.name, true);
+    } finally {
+      bmp.close && bmp.close();
+    }
+  } catch (err) {
+    console.error(err);
+    toast(t("pic.failed", { err: userError(err) }), "error");
+  } finally {
+    busy("");
+  }
+}
+
+function initPicture() {
+  $("#btnPicture").addEventListener("click", () => picOpenPanel($("#picPanel").hidden));
+  $("#picClose").addEventListener("click", () => picOpenPanel(false));
+  $("#picBright").addEventListener("input", (e) => { picEdit.bright = Number(e.target.value); picSync(); });
+  $("#picContrast").addEventListener("input", (e) => { picEdit.contrast = Number(e.target.value); picSync(); });
+  $("#picGray").addEventListener("change", (e) => { picEdit.gray = e.target.checked; picSync(); });
+  $("#picRotL").addEventListener("click", () => { picEdit.rotate = (picEdit.rotate + 270) % 360; picSync(); });
+  $("#picRotR").addEventListener("click", () => { picEdit.rotate = (picEdit.rotate + 90) % 360; picSync(); });
+  $("#picCrop").addEventListener("click", () => { picCropMode = !picCropMode; if (picCropMode) picEdit.crop = null; picSync(); });
+  $("#picReset").addEventListener("click", picReset);
+  $("#picApply").addEventListener("click", picApply);
+  document.addEventListener("pointerdown", picCropStart, true);
+  // Zooming redraws the pages: put the crop layer back when it is needed.
+  new MutationObserver(() => { if (document.body.classList.contains("is-image") && (picCropMode || picEdit.crop) && !picLayer(false)) picDrawCrop(); })
+    .observe($("#pages"), { childList: true });
+}
+
+// ======================================================================
+// Offline use. The app loads two libraries from the internet: MuPDF (the document engine, at
+// every start) and Tesseract (text recognition, on first use, plus language data). For work
+// without a connection the set of files can be saved as a ZIP on the computer and loaded from
+// that ZIP or its unpacked folder (here or on the start page); optionally the browser keeps
+// the loaded files (IndexedDB), so that the app starts offline on its own.
+//
+// A page opened from disk cannot load scripts from a folder next to it, so the files are read
+// through the file picker and served from blob: URLs. MuPDF's files refer to each other by
+// relative path and are rewritten to point at the stored copies. Tesseract reads language data
+// from its own browser cache before the network, so language files are written into that cache.
+// ======================================================================
+
+const APP_VERSION = "1.30";
 // (a change of library version makes a stored set outdated: it is then ignored)
 const OFFLINE_VERSION = `${MUPDF_URL} ${OCR_LIB}`;
-const OFFLINE_FILES = [
-  ["mupdf.js", MUPDF_URL],
-  ["mupdf-wasm.js", MUPDF_URL.replace(/mupdf\.js$/, "mupdf-wasm.js")],
-  ["mupdf-wasm.wasm", MUPDF_URL.replace(/mupdf\.js$/, "mupdf-wasm.wasm")],
-  ["tesseract.esm.min.js", OCR_LIB],
-  ["worker.min.js", OCR_WORKER],
-  ["tesseract-core.wasm.js", null], // the build that fits this browser is chosen when downloading
-];
+const CORE_SIMD = "tesseract-core-simd-lstm.wasm.js", CORE_PLAIN = "tesseract-core-lstm.wasm.js";
+const LIB_FILES = {
+  "mupdf.js": MUPDF_URL,
+  "mupdf-wasm.js": MUPDF_URL.replace(/mupdf\.js$/, "mupdf-wasm.js"),
+  "mupdf-wasm.wasm": MUPDF_URL.replace(/mupdf\.js$/, "mupdf-wasm.wasm"),
+  "tesseract.esm.min.js": OCR_LIB,
+  "worker.min.js": OCR_WORKER,
+  [CORE_SIMD]: `${OCR_CORE}/${CORE_SIMD}`,
+  [CORE_PLAIN]: `${OCR_CORE}/${CORE_PLAIN}`,
+};
+const LIB_REQUIRED = ["mupdf.js", "mupdf-wasm.js", "mupdf-wasm.wasm"];
+const langUrl = (l) => (OCR_LANG_PATH ? `${OCR_LANG_PATH}/${l}.traineddata.gz` : `https://cdn.jsdelivr.net/npm/@tesseract.js-data/${l}/4.0.0_best_int/${l}.traineddata.gz`);
 const libKey = (name) => `lib:${name}`;
 // Does the browser run WebAssembly SIMD? (the same probe Tesseract uses to choose its build)
 const WASM_SIMD = WebAssembly.validate(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 5, 1, 96, 0, 1, 123, 3, 2, 1, 0, 10, 10, 1, 8, 0, 65, 0, 253, 15, 253, 98, 11]));
-const OCR_CORE_FILE = `tesseract-core${WASM_SIMD ? "-simd" : ""}-lstm.wasm.js`;
+const OCR_CORE_FILE = WASM_SIMD ? CORE_SIMD : CORE_PLAIN;
+const mbOf = (bytes) => (bytes / 1048576).toFixed(1);
 
 let offlineLibsPromise = null;
+let offlineSource = null; // {kind: "folder", langs} when the libraries came from a folder or ZIP in this session
 
-/** {mupdfUrl, ocr: {lib, worker, core} | null, manifest} from the stored copies, or null. */
+/** {mupdfUrl, ocr: {lib, worker, core} | null} from the stored copies, or null. */
 function offlineLibs() {
-  if (!offlineLibsPromise) offlineLibsPromise = loadOfflineLibs().catch((err) => { console.warn("Stored libraries not usable:", err); return null; });
+  if (!offlineLibsPromise) offlineLibsPromise = loadStoredLibs().catch((err) => { console.warn("Stored libraries not usable:", err); return null; });
   return offlineLibsPromise;
 }
 
-async function loadOfflineLibs() {
+async function loadStoredLibs() {
   const manifest = await idbGet(libKey("manifest"));
   if (!manifest || manifest.version !== OFFLINE_VERSION) return null;
   const data = {};
-  for (const [name] of OFFLINE_FILES) data[name] = await idbGet(libKey(name));
-  if (!data["mupdf.js"] || !data["mupdf-wasm.js"] || !data["mupdf-wasm.wasm"]) return null;
+  for (const name of Object.keys(LIB_FILES)) { const v = await idbGet(libKey(name)); if (v) data[name] = v; }
+  return buildLibs(data);
+}
+
+/** Blob URLs for the library files, with MuPDF's internal references rewritten; null if a file is missing or unexpected. */
+function buildLibs(data) {
+  if (LIB_REQUIRED.some((n) => !data[n])) return null;
   const dec = new TextDecoder();
   const blobUrl = (content, type) => URL.createObjectURL(new Blob([content], { type }));
   const wasmUrl = blobUrl(data["mupdf-wasm.wasm"], "application/wasm");
   const glue = dec.decode(data["mupdf-wasm.js"]).replace('new URL("mupdf-wasm.wasm",import.meta.url).href', JSON.stringify(wasmUrl));
-  if (!glue.includes(wasmUrl)) return null; // not the expected build of the library: use the network
+  if (!glue.includes(wasmUrl)) return null; // not the expected build of the library
   const glueUrl = blobUrl(glue, "text/javascript");
   const main = dec.decode(data["mupdf.js"]).replace(/from\s+"\.\/mupdf-wasm\.js"/, `from ${JSON.stringify(glueUrl)}`);
   if (!main.includes(glueUrl)) return null;
-  const libs = { mupdfUrl: blobUrl(main, "text/javascript"), ocr: null, manifest };
-  if (data["tesseract.esm.min.js"] && data["worker.min.js"] && data["tesseract-core.wasm.js"]) {
+  const libs = { mupdfUrl: blobUrl(main, "text/javascript"), ocr: null };
+  const core = data[OCR_CORE_FILE] || data[CORE_SIMD] || data[CORE_PLAIN];
+  if (data["tesseract.esm.min.js"] && data["worker.min.js"] && core) {
     // The worker script loads its core with importScripts(corePath), which a worker cannot do from a
     // blob: URL on a file: page. The core defines the global TesseractCore, and the worker skips the
-    // loading when that global exists, so core and worker are stored as one script instead.
-    const worker = dec.decode(data["tesseract-core.wasm.js"]) + "\n;\n" + dec.decode(data["worker.min.js"]);
+    // loading when that global exists, so core and worker become one script.
+    const worker = dec.decode(core) + "\n;\n" + dec.decode(data["worker.min.js"]);
     libs.ocr = { lib: blobUrl(data["tesseract.esm.min.js"], "text/javascript"), worker: blobUrl(worker, "text/javascript"), core: OCR_CORE };
   }
   return libs;
@@ -11467,35 +11771,144 @@ async function fetchWithProgress(url, onProgress) {
   return out.buffer;
 }
 
-const mbOf = (bytes) => (bytes / 1048576).toFixed(1);
-
-/** Download the libraries into the browser; `langs` are OCR languages to fetch into Tesseract's cache. */
-async function downloadOfflineLibs(langs) {
-  const files = OFFLINE_FILES.map(([name, url]) => [name, url || `${OCR_CORE}/${OCR_CORE_FILE}`]);
+/** Fetch the library files (both Tesseract builds when `allCores`) and the language data. */
+async function fetchLibrarySet(langs, allCores) {
+  const names = Object.keys(LIB_FILES).filter((n) => allCores || (n !== CORE_SIMD && n !== CORE_PLAIN) || n === OCR_CORE_FILE);
+  const items = names.map((n) => [n, LIB_FILES[n]]).concat(langs.map((l) => [`${l}.traineddata.gz`, langUrl(l)]));
+  const data = {}, langData = {};
   let total = 0;
+  for (const [i, [name, url]] of items.entries()) {
+    const show = (got) => busy(t("offline.fetching", { i: i + 1, n: items.length, name, mb: mbOf(got) }));
+    show(0);
+    const buf = await fetchWithProgress(url, show);
+    total += buf.byteLength;
+    const m = /^([a-z_]+)\.traineddata\.gz$/.exec(name);
+    if (m) langData[m[1]] = buf; else data[name] = buf;
+  }
+  return { data, langData, total };
+}
+
+/* ------------------------------------------------ Tesseract's language cache */
+
+// Tesseract 6 keeps language data in IndexedDB "keyval-store" / "keyval" under "./<lang>.traineddata"
+// (unpacked), and reads it before fetching. Language files from a ZIP or folder are put there.
+function tessCache(mode, fn) {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open("keyval-store", 1);
+    req.onupgradeneeded = () => req.result.createObjectStore("keyval");
+    req.onerror = () => reject(req.error);
+    req.onsuccess = () => {
+      const db = req.result, tx = db.transaction("keyval", mode), r = fn(tx.objectStore("keyval"));
+      tx.oncomplete = () => { db.close(); resolve(r && r.result); };
+      tx.onerror = () => { db.close(); reject(tx.error); };
+    };
+  });
+}
+
+async function gunzip(buf) {
+  const u = new Uint8Array(buf);
+  if (u[0] !== 0x1f || u[1] !== 0x8b || typeof DecompressionStream === "undefined") return u;
+  return new Uint8Array(await new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream("gzip"))).arrayBuffer());
+}
+
+async function storeLangData(langData) {
+  for (const [code, buf] of Object.entries(langData)) {
+    const data = await gunzip(buf);
+    await tessCache("readwrite", (store) => store.put(data, `./${code}.traineddata`));
+  }
+}
+
+/* ------------------------------------------------------------- the actions */
+
+/** Use a set of library files now; `remember` also stores them in the browser. */
+async function activateLibs(data, langData, remember, source) {
+  const libs = buildLibs(data);
+  if (!libs) throw new Error("The library files could not be used.");
+  await storeLangData(langData);
+  offlineLibsPromise = Promise.resolve(libs);
+  const langs = Object.keys(langData);
+  offlineSource = source === "folder" ? { kind: "folder", langs } : null;
+  if (remember) {
+    for (const name of Object.keys(LIB_FILES)) await idbDel(libKey(name));
+    let bytes = 0;
+    for (const [name, buf] of Object.entries(data)) { await idbPut(buf, libKey(name)); bytes += buf.byteLength; }
+    await idbPut({ version: OFFLINE_VERSION, date: Date.now(), bytes, langs }, libKey("manifest"));
+  }
+  if (pool.ready === null) await startEngine(); // the engine could not come from the internet: start it from the files
+}
+
+/** Download the whole set as a ZIP on the computer. */
+async function downloadOfflineZip(langs) {
   try {
-    for (const [i, [name, url]] of files.entries()) {
-      busy(t("offline.fetching", { i: i + 1, n: files.length, name, mb: "0.0" }));
-      const buf = await fetchWithProgress(url, (got) => busy(t("offline.fetching", { i: i + 1, n: files.length, name, mb: mbOf(got) })));
-      total += buf.byteLength;
-      await idbPut(buf, libKey(name));
+    const { data, langData, total } = await fetchLibrarySet(langs, true);
+    busy(t("offline.zipping"));
+    const entries = Object.entries(data).map(([name, buf]) => ({ name, data: new Uint8Array(buf) }))
+      .concat(Object.entries(langData).map(([code, buf]) => ({ name: `${code}.traineddata.gz`, data: new Uint8Array(buf), store: true })));
+    entries.push({ name: "README.txt", data: new TextEncoder().encode(OFFLINE_README) });
+    const zip = await zipWrite(entries);
+    const name = `Kameleon-offline-${APP_VERSION}.zip`;
+    saveBlob(new Blob([zip], { type: "application/zip" }), name);
+    toast(t("offline.zipDone", { name, mb: mbOf(zip.length), src: mbOf(total) }), "ok");
+  } catch (err) {
+    console.error(err);
+    toast(t("offline.failed", { err: userError(err) }), "error");
+  } finally {
+    busy("");
+  }
+}
+
+const OFFLINE_README = `Kameleon ${APP_VERSION} – Bibliotheken für die Offline-Nutzung / libraries for offline use
+
+DE: Diese ZIP enthält die Dokument-Engine (MuPDF), die Texterkennung (Tesseract) und Sprachdaten.
+Ohne Internet: Kameleon öffnen, dann auf der Startseite oder unter Hilfe → „Offline arbeiten“
+diese ZIP-Datei (oder den entpackten Ordner) wählen. Die Dateien bleiben auf Ihrem Computer.
+
+EN: This ZIP holds the document engine (MuPDF), text recognition (Tesseract) and language data.
+Without internet: open Kameleon, then choose this ZIP file (or the unpacked folder) on the start
+page or under Help → "Working offline". The files stay on your computer.
+`;
+
+/** Store the set in the browser directly (fetched from the internet). */
+async function storeOfflineLibs(langs) {
+  try {
+    const { data, langData } = await fetchLibrarySet(langs, false);
+    busy(t("offline.storing"));
+    await activateLibs(data, langData, true, "browser");
+    toast(t("offline.done"), "ok");
+  } catch (err) {
+    console.error(err);
+    toast(t("offline.failed", { err: userError(err) }), "error");
+  } finally {
+    busy("");
+    refreshOfflineStatus();
+  }
+}
+
+/** Library files chosen by the user: loose files, a folder, or one or more ZIPs. */
+async function useLibraryFiles(files, remember) {
+  const data = {}, langData = {};
+  const take = (name, bytes) => {
+    // (an entry read from a ZIP may be a view into the archive: copy just its own bytes)
+    const buf = bytes instanceof ArrayBuffer ? bytes : bytes.slice().buffer;
+    const base = name.split(/[\\/]/).pop().toLowerCase();
+    if (LIB_FILES[base]) data[base] = buf;
+    const m = /^([a-z_]+)\.traineddata(\.gz)?$/.exec(base);
+    if (m) langData[m[1]] = buf;
+  };
+  try {
+    busy(t("offline.reading"));
+    for (const f of files) {
+      if (/\.zip$/i.test(f.name)) {
+        const bytes = new Uint8Array(await f.arrayBuffer());
+        for (const e of zipEntries(bytes)) take(e.name, await zipRead(e));
+      } else {
+        take(f.name, await f.arrayBuffer());
+      }
     }
-    const manifest = { version: OFFLINE_VERSION, date: Date.now(), bytes: total, langs: [] };
-    await idbPut(manifest, libKey("manifest"));
-    offlineLibsPromise = null;
-    const libs = await offlineLibs();
-    if (!libs) throw new Error("The stored libraries could not be read back.");
-    if (langs.length && libs.ocr) {
-      // Tesseract keeps language data in its own browser cache: loading the languages once stores them.
-      busy(t("offline.langs", { langs: langs.map((l) => t("ocrlang." + l)).join(", ") }));
-      const T = await import(libs.ocr.lib);
-      const createWorker = T.createWorker || (T.default && T.default.createWorker);
-      const w = await createWorker(langs.join("+"), 1, ocrWorkerOptions(libs.ocr));
-      await w.terminate();
-      manifest.langs = langs;
-      await idbPut(manifest, libKey("manifest"));
-    }
-    toast(t("offline.done", { mb: mbOf(total) }), "ok");
+    const missing = LIB_REQUIRED.filter((n) => !data[n]);
+    if (missing.length) { toast(t("offline.missing", { names: missing.join(", ") }), "error"); return; }
+    await activateLibs(data, langData, remember, "folder");
+    toast(t("offline.loaded", { n: Object.keys(data).length + Object.keys(langData).length }), "ok");
   } catch (err) {
     console.error(err);
     toast(t("offline.failed", { err: userError(err) }), "error");
@@ -11506,47 +11919,62 @@ async function downloadOfflineLibs(langs) {
 }
 
 async function removeOfflineLibs() {
-  for (const [name] of OFFLINE_FILES) await idbDel(libKey(name));
+  for (const name of Object.keys(LIB_FILES)) await idbDel(libKey(name));
   await idbDel(libKey("manifest"));
-  offlineLibsPromise = null;
+  if (!offlineSource) offlineLibsPromise = null;
   toast(t("offline.removed"), "ok");
   refreshOfflineStatus();
 }
 
-/** The "Working offline" part of the Help dialog: what is stored, and the language choice. */
+/* ------------------------------------------------------------------ the UI */
+
+const langNames = (codes) => (codes && codes.length ? codes.map((l) => t("ocrlang." + l)).join(", ") : t("offline.noLangs"));
+
 async function refreshOfflineStatus() {
   const el = $("#offlineStatus");
   if (!el) return;
   const m = await idbGet(libKey("manifest"));
-  if (!m) el.textContent = t("offline.none");
-  else if (m.version !== OFFLINE_VERSION) el.textContent = t("offline.outdated");
-  else {
-    const langs = (m.langs || []).map((l) => t("ocrlang." + l)).join(", ");
-    el.textContent = t("offline.stored", { date: new Date(m.date).toLocaleDateString(LANG === "de" ? "de-DE" : "en-GB"), mb: mbOf(m.bytes), langs: langs || t("offline.noLangs") });
-  }
+  const parts = [];
+  if (offlineSource) parts.push(t("offline.folder", { langs: langNames(offlineSource.langs) }));
+  if (!m) parts.push(t("offline.none"));
+  else if (m.version !== OFFLINE_VERSION) parts.push(t("offline.outdated"));
+  else parts.push(t("offline.stored", { date: new Date(m.date).toLocaleDateString(LANG === "de" ? "de-DE" : "en-GB"), mb: mbOf(m.bytes), langs: langNames(m.langs) }));
+  el.textContent = parts.join(" ");
   $("#offlineRemove").hidden = !m;
-  $("#offlineDownload").textContent = t(m ? "offline.again" : "offline.download");
 }
 
 function renderOfflineLangs() {
   let saved = {};
   try { saved = JSON.parse(localStorage.getItem(LS_OCR) || "{}"); } catch (_) { /* default */ }
-  const checked = new Set((saved.langs && saved.langs.length) ? saved.langs : (LANG === "de" ? ["deu", "eng"] : ["eng"]));
+  const fallback = new Set((saved.langs && saved.langs.length) ? saved.langs : (LANG === "de" ? ["deu", "eng"] : ["eng"]));
   const current = new Set([...document.querySelectorAll("#offlineLangs input:checked")].map((i) => i.value));
-  const on = current.size ? current : checked;
-  $("#offlineLangs").innerHTML = OCR_LANGS.map((l) =>
+  const on = current.size ? current : fallback;
+  $("#offlineLangs").innerHTML = sortedOcrLangs().map((l) =>
     `<label class="check"><input type="checkbox" value="${l}"${on.has(l) ? " checked" : ""}> ${escapeHtml(t("ocrlang." + l))}</label>`).join("");
 }
+
+const chosenOfflineLangs = () => [...document.querySelectorAll("#offlineLangs input:checked")].map((i) => i.value);
 
 function initOffline() {
   renderOfflineLangs();
   document.addEventListener("languagechange", () => { renderOfflineLangs(); if ($("#helpDialog").open) refreshOfflineStatus(); });
-  $("#offlineDownload").addEventListener("click", () => {
-    const langs = [...document.querySelectorAll("#offlineLangs input:checked")].map((i) => i.value);
-    $("#helpDialog").close("cancel"); // (the progress box would be hidden behind the dialog)
-    downloadOfflineLibs(langs);
-  });
+  const closeHelp = () => { if ($("#helpDialog").open) $("#helpDialog").close("cancel"); }; // (the progress box would be hidden behind it)
+  $("#offlineZipBtn").addEventListener("click", () => { const langs = chosenOfflineLangs(); closeHelp(); downloadOfflineZip(langs); });
+  $("#offlineDownload").addEventListener("click", () => { const langs = chosenOfflineLangs(); closeHelp(); storeOfflineLibs(langs); });
   $("#offlineRemove").addEventListener("click", () => removeOfflineLibs());
+  const pick = (input) => (e) => { e.preventDefault(); e.stopPropagation(); input.value = ""; input.click(); };
+  $("#offlineLoadZip").addEventListener("click", pick($("#offlineZip")));
+  $("#offlineLoadFolder").addEventListener("click", pick($("#offlineFolder")));
+  $("#engineLoadZip").addEventListener("click", pick($("#offlineZip")));
+  $("#engineLoadFolder").addEventListener("click", pick($("#offlineFolder")));
+  for (const input of [$("#offlineZip"), $("#offlineFolder")]) {
+    input.addEventListener("change", () => {
+      const files = [...input.files];
+      if (!files.length) return;
+      closeHelp();
+      useLibraryFiles(files, $("#offlineRemember").checked);
+    });
+  }
 }
 
 // Start-up (runs after ui.js, markup.js and tools.js have defined everything).
@@ -11554,6 +11982,7 @@ document.querySelectorAll(".lang-switch button").forEach((b) => b.addEventListen
 document.addEventListener("languagechange", onLanguageChange);
 initMarkup();
 initTools();
+initPicture();
 initOffline();
 init();
 

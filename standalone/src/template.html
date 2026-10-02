@@ -45,6 +45,10 @@
     </div>
     <div class="dz-progress" id="uploadProgress" hidden><div class="spinner"></div> <span id="uploadProgressText"></span></div>
     <div class="engine-status" id="engineStatus"><div class="spinner"></div> <span data-i18n="upload.engine">Loading the PDF engine…</span></div>
+    <div class="engine-offline" id="engineOffline" hidden><span data-i18n="offline.startHint"></span>
+      <button type="button" class="btn" id="engineLoadZip" data-i18n="offline.loadZip"></button>
+      <button type="button" class="btn" id="engineLoadFolder" data-i18n="offline.loadFolder"></button>
+    </div>
   </label>
   <!-- The workflow (also copied into Help); the buttons look as they do in the app. -->
   <section class="wf" id="wfStart" aria-labelledby="wfTitle">
@@ -120,6 +124,8 @@
     <div class="viewer-body">
     <div class="tool-rail" id="toolRail">
       <button type="button" class="rail-fold" id="railFold" data-i18n-title="tool.fold"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
+      <button type="button" class="tool pic-only" id="btnPicture" data-i18n-title="pic.title"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 12h3M11 12h9M4 17h12M20 17h0"/><circle cx="16" cy="7" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="18" cy="17" r="2"/></svg></button>
+      <div class="rail-sep pic-only"></div>
       <button type="button" class="tool active" data-tool="select" data-i18n-title="tool.select"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3l14 8-6 2-3 6z"/></svg></button>
       <button type="button" class="tool" data-tool="rect" data-i18n-title="tool.rect"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="6" width="16" height="12" rx="1"/></svg></button>
       <button type="button" class="tool" data-tool="ellipse" data-i18n-title="tool.ellipse"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="12" rx="9" ry="6.5"/></svg></button>
@@ -147,6 +153,16 @@
       <button type="button" class="tool" id="btnUndo" disabled data-i18n-title="tool.undo"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg></button>
       <button type="button" class="tool" id="btnRedo" disabled data-i18n-title="tool.redo"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14l5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h3"/></svg></button>
       <button type="button" class="tool" id="btnClearMarkups" data-i18n-title="tool.clear"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button>
+    </div>
+    <div class="pic-panel" id="picPanel" hidden>
+      <div class="pic-head"><b data-i18n="pic.title">Edit picture</b><button type="button" class="modal-x pic-x" id="picClose" data-i18n-title="common.close">×</button></div>
+      <label class="pic-row"><span data-i18n="pic.brightness">Brightness</span><input type="range" id="picBright" min="50" max="150" value="100"><output id="picBrightOut">100%</output></label>
+      <label class="pic-row"><span data-i18n="pic.contrast">Contrast</span><input type="range" id="picContrast" min="50" max="150" value="100"><output id="picContrastOut">100%</output></label>
+      <label class="check"><input type="checkbox" id="picGray"> <span data-i18n="pic.gray">Greyscale</span></label>
+      <div class="pic-row"><span data-i18n="pic.rotate">Rotate</span><span class="pic-buttons"><button type="button" class="btn" id="picRotL" data-i18n-title="pic.rotL">⟲ 90°</button><button type="button" class="btn" id="picRotR" data-i18n-title="pic.rotR">⟳ 90°</button></span><output id="picRotOut"></output></div>
+      <div class="pic-row"><span data-i18n="pic.cropLabel">Crop</span><span class="pic-buttons"><button type="button" class="btn" id="picCrop" data-i18n="pic.crop">Choose area</button></span><output id="picCropOut"></output></div>
+      <p class="muted small" id="picHint" data-i18n="pic.hint"></p>
+      <div class="pic-actions"><button type="button" class="btn ghost" id="picReset" data-i18n="pic.reset">Reset</button><button type="button" class="btn primary" id="picApply" data-i18n="pic.apply">Apply</button></div>
     </div>
     <div class="pages" id="pages"></div>
     <div class="pages translated cmp-pages" id="pagesCmp" hidden></div>
@@ -368,8 +384,19 @@
       <p class="muted small" data-i18n="offline.text"></p>
       <p class="small" id="offlineStatus"></p>
       <div class="field"><span data-i18n="offline.langsTitle"></span><div class="ocr-langs" id="offlineLangs"></div></div>
-      <div class="wf-row offline-actions"><button type="button" class="btn" id="offlineDownload" data-i18n="offline.download"></button><button type="button" class="btn ghost" id="offlineRemove" hidden data-i18n="offline.remove"></button></div>
+      <div class="wf-row offline-actions">
+        <button type="button" class="btn primary" id="offlineZipBtn" data-i18n="offline.zip"></button>
+        <button type="button" class="btn" id="offlineLoadZip" data-i18n="offline.loadZip"></button>
+        <button type="button" class="btn" id="offlineLoadFolder" data-i18n="offline.loadFolder"></button>
+      </div>
+      <label class="check"><input type="checkbox" id="offlineRemember"> <span data-i18n="offline.remember"></span></label>
+      <div class="wf-row offline-actions">
+        <button type="button" class="btn ghost" id="offlineDownload" data-i18n="offline.download"></button>
+        <button type="button" class="btn ghost" id="offlineRemove" hidden data-i18n="offline.remove"></button>
+      </div>
     </div>
+    <input type="file" id="offlineZip" class="visually-hidden" accept=".zip,application/zip" multiple tabindex="-1">
+    <input type="file" id="offlineFolder" class="visually-hidden" webkitdirectory multiple tabindex="-1">
     <p class="muted small help-version help-part">Kameleon v{{VERSION}} · <span data-i18n="app.tagline"></span></p>
     <div class="modal-actions">
       <button type="button" value="cancel" class="btn ghost" data-i18n="common.close">Close</button>

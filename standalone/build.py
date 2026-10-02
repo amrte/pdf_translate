@@ -1,4 +1,4 @@
-"""Build standalone/pdf-translate.html from standalone/src/ and the VERSION file.
+"""Build standalone/Kameleon-<version>.html from standalone/src/ and the VERSION file.
 
     python standalone/build.py
 """
@@ -18,7 +18,7 @@ def main() -> None:
         # The engine (PDF) and the e-book support run together in the workers.
         "ENGINE": "\n".join((SRC / f).read_text("utf-8") for f in ("engine.js", "ebook.js", "office.js", "legacy.js", "doc.js", "xls.js", "ppt.js")),
         # One module: interface, markup tools, field/OCR tools, then start-up.
-        "UI": "\n".join((SRC / f).read_text("utf-8") for f in ("ui.js", "markup.js", "tools.js", "offline.js", "main.js")).replace("{{VERSION}}", version),
+        "UI": "\n".join((SRC / f).read_text("utf-8") for f in ("ui.js", "markup.js", "tools.js", "picture.js", "offline.js", "main.js")).replace("{{VERSION}}", version),
     }
     for name in ("I18N", "ENGINE", "UI"):
         if "</script" in parts[name].lower():
@@ -30,7 +30,11 @@ def main() -> None:
     leftover = [p for p in ("{{STYLE}}", "{{I18N}}", "{{ENGINE}}", "{{UI}}", "{{VERSION}}") if p in html]
     if leftover:
         raise SystemExit(f"unreplaced placeholders: {leftover}")
-    out = HERE / "pdf-translate.html"
+    # The app file carries its version in its name; older builds are removed.
+    for stale in list(HERE.glob("Kameleon-*.html")) + [HERE / "pdf-translate.html"]:
+        if stale.exists():
+            stale.unlink()
+    out = HERE / f"Kameleon-{version}.html"
     out.write_text(html, "utf-8")
     print(f"Kameleon v{version}: wrote {out.relative_to(ROOT)} ({len(html):,} bytes)")
 

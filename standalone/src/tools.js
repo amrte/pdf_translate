@@ -341,6 +341,8 @@ const OCR_CORE = "https://cdn.jsdelivr.net/npm/tesseract.js-core@6.0.0";
 const OCR_LANG_PATH = ""; // "" = the language data on jsDelivr (@tesseract.js-data/<lang>)
 const OCR_LANGS = ["eng", "deu", "fra", "spa", "por", "nld", "swe", "pol", "ces", "slk", "hun", "bul", "ukr", "fin", "chi_sim", "chi_tra"];
 const LS_OCR = "pdftr:ocr-options";
+/** The OCR languages in alphabetical order of their names in the interface language. */
+const sortedOcrLangs = () => [...OCR_LANGS].sort((a, b) => t("ocrlang." + a).localeCompare(t("ocrlang." + b), LANG));
 
 /** Pages with no text but a picture covering much of the page (scans). */
 function scannedPages() {
@@ -375,7 +377,7 @@ function openOcrDialog() {
   let saved = {};
   try { saved = JSON.parse(localStorage.getItem(LS_OCR) || "{}"); } catch (_) { /* default */ }
   const langs = saved.langs || (LANG === "de" ? ["deu", "eng"] : ["eng"]);
-  $("#ocrLangs").innerHTML = OCR_LANGS.map((l) =>
+  $("#ocrLangs").innerHTML = sortedOcrLangs().map((l) =>
     `<label class="check"><input type="checkbox" value="${l}"${langs.includes(l) ? " checked" : ""}> ${escapeHtml(t("ocrlang." + l))}</label>`).join("");
   const scans = scannedPages().length;
   $("#ocrPagesEmpty").checked = scans > 0;

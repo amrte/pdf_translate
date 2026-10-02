@@ -1,7 +1,7 @@
 # Kameleon
 
 *Wechselt die Sprache, behält die Form. / Changes language, keeps its shape.*
-Formerly called PDF Translate; the generated file is still `standalone/pdf-translate.html`.
+Formerly called PDF Translate.
 
 A small web app for translating PDF documents **without losing their layout**:
 
@@ -22,8 +22,8 @@ The interface is in German by default; switch to English with DE / EN in the top
 
 The file is generated from `standalone/src/` with `python standalone/build.py`.
 
-[`standalone/pdf-translate.html`](standalone/pdf-translate.html) is the whole app in a single
-file. Download it and open it in a modern browser (Chrome, Edge, Firefox or Safari). Everything
+`standalone/Kameleon-<version>.html` (the one file in [`standalone/`](standalone/)) is the whole app in a single
+file; its name carries the version. Download it and open it in a modern browser (Chrome, Edge, Firefox or Safari). Everything
 runs locally on [MuPDF.js](https://www.npmjs.com/package/mupdf) (WebAssembly), so your PDF is never
 uploaded. The first time it runs, the browser downloads the MuPDF engine (about 4 MB) from
 cdn.jsdelivr.net. The last opened PDF and its translations are kept in the browser.
@@ -50,8 +50,9 @@ numbers stay as they are, and you download a new file in the same format. The vi
 preview of the text (the document as one flow, one page per slide, one page per sheet), not the
 exact Office layout.
 
-**Offline:** Help → "Working offline" stores the document engine and the text recognition library
-(about 15 MB) plus the chosen OCR languages in the browser, so the app runs without a connection.
+**Offline:** Help → "Working offline" downloads the document engine, the text recognition library and
+the chosen OCR languages as a ZIP (about 20 MB). Without internet, load that ZIP or its folder on the
+start page; optionally the browser keeps the files so the app starts offline by itself.
 
 **Pictures** (JPG, PNG, GIF, BMP, TIFF, WebP, AVIF, HEIC) open as a one-page document whose text
 is read with OCR; the translation is saved as a picture of the same size and format.
