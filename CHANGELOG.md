@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.47
+
+- PowerPoint: the text of SmartArt diagrams is now translated. Each line of a diagram is a segment (marked "diagram") in the slide's order, the "Translated" view shows the translations inside the drawn diagram, and the rebuilt file carries them both in the diagram's data and in the stored drawing, so PowerPoint and other programs show the translation.
+
 ## 1.46
 
 - PowerPoint: slides are now shown as they look. The preview draws each slide with its background, the shapes and pictures of the slide, its layout and its master, tables, and the text in its real place, size and colour; the "Translated" view sets the translations into the same boxes and shrinks them to fit where needed. SmartArt diagrams are drawn from the copy PowerPoint stores (their text is shown, not yet translated); charts appear as a placeholder box. Speaker notes follow each slide on a page of their own. Decks that cannot be drawn fall back to the former text preview.

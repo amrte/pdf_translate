@@ -572,6 +572,7 @@ async function saveBook(book, bytes, segments, translations, opts = {}) {
     if (lang) out = setBookLanguage(out, f.type, lang);
     if (out !== f.src || list.length) changed.set(f.path, out);
   });
+  if (book.deck) mirrorDiagramDrawings(book, segments, translations, changed, opts); // SmartArt drawings follow their data
   const fontsDropped = book.kind === "fb2" ? [] : await dropUncoveredFonts(book, changed, translations);
   let result;
   if (book.kind === "fb2") {

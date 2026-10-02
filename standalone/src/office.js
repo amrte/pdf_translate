@@ -439,6 +439,26 @@ function oxBlocks(src, el, ctx) {
 }
 
 /** DrawingML text (slides, notes, tables on slides) as preview chunks. */
+/** The text of a SmartArt diagram: the paragraphs of its data nodes (not of the layout's presentation points). */
+function oxDiagram(data, ctx) {
+  const chunks = [];
+  for (const pt of findAll(data.root, (k) => k.name === "pt")) {
+    const type = xmlAttr(data.src, pt, "type");
+    if (type && type !== "node" && type !== "asst") continue;
+    const t = firstNamed(pt, "t");
+    if (!t) continue;
+    const id = xmlAttr(data.src, pt, "modelId");
+    chunks.push('<div class="shape">');
+    kidsNamed(t, "p").forEach((p, pi) => {
+      const before = ctx.out.length;
+      chunks.push("<p>", ...oxParagraph(data.src, p, { ...ctx, file: data.fi, tag: "diagram" }), "</p>");
+      for (let i = before; i < ctx.out.length; i++) ctx.out[i].dgm = { id, pi }; // (which shape shows it)
+    });
+    chunks.push("</div>");
+  }
+  return chunks;
+}
+
 function oxDrawing(src, el, ctx) {
   const chunks = [];
   for (const k of el.kids || []) {
@@ -474,6 +494,9 @@ function oxDrawing(src, el, ctx) {
         chunks.push("</tr>");
       }
       chunks.push("</table>");
+    } else if (k.name === "graphicframe" && ctx.diagrams && findAll(k, (x) => x.name === "relids")[0]) {
+      const data = ctx.diagrams[xmlAttr(src, findAll(k, (x) => x.name === "relids")[0], "r:dm") || ""];
+      if (data) chunks.push(...oxDiagram(data, ctx)); // SmartArt: its text lives in the diagram's data part
     } else {
       chunks.push(...oxDrawing(src, k, ctx)); // groups, graphic frames …
     }
@@ -555,7 +578,7 @@ async function openOffice(bytes, kind) {
       if (i) preview.push(pageBreak);
       preview.push(`<p class="slide-no">${label(String(i + 1))}</p>`);
       const tree = findAll(sl.root, (k) => k.name === "sptree")[0];
-      if (tree) preview.push(...oxDrawing(sl.src, tree, { file: sl.fi, out: segments, tag: "p" }));
+      if (tree) preview.push(...oxDrawing(sl.src, tree, { file: sl.fi, out: segments, tag: "p", diagrams: sl.diagramData }));
       const notesRel = Object.values(sl.rels).find((r) => /\/notesSlide$/.test(r.type));
       const nf = notesRel && await addFile(notesRel.target);
       const ntree = nf && findAll(nf.root, (k) => k.name === "sptree")[0];

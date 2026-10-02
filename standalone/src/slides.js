@@ -97,7 +97,18 @@ async function collectDeck(ctx) {
     // SmartArt: PowerPoint stores a drawn copy of each diagram, which is what is shown
     const diagrams = {};
     for (const r of Object.values(slide.rels)) if (/\/diagramDrawing$/.test(r.type)) { const d = await part(r.target); if (d) diagrams[r.target] = d; }
-    deck.slides.push({ ...slide, layout, master, theme, diagrams, notesFi: -1 });
+    // The diagram's data (its text, translated like slide text) and the drawing it belongs to.
+    const diagramData = {};
+    for (const [rId, r] of Object.entries(slide.rels)) {
+      if (!/\/diagramData$/.test(r.type)) continue;
+      const f = await addFile(r.target);
+      if (!f) continue;
+      const ext = findAll(f.root, (k) => k.name === "datamodelext")[0];
+      const drawRel = ext && slide.rels[xmlAttr(f.src, ext, "relId") || ""];
+      const drawing = (drawRel && diagrams[drawRel.target]) || Object.values(diagrams).find((d) => d.path.replace(/\D/g, "") === r.target.replace(/\D/g, "")) || null;
+      diagramData[rId] = { rId, fi: f.fi, src: f.src, root: f.root, path: r.target, drawing };
+    }
+    deck.slides.push({ ...slide, layout, master, theme, diagrams, diagramData, notesFi: -1 });
   }
   return deck;
 }
@@ -346,9 +357,10 @@ function xfrmOf(src, xfrm) {
 const FONT_FAMILY = (typeface) => (/times|georgia|cambria|garamond|antiqua|palatino|baskerville|bodoni|century|minion|serif/i.test(typeface || "") && !/sans/i.test(typeface || "") ? "serif" : /courier|consolas|mono|menlo/i.test(typeface || "") ? "monospace" : "sans-serif");
 
 class SlideRenderer {
-  constructor(doc, fk, images, deck, sl, segs, translations) {
+  constructor(doc, fk, images, deck, sl, segs, translations, segsByFile = new Map()) {
     this.doc = doc; this.fk = fk; this.images = images; this.deck = deck; this.sl = sl; this.translations = translations;
     this.segs = segs; // this slide's segments, in document order
+    this.segsByFile = segsByFile;
     this.ops = []; this.used = new Set(); this.xobjs = new Map();
     this.scheme = colorScheme(sl);
     this.paper = "#ffffff";
@@ -535,11 +547,11 @@ class SlideRenderer {
     const tbl = findAll(gf, (k) => k.name === "tbl")[0];
     if (tbl) { if (!inherited) this.table(part, tbl, M, xf); return; }
     const relIds = findAll(gf, (k) => k.name === "relids")[0];
-    if (relIds && part.diagrams) { // SmartArt: the stored drawing of the diagram (shapes relative to the frame)
-      const dr = Object.values(part.rels).find((r) => /\/diagramDrawing$/.test(r.type) && part.diagrams[r.target]);
-      const d = dr && part.diagrams[dr.target];
+    if (relIds && part.diagramData) { // SmartArt: the stored drawing of the diagram (shapes relative to the frame)
+      const data = part.diagramData[xmlAttr(src, relIds, "r:dm") || ""];
+      const d = data ? data.drawing : null;
       const tree = d && findAll(d.root, (k) => k.name === "sptree")[0];
-      if (tree) { this.tree({ src: d.src, fi: -1, rels: d.rels }, tree, M, false); return; }
+      if (tree) { this.tree({ src: d.src, fi: -1, rels: d.rels, dgm: diagramTextMap(data, this.segsByFile.get(data.fi) || []) }, tree, M, false); return; }
     }
     // a chart, an embedded object: a quiet placeholder box
     this.ops.push(`q ${mfmt(M)} cm 0.95 0.95 0.95 rg 0.75 0.75 0.75 RG 0.75 w 0 0 ${fmt(xf.w)} ${fmt(xf.h)} re B Q`);
@@ -645,6 +657,13 @@ class SlideRenderer {
 
   /** Text shown for a paragraph: its segments' translation or text; else its plain text (fields). */
   paraText(part, p) {
+    const shown = (s) => unescapeMarkers(shownText((this.translations[s.id] || "").trim() || s.text, s.tags).replace(/<\/?\d+\/?>/g, ""));
+    if (part.dgm) { // a diagram shape: its text is the data node's paragraph
+      let sp = p.parent;
+      while (sp && sp.name !== "sp") sp = sp.parent;
+      const seg = sp && part.dgm.get(`${xmlAttr(part.src, sp, "modelId")}/${kidsNamed(p.parent, "p").indexOf(p)}`);
+      if (seg) return shown(seg);
+    }
     const segs = this.segs.filter((s) => s.file === part.fi && s.s >= p.s && s.e <= p.e);
     if (segs.length) {
       return segs.map((s) => {
@@ -814,7 +833,7 @@ function renderSlides(book, segments, translations = {}) {
     };
     for (const sl of deck.slides) {
       if (!sl) { addPage("", new Set(), new Map()); continue; }
-      const R = new SlideRenderer(doc, fk, images, deck, sl, (byFile.get(sl.fi) || []).sort((a, b) => a.s - b.s), translations);
+      const R = new SlideRenderer(doc, fk, images, deck, sl, (byFile.get(sl.fi) || []).sort((a, b) => a.s - b.s), translations, byFile);
       let content;
       try { content = R.render(); } catch (e) { content = R.ops.join("\n"); } // a damaged shape costs the rest of its slide, not the deck
       addPage(content, R.used, R.xobjs);
@@ -837,5 +856,67 @@ function renderSlides(book, segments, translations = {}) {
   } finally {
     fk.dispose();
     free(doc);
+  }
+}
+
+/* ---------------------------------------------------------------- SmartArt text */
+
+/** Presentation point id → data node id, from the data part of a diagram. */
+function diagramNodeMap(data) {
+  const map = new Map();
+  for (const pt of findAll(data.root, (k) => k.name === "pt")) {
+    if (xmlAttr(data.src, pt, "type") !== "pres") continue;
+    const prSet = firstNamed(pt, "prset"), node = prSet && xmlAttr(data.src, prSet, "presAssocID");
+    if (node) map.set(xmlAttr(data.src, pt, "modelId"), node);
+  }
+  return map;
+}
+
+/** "<drawing shape modelId>/<paragraph index>" → the data segment shown in that paragraph. */
+function diagramTextMap(data, segs) {
+  const nodes = diagramNodeMap(data), byNode = new Map();
+  for (const s of segs) if (s.dgm) { if (!byNode.has(s.dgm.id)) byNode.set(s.dgm.id, []); byNode.get(s.dgm.id).push(s); }
+  const map = new Map();
+  for (const [pres, node] of nodes) for (const s of byNode.get(node) || []) map.set(`${pres}/${s.dgm.pi}`, s);
+  for (const [node, list] of byNode) for (const s of list) map.set(`${node}/${s.dgm.pi}`, s); // (a shape may carry the node id itself)
+  return map;
+}
+
+/**
+ * Write the translations of SmartArt text into the diagrams' stored drawings as well: PowerPoint
+ * rebuilds a diagram from its data, other programs show the drawing. `changed` gets the new XML.
+ */
+function mirrorDiagramDrawings(book, segments, translations, changed, opts = {}) {
+  const deck = book.deck;
+  if (!deck) return;
+  const plain = (s, tr) => unescapeMarkers(shownText(tr, s.tags).replace(/<\/?\d+\/?>/g, ""));
+  for (const sl of deck.slides) {
+    if (!sl || !sl.diagramData) continue;
+    for (const data of Object.values(sl.diagramData)) {
+      const d = data.drawing;
+      if (!d) continue;
+      const map = diagramTextMap(data, segments.filter((s) => s.file === data.fi));
+      const edits = [];
+      for (const sp of findAll(d.root, (k) => k.name === "sp")) {
+        const id = xmlAttr(d.src, sp, "modelId"), body = findAll(sp, (k) => k.name === "txbody")[0];
+        if (!id || !body) continue;
+        kidsNamed(body, "p").forEach((p, pi) => {
+          const seg = map.get(`${id}/${pi}`), tr = seg && (translations[seg.id] || "").trim();
+          if (!tr) return;
+          const text = opts.bilingual ? `${plain(seg, seg.text)}\n${plain(seg, tr)}` : plain(seg, tr);
+          const pPr = firstNamed(p, "ppr"), endPr = firstNamed(p, "endpararpr");
+          const run = kidsNamed(p, "r")[0], rPrEl = run && firstNamed(run, "rpr");
+          const rPr = rPrEl ? d.src.slice(rPrEl.s, rPrEl.e) : endPr ? d.src.slice(endPr.s, endPr.e).replace(/endParaRPr/g, "rPr") : "";
+          const runs = text.split("\n").map((line) => `<a:r>${rPr}<a:t>${escapeXmlText(line)}</a:t></a:r>`).join(`<a:br>${rPr}</a:br>`);
+          edits.push({ s: p.cs, e: p.ce, text: (pPr ? d.src.slice(pPr.s, pPr.e) : "") + runs + (endPr ? d.src.slice(endPr.s, endPr.e) : "") });
+        });
+      }
+      if (!edits.length) continue;
+      edits.sort((a, b) => a.s - b.s);
+      let out = "", pos = 0;
+      for (const ed of edits) { out += d.src.slice(pos, ed.s) + ed.text; pos = ed.e; }
+      out += d.src.slice(pos);
+      changed.set(d.path, out);
+    }
   }
 }
