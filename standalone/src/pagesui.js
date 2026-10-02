@@ -3,7 +3,8 @@
 // pages of other files inserted. "Apply" has the engine put the file together anew; the new file
 // is opened and the translations of the kept pages are carried over.
 
-const pm = { items: [], extras: [], thumbs: new Map(), swapFrom: null, slides: null, hidden: null, showHidden: false, insertAt: null };
+const pm = { items: [], extras: [], thumbs: new Map(), swapFrom: null, slides: null, hidden: null, notes: null, showHidden: false, insertAt: null };
+const pmNotesItem = (it) => Boolean(it.from === 0 && pm.notes && pm.notes[it.page]);
 const pmHiddenItem = (it) => Boolean(it.from === 0 && pm.hidden && pm.hidden[it.page]);
 const pmShown = (it) => pm.showHidden || !pmHiddenItem(it);
 
@@ -24,8 +25,13 @@ async function openPagesDialog() {
   const info = await pool.workers[0].call("pagesInfo");
   pm.slides = info && info.slides ? info.slides : null;
   pm.hidden = info && info.hidden ? info.hidden : null;
+  pm.notes = info && info.notes ? info.notes : null;
   pm.showHidden = $("#pagesShowHidden").checked;
   $("#pagesHiddenWrap").hidden = !(pm.hidden && pm.hidden.some(Boolean));
+  const withNotes = pm.notes ? pm.notes.filter(Boolean).length : 0;
+  $("#pagesNotesWrap").hidden = !withNotes;
+  $("#pagesDropNotes").checked = false;
+  $("#pagesDropNotesText").textContent = t("pages.dropNotes", { n: withNotes });
   pm.extras = []; pm.swapFrom = null; pm.insertAt = null;
   for (const url of pm.thumbs.values()) URL.revokeObjectURL(url);
   pm.thumbs.clear();
@@ -48,6 +54,7 @@ function renderPagesGrid() {
     else if (it.from > 0) { const ex = pm.extras.find((e) => e.index === it.from); badge = `${ex ? ex.name : ""} · ${it.page + 1}`; }
     else if (it.page !== i) badge += t("pages.origin", { n: it.page + 1 });
     else badge = badge.replace(/ · $/, "");
+    if (pmNotesItem(it)) badge = badge ? `${badge} · ${t("pages.notesLabel")}` : t("pages.notesLabel");
     const btn = (act, key, label) => `<button type="button" data-act="${act}" title="${t(key)}" aria-label="${t(key)}">${label}</button>`;
     return `<div class="pg-card${pm.swapFrom === i ? " swap" : ""}${pmHiddenItem(it) ? " hidden-slide" : ""}" draggable="true" data-i="${i}">
       <div class="pg-thumb" style="aspect-ratio: ${size.width} / ${size.height}">${it.from < 0 ? `<span>${t("pages.blankLabel")}</span>` : '<img alt="">'}</div>
@@ -147,12 +154,13 @@ function pmRestoreTranslations(cap, plan) {
 async function applyPages() {
   const plan = pm.items.map((it) => ({ from: it.from, page: it.page, w: it.w, h: it.h }));
   const n = pmSlides() ? pm.slides.length : state.doc.pages.length;
-  if (plan.length === n && plan.every((p, i) => p.from === 0 && p.page === i)) { toast(t("pages.unchanged")); return; }
+  const dropNotes = pmSlides() && !$("#pagesNotesWrap").hidden && $("#pagesDropNotes").checked;
+  if (!dropNotes && plan.length === n && plan.every((p, i) => p.from === 0 && p.page === i)) { toast(t("pages.unchanged")); return; }
   const name = state.doc.name.replace(/\.ppt$/i, ".pptx");
   const kind = state.doc.kind;
   busy(t("pages.working"));
   try {
-    const bytes = await pool.workers[0].call("rearrange", { plan });
+    const bytes = await pool.workers[0].call("rearrange", { plan, dropNotes });
     const cap = pmCaptureTranslations();
     await loadBytes(new Uint8Array(bytes), name, true);
     if (!state.doc || state.doc.kind !== kind) return;

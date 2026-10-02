@@ -708,7 +708,9 @@ async function openOffice(bytes, kind) {
       const nf = notesRel && await addFile(notesRel.target);
       const ntree = nf && findAll(nf.root, (k) => k.name === "sptree")[0];
       if (ntree) {
+        const beforeNotes = segments.length;
         const chunks = oxDrawing(nf.src, ntree, { file: nf.fi, out: segments, tag: "notes", notes: true });
+        for (let k = beforeNotes; k < segments.length; k++) segments[k].notes = true; // speaker notes, not slide text
         if (chunks.some((c) => typeof c === "object")) { preview.push('<div class="notes">', ...chunks, "</div>"); sl.notesFi = nf.fi; }
       }
       for (let k = before; k < segments.length; k++) { segments[k].slide = i; if (sl.hidden) segments[k].hiddenSlide = true; } // (the page manager finds translations again by slide)

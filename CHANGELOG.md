@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.58
+
+- Presentations: speaker notes are now handled as what they are. The notes a slide carries (shown in the preview as the grey page after the slide) are labelled "speaker notes" in the segment list, "Translate with AI" leaves them out unless the new tickbox "Include speaker notes" is ticked, and the slide manager shows which slides carry notes and offers "Remove speaker notes" – Apply then strips all notes from the file, and the grey notes pages disappear.
+
 ## 1.57
 
 - PDF: formula recognition covers more of what textbooks set – single Greek letters and lone symbols (Λ, Φ, Θ, x), equations in a Symbol-encoded font, phasor and fraction parts such as "U·e^jωt·e^jφu", indexed quantities like "R₂R₃ − R₁R₄", function terms like "ln r_a / r_M" and reaction equations such as "Zn + 2 OH⁻ → ZnO + H₂O + 2e⁻". They are marked as formulas, skipped by the translation and kept as they are in the rebuilt PDF.

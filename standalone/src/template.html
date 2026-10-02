@@ -398,6 +398,7 @@
       <label><span data-i18n="ai.partSize">Segments per part</span> <input id="aiPartSize" type="number" min="20" step="1" value="1000"></label>
       <label class="check"><input type="checkbox" id="aiOnlyTodo"> <span data-i18n="ai.onlyTodo"></span></label>
       <label class="check pptx-only"><input type="checkbox" id="aiHidden"> <span data-i18n="ai.hidden"></span></label>
+      <label class="check pptx-only" data-i18n-title="ai.notesTitle"><input type="checkbox" id="aiNotes"> <span data-i18n="ai.notes"></span></label>
       <label class="check kw-opt" data-i18n-title="ai.keywordsTitle"><input type="checkbox" id="aiKeywords" checked> <span data-i18n="ai.keywords"></span> <input id="aiKeywordCount" class="kw-n" type="number" min="1" max="100" value="10" data-i18n-aria="ai.keywordCount"></label>
       <label class="check kw-opt" data-i18n-title="ai.examplesTitle"><input type="checkbox" id="aiExamples"> <span data-i18n="ai.examples"></span></label>
     </div>
@@ -486,6 +487,7 @@
       <button type="button" class="btn" id="pagesAddBlank" data-i18n="pages.blank"></button>
       <button type="button" class="btn" id="pagesAddFile" data-i18n="pages.fromFile"></button>
       <label class="check" id="pagesHiddenWrap" hidden><input type="checkbox" id="pagesShowHidden"> <span data-i18n="pages.showHidden"></span></label>
+      <label class="check" id="pagesNotesWrap" hidden data-i18n-title="pages.dropNotesTitle"><input type="checkbox" id="pagesDropNotes"> <span id="pagesDropNotesText"></span></label>
       <span class="muted" id="pagesCount"></span>
       <span class="spacer"></span>
       <button value="cancel" class="btn ghost" data-i18n="common.cancel">Cancel</button>

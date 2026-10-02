@@ -2608,10 +2608,10 @@ function createHandler() {
       return { result: png.buffer, transfer: [png.buffer] };
     }
     if (cmd === "extraClear") { clearExtras(); return { result: true }; }
-    if (cmd === "pagesInfo") { const deck = W.book && W.book.deck; return { result: { slides: (deck && deck.slidePages) || null, hidden: deck ? deck.slides.map((sl) => Boolean(sl && sl.hidden)) : null } }; }
+    if (cmd === "pagesInfo") { const deck = W.book && W.book.deck; return { result: { slides: (deck && deck.slidePages) || null, hidden: deck ? deck.slides.map((sl) => Boolean(sl && sl.hidden)) : null, notes: deck ? deck.slides.map((sl) => Boolean(sl && sl.notesFi >= 0)) : null } }; }
     if (cmd === "rearrange") {
       if (!W.bytes) throw new Error("No document is open.");
-      const bytes = await rearrangeDocument(W.kind, W.bytes, args.plan, W.extras.map((e) => e.bytes));
+      const bytes = await rearrangeDocument(W.kind, W.bytes, args.plan, W.extras.map((e) => e.bytes), { dropNotes: Boolean(args.dropNotes) });
       return { result: bytes, transfer: [bytes.buffer] };
     }
     if (cmd === "keywordsPdf") { const b = keywordsPdf(args); return { result: b, transfer: [b.buffer] }; }

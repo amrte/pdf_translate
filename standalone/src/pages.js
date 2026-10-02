@@ -111,7 +111,7 @@ const contentTypesXml = (ct) => `<?xml version="1.0" encoding="UTF-8" standalone
  * The slides of the plan as a new PPTX. Slides of the open deck keep their parts; a slide used
  * twice is duplicated; slides from other decks are copied with everything they refer to.
  */
-async function rearrangePptx(bytes, plan, extras) {
+async function rearrangePptx(bytes, plan, extras, opts = {}) {
   const pkg = pkgOpen(bytes);
   const rootRel = (await pkgRels(pkg, "")).find((r) => /\/officeDocument$/.test(r.type));
   const presPath = rootRel && pkg.byName.has(rootRel.target) ? rootRel.target : "ppt/presentation.xml";
@@ -242,6 +242,19 @@ async function rearrangePptx(bytes, plan, extras) {
     drop(s.target);
   }
 
+  // --- the speaker notes of the kept slides go too, when asked (the slide's relationships lose the link)
+  if (opts.dropNotes) {
+    for (const s of slides) {
+      if (!usedOwn.has(s.target)) continue;
+      const rels = await pkgRels(pkg, s.target);
+      const notes = rels.filter((r) => /\/notesSlide$/.test(r.type));
+      if (!notes.length) continue;
+      for (const r of notes) { removed.add(r.target); removed.add(relsPathOf(r.target)); ct.overrides.delete(`/${r.target}`); }
+      const rest = rels.filter((r) => !notes.includes(r));
+      addText(relsPathOf(s.target), relsXml(rest.map((r) => ({ ...r, target: r.external ? r.target : relativePart(s.target, r.target) }))));
+    }
+  }
+
   // --- presentation.xml and its relationships
   const keptRels = presRels.filter((r) => !(/\/slide$/.test(r.type) && !usedOwn.has(r.target)));
   for (const s of list) if (s.added) keptRels.push({ id: s.rId, type: `${REL_TYPE}slide`, target: s.target, external: false });
@@ -266,8 +279,8 @@ async function rearrangePptx(bytes, plan, extras) {
 }
 
 /** Dispatch by kind: PDF or PPTX (a converted .ppt is a PPTX here). */
-async function rearrangeDocument(kind, bytes, plan, extras) {
+async function rearrangeDocument(kind, bytes, plan, extras, opts = {}) {
   if (kind === "pdf") return rearrangePdf(bytes, plan, extras);
-  if (kind === "pptx") return rearrangePptx(bytes, plan, extras);
+  if (kind === "pptx") return rearrangePptx(bytes, plan, extras, opts);
   throw new Error("Pages of this file type cannot be rearranged.");
 }

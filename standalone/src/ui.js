@@ -901,7 +901,7 @@ const translatable = () => state.doc.segments.filter((s) => !s.skip);
 function segMeta(s) {
   const page = t("meta.page", { n: s.page + 1 });
   if (s.skip) return `${page} · ${t(s.formula ? "meta.formula" : "meta.numbers")}`;
-  if (isBook()) return s.hidden ? `${t("meta.notShown")} · ${s.tag}` : `${page} · ${s.tag}`;
+  if (isBook()) return s.hidden ? `${t("meta.notShown")} · ${s.tag}` : `${page} · ${s.notes ? t("meta.notes") : s.tag}`;
   if (s.ocr) return `${page} · OCR · ${Math.round(s.size * 10) / 10}pt${s.bold ? " " + t("meta.bold") : ""}`;
   const style = [s.bold && t("meta.bold"), s.italic && t("meta.italic")].filter(Boolean).join(" ");
   const rot = s.rotation ? ` · ${t("meta.rotated", { deg: s.rotation })}` : "";
@@ -1742,7 +1742,7 @@ function aiSegments() {
   const n = state.doc.pages.length;
   const from = Math.min(n, Math.max(1, Number($("#aiFrom").value) || 1)) - 1;
   const to = Math.min(n, Math.max(from + 1, Number($("#aiTo").value) || n)) - 1;
-  return state.doc.segments.filter((s) => !s.skip && s.page >= from && s.page <= to && (!$("#aiOnlyTodo").checked || !hasTr(s.id)) && (!s.hiddenSlide || $("#aiHidden").checked));
+  return state.doc.segments.filter((s) => !s.skip && s.page >= from && s.page <= to && (!$("#aiOnlyTodo").checked || !hasTr(s.id)) && (!s.hiddenSlide || $("#aiHidden").checked) && (!s.notes || $("#aiNotes").checked));
 }
 
 /** The selected segments split into parts of "Fields per part" (numbers stay global). */
@@ -1843,7 +1843,7 @@ function initHelp() {
   addCloseButtons();
   $("#btnHelp").addEventListener("click", () => openHelp(false));
   $("#btnAi").addEventListener("click", () => openHelp(true));
-  for (const id of ["#aiTarget", "#aiFrom", "#aiTo", "#aiOnlyTodo", "#aiHidden", "#aiKeywords", "#aiKeywordCount", "#aiExamples", "#aiContext", "#aiGlossary", "#aiPartSize"]) {
+  for (const id of ["#aiTarget", "#aiFrom", "#aiTo", "#aiOnlyTodo", "#aiHidden", "#aiNotes", "#aiKeywords", "#aiKeywordCount", "#aiExamples", "#aiContext", "#aiGlossary", "#aiPartSize"]) {
     $(id).addEventListener("input", refreshAiPrompt);
   }
   $("#aiParts").addEventListener("click", (e) => {
