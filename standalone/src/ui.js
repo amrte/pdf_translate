@@ -835,6 +835,22 @@ function setVariant(variant) {
 }
 
 const ZOOM_MIN = 0.25, ZOOM_MAX = 5;
+
+/**
+ * The smallest zoom: 25 %, or less when a page is so large (a photo at its own resolution, a
+ * poster) that 25 % would still not show it whole – fit-to-width and fit-page must always be
+ * reachable.
+ */
+function zoomMin() {
+  if (!state.doc) return ZOOM_MIN;
+  const box = $("#pages");
+  let fit = ZOOM_MIN;
+  viewPages().forEach((_, i) => {
+    const [w, h] = shownSize(i);
+    fit = Math.min(fit, (box.clientWidth - 48) / (w * 1.25), (box.clientHeight - 44) / (h * 1.25));
+  });
+  return Math.max(0.02, Math.min(ZOOM_MIN, Math.floor(fit * 1000) / 1000));
+}
 let zoomRenderTimer = null;
 
 /**
@@ -844,7 +860,7 @@ let zoomRenderTimer = null;
 function setZoom(z, anchor) {
   const box = $("#pages");
   state.fitMode = false;
-  z = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Math.round(z * 100) / 100));
+  z = Math.min(ZOOM_MAX, Math.max(zoomMin(), Math.round(z * 1000) / 1000)); // (tenths of a percent: on a huge page a whole percent is dozens of pixels)
   if (!state.doc || z === state.zoom) return;
   const ax = anchor ? anchor[0] : box.clientWidth / 2, ay = anchor ? anchor[1] : box.clientHeight / 2;
   const cx = box.scrollLeft + ax, cy = box.scrollTop + ay;
