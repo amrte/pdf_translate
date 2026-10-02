@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.56
+
+- PDF: displayed equations are recognised as formulas far more reliably – math signs, Greek letters, sub- and superscripts, single-letter variables, symbol glyphs without a Unicode value and math fonts count, real words count against. A formula needs no translation (it is marked "formula" and skipped) and is drawn again from the original when the PDF is rebuilt, so its layout survives. Sentences that merely contain "x = 5" stay text.
+
 ## 1.55
 
 - Equations in PowerPoint and Word files (Office Math) are now shown: the segment and the slide preview show them as readable text – fractions as a/b, powers and indices with small digits, roots, sums, integrals, brackets, matrices – and the equation itself stays in the file untouched.

@@ -836,21 +836,44 @@ function buildSegment(group, pageNo, bounds, id, marginsByRot, pageLines, shaped
 }
 
 const MATH_FONT_RE = /^(?:cm(?:mi|sy|ex|bsy|mib)\d|msam|msbm|eufm|eusm|rsfs|stmary|wasy|lmmath|latinmodern-?math|cambria-?math|stix\w*math|xits|asana|tx(?:mi|sy|ex)|px(?:mi|sy|ex)|mtmi|mtsy|mathematicalpi|mt-?extra|euler|esint|symbol)|math/i;
-const MATH_SIGN_RE = /[=≈≠≤≥±∓×÷·⋅√∑∏∫∂∞∝→⇒⇔∇∆Δ\u0370-\u03ff]/;
+const MATH_SIGN_RE = /[=≈≠≤≥±∓×÷·⋅√∑∏∫∂∞∝→⇒⇔∇∆ΔͰ-Ͽ]/;
+const MATH_SIGN_RE_G = /[=≈≠≤≥±∓×÷·⋅√∑∏∫∂∞∝→⇒⇔∇∆Δ^\u0370-\u03ff]|(?<=[\p{L}\p{N})\]])\s*\+\s*(?=[\p{L}\p{N}(\[√∑∫])/gu;
+const MATH_SIGNS_G = /[=≈≠≤≥±∓×÷·⋅√∑∏∫∂∞∝→⇒⇔∇∆Δ^Ͱ-Ͽ]|(?<=[\p{L}\p{N})\]])\s*[+−-]\s*(?=[\p{L}\p{N}(\[√∑∫])|(?<=[\p{L}\p{N})])\s*\/\s*(?=[\p{L}\p{N}(])/gu;
+/** Words that occur in formulas without making them prose. */
+const MATH_WORDS = new Set(["sin", "cos", "tan", "cot", "sec", "csc", "arcsin", "arccos", "arctan", "sinh", "cosh", "tanh", "log", "ln", "lg", "exp", "lim", "max", "min", "sup", "inf", "det", "arg", "mod", "div", "rot", "grad", "const", "dim", "ker", "rank", "sgn", "tr", "diag", "where", "with", "für", "mit", "wenn", "if", "and", "und", "or", "oder"]);
 
 /**
- * A formula (E = m·v², fraction parts, unit expressions such as kg·m²/s³): mostly set in math
- * fonts, or math signs without a single word. It stays as it is.
+ * A formula (E = m·v², I = I₀ + Σ√2·I_k·cos(kω₁t + φ_ik), fraction parts, unit expressions such
+ * as kg·m²/s³): set in math fonts, or math signs, Greek letters, sub- and superscripts and
+ * single-letter variables with hardly a real word among them. It stays as it is.
  */
 function isFormula(text, spans) {
-  let math = 0, all = 0;
+  let math = 0, all = 0, sizeMin = Infinity, sizeMax = 0, italicLetters = 0;
   for (const s of spans) {
     const n = s.text.replace(/\s/g, "").length;
+    if (!n) continue;
     all += n;
     if (MATH_FONT_RE.test(s.font.name)) math += n;
+    sizeMin = Math.min(sizeMin, s.size); sizeMax = Math.max(sizeMax, s.size);
+    if (s.font.italic) italicLetters += (s.text.match(/\p{L}/gu) || []).length;
   }
-  if (all && math >= 0.6 * all && !/\p{L}{5,}/u.test(text)) return true;
-  return MATH_SIGN_RE.test(text) && !/\p{L}{4,}/u.test(text);
+  const words = (text.match(/\p{L}{3,}/gu) || []).filter((w) => !MATH_WORDS.has(w.toLowerCase()) && !/^[Ͱ-Ͽ]+$/.test(w)).length;
+  const longWords = (text.match(/\p{L}{5,}/gu) || []).filter((w) => !MATH_WORDS.has(w.toLowerCase())).length;
+  if (all && math >= 0.6 * all && !longWords) return true;
+  const strong = (text.match(MATH_SIGN_RE_G) || []).length; // =, ≤, √, ∑, Greek …
+  const ops = (text.match(MATH_SIGNS_G) || []).length; // those, and + − / between letters or digits
+  const unknown = (text.match(/�/g) || []).length;
+  const vars = (text.match(/(?<![\p{L}\p{N}])\p{L}(?![\p{L}])/gu) || []).length; // single letters: variables
+  const scripts = sizeMin < Infinity && sizeMax >= 1.25 * sizeMin; // sub- or superscripts
+  const letters = (text.match(/\p{L}/gu) || []).length;
+  if (strong && !words) return true; // "E = m·v²", "k = 1", "α ≤ π"
+  if (ops >= 2 && !words && letters >= 1 && letters <= 6) return true; // "a−b/c" (a product code with more letters is text; plain numbers are "numbers")
+  if (words > 2) return false; // a sentence, even with an equation in it
+  if (unknown >= 2 && words <= 1) return true; // symbol glyphs without Unicode
+  if (strong >= 2 && words <= 1 && (vars >= 2 || unknown || scripts)) return true;
+  if (scripts && strong && words <= 1) return true;
+  if (vars >= 3 && strong && letters <= 2 * vars + 4) return true;
+  return italicLetters && letters <= 2 && !words && /^[\p{L}\p{N}\s]+$/u.test(text); // a lone variable "n" set in italics
 }
 
 /**
