@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.41
+
+- The "Recently opened" row on the start screen no longer overlaps the drop area; it sits a few pixels below it.
+
 ## 1.40
 
 - "Fit to width" and "Fit the whole page" now work for pictures too. A photo at its own resolution makes a very large page, and the zoom used to stop at 25 %, so the page never fitted. The zoom now goes as low as the page needs, and it is set finely enough that the fitted page no longer overhangs the view by a few pixels.

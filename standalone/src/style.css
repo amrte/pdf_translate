@@ -606,7 +606,7 @@ body.splitting .pages, body.splitting iframe { pointer-events: none; }
 }
 
 /* ---------- recently opened documents (start page) ---------- */
-.recent { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px 10px; font-size: 13px; color: var(--muted); margin-top: -16px; max-width: min(1400px, 100%); }
+.recent { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px 10px; font-size: 13px; color: var(--muted); margin-top: -4px; max-width: min(1400px, 100%); }
 .recent-list { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
 .recent-item { display: inline-flex; align-items: stretch; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); overflow: hidden; }
 .recent-open { border: 0; background: none; font: inherit; font-weight: 550; color: var(--text); padding: 4px 9px; cursor: pointer; max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
