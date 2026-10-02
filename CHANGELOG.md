@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.57
+
+- PDF: formula recognition covers more of what textbooks set – single Greek letters and lone symbols (Λ, Φ, Θ, x), equations in a Symbol-encoded font, phasor and fraction parts such as "U·e^jωt·e^jφu", indexed quantities like "R₂R₃ − R₁R₄", function terms like "ln r_a / r_M" and reaction equations such as "Zn + 2 OH⁻ → ZnO + H₂O + 2e⁻". They are marked as formulas, skipped by the translation and kept as they are in the rebuilt PDF.
+
 ## 1.56
 
 - PDF: displayed equations are recognised as formulas far more reliably – math signs, Greek letters, sub- and superscripts, single-letter variables, symbol glyphs without a Unicode value and math fonts count, real words count against. A formula needs no translation (it is marked "formula" and skipped) and is drawn again from the original when the PDF is rebuilt, so its layout survives. Sentences that merely contain "x = 5" stay text.

@@ -837,9 +837,11 @@ function buildSegment(group, pageNo, bounds, id, marginsByRot, pageLines, shaped
 
 const MATH_FONT_RE = /^(?:cm(?:mi|sy|ex|bsy|mib)\d|msam|msbm|eufm|eusm|rsfs|stmary|wasy|lmmath|latinmodern-?math|cambria-?math|stix\w*math|xits|asana|tx(?:mi|sy|ex)|px(?:mi|sy|ex)|mtmi|mtsy|mathematicalpi|mt-?extra|euler|esint|symbol)|math/i;
 const MATH_SIGN_RE = /[=≈≠≤≥±∓×÷·⋅√∑∏∫∂∞∝→⇒⇔∇∆ΔͰ-Ͽ]/;
-const MATH_SIGN_RE_G = /[=≈≠≤≥±∓×÷·⋅√∑∏∫∂∞∝→⇒⇔∇∆Δ^\u0370-\u03ff]|(?<=[\p{L}\p{N})\]])\s*\+\s*(?=[\p{L}\p{N}(\[√∑∫])/gu;
+const MATH_SIGN_RE_G = /[=≈≠≤≥±∓×÷·⋅√∑∏∫∂∞∝→⇒⇔∇∆Δ^\u0370-\u03ff]|\p{L}(?=[₀-₉⁰-⁹])|(?<=[\p{L}\p{N})\]])\s*\+\s*(?=[\p{L}\p{N}(\[√∑∫])/gu;
 const MATH_SIGNS_G = /[=≈≠≤≥±∓×÷·⋅√∑∏∫∂∞∝→⇒⇔∇∆Δ^Ͱ-Ͽ]|(?<=[\p{L}\p{N})\]])\s*[+−-]\s*(?=[\p{L}\p{N}(\[√∑∫])|(?<=[\p{L}\p{N})])\s*\/\s*(?=[\p{L}\p{N}(])/gu;
 /** Words that occur in formulas without making them prose. */
+const MATH_FUNCS = new Set(["sin", "cos", "tan", "cot", "sec", "csc", "arcsin", "arccos", "arctan", "sinh", "cosh", "tanh", "log", "ln", "lg", "exp", "lim", "max", "min", "sup", "inf", "det", "arg", "mod", "sgn", "tr", "diag", "grad", "div", "rot"]);
+const MATH_FUNC_RE = /(?<!\p{L})(?:sin|cos|tan|cot|sec|csc|arcsin|arccos|arctan|sinh|cosh|tanh|log|ln|lg|exp|lim|max|min|sup|inf|det|arg|mod|sgn|tr|diag|grad|div|rot)(?!\p{L})/u;
 const MATH_WORDS = new Set(["sin", "cos", "tan", "cot", "sec", "csc", "arcsin", "arccos", "arctan", "sinh", "cosh", "tanh", "log", "ln", "lg", "exp", "lim", "max", "min", "sup", "inf", "det", "arg", "mod", "div", "rot", "grad", "const", "dim", "ker", "rank", "sgn", "tr", "diag", "where", "with", "für", "mit", "wenn", "if", "and", "und", "or", "oder"]);
 
 /**
@@ -857,8 +859,8 @@ function isFormula(text, spans) {
     sizeMin = Math.min(sizeMin, s.size); sizeMax = Math.max(sizeMax, s.size);
     if (s.font.italic) italicLetters += (s.text.match(/\p{L}/gu) || []).length;
   }
-  const words = (text.match(/\p{L}{3,}/gu) || []).filter((w) => !MATH_WORDS.has(w.toLowerCase()) && !/^[Ͱ-Ͽ]+$/.test(w)).length;
-  const longWords = (text.match(/\p{L}{5,}/gu) || []).filter((w) => !MATH_WORDS.has(w.toLowerCase())).length;
+  const words = (text.match(/\p{L}{3,}/gu) || []).filter((w) => !MATH_WORDS.has(w.toLowerCase()) && !/[Ͱ-Ͽ]/.test(w)).length; // tokens mixing Latin and Greek (ejωt) are never prose
+  const longWords = (text.match(/\p{L}{5,}/gu) || []).filter((w) => !MATH_WORDS.has(w.toLowerCase()) && !/[Ͱ-Ͽ]/.test(w)).length;
   if (all && math >= 0.6 * all && !longWords) return true;
   const strong = (text.match(MATH_SIGN_RE_G) || []).length; // =, ≤, √, ∑, Greek …
   const ops = (text.match(MATH_SIGNS_G) || []).length; // those, and + − / between letters or digits
@@ -867,6 +869,8 @@ function isFormula(text, spans) {
   const scripts = sizeMin < Infinity && sizeMax >= 1.25 * sizeMin; // sub- or superscripts
   const letters = (text.match(/\p{L}/gu) || []).length;
   if (strong && !words) return true; // "E = m·v²", "k = 1", "α ≤ π"
+  if (!words && letters && /^[\p{N}\s().,;:^_]*$/u.test(text.replace(/\p{L}+/gu, "")) && MATH_FUNC_RE.test(text) && [...text.matchAll(/\p{L}+/gu)].every((m) => m[0].length === 1 || MATH_FUNCS.has(m[0]))) return true; // "ln r a", "sin x"
+  if (letters === 1 && !/\p{L}\p{N}|\p{N}\p{L}/u.test(text) && text.replace(/[\s\p{N}().,;:=+−-]/gu, "").length === 1) return true; // a lone symbol: Φ, L, x
   if (ops >= 2 && !words && letters >= 1 && letters <= 6) return true; // "a−b/c" (a product code with more letters is text; plain numbers are "numbers")
   if (words > 2) return false; // a sentence, even with an equation in it
   if (unknown >= 2 && words <= 1) return true; // symbol glyphs without Unicode
