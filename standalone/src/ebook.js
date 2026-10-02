@@ -13,6 +13,7 @@ const BOOK_MIME = { epub: "application/epub+zip", fb2: "application/x-fictionboo
 function detectKind(bytes, name = "") {
   const head = new TextDecoder("latin1").decode(bytes.subarray(0, 1024));
   if (head.startsWith("%PDF") || head.slice(0, 1024).includes("%PDF-")) return "pdf";
+  if (isCfb(bytes)) return legacyKindOf(bytes, name) || "pdf"; // .doc/.xls/.ppt (converted when opened)
   if (head.startsWith("PK")) {
     if (head.includes("mimetypeapplication/epub+zip") || /\.epub$/i.test(name)) return "epub";
     const office = officeKindOf(bytes);

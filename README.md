@@ -47,6 +47,12 @@ numbers stay as they are, and you download a new file in the same format. The vi
 preview of the text (the document as one flow, one page per slide, one page per sheet), not the
 exact Office layout.
 
+**Older Office files** (`.doc`, `.xls`, `.ppt` of Office 97–2003) are converted to the modern
+format when they are opened: text, tables, headers and footers, footnotes, slide text and speaker
+notes, sheet names, cell values (formulas keep their last calculated value) and simple formatting
+are carried over, pictures and drawings are not. The translated file is saved as `.docx`, `.xlsx`
+or `.pptx`.
+
 Extra features in the standalone version:
 
 * **⟳ update PDF** on a segment card (or <kbd>Ctrl</kbd>+<kbd>S</kbd> in its text box) writes that one

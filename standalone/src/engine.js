@@ -2395,6 +2395,7 @@ function createHandler() {
     }
     if (cmd === "extract") return { result: await extractPages(W.doc, args.pages, progress) };
     if (cmd === "unlock") return { result: unlockPdf(args.bytes, args.password) };
+    if (cmd === "convert") return { result: await convertLegacy(args.bytes, args.kind) }; // .doc/.xls/.ppt → .docx/.xlsx/.pptx
     if (cmd === "ocrPage") {
       const page = W.doc.loadPage(args.page);
       try {

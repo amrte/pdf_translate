@@ -4,6 +4,15 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.24
+
+- **Word, Excel and PowerPoint 97–2003 files** (`.doc`, `.xls`, `.ppt`) can be opened. They are
+  converted to the modern format when opened (text, tables, headers and footers, footnotes, slide
+  text and speaker notes, sheet names, cell values and simple formatting such as bold, italic, size
+  and alignment; formula cells keep their last calculated value; pictures and drawings are not
+  carried over), translated like any Office file, and saved as `.docx`, `.xlsx` or `.pptx`.
+  Encrypted files and files older than Office 97 are refused with a clear message.
+
 ## 1.23
 
 Fixes from a full audit of the code and the interface.

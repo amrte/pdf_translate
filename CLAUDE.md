@@ -16,6 +16,8 @@
   `engine.js` (MuPDF WASM: extraction, layout, rebuild; also runs inside Web Workers),
   `ebook.js` (EPUB/FB2: segments from the XHTML/FictionBook source, rebuild, zip; runs with the engine),
   `office.js` (DOCX/PPTX/XLSX: segments from the Office Open XML parts, rebuild, HTML preview; runs with the engine),
+  `legacy.js` (OLE compound file reader; converts .doc/.xls/.ppt to the modern format on open),
+  `doc.js`, `xls.js`, `ppt.js` (the three converters: Word 97–2003 → DOCX, BIFF8 → XLSX, PowerPoint 97–2003 → PPTX),
   `icon.svg` (app icon; the template embeds it as favicon and logo), `ui.js` (interface), `markup.js` (markup tools, page navigation, undo/redo), `tools.js`
   (moving/resizing fields, per-field style, full screen, passwords, OCR, comparison view), `main.js`
   (start-up). `standalone/pdf-translate.html` is generated – do not edit it by hand.

@@ -146,7 +146,7 @@ const I18N = {
     "view.exitFullscreen": "Vollbild beenden (Esc)",
     "ai.pasteHere": "[Segmente hier einfügen]",
 
-    "msg.chooseFile": "Bitte wählen Sie eine PDF-, Word-, PowerPoint-, Excel-, EPUB- oder FB2-Datei.",
+    "msg.chooseFile": "Bitte wählen Sie eine PDF-, Word-, PowerPoint-, Excel-, EPUB- oder FB2-Datei (auch .doc, .xls, .ppt).",
     "msg.loadingEngine": "PDF-Engine wird geladen…",
     "msg.opening": "Wird geöffnet…",
     "find.title": "Suchoptionen und Ersetzen (Strg+F sucht, Strg+H ersetzt)",
@@ -328,6 +328,10 @@ const I18N = {
     "err.noOpf": "Dieses EPUB hat keine Paketdatei (content.opf).",
     "err.xliff": "Die XLIFF-Datei ist kein gültiges XML.",
     "err.noDoc": "Es ist kein Dokument geöffnet.",
+    "err.encrypted": "Diese Datei ist verschlüsselt und kann nicht geöffnet werden.",
+    "err.tooOld": "Diese Datei ist in einem zu alten Office-Format (vor Office 97).",
+    "msg.converting": "{from}-Datei wird in das {to}-Format umgewandelt…",
+    "msg.converted": "Die {from}-Datei wurde als {to} geöffnet: Text, Tabellen und einfache Formatierung wurden übernommen, Bilder und Zeichnungen nicht. Das Ergebnis wird als {to} gespeichert.",
     "common.undo": "Rückgängig",
   },
 
@@ -475,7 +479,7 @@ const I18N = {
     "view.exitFullscreen": "Exit full screen (Esc)",
     "ai.pasteHere": "[paste the segments here]",
 
-    "msg.chooseFile": "Please choose a PDF, Word, PowerPoint, Excel, EPUB or FB2 file.",
+    "msg.chooseFile": "Please choose a PDF, Word, PowerPoint, Excel, EPUB or FB2 file (.doc, .xls and .ppt too).",
     "msg.loadingEngine": "Loading the PDF engine…",
     "msg.opening": "Opening…",
     "find.title": "Search options and replace (Ctrl+F finds, Ctrl+H replaces)",
@@ -657,6 +661,10 @@ const I18N = {
     "err.noOpf": "This EPUB has no package file (content.opf).",
     "err.xliff": "The XLIFF file is not valid XML.",
     "err.noDoc": "No document is open.",
+    "err.encrypted": "This file is encrypted and cannot be opened.",
+    "err.tooOld": "This file is in an Office format that is too old (before Office 97).",
+    "msg.converting": "Converting the {from} file to {to}…",
+    "msg.converted": "The {from} file was opened as {to}: text, tables and simple formatting were carried over, pictures and drawings were not. The result is saved as {to}.",
     "common.undo": "Undo",
   },
 };

@@ -3,8 +3,8 @@
 // the segment list is virtualised so documents with thousands of segments stay fast.
 // ======================================================================
 const ENGINE_SRC = document.getElementById("engine-src").textContent;
-const { Engine, createHandler } = await import(URL.createObjectURL(new Blob(
-  [ENGINE_SRC, "\nexport { Engine, createHandler };\n"], { type: "text/javascript" })));
+const { Engine, createHandler, LEGACY_KINDS, LEGACY_TO_MODERN } = await import(URL.createObjectURL(new Blob(
+  [ENGINE_SRC, "\nexport { Engine, createHandler, LEGACY_KINDS, LEGACY_TO_MODERN };\n"], { type: "text/javascript" })));
 // Workers are classic scripts (module workers are refused on file:// pages); the engine
 // loads MuPDF with a dynamic import(), which classic workers support.
 const WORKER_URL = URL.createObjectURL(new Blob([ENGINE_SRC], { type: "text/javascript" }));
@@ -210,7 +210,7 @@ function saveBlob(blob, filename) {
 const ERROR_KEYS = [
   [/DRM-protected/i, "err.drm"], [/not a valid (zip|\.docx)/i, "err.zip"], [/ZIP64/i, "err.zip64"],
   [/No \.fb2 file/i, "err.noFb2"], [/no package file/i, "err.noOpf"], [/XLIFF file is not valid/i, "err.xliff"],
-  [/No document is open/i, "err.noDoc"], [/engine worker|worker stopped/i, "msg.workerStopped"],
+  [/No document is open/i, "err.noDoc"], [/is encrypted and cannot be opened/i, "err.encrypted"], [/is too old/i, "err.tooOld"], [/engine worker|worker stopped/i, "msg.workerStopped"],
 ];
 function userError(err) {
   const msg = String((err && err.message) || err || "");
@@ -218,7 +218,7 @@ function userError(err) {
   return hit ? t(hit[1]) : msg;
 }
 
-const stem = () => (state.doc.name || "document.pdf").replace(/\.(pdf|epub|fb2|fbz|fb2\.zip|zip|docx|pptx|xlsx)$/i, "") || "document";
+const stem = () => (state.doc.name || "document.pdf").replace(/\.(pdf|epub|fb2|fbz|fb2\.zip|zip|docx|pptx|xlsx|doc|xls|ppt)$/i, "") || "document";
 const escapeHtml = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 
 async function sha256(bytes) {
@@ -284,7 +284,7 @@ async function idbGet(key = "last") {
 
 async function openPdf(file) {
   if (!file) return;
-  if (!/\.(pdf|epub|fb2|fbz|zip|docx|pptx|xlsx)$/i.test(file.name) && !/pdf|epub|fictionbook|officedocument/i.test(file.type)) {
+  if (!/\.(pdf|epub|fb2|fbz|zip|docx|pptx|xlsx|doc|xls|ppt)$/i.test(file.name) && !/pdf|epub|fictionbook|officedocument|msword|ms-excel|ms-powerpoint/i.test(file.type)) {
     toast(t("msg.chooseFile"), "error");
     return;
   }
@@ -339,7 +339,14 @@ async function loadBytes(bytes, name, remember, knownId = null) {
     if (stale()) return;
     // (an unlocked PDF keeps the id of the protected file, so its translations are found again)
     const id = knownId || await sha256(bytes);
-    const kind = Engine.detectKind(bytes, name);
+    let kind = Engine.detectKind(bytes, name), converted = null;
+    if (LEGACY_KINDS.has(kind)) { // Word/Excel/PowerPoint 97–2003: converted to the modern format first
+      converted = { from: kind.toUpperCase(), to: LEGACY_TO_MODERN[kind].toUpperCase() };
+      setLoading(t("msg.converting", converted));
+      const c = await pool.workers[0].call("convert", { bytes, kind });
+      if (stale()) return;
+      bytes = c.bytes; kind = c.kind;
+    }
     if (kind === "pdf") {
       // Password protection is removed: restrictions at once, an open password after asking.
       let password = "";
@@ -373,6 +380,7 @@ async function loadBytes(bytes, name, remember, knownId = null) {
     const restored = kind === "pdf" ? await restoreOcr(id, segments, pages) : { segments, ocr: null };
     if (stale()) return;
     openDocument({ id, name, kind, pages, segments: restored.segments, ocr: restored.ocr }, bytes);
+    if (converted) toast(t("msg.converted", converted));
     suggestOcr();
   } catch (err) {
     if (stale()) return;
