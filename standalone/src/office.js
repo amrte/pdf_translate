@@ -76,7 +76,7 @@ const firstNamed = (el, name) => (el.kids || []).find((k) => k.name === name);
 
 /* Pictures in the slide preview: the media parts become data URIs, sized from their EMU extents. */
 const PIC_MIME = { png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", gif: "image/gif", bmp: "image/bmp", tif: "image/tiff", tiff: "image/tiff" };
-const PIC_MAX_BYTES = 8 * 1048576, PIC_MAX_W = 680, PIC_MAX_H = 240;
+const PIC_MAX_BYTES = 8 * 1048576, PIC_MAX_W = 680, PIC_MAX_H = 150, PIC_MAX_PER_SLIDE = 6;
 function toBase64(bytes) {
   let str = "";
   for (let i = 0; i < bytes.length; i += 0x8000) str += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
@@ -464,7 +464,7 @@ function oxDrawing(src, el, ctx) {
     if (!k.kids || k.name === "fallback") continue;
     if (ctx.picsOnly && !/^(pic|grpsp)$/.test(k.name)) continue;
     if (k.name === "pic") {
-      if (ctx.images) chunks.push(oxPicHtml(src, k, ctx));
+      if (ctx.pics) ctx.pics.push(oxPicHtml(src, k, ctx)); // (shown after the slide's text)
     } else if (k.name === "sp") {
       const ph = findAll(k, (x) => x.name === "ph")[0];
       const type = ph ? xmlAttr(src, ph, "type") || "" : "";
@@ -606,16 +606,22 @@ async function openOffice(bytes, kind) {
       const layout = layoutRel ? await partOf(layoutRel.target) : null;
       const masterRel = layout && Object.values(await relsOf(layout.part)).find((r) => /\/slideMaster$/.test(r.type));
       const master = masterRel ? await partOf(masterRel.target) : null;
-      preview.push(bgHtml(slide) || (layout && bgHtml(layout)) || (master && bgHtml(master)) || "");
+      // The text comes first, so it stays on the slide's first page; the artwork follows: the
+      // background strip, the pictures of the master and layout, then the slide's own pictures.
+      const pics = [];
       const cSld = findAll(f.root, (k) => k.name === "csld")[0];
       if (!cSld || xmlAttr(f.src, cSld, "showMasterSp") !== "0") {
         for (const p of [master, layout]) {
           const ptree = p && findAll(p.root, (k) => k.name === "sptree")[0];
-          if (ptree) preview.push(...oxDrawing(p.src, ptree, { images: p.images, scale, picsOnly: true }));
+          if (ptree) oxDrawing(p.src, ptree, { images: p.images, scale, picsOnly: true, pics });
         }
       }
       const tree = findAll(f.root, (k) => k.name === "sptree")[0];
-      if (tree) preview.push(...oxDrawing(f.src, tree, { file: f.fi, out: segments, tag: "p", images: slide.images, scale }));
+      if (tree) preview.push(...oxDrawing(f.src, tree, { file: f.fi, out: segments, tag: "p", images: slide.images, scale, pics }));
+      const shown = pics.filter(Boolean);
+      preview.push('<div class="art">', bgHtml(slide) || (layout && bgHtml(layout)) || (master && bgHtml(master)) || "", ...shown.slice(0, PIC_MAX_PER_SLIDE));
+      if (shown.length > PIC_MAX_PER_SLIDE) preview.push(`<p class="more">+${shown.length - PIC_MAX_PER_SLIDE}</p>`);
+      preview.push("</div>");
       const notesRel = Object.values(await relsOf(path)).find((r) => /\/notesSlide$/.test(r.type));
       const nf = notesRel && await addFile(notesRel.target);
       const ntree = nf && findAll(nf.root, (k) => k.name === "sptree")[0];
@@ -698,8 +704,9 @@ td p { margin: 0; }
 .title p { font-size: 1.5em; font-weight: bold; }
 .shape { margin: 0 0 0.6em; }
 .pb { page-break-after: always; }
-img { display: block; margin: 0 0 0.4em; }
-img.bg { margin: 0 0 0.5em; }
+.art { margin-top: 0.6em; }
+.art img { display: block; margin: 0 0 0.4em; }
+.art .more { color: #999; font-size: 0.85em; }
 `;
 
 /** CSS for a run's properties (bold, italic, underline, colour). */

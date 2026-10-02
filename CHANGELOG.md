@@ -4,6 +4,11 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.45
+
+- PowerPoint preview: each slide now shows its text first and its pictures below it, smaller than before and at most six per slide (the rest are counted). Pictures no longer push a slide's text onto a following page, so the preview pages follow the slides more closely.
+- Rebuilt Office and e-book files carry a valid date in their archive entries; some programs reject archives with an empty date.
+
 ## 1.44
 
 - PowerPoint: the slide preview now shows the pictures too. Each slide's own pictures appear in their order among the text, and the slide's background artwork (its own, or the one it inherits from its layout or master) is shown as a small strip at the top. The rebuilt file always kept every picture; only the preview left them out.

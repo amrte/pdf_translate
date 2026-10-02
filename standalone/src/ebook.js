@@ -123,11 +123,13 @@ async function zipWrite(entries) {
     const flags = e.nameBytes && !e.utf8Name ? 0 : 0x0800; // 0x800: the name is UTF-8
     const local = new DataView(new ArrayBuffer(30));
     local.setUint32(0, 0x04034b50, true); local.setUint16(4, 20, true); local.setUint16(6, flags, true); local.setUint16(8, method, true);
+    local.setUint16(12, 0x0021, true); // a valid date (1980-01-01): some readers reject a zero date field
     local.setUint32(14, crc, true); local.setUint32(18, csize, true); local.setUint32(22, size, true);
     local.setUint16(26, name.length, true);
     parts.push(new Uint8Array(local.buffer), name, raw);
     const cd = new DataView(new ArrayBuffer(46));
     cd.setUint32(0, 0x02014b50, true); cd.setUint16(4, 20, true); cd.setUint16(6, 20, true); cd.setUint16(8, flags, true); cd.setUint16(10, method, true);
+    cd.setUint16(14, 0x0021, true);
     cd.setUint32(16, crc, true); cd.setUint32(20, csize, true); cd.setUint32(24, size, true);
     cd.setUint16(28, name.length, true); cd.setUint32(42, offset, true);
     central.push(new Uint8Array(cd.buffer), name);
