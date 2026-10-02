@@ -570,6 +570,7 @@ async function saveBook(book, bytes, segments, translations, opts = {}) {
     if (lang) out = setBookLanguage(out, f.type, lang);
     if (out !== f.src || list.length) changed.set(f.path, out);
   });
+  const fontsDropped = book.kind === "fb2" ? [] : await dropUncoveredFonts(book, changed, translations);
   let result;
   if (book.kind === "fb2") {
     result = encodeXml(changed.get("book.fb2") ?? book.files[0].src);
@@ -584,7 +585,89 @@ async function saveBook(book, bytes, segments, translations, opts = {}) {
     entries.sort((a, b) => (b.name === "mimetype") - (a.name === "mimetype"));
     result = await zipWrite(entries);
   }
-  return { bytes: result, stats: { replaced, untranslated: segments.length - replaced, shrunk: [], missing: 0, missingChars: "" } };
+  return { bytes: result, stats: { replaced, untranslated: segments.length - replaced, shrunk: [], missing: 0, missingChars: "", fontsDropped: fontsDropped.length } };
+}
+
+/**
+ * Embedded fonts that lack the letters of the translation are switched off in the translated
+ * book: their @font-face rules are removed from the stylesheets (and inline <style> blocks), so
+ * the reader falls back to its own fonts. MuPDF and many readers draw nothing for a glyph the
+ * font does not have, which made whole words disappear (a subsetted display font on a table
+ * of contents, for example). Returns the paths of the fonts that were switched off.
+ */
+async function dropUncoveredFonts(book, changed, translations) {
+  if (!M || !book.entries) return [];
+  const needed = new Map(); // letter → how often it occurs in the translations
+  for (const t of Object.values(translations)) for (const ch of t) if (/\p{L}/u.test(ch)) { const cp = ch.codePointAt(0); needed.set(cp, (needed.get(cp) || 0) + 1); }
+  if (!needed.size) return [];
+  const byName = new Map(book.entries.map((e) => [e.name, e]));
+  // Obfuscated fonts (META-INF/encryption.xml) cannot be inspected: they are left as they are.
+  const protectedFonts = new Set();
+  const enc = byName.get("META-INF/encryption.xml");
+  if (enc) for (const m of decodeXml(await zipRead(enc)).matchAll(/CipherReference[^>]*URI\s*=\s*["']([^"']+)/gi)) protectedFonts.add(decodeURIComponent(m[1]).replace(/^\//, ""));
+  const dropped = [];
+  for (const e of book.entries) {
+    if (!/\.(ttf|otf|woff)$/i.test(e.name) || protectedFonts.has(e.name)) continue;
+    let data = await zipRead(e);
+    if (/\.woff$/i.test(e.name)) { try { data = await woffToSfnt(data); } catch (_) { data = null; } }
+    if (!data) continue;
+    let font;
+    try { font = new M.Font(e.name, data); } catch (_) { continue; }
+    // (one letter that occurs once, say a stray Greek symbol, does not cost the font its place)
+    let missing = 0;
+    try { for (const [cp, count] of needed) if (!font.encodeCharacter(cp)) missing += count; } finally { free(font); }
+    if (missing >= 2) dropped.push(e.name);
+  }
+  if (!dropped.length) return [];
+  const base = (p) => decodeURIComponent(p.split(/[?#]/)[0]).split("/").pop().toLowerCase();
+  const names = new Set(dropped.map(base));
+  const strip = (css) => css.replace(/@font-face\s*\{[^}]*\}/gi, (rule) => {
+    const urls = [...rule.matchAll(/url\(\s*["']?([^"')]+)/gi)].map((m) => base(m[1]));
+    return urls.length && urls.every((u) => names.has(u)) ? "" : rule;
+  });
+  for (const e of book.entries) {
+    if (!/\.css$/i.test(e.name)) continue;
+    const src = changed.get(e.name) ?? decodeXml(await zipRead(e));
+    const out = strip(src);
+    if (out !== src) changed.set(e.name, out);
+  }
+  for (const f of book.files) {
+    if (f.type !== "xhtml") continue;
+    const src = changed.get(f.path) ?? f.src;
+    const out = src.replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, (block) => strip(block));
+    if (out !== src) changed.set(f.path, out);
+  }
+  return dropped;
+}
+
+/** A WOFF (1.0) font unwrapped to the plain TrueType/OpenType it holds, so FreeType can read it. */
+async function woffToSfnt(data) {
+  const dv = new DataView(data.buffer, data.byteOffset, data.byteLength);
+  if (data.length < 44 || dv.getUint32(0) !== 0x774f4646) return null; // "wOFF"
+  const flavor = dv.getUint32(4), n = dv.getUint16(12);
+  const tables = [];
+  for (let i = 0, off = 44; i < n; i++, off += 20) {
+    tables.push({ tag: dv.getUint32(off), offset: dv.getUint32(off + 4), comp: dv.getUint32(off + 8), orig: dv.getUint32(off + 12), sum: dv.getUint32(off + 16) });
+  }
+  const parts = [];
+  for (const t of tables) {
+    const raw = data.subarray(t.offset, t.offset + t.comp);
+    parts.push(t.comp < t.orig ? await streamBytes(raw, new DecompressionStream("deflate")) : raw);
+  }
+  const dirSize = 12 + 16 * n;
+  let total = dirSize;
+  for (const t of tables) total += (t.orig + 3) & ~3;
+  const out = new Uint8Array(total), o = new DataView(out.buffer);
+  let range = 1, sel = 0;
+  while (range * 2 <= n) { range *= 2; sel++; }
+  o.setUint32(0, flavor); o.setUint16(4, n); o.setUint16(6, range * 16); o.setUint16(8, sel); o.setUint16(10, n * 16 - range * 16);
+  let pos = dirSize;
+  tables.forEach((t, i) => {
+    o.setUint32(12 + i * 16, t.tag); o.setUint32(16 + i * 16, t.sum); o.setUint32(20 + i * 16, pos); o.setUint32(24 + i * 16, t.orig);
+    out.set(parts[i].subarray(0, t.orig), pos);
+    pos += (t.orig + 3) & ~3;
+  });
+  return out;
 }
 
 const CELL_TAGS = new Set(["td", "th"]);

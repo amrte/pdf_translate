@@ -4,6 +4,15 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.33
+
+- **EPUB: no more vanishing words.** Books often embed fonts that only contain the letters of the
+  original text (a bold display font on the table of contents, for instance). The translated book
+  used those fonts for the new text, and readers drew nothing for the missing letters, so "РОЗДІЛ
+  1" showed as "1". The rebuild now checks every embedded font (TTF, OTF, WOFF) against the
+  letters of the translation and switches off the fonts that cannot show it; the reader then
+  uses its default font for those parts. A message after the build says when this happened.
+
 ## 1.32
 
 - **New logo: the Caravan.** The app icon, the favicon and the top-bar logo are now the one-colour

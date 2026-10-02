@@ -1391,6 +1391,7 @@ async function doBuild() {
     let msg = t("msg.built", { n: stats.replaced, secs, mb: (bytes.length / 1048576).toFixed(1) });
     if (stats.shrunk.length) msg += t("msg.shrunk", { n: stats.shrunk.length });
     toast(msg, "ok");
+    if (stats.fontsDropped) toast(t("msg.fontsDropped", { n: stats.fontsDropped }));
     if (stats.missing) {
       toast(t("msg.fontMissing", { n: stats.missing, chars: stats.missingChars }), "error");
     }
