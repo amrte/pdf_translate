@@ -4,6 +4,14 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.34
+
+- **Import: translations that begin with a quotation mark and an inline tag are no longer
+  lost.** A pasted translation such as `«<1>Якщо</1> ми …` was read as a marker for segment 1
+  (the mixed brackets `«<1>` looked like `[[1]]`), so the real segment kept its original text and
+  segment 1 was overwritten. Markers now have to use one kind of bracket, repeated and matching
+  (`[[12]]`, `((12))`, `【【12】】`). If this happened to you, import the translation again.
+
 ## 1.33
 
 - **EPUB: no more vanishing words.** Books often embed fonts that only contain the letters of the

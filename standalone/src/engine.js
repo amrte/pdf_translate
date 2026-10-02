@@ -959,6 +959,11 @@ async function extractDocument(bytes, onProgress) {
 
 /** A [[n]] marker; chat apps sometimes drop one bracket or wrap it in **bold**. */
 const MARKER_RE = /(?:\*\*)?([\[［【〔(（<«]{1,2})\s*#?\s*(\p{Nd}+)\s*([\]］】〕)）>»]{1,2})(?:\*\*)?/gu;
+// A marker's brackets are one kind, repeated, and they match: "[[12]]" or "((12))". A mixed run
+// such as the «<1> at the start of a translation that opens with a quote and an inline tag is
+// not a marker (it used to swallow the whole paragraph into a phantom segment 1).
+const BRACKET_PAIRS = { "[": "]", "［": "］", "【": "】", "〔": "〕", "(": ")", "（": "）", "<": ">", "«": "»" };
+const isMarkerBrackets = (open, close) => open.length + close.length >= 3 && /^(.)\1*$/u.test(open) && /^(.)\1*$/u.test(close) && BRACKET_PAIRS[open[0]] === close[0];
 /** Markdown escapes as chat apps copy them: "\[\[12]] 2\. Title". */
 const MD_ESCAPE_RE = /\\([\\`*_{}\[\]()#+\-.!|~<>])/g;
 const MD_MARKER_RE = /\\\[\s*(?:\\\[)?\s*\p{Nd}+\s*\\?\]/u;
@@ -983,7 +988,7 @@ function parseMarkedText(text) {
     if (v) result[current] = v;
   };
   for (const m of text.matchAll(MARKER_RE)) {
-    if (m[1].length + m[3].length < 3) continue; // "[1]" is a citation, not a marker
+    if (!isMarkerBrackets(m[1], m[3])) continue; // "[1]" is a citation, "«<1>" an inline tag after a quote
     const id = digitsToInt(m[2]);
     const lineStart = text.lastIndexOf("\n", m.index - 1) + 1;
     const atLineStart = !text.slice(lineStart, m.index).trim();
