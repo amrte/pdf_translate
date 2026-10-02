@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="Kameleon 1.53">
+  <meta name="generator" content="Kameleon 1.54">
   <meta name="description" content="Kameleon – Wechselt die Sprache, behält die Form. Changes language, keeps its shape.">
   <title>Kameleon</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2216%22 fill=%22%23287130%22/%3E%3Cg transform=%22translate(2.5 1) scale(0.9)%22 fill=%22%23ffffff%22 stroke=%22%23ffffff%22%3E%3Cpath d=%22M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6%22 fill=%22none%22 stroke-width=%223.8%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M21 43l-1 10M30 44v9M38 43l1 10%22 stroke-width=%223.6%22 stroke-linecap=%22round%22/%3E%3Cellipse cx=%2221%22 cy=%2225%22 rx=%227%22 ry=%227.5%22 stroke=%22none%22/%3E%3Cellipse cx=%2233%22 cy=%2223.5%22 rx=%227.5%22 ry=%228%22 stroke=%22none%22/%3E%3Cpath d=%22M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z%22 stroke=%22none%22/%3E%3Cpath d=%22M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z%22 stroke=%22none%22/%3E%3Cpath d=%22M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z%22 stroke=%22none%22/%3E%3Cpath d=%22M16 37l4-3 4 3 4-3 4 3 4-3 4 3%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%222.1%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3Cpath d=%22M43.5 33.9L57 32.6%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%221.5%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M58.5 33.6c4.5 1.4 6.2 5 4 8.4-1 1.6-3 1.6-3.6.1%22 fill=%22none%22 stroke-width=%222.6%22 stroke-linecap=%22round%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%224.4%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%222.7%22 stroke=%22none%22/%3E%3Ccircle cx=%2246.2%22 cy=%2226.7%22 r=%221.3%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Cpath d=%22M4 55.5c15-3 39-3 54 0%22 fill=%22none%22 stroke-width=%222.4%22 stroke-linecap=%22round%22/%3E%3C/g%3E%3C/svg%3E">
@@ -698,6 +698,31 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
 .kw-actions .spacer { flex: 1; }
 @media (max-width: 760px) { .kw-wrap { grid-template-columns: 1fr; } }
 
+/* ---------- v1.54: concise AI options, example sentences, learning cards ---------- */
+.kw-opt { white-space: nowrap; }
+.kw-row { grid-template-columns: 1fr 1fr auto; }
+.kw-row .kw-ex { font-size: 12px; color: var(--muted); }
+.kw-row .kw-ex[data-k="exampleTr"] { grid-column: 2 / 4; }
+.kw-modes { align-self: flex-start; }
+#kwDialog[data-mode="cards"] .kw-list-only { display: none !important; }
+#kwDialog:not([data-mode="cards"]) .kw-cards-only { display: none !important; }
+.kw-cards { display: grid; gap: 12px; }
+.kw-progress { display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; }
+.kw-card { perspective: 1200px; height: clamp(220px, 40vh, 320px); cursor: pointer; outline: none; }
+.kw-card:focus-visible .kw-card-inner { box-shadow: 0 0 0 3px var(--accent-soft), 0 0 0 5px var(--accent); }
+.kw-card-inner { position: relative; width: 100%; height: 100%; transition: transform .45s cubic-bezier(.2, .7, .2, 1); transform-style: preserve-3d; border-radius: 16px; }
+.kw-card.flipped .kw-card-inner { transform: rotateY(180deg); }
+.kw-face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 16px; border: 1px solid var(--border); background: var(--surface); display: grid; align-content: center; justify-items: center; gap: 12px; padding: 24px 28px; text-align: center; }
+.kw-front { background: var(--accent-soft); }
+.kw-back { transform: rotateY(180deg); background: var(--accent); color: var(--on-accent); border-color: transparent; }
+.kw-word { font-size: clamp(22px, 3.2vw, 34px); font-weight: 700; line-height: 1.2; overflow-wrap: anywhere; }
+.kw-sentence { font-size: 15px; line-height: 1.45; max-width: 60ch; opacity: .9; }
+.kw-tap { position: absolute; bottom: 12px; }
+.kw-fc-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.kw-fc-actions .spacer { flex: 1; }
+.kw-done { display: grid; justify-items: center; gap: 14px; padding: 40px 20px; }
+.kw-done-text { font-size: 22px; font-weight: 700; }
+
   </style>
 </head>
 <body>
@@ -705,7 +730,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
   <div class="brand">
     <span class="logo"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#287130"/><g transform="translate(2.5 1) scale(0.9)" fill="#ffffff" stroke="#ffffff"><path d="M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6" fill="none" stroke-width="3.8" stroke-linecap="round"/><path d="M21 43l-1 10M30 44v9M38 43l1 10" stroke-width="3.6" stroke-linecap="round"/><ellipse cx="21" cy="25" rx="7" ry="7.5" stroke="none"/><ellipse cx="33" cy="23.5" rx="7.5" ry="8" stroke="none"/><path d="M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z" stroke="none"/><path d="M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z" stroke="none"/><path d="M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z" stroke="none"/><path d="M16 37l4-3 4 3 4-3 4 3 4-3 4 3" fill="none" stroke="#287130" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M43.5 33.9L57 32.6" fill="none" stroke="#287130" stroke-width="1.5" stroke-linecap="round"/><path d="M58.5 33.6c4.5 1.4 6.2 5 4 8.4-1 1.6-3 1.6-3.6.1" fill="none" stroke-width="2.6" stroke-linecap="round"/><circle cx="45.5" cy="26.5" r="4.4" fill="#287130" stroke="none"/><circle cx="45.5" cy="26.5" r="2.7" stroke="none"/><circle cx="46.2" cy="26.7" r="1.3" fill="#287130" stroke="none"/><path d="M4 55.5c15-3 39-3 54 0" fill="none" stroke-width="2.4" stroke-linecap="round"/></g></svg></span>
     <span class="brand-name">Kameleon</span>
-    <span class="version" id="appVersion">v1.53</span>
+    <span class="version" id="appVersion">v1.54</span>
   </div>
   <div class="topbar-actions">
     <span class="doc-name" id="docName"></span>
@@ -1087,7 +1112,8 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
       <label><span data-i18n="ai.partSize">Segments per part</span> <input id="aiPartSize" type="number" min="20" step="1" value="1000"></label>
       <label class="check"><input type="checkbox" id="aiOnlyTodo"> <span data-i18n="ai.onlyTodo"></span></label>
       <label class="check pptx-only"><input type="checkbox" id="aiHidden"> <span data-i18n="ai.hidden"></span></label>
-      <label class="check"><input type="checkbox" id="aiKeywords" checked> <span data-i18n="ai.keywords"></span> <input id="aiKeywordCount" class="kw-n" type="number" min="1" max="100" value="10" data-i18n-aria="ai.keywordCount"></label>
+      <label class="check kw-opt" data-i18n-title="ai.keywordsTitle"><input type="checkbox" id="aiKeywords" checked> <span data-i18n="ai.keywords"></span> <input id="aiKeywordCount" class="kw-n" type="number" min="1" max="100" value="10" data-i18n-aria="ai.keywordCount"></label>
+      <label class="check kw-opt" data-i18n-title="ai.examplesTitle"><input type="checkbox" id="aiExamples"> <span data-i18n="ai.examples"></span></label>
     </div>
     <label class="field"><span><span data-i18n="ai.context"></span> <span class="muted" data-i18n="ai.contextHint"></span></span>
       <input id="aiContext" data-i18n-placeholder="ai.contextPh">
@@ -1118,7 +1144,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
     </div>
     <input type="file" id="offlineZip" class="visually-hidden" accept=".zip,application/zip" multiple tabindex="-1">
     <input type="file" id="offlineFolder" class="visually-hidden" webkitdirectory multiple tabindex="-1">
-    <p class="muted small help-version help-part">Kameleon v1.53 · <span data-i18n="app.tagline"></span></p>
+    <p class="muted small help-version help-part">Kameleon v1.54 · <span data-i18n="app.tagline"></span></p>
     <div class="modal-actions">
       <button type="button" value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
       <button type="button" class="btn ai-part" id="aiCopyPrompt" data-i18n="ai.copyPrompt">Copy prompt only</button>
@@ -1149,17 +1175,19 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
 <dialog id="kwDialog" class="modal wide" aria-labelledby="kwTitle">
   <form method="dialog">
     <h2 id="kwTitle" data-i18n="kw.title">Keywords</h2>
-    <p class="muted small" data-i18n="kw.text"></p>
-    <div class="kw-wrap">
+    <div class="kw-modes seg-toggle" role="group"><button type="button" class="active" id="kwModeList" data-i18n="kw.modeList">List</button><button type="button" id="kwModeCards" data-i18n="kw.modeCards">Flashcards</button></div>
+    <p class="muted small kw-list-only" data-i18n="kw.text"></p>
+    <div class="kw-wrap kw-list-only">
       <div class="kw-list" id="kwList"></div>
       <div class="kw-preview"><img id="kwPreview" alt=""></div>
     </div>
+    <div class="kw-cards kw-cards-only" id="kwCards"></div>
     <div class="modal-actions kw-actions">
-      <button type="button" class="btn" id="kwAdd" data-i18n="kw.add"></button>
-      <button type="button" class="btn" id="kwCopy" data-i18n="kw.copy"></button>
+      <button type="button" class="btn kw-list-only" id="kwAdd" data-i18n="kw.add"></button>
+      <button type="button" class="btn kw-list-only" id="kwCopy" data-i18n="kw.copy"></button>
       <span class="spacer"></span>
       <button value="close" class="btn ghost" data-i18n="kw.close"></button>
-      <button type="button" class="btn primary" id="kwDownload" data-i18n="kw.download"></button>
+      <button type="button" class="btn primary kw-list-only" id="kwDownload" data-i18n="kw.download"></button>
     </div>
   </form>
 </dialog>
@@ -1527,7 +1555,10 @@ const I18N = {
     "nav.next": "Nächste Seite (Bild ↓)",
     "nav.page": "Zu Seite springen",
     "pic.title": "Bild bearbeiten",
-    "ai.keywords": "Zusätzlich die wichtigsten Begriffe mit Übersetzung auflisten, Anzahl:",
+    "ai.keywords": "Begriffsliste, Anzahl:",
+    "ai.keywordsTitle": "Die KI listet zusätzlich die wichtigsten Begriffe des Textes mit ihrer Übersetzung auf (Knopf „Begriffe“).",
+    "ai.examples": "mit Beispielsätzen",
+    "ai.examplesTitle": "Zu jedem Begriff ein Beispielsatz aus dem Text, mit Übersetzung",
     "ai.keywordCount": "Anzahl der Begriffe",
     "kw.title": "Schlüsselwörter",
     "kw.short": "Begriffe",
@@ -1544,6 +1575,23 @@ const I18N = {
     "kw.imported": "{n} Schlüsselwörter übernommen.",
     "kw.copied": "Schlüsselwörter kopiert.",
     "kw.subtitle": "{name} · {n} Begriffe · {date}",
+    "kw.example": "Beispielsatz",
+    "kw.exampleTr": "Beispielsatz übersetzt",
+    "kw.modeList": "Liste",
+    "kw.modeCards": "Lernkarten",
+    "kw.flip": "Karte umdrehen (Leertaste)",
+    "kw.flipBtn": "Umdrehen",
+    "kw.prev": "Vorherige Karte (←)",
+    "kw.next": "Nächste Karte (→)",
+    "kw.shuffle": "Mischen",
+    "kw.known": "Gewusst",
+    "kw.again": "Nochmal",
+    "kw.progress": "Karte {i} von {n}",
+    "kw.knownCount": "{n} von {total} gewusst",
+    "kw.allDone": "Alle Karten gewusst!",
+    "kw.restart": "Von vorn",
+    "kw.noCards": "Keine Begriffe für Lernkarten – erst eine Liste importieren oder eintragen.",
+    "kw.tapHint": "Anklicken oder Leertaste: umdrehen · ←/→ blättern · K gewusst · A nochmal",
     "theme.system": "Design: wie das System eingestellt ist – klicken für hell",
     "theme.light": "Design: hell – klicken für dunkel",
     "theme.dark": "Design: dunkel – klicken für wie das System",
@@ -1972,7 +2020,10 @@ const I18N = {
     "nav.next": "Next page (Page Down)",
     "nav.page": "Go to page",
     "pic.title": "Edit picture",
-    "ai.keywords": "Also list the most important terms with their translation, how many:",
+    "ai.keywords": "Term list, count:",
+    "ai.keywordsTitle": "The AI also lists the most important terms of the text with their translation (button \"Terms\").",
+    "ai.examples": "with example sentences",
+    "ai.examplesTitle": "An example sentence from the text for each term, with its translation",
     "ai.keywordCount": "Number of terms",
     "kw.title": "Keywords",
     "kw.short": "Terms",
@@ -1989,6 +2040,23 @@ const I18N = {
     "kw.imported": "{n} keywords taken over.",
     "kw.copied": "Keywords copied.",
     "kw.subtitle": "{name} · {n} terms · {date}",
+    "kw.example": "Example sentence",
+    "kw.exampleTr": "Example sentence translated",
+    "kw.modeList": "List",
+    "kw.modeCards": "Flashcards",
+    "kw.flip": "Turn the card (Space)",
+    "kw.flipBtn": "Turn",
+    "kw.prev": "Previous card (←)",
+    "kw.next": "Next card (→)",
+    "kw.shuffle": "Shuffle",
+    "kw.known": "Known",
+    "kw.again": "Again",
+    "kw.progress": "Card {i} of {n}",
+    "kw.knownCount": "{n} of {total} known",
+    "kw.allDone": "All cards known!",
+    "kw.restart": "Start over",
+    "kw.noCards": "No terms for flashcards yet – import or enter a list first.",
+    "kw.tapHint": "Click or Space: turn · ←/→ browse · K known · A again",
     "theme.system": "Theme: as the system is set – click for light",
     "theme.light": "Theme: light – click for dark",
     "theme.dark": "Theme: dark – click to follow the system",
@@ -2131,6 +2199,7 @@ const AI_PROMPT = {
     glossary: "Verwende für die folgenden Begriffe diese Übersetzungen:",
     segments: "Segmente:",
     keywords: (n) => `Nenne zum Schluss die ${n} wichtigsten Fachbegriffe oder Schlüsselwörter des Textes mit ihrer Übersetzung. Beginne diese Liste mit einer eigenen Zeile [[keywords]] und schreibe danach je Zeile „Begriff = Übersetzung“, ohne Nummerierung.`,
+    keywordsEx: (n) => `Nenne zum Schluss die ${n} wichtigsten Fachbegriffe oder Schlüsselwörter des Textes mit ihrer Übersetzung und je einem Beispielsatz aus dem Text. Beginne diese Liste mit einer eigenen Zeile [[keywords]] und schreibe danach je Zeile „Begriff = Übersetzung | Beispielsatz im Original | Beispielsatz übersetzt“, ohne Nummerierung.`,
     officeRules: [
       "Die Segmente stammen aus einem Office-Dokument (Word, PowerPoint oder Excel). Jede Übersetzung ersetzt den Originaltext an derselben Stelle der Datei. Halte dich strikt an diese Regeln:",
       "",
@@ -2174,6 +2243,7 @@ const AI_PROMPT = {
     glossary: "Use these translations for the following terms:",
     segments: "Segments:",
     keywords: (n) => `At the end, list the ${n} most important technical terms or keywords of the text with their translation. Start that list with a line of its own, [[keywords]], then write one term per line as "term = translation", without numbering.`,
+    keywordsEx: (n) => `At the end, list the ${n} most important technical terms or keywords of the text with their translation and one example sentence from the text each. Start that list with a line of its own, [[keywords]], then write one term per line as "term = translation | example sentence in the original | example sentence translated", without numbering.`,
     officeRules: [
       "The segments were extracted from an Office document (Word, PowerPoint or Excel). Each translation replaces the original text at the same place in the file. Follow these rules strictly:",
       "",
@@ -4333,10 +4403,14 @@ function keywordsPdf(args) {
     header();
     for (const row of args.rows) {
       const a = layout(row.term, 11, true, colW[0]), b = layout(row.translation, 11, false, colW[1]);
-      const h = Math.max(a.lines.length, b.lines.length) * 1.3 * 11 + 9;
+      const ex = row.example ? layout(row.example, 9.5, false, colW[0]) : null, exT = row.exampleTr ? layout(row.exampleTr, 9.5, false, colW[1]) : null;
+      const main = Math.max(a.lines.length, b.lines.length) * 1.3 * 11, extra = ex || exT ? Math.max(ex ? ex.lines.length : 0, exT ? exT.lines.length : 0) * 1.3 * 9.5 + 3 : 0;
+      const h = main + extra + 9;
       if (y + h > H - MARGIN) { newPage(); header(); }
       draw(a, MARGIN, y + 2, 11, "#111111");
       draw(b, MARGIN + colW[0] + GAP, y + 2, 11, "#111111");
+      if (ex) draw(ex, MARGIN, y + 2 + main + 3, 9.5, "#666666");
+      if (exT) draw(exT, MARGIN + colW[0] + GAP, y + 2 + main + 3, 9.5, "#666666");
       y += h; rule(y - 3, 0.85, 0.5);
     }
     newPage();
@@ -6987,12 +7061,14 @@ class SlideRenderer {
     // or resizes the whole shape by the same amount.
     const body = firstNamed(sp, "txbody");
     const segs = body && !inherited ? this.segs.filter((s) => s.file === part.fi && s.s >= body.s && s.e <= body.e) : [];
-    for (const s of segs) s.shape = { x: xf.x, y: xf.y, w: xf.w, h: xf.h };
+    // (inside a scaled group the shape's own units differ from slide points: the parent's scale)
+    const psx = Math.hypot(m[0], m[1]) || 1, psy = Math.hypot(m[2], m[3]) || 1;
+    for (const s of segs) s.shape = { x: xf.x, y: xf.y, w: xf.w, h: xf.h, sx: psx, sy: psy };
     const moved = segs.find((s) => s.ov && s.ov.bbox && s.bbox);
     if (moved) {
       const [ax0, ay0, ax1, ay1] = moved.bbox, [bx0, by0, bx1, by1] = moved.ov.bbox;
-      const dx = bx0 - ax0, dy = by0 - ay0, dw = (bx1 - bx0) - (ax1 - ax0), dh = (by1 - by0) - (ay1 - ay0);
-      xf = { ...xf, m: mmul(xf.m, mtranslate(dx, dy)), w: Math.max(4, xf.w + dw), h: Math.max(4, xf.h + dh) };
+      const dx = (bx0 - ax0) / psx, dy = (by0 - ay0) / psy, dw = ((bx1 - bx0) - (ax1 - ax0)) / psx, dh = ((by1 - by0) - (ay1 - ay0)) / psy;
+      xf = { ...xf, m: mmul(mtranslate(dx, dy), xf.m), w: Math.max(4, xf.w + dw), h: Math.max(4, xf.h + dh) }; // (shifted in the parent's space: rotation kept)
     }
     const M = mmul(m, xf.m), ctx = this.ctx();
     const style = firstNamed(sp, "style");
@@ -7489,9 +7565,9 @@ function slideShapeEdits(book, segments, edits) {
     edits.set(seg.file, list);
     if (list.some((e) => e.shape === sp)) continue;
     const [ax0, ay0, ax1, ay1] = seg.bbox, [bx0, by0, bx1, by1] = seg.ov.bbox;
-    const emu = (v) => Math.round(v / EMU_PT);
-    const x = emu(seg.shape.x + bx0 - ax0), y = emu(seg.shape.y + by0 - ay0);
-    const cx = Math.max(12700, emu(seg.shape.w + (bx1 - bx0) - (ax1 - ax0))), cy = Math.max(12700, emu(seg.shape.h + (by1 - by0) - (ay1 - ay0)));
+    const emu = (v) => Math.round(v / EMU_PT), sx = seg.shape.sx || 1, sy = seg.shape.sy || 1;
+    const x = emu(seg.shape.x + (bx0 - ax0) / sx), y = emu(seg.shape.y + (by0 - ay0) / sy);
+    const cx = Math.max(12700, emu(seg.shape.w + ((bx1 - bx0) - (ax1 - ax0)) / sx)), cy = Math.max(12700, emu(seg.shape.h + ((by1 - by0) - (ay1 - ay0)) / sy));
     const xfrm = firstNamed(spPr, "xfrm");
     if (xfrm) {
       const off = firstNamed(xfrm, "off"), ext = firstNamed(xfrm, "ext");
@@ -11629,7 +11705,7 @@ function aiPromptText(part) {
   if (context) lines.push("", P.context(context.replace(/\.$/, "")));
   if (glossary) lines.push("", P.glossary, ...glossary.split(/\n/).map((l) => l.trim()).filter(Boolean).map((l) => `- ${l}`));
   if (part && part.total > 1) lines.push("", P.part(part.k, part.total, part.a, part.b));
-  if ($("#aiKeywords").checked) lines.push("", P.keywords(Math.max(1, Math.min(100, Number($("#aiKeywordCount").value) || 10))));
+  if ($("#aiKeywords").checked) lines.push("", ($("#aiExamples").checked ? P.keywordsEx : P.keywords)(Math.max(1, Math.min(100, Number($("#aiKeywordCount").value) || 10))));
   lines.push("", P.segments);
   return lines.join("\n");
 }
@@ -11709,7 +11785,7 @@ function initHelp() {
   addCloseButtons();
   $("#btnHelp").addEventListener("click", () => openHelp(false));
   $("#btnAi").addEventListener("click", () => openHelp(true));
-  for (const id of ["#aiTarget", "#aiFrom", "#aiTo", "#aiOnlyTodo", "#aiHidden", "#aiKeywords", "#aiKeywordCount", "#aiContext", "#aiGlossary", "#aiPartSize"]) {
+  for (const id of ["#aiTarget", "#aiFrom", "#aiTo", "#aiOnlyTodo", "#aiHidden", "#aiKeywords", "#aiKeywordCount", "#aiExamples", "#aiContext", "#aiGlossary", "#aiPartSize"]) {
     $(id).addEventListener("input", refreshAiPrompt);
   }
   $("#aiParts").addEventListener("click", (e) => {
@@ -13622,7 +13698,7 @@ function initPicture() {
 // from its own browser cache before the network, so language files are written into that cache.
 // ======================================================================
 
-const APP_VERSION = "1.53";
+const APP_VERSION = "1.54";
 // (a change of library version makes a stored set outdated: it is then ignored)
 const OFFLINE_VERSION = `${MUPDF_URL} ${OCR_LIB}`;
 const CORE_SIMD = "tesseract-core-simd-lstm.wasm.js", CORE_PLAIN = "tesseract-core-lstm.wasm.js";
@@ -14154,8 +14230,10 @@ function kwExtract(text) {
   for (const raw of block.split(/\r?\n/)) {
     const line = raw.replace(/^\s*(?:[-*•]|\d+[.)])\s*/, "").trim();
     if (!line) continue;
-    const mm = /^(.+?)\s*(?:=|—|–|->|→|\||\t)\s*(.+)$/.exec(line) || /^(.+?):\s+(.+)$/.exec(line);
-    if (mm) rows.push({ term: mm[1].trim(), translation: mm[2].trim() });
+    // "term = translation | example sentence | translated example" (the examples are optional)
+    const parts = line.split(/\s\|\s/);
+    const mm = /^(.+?)\s*(?:=|—|–|->|→|\t)\s*(.+)$/.exec(parts[0]) || /^(.+?):\s+(.+)$/.exec(parts[0]);
+    if (mm) rows.push({ term: mm[1].trim(), translation: mm[2].trim(), example: (parts[1] || "").trim(), exampleTr: (parts[2] || "").trim() });
   }
   if (rows.length) { kwMerge(rows); toast(t("kw.imported", { n: rows.length }), "ok"); }
   return text.slice(0, m.index) + (end < 0 ? "" : after.slice(end));
@@ -14165,7 +14243,8 @@ function kwMerge(rows) {
   for (const r of rows) {
     const k = r.term.trim().toLowerCase();
     if (!k) continue;
-    if (have.has(k)) have.get(k).translation = r.translation; else { state.keywords.push({ term: r.term, translation: r.translation }); have.set(k, r); }
+    if (have.has(k)) { const cur = have.get(k); cur.translation = r.translation; if (r.example) cur.example = r.example; if (r.exampleTr) cur.exampleTr = r.exampleTr; }
+    else { state.keywords.push({ term: r.term, translation: r.translation, example: r.example || "", exampleTr: r.exampleTr || "" }); have.set(k, r); }
   }
   kwSave();
 }
@@ -14190,9 +14269,11 @@ function kwRenderList() {
   const list = $("#kwList");
   const rows = state.keywords || [];
   list.innerHTML = rows.length ? rows.map((r, i) => `<div class="kw-row" data-i="${i}">
-      <input data-k="term" value="${escapeHtml(r.term)}" data-i18n-placeholder="kw.term" placeholder="${escapeHtml(t("kw.term"))}">
+      <input data-k="term" value="${escapeHtml(r.term)}" placeholder="${escapeHtml(t("kw.term"))}">
       <input data-k="translation" value="${escapeHtml(r.translation)}" placeholder="${escapeHtml(t("kw.translation"))}">
       <button type="button" class="mini" data-act="del" title="${escapeHtml(t("kw.remove"))}" aria-label="${escapeHtml(t("kw.remove"))}">✕</button>
+      <input class="kw-ex" data-k="example" value="${escapeHtml(r.example || "")}" placeholder="${escapeHtml(t("kw.example"))}">
+      <input class="kw-ex" data-k="exampleTr" value="${escapeHtml(r.exampleTr || "")}" placeholder="${escapeHtml(t("kw.exampleTr"))}">
     </div>`).join("") : `<p class="muted small">${escapeHtml(t("kw.empty"))}</p>`;
 }
 function kwSchedulePreview(delay = 500) {
@@ -14226,15 +14307,88 @@ function initKeywords() {
     kwSave(); kwRenderList(); kwSchedulePreview();
   });
   $("#kwAdd").addEventListener("click", () => {
-    state.keywords.push({ term: "", translation: "" });
+    state.keywords.push({ term: "", translation: "", example: "", exampleTr: "" });
     kwSave(); kwRenderList();
     const inputs = list.querySelectorAll('[data-k="term"]');
     if (inputs.length) inputs[inputs.length - 1].focus();
   });
-  $("#kwCopy").addEventListener("click", () => copyText(kwRows().map((r) => `${r.term} = ${r.translation}`).join("\n"), t("kw.copied")));
+  $("#kwCopy").addEventListener("click", () => copyText(kwRows().map((r) => `${r.term} = ${r.translation}${r.example || r.exampleTr ? ` | ${r.example || ""} | ${r.exampleTr || ""}` : ""}`).join("\n"), t("kw.copied")));
+  initFlashcards();
   $("#kwDownload").addEventListener("click", async () => {
     try { saveBlob(new Blob([await kwPdfBytes()], { type: "application/pdf" }), `${stem()}.keywords.pdf`); } catch (err) { toast(userError(err), "error"); }
   });
+}
+
+/* ---------------------------------------------------------------- learning cards */
+// The terms as flashcards: front the term (with its example sentence), back the translation.
+// Click or Space turns a card; "Known" takes it out of the round, "Again" puts it at the end.
+const fc = { queue: [], index: 0, flipped: false, known: 0, total: 0 };
+
+function fcStart() {
+  const rows = kwRows().filter((r) => r.term.trim() && r.translation.trim());
+  fc.queue = rows.map((_, i) => i); fc.rows = rows; fc.index = 0; fc.flipped = false; fc.known = 0; fc.total = rows.length;
+  fcRender();
+}
+function fcShuffle() { for (let i = fc.queue.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [fc.queue[i], fc.queue[j]] = [fc.queue[j], fc.queue[i]]; } fc.index = 0; fc.flipped = false; fcRender(); }
+function fcRender() {
+  const box = $("#kwCards");
+  if (!fc.total) { box.innerHTML = `<p class="muted small">${escapeHtml(t("kw.noCards"))}</p>`; return; }
+  if (!fc.queue.length) {
+    box.innerHTML = `<div class="kw-done"><div class="kw-done-text">${escapeHtml(t("kw.allDone"))}</div><button type="button" class="btn primary" data-fc="restart">${escapeHtml(t("kw.restart"))}</button></div>`;
+    box.querySelector("[data-fc]").focus({ preventScroll: true });
+    return;
+  }
+  const r = fc.rows[fc.queue[fc.index]];
+  box.innerHTML = `
+    <div class="kw-progress"><span>${escapeHtml(t("kw.progress", { i: fc.index + 1, n: fc.queue.length }))}</span><span class="muted">${escapeHtml(t("kw.knownCount", { n: fc.known, total: fc.total }))}</span></div>
+    <div class="kw-card${fc.flipped ? " flipped" : ""}" tabindex="0" role="button" aria-label="${escapeHtml(t("kw.flip"))}" data-fc="flip">
+      <div class="kw-card-inner">
+        <div class="kw-face kw-front"><div class="kw-word">${escapeHtml(r.term)}</div>${r.example ? `<div class="kw-sentence">${escapeHtml(r.example)}</div>` : ""}<div class="kw-tap muted small">${escapeHtml(t("kw.tapHint"))}</div></div>
+        <div class="kw-face kw-back"><div class="kw-word">${escapeHtml(r.translation)}</div>${r.exampleTr ? `<div class="kw-sentence">${escapeHtml(r.exampleTr)}</div>` : ""}</div>
+      </div>
+    </div>
+    <div class="kw-fc-actions">
+      <button type="button" class="btn" data-fc="prev" title="${escapeHtml(t("kw.prev"))}">‹</button>
+      <button type="button" class="btn" data-fc="flip">${escapeHtml(t("kw.flipBtn"))}</button>
+      <button type="button" class="btn" data-fc="next" title="${escapeHtml(t("kw.next"))}">›</button>
+      <span class="spacer"></span>
+      <button type="button" class="btn" data-fc="again">↻ ${escapeHtml(t("kw.again"))}</button>
+      <button type="button" class="btn primary" data-fc="known">✓ ${escapeHtml(t("kw.known"))}</button>
+      <button type="button" class="btn ghost" data-fc="shuffle">${escapeHtml(t("kw.shuffle"))}</button>
+    </div>`;
+  // the keyboard keeps working after a card was redrawn
+  (box.querySelector(".kw-card") || box.querySelector("[data-fc]"))?.focus({ preventScroll: true });
+}
+function fcAction(act) {
+  if (!fc.queue.length && act !== "restart") return;
+  if (act === "flip") { fc.flipped = !fc.flipped; $("#kwCards .kw-card")?.classList.toggle("flipped", fc.flipped); return; }
+  if (act === "next") fc.index = (fc.index + 1) % fc.queue.length;
+  else if (act === "prev") fc.index = (fc.index - 1 + fc.queue.length) % fc.queue.length;
+  else if (act === "known") { fc.queue.splice(fc.index, 1); fc.known++; if (fc.index >= fc.queue.length) fc.index = 0; }
+  else if (act === "again") { const [i] = fc.queue.splice(fc.index, 1); fc.queue.push(i); if (fc.index >= fc.queue.length) fc.index = 0; }
+  else if (act === "shuffle") { fcShuffle(); return; }
+  else if (act === "restart") { fcStart(); return; }
+  fc.flipped = false;
+  fcRender();
+}
+function kwSetMode(mode) {
+  const cards = mode === "cards";
+  $("#kwDialog").dataset.mode = mode;
+  $("#kwModeList").classList.toggle("active", !cards);
+  $("#kwModeCards").classList.toggle("active", cards);
+  if (cards) { fcStart(); $("#kwCards .kw-card")?.focus(); }
+}
+function initFlashcards() {
+  $("#kwModeList").addEventListener("click", () => kwSetMode("list"));
+  $("#kwModeCards").addEventListener("click", () => kwSetMode("cards"));
+  $("#kwCards").addEventListener("click", (e) => { const b = e.target.closest("[data-fc]"); if (b) fcAction(b.dataset.fc); });
+  document.addEventListener("keydown", (e) => {
+    const dlg = $("#kwDialog");
+    if (!dlg.open || dlg.dataset.mode !== "cards" || e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+    const keys = { " ": "flip", Enter: "flip", ArrowRight: "next", ArrowLeft: "prev", k: "known", K: "known", a: "again", A: "again" };
+    if (keys[e.key]) { e.preventDefault(); fcAction(keys[e.key]); }
+  });
+  $("#kwDialog").addEventListener("close", () => kwSetMode("list"));
 }
 
 /* ------------------------------------------------------------- the app's colour */

@@ -467,12 +467,14 @@ class SlideRenderer {
     // or resizes the whole shape by the same amount.
     const body = firstNamed(sp, "txbody");
     const segs = body && !inherited ? this.segs.filter((s) => s.file === part.fi && s.s >= body.s && s.e <= body.e) : [];
-    for (const s of segs) s.shape = { x: xf.x, y: xf.y, w: xf.w, h: xf.h };
+    // (inside a scaled group the shape's own units differ from slide points: the parent's scale)
+    const psx = Math.hypot(m[0], m[1]) || 1, psy = Math.hypot(m[2], m[3]) || 1;
+    for (const s of segs) s.shape = { x: xf.x, y: xf.y, w: xf.w, h: xf.h, sx: psx, sy: psy };
     const moved = segs.find((s) => s.ov && s.ov.bbox && s.bbox);
     if (moved) {
       const [ax0, ay0, ax1, ay1] = moved.bbox, [bx0, by0, bx1, by1] = moved.ov.bbox;
-      const dx = bx0 - ax0, dy = by0 - ay0, dw = (bx1 - bx0) - (ax1 - ax0), dh = (by1 - by0) - (ay1 - ay0);
-      xf = { ...xf, m: mmul(xf.m, mtranslate(dx, dy)), w: Math.max(4, xf.w + dw), h: Math.max(4, xf.h + dh) };
+      const dx = (bx0 - ax0) / psx, dy = (by0 - ay0) / psy, dw = ((bx1 - bx0) - (ax1 - ax0)) / psx, dh = ((by1 - by0) - (ay1 - ay0)) / psy;
+      xf = { ...xf, m: mmul(mtranslate(dx, dy), xf.m), w: Math.max(4, xf.w + dw), h: Math.max(4, xf.h + dh) }; // (shifted in the parent's space: rotation kept)
     }
     const M = mmul(m, xf.m), ctx = this.ctx();
     const style = firstNamed(sp, "style");
@@ -969,9 +971,9 @@ function slideShapeEdits(book, segments, edits) {
     edits.set(seg.file, list);
     if (list.some((e) => e.shape === sp)) continue;
     const [ax0, ay0, ax1, ay1] = seg.bbox, [bx0, by0, bx1, by1] = seg.ov.bbox;
-    const emu = (v) => Math.round(v / EMU_PT);
-    const x = emu(seg.shape.x + bx0 - ax0), y = emu(seg.shape.y + by0 - ay0);
-    const cx = Math.max(12700, emu(seg.shape.w + (bx1 - bx0) - (ax1 - ax0))), cy = Math.max(12700, emu(seg.shape.h + (by1 - by0) - (ay1 - ay0)));
+    const emu = (v) => Math.round(v / EMU_PT), sx = seg.shape.sx || 1, sy = seg.shape.sy || 1;
+    const x = emu(seg.shape.x + (bx0 - ax0) / sx), y = emu(seg.shape.y + (by0 - ay0) / sy);
+    const cx = Math.max(12700, emu(seg.shape.w + ((bx1 - bx0) - (ax1 - ax0)) / sx)), cy = Math.max(12700, emu(seg.shape.h + ((by1 - by0) - (ay1 - ay0)) / sy));
     const xfrm = firstNamed(spPr, "xfrm");
     if (xfrm) {
       const off = firstNamed(xfrm, "off"), ext = firstNamed(xfrm, "ext");

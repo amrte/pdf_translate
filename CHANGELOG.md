@@ -4,6 +4,12 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.54
+
+- Presentations: a field moved or resized inside a scaled group now moves by the right amount, in the preview and in the saved file.
+- "Translate with AI": the term list option is one short line ("Term list, count: 10"), with a new tickbox "with example sentences" that asks the AI for an example sentence per term, in the original and translated.
+- Keywords: the list holds the example sentences (editable), the PDF page shows them under each term, and a new "Flashcards" mode turns the terms into learning cards: click or Space turns a card, "Known" takes it out of the round, "Again" puts it at the end, with shuffle and keyboard browsing.
+
 ## 1.53
 
 - Keywords: "Translate with AI" now also asks for the most important terms of the text with their translations (10 by default, adjustable, can be switched off). When the answer is imported, the list after the line [[keywords]] is taken over. The new "Terms" button opens them: edit the list, see the PDF page, copy it or download it as a separate PDF file.

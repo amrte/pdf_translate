@@ -398,7 +398,8 @@
       <label><span data-i18n="ai.partSize">Segments per part</span> <input id="aiPartSize" type="number" min="20" step="1" value="1000"></label>
       <label class="check"><input type="checkbox" id="aiOnlyTodo"> <span data-i18n="ai.onlyTodo"></span></label>
       <label class="check pptx-only"><input type="checkbox" id="aiHidden"> <span data-i18n="ai.hidden"></span></label>
-      <label class="check"><input type="checkbox" id="aiKeywords" checked> <span data-i18n="ai.keywords"></span> <input id="aiKeywordCount" class="kw-n" type="number" min="1" max="100" value="10" data-i18n-aria="ai.keywordCount"></label>
+      <label class="check kw-opt" data-i18n-title="ai.keywordsTitle"><input type="checkbox" id="aiKeywords" checked> <span data-i18n="ai.keywords"></span> <input id="aiKeywordCount" class="kw-n" type="number" min="1" max="100" value="10" data-i18n-aria="ai.keywordCount"></label>
+      <label class="check kw-opt" data-i18n-title="ai.examplesTitle"><input type="checkbox" id="aiExamples"> <span data-i18n="ai.examples"></span></label>
     </div>
     <label class="field"><span><span data-i18n="ai.context"></span> <span class="muted" data-i18n="ai.contextHint"></span></span>
       <input id="aiContext" data-i18n-placeholder="ai.contextPh">
@@ -460,17 +461,19 @@
 <dialog id="kwDialog" class="modal wide" aria-labelledby="kwTitle">
   <form method="dialog">
     <h2 id="kwTitle" data-i18n="kw.title">Keywords</h2>
-    <p class="muted small" data-i18n="kw.text"></p>
-    <div class="kw-wrap">
+    <div class="kw-modes seg-toggle" role="group"><button type="button" class="active" id="kwModeList" data-i18n="kw.modeList">List</button><button type="button" id="kwModeCards" data-i18n="kw.modeCards">Flashcards</button></div>
+    <p class="muted small kw-list-only" data-i18n="kw.text"></p>
+    <div class="kw-wrap kw-list-only">
       <div class="kw-list" id="kwList"></div>
       <div class="kw-preview"><img id="kwPreview" alt=""></div>
     </div>
+    <div class="kw-cards kw-cards-only" id="kwCards"></div>
     <div class="modal-actions kw-actions">
-      <button type="button" class="btn" id="kwAdd" data-i18n="kw.add"></button>
-      <button type="button" class="btn" id="kwCopy" data-i18n="kw.copy"></button>
+      <button type="button" class="btn kw-list-only" id="kwAdd" data-i18n="kw.add"></button>
+      <button type="button" class="btn kw-list-only" id="kwCopy" data-i18n="kw.copy"></button>
       <span class="spacer"></span>
       <button value="close" class="btn ghost" data-i18n="kw.close"></button>
-      <button type="button" class="btn primary" id="kwDownload" data-i18n="kw.download"></button>
+      <button type="button" class="btn primary kw-list-only" id="kwDownload" data-i18n="kw.download"></button>
     </div>
   </form>
 </dialog>

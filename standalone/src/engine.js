@@ -2095,10 +2095,14 @@ function keywordsPdf(args) {
     header();
     for (const row of args.rows) {
       const a = layout(row.term, 11, true, colW[0]), b = layout(row.translation, 11, false, colW[1]);
-      const h = Math.max(a.lines.length, b.lines.length) * 1.3 * 11 + 9;
+      const ex = row.example ? layout(row.example, 9.5, false, colW[0]) : null, exT = row.exampleTr ? layout(row.exampleTr, 9.5, false, colW[1]) : null;
+      const main = Math.max(a.lines.length, b.lines.length) * 1.3 * 11, extra = ex || exT ? Math.max(ex ? ex.lines.length : 0, exT ? exT.lines.length : 0) * 1.3 * 9.5 + 3 : 0;
+      const h = main + extra + 9;
       if (y + h > H - MARGIN) { newPage(); header(); }
       draw(a, MARGIN, y + 2, 11, "#111111");
       draw(b, MARGIN + colW[0] + GAP, y + 2, 11, "#111111");
+      if (ex) draw(ex, MARGIN, y + 2 + main + 3, 9.5, "#666666");
+      if (exT) draw(exT, MARGIN + colW[0] + GAP, y + 2 + main + 3, 9.5, "#666666");
       y += h; rule(y - 3, 0.85, 0.5);
     }
     newPage();

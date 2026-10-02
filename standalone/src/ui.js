@@ -1763,7 +1763,7 @@ function aiPromptText(part) {
   if (context) lines.push("", P.context(context.replace(/\.$/, "")));
   if (glossary) lines.push("", P.glossary, ...glossary.split(/\n/).map((l) => l.trim()).filter(Boolean).map((l) => `- ${l}`));
   if (part && part.total > 1) lines.push("", P.part(part.k, part.total, part.a, part.b));
-  if ($("#aiKeywords").checked) lines.push("", P.keywords(Math.max(1, Math.min(100, Number($("#aiKeywordCount").value) || 10))));
+  if ($("#aiKeywords").checked) lines.push("", ($("#aiExamples").checked ? P.keywordsEx : P.keywords)(Math.max(1, Math.min(100, Number($("#aiKeywordCount").value) || 10))));
   lines.push("", P.segments);
   return lines.join("\n");
 }
@@ -1843,7 +1843,7 @@ function initHelp() {
   addCloseButtons();
   $("#btnHelp").addEventListener("click", () => openHelp(false));
   $("#btnAi").addEventListener("click", () => openHelp(true));
-  for (const id of ["#aiTarget", "#aiFrom", "#aiTo", "#aiOnlyTodo", "#aiHidden", "#aiKeywords", "#aiKeywordCount", "#aiContext", "#aiGlossary", "#aiPartSize"]) {
+  for (const id of ["#aiTarget", "#aiFrom", "#aiTo", "#aiOnlyTodo", "#aiHidden", "#aiKeywords", "#aiKeywordCount", "#aiExamples", "#aiContext", "#aiGlossary", "#aiPartSize"]) {
     $(id).addEventListener("input", refreshAiPrompt);
   }
   $("#aiParts").addEventListener("click", (e) => {
