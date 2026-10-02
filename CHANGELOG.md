@@ -4,6 +4,17 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.26
+
+- **No more "�" in words.** Some PDFs (typically printed from Word or Excel with Calibri) draw
+  letter pairs such as "ti", "fi" or "ff" as one glyph without saying which letters it stands
+  for; they showed up as a replacement mark ("Ac�vity"). The pair whose width matches the drawn
+  glyph is now filled in, using the font's own letter widths, so the text reads "Activity".
+- **OCR for chosen pages:** the text recognition dialog has a third option, "Specific pages",
+  with a page list as in a print dialog ("1-3, 7"). It starts with the page you are on.
+- **Rounded rectangles instead of pills:** the format chips, the version badge, the workflow
+  step numbers, the drop icon and the colour swatches no longer have round or pill shapes.
+
 ## 1.25
 
 - **New name and look: Kameleon.** The app is now called Kameleon ("Wechselt die Sprache,

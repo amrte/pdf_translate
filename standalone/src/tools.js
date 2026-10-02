@@ -381,8 +381,32 @@ function openOcrDialog() {
   $("#ocrPagesEmpty").checked = scans > 0;
   $("#ocrPagesAll").checked = scans === 0;
   $("#ocrScanCount").textContent = t("ocr.scanCount", { n: scans });
+  $("#ocrRange").value = String(currentPageIndex() + 1);
   $("#ocrFamily").value = saved.family || "serif";
   openModal($("#ocrDialog"));
+}
+
+/**
+ * Page numbers typed as in a print dialog ("1-3, 7"; "5-" runs to the end) to sorted 0-based
+ * indexes; null when the text is not a page list or names a page the document does not have.
+ */
+function parsePageRange(text, count) {
+  const out = new Set();
+  for (const part of text.split(/[,;\s]+/).filter(Boolean)) {
+    const m = /^(\d+)?(?:\s*[-–]\s*(\d+)?)?$/.exec(part);
+    if (!m || (!m[1] && !m[2])) return null;
+    const from = m[1] ? Number(m[1]) : 1, to = part.includes("-") || part.includes("–") ? (m[2] ? Number(m[2]) : count) : from;
+    if (from < 1 || to > count || from > to) return null;
+    for (let i = from; i <= to; i++) out.add(i - 1);
+  }
+  return out.size ? [...out].sort((a, b) => a - b) : null;
+}
+
+/** The pages chosen in the OCR dialog, or null when the typed page list is not valid. */
+function ocrPageChoice() {
+  if ($("#ocrPagesEmpty").checked) return scannedPages();
+  if ($("#ocrPagesRange").checked) return parsePageRange($("#ocrRange").value, state.doc.pages.length);
+  return state.doc.pages.map((p, i) => i);
 }
 
 let ocrCancel = false;
@@ -392,7 +416,7 @@ async function startOcr() {
   if (!langs.length) { toast(t("ocr.noLang"), "error"); return; }
   const family = $("#ocrFamily").value;
   try { localStorage.setItem(LS_OCR, JSON.stringify({ langs, family })); } catch (_) { /* fine */ }
-  const pages = $("#ocrPagesEmpty").checked ? scannedPages() : state.doc.pages.map((p, i) => i);
+  const pages = ocrPageChoice() || [];
   if (!pages.length) { toast(t("ocr.none")); return; }
   ocrCancel = false;
   const doc = state.doc, results = {};
@@ -798,7 +822,16 @@ function initTools() {
     }
   }, true);
   $("#btnOcr").addEventListener("click", openOcrDialog);
-  $("#ocrGo").addEventListener("click", (e) => { e.preventDefault(); $("#ocrDialog").close(); startOcr(); });
+  $("#ocrGo").addEventListener("click", (e) => {
+    e.preventDefault();
+    if ($("#ocrPagesRange").checked && !parsePageRange($("#ocrRange").value, state.doc.pages.length)) {
+      toast(t("ocr.badRange", { n: state.doc.pages.length }), "error"); $("#ocrRange").focus(); return;
+    }
+    $("#ocrDialog").close(); startOcr();
+  });
+  // Typing a page list selects that choice.
+  $("#ocrRange").addEventListener("focus", () => { $("#ocrPagesRange").checked = true; });
+  $("#ocrRange").addEventListener("input", () => { $("#ocrPagesRange").checked = true; });
 }
 
 /* ---------------------------------------------------------- comparison view */

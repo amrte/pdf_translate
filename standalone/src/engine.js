@@ -234,6 +234,43 @@ function pageBlocks(page, bounds, seps) {
   return unknownChars(drawn) <= unknownChars(blocks) ? drawn : blocks;
 }
 
+// Ligature glyphs without a Unicode mapping arrive as U+FFFD ("Ac\ufffdvity" in PDFs printed with
+// Calibri and similar fonts). Inside a word such a glyph is replaced by the letter pair whose
+// combined advance (from the font itself where the subset has the letters) comes closest to the
+// drawn width. Symbol fonts and lone glyphs are left alone.
+const LIGATURE_FIXES = ["ti", "fi", "fl", "ff", "tt", "ffi", "ffl", "st", "Th"];
+const GENERIC_ADV = { t: 0.33, i: 0.25, f: 0.3, l: 0.25, s: 0.38, T: 0.55, h: 0.55 };
+function ligatureGuess(font, info, w) {
+  if (!(w > 0.4) || /symbol|wingding|dingbat|webding/i.test(info.name)) return null;
+  if (!info.adv) info.adv = new Map();
+  const adv = (ch) => {
+    if (!info.adv.has(ch)) {
+      let a = null;
+      try { const g = font.encodeCharacter(ch.codePointAt(0)); a = g > 0 ? font.advanceGlyph(g, 0) : null; } catch (_) { a = null; }
+      info.adv.set(ch, a);
+    }
+    return info.adv.get(ch);
+  };
+  let best = null;
+  for (const lig of LIGATURE_FIXES) {
+    let sum = 0, generic = false;
+    for (const ch of lig) { const a = adv(ch); if (a == null) { generic = true; sum += GENERIC_ADV[ch]; } else sum += a; }
+    // Estimated widths count for less; "ti" is by far the most frequent of these pairs.
+    const d = Math.abs(sum - w) / w + (generic ? 0.03 : 0) - (lig === "ti" ? 0.03 : 0);
+    if (d < 0.12 && (!best || d < best.d)) best = { lig, d };
+  }
+  return best && best.lig;
+}
+const LETTER = /\p{L}/u;
+function applyLigatureFixes(span) {
+  for (let i = span.fixes.length - 1; i >= 0; i--) {
+    const { at, lig } = span.fixes[i], prev = span.text[at - 1], next = span.text[at + 1];
+    const edge = (ch) => ch === undefined || ch === " " || LETTER.test(ch);
+    if ((LETTER.test(prev || "") || LETTER.test(next || "")) && edge(prev) && edge(next)) span.text = span.text.slice(0, at) + lig + span.text.slice(at + 1);
+  }
+  delete span.fixes;
+}
+
 function readBlocks(page, bounds, seps, options) {
   // Font pointers are only unique while this structured-text page keeps its fonts alive;
   // MuPDF reuses the addresses later, so the pointer cache must not outlive the page.
@@ -257,6 +294,7 @@ function readBlocks(page, bounds, seps, options) {
       if (qb[2] < bounds[0] || qb[0] > bounds[2] || qb[3] < bounds[1] || qb[1] > bounds[3]) return; // off-page
       const blank = c === " " || !c.trim();
       const info = fontInfo(font);
+      const lig = c === "\ufffd" && Math.abs(line.dir[0]) > 0.99 ? ligatureGuess(font, info, (qb[2] - qb[0]) / size) : null;
       free(font); // release the per-character wrapper right away instead of waiting for GC
       const ck = color.length === 3 ? ((color[0] * 255) << 16) + ((color[1] * 255) << 8) + (color[2] * 255 | 0) : color.join(",");
       let col = colorCache.get(ck);
@@ -283,6 +321,7 @@ function readBlocks(page, bounds, seps, options) {
         span = { key, text: "", bbox: null, origin: [origin[0], origin[1]], size, font: info, color: col, gapBefore };
         line.spans.push(span);
       }
+      if (lig) (span.fixes = span.fixes || []).push({ at: span.text.length, lig });
       span.text += c;
       if (blank) { sawSpace = true; return; }
       span.bbox = union(span.bbox, qb);
@@ -291,7 +330,10 @@ function readBlocks(page, bounds, seps, options) {
     },
   });
   free(st);
-  for (const b of blocks) for (const l of b.lines) l.spans = l.spans.filter((sp) => sp.bbox);
+  for (const b of blocks) for (const l of b.lines) {
+    l.spans = l.spans.filter((sp) => sp.bbox);
+    for (const sp of l.spans) if (sp.fixes) applyLigatureFixes(sp);
+  }
   return blocks;
 }
 

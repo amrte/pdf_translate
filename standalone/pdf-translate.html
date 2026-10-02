@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="Kameleon 1.25">
+  <meta name="generator" content="Kameleon 1.26">
   <meta name="description" content="Kameleon – Wechselt die Sprache, behält die Form. Changes language, keeps its shape.">
   <title>Kameleon</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%227%22 fill=%22%23f2c94c%22/%3E%3Cpath d=%22M4 24.5c7-1 17-1 24 0%22 fill=%22none%22 stroke=%22%238a5a2b%22 stroke-width=%222.2%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M9.5 18.5c0-4.5 3.5-8 8-8h3.5c3.5 0 6 2.5 6 5.5 0 2.6-1.5 4.5-4 5.5h-9c-2.8 0-4.5-1.3-4.5-3z%22 fill=%22%234caf50%22/%3E%3Cpath d=%22M7.5 20.5c-2.3-.4-3.6 1.2-3.1 2.9.4 1.3 1.9 1.7 2.8.9.9-.8.6-2-.2-2.3%22 fill=%22none%22 stroke=%22%234caf50%22 stroke-width=%222.2%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M26.5 16c1.6-1.2 3.2-.2 3.4 1.2%22 fill=%22none%22 stroke=%22%234caf50%22 stroke-width=%222.4%22 stroke-linecap=%22round%22/%3E%3Ccircle cx=%2222.5%22 cy=%2214.5%22 r=%223.1%22 fill=%22%232e7d32%22/%3E%3Ccircle cx=%2222.5%22 cy=%2214.5%22 r=%221.9%22 fill=%22%23fff%22/%3E%3Ccircle cx=%2223%22 cy=%2214.6%22 r=%22.9%22 fill=%22%231b1b1b%22/%3E%3Cpath d=%22M13.5 15.5c.8-1.5 2.3-2 3.8-1.6M18.5 19.5h4%22 fill=%22none%22 stroke=%22%232e7d32%22 stroke-width=%221.3%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M13 21.5v2.6M19 21.5v2.6%22 stroke=%22%232e7d32%22 stroke-width=%221.8%22 stroke-linecap=%22round%22/%3E%3C/svg%3E">
@@ -163,7 +163,7 @@ code { font-size: 12.5px; background: var(--surface-2); border: 1px solid var(--
 
 /* ---------- editor ---------- */
 .progress-row { display: flex; align-items: center; gap: 10px; padding: 10px 14px 0; color: var(--muted); font-size: 13px; }
-.progress { flex: 1; height: 6px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 99px; overflow: hidden; }
+.progress { flex: 1; height: 6px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 3px; overflow: hidden; }
 .progress-bar { height: 100%; width: 0; background: var(--success); transition: width .25s; }
 .filter-row { display: flex; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--border); }
 .filter-row input, .filter-row select, .lang-row input, .field select, textarea {
@@ -295,7 +295,7 @@ kbd { font: 11.5px ui-monospace, monospace; border: 1px solid var(--border); bor
 .lang-switch { display: inline-flex; border: 1px solid var(--border); border-radius: 7px; overflow: hidden; }
 .lang-switch button { border: 0; background: transparent; color: var(--muted); font: inherit; font-size: 12px; font-weight: 600; padding: 3px 8px; cursor: pointer; }
 .lang-switch button.active { background: var(--accent-soft); color: var(--accent); }
-.version { font-size: 11px; color: var(--muted); font-weight: 500; padding: 1px 6px; border: 1px solid var(--border); border-radius: 99px; }
+.version { font-size: 11px; color: var(--muted); font-weight: 500; padding: 1px 6px; border: 1px solid var(--border); border-radius: 5px; }
 .help-version { margin-top: 4px; }
 .help-part, .ai-part { display: flex; flex-direction: column; gap: 12px; }
 p.help-part, button.ai-part { display: block; }
@@ -341,7 +341,7 @@ p.help-part, button.ai-part { display: block; }
 .tool-rail .tool:disabled { opacity: .35; cursor: default; }
 .rail-sep { width: 22px; height: 1px; background: var(--border); margin: 4px 0; flex: none; }
 .swatches { display: grid; grid-template-columns: repeat(2, 13px); gap: 4px; flex: none; }
-.swatch { width: 13px; height: 13px; border-radius: 50%; border: 1px solid var(--border); background: var(--c); cursor: pointer; padding: 0; box-shadow: 0 0 0 1px rgba(127, 127, 127, .25); }
+.swatch { width: 13px; height: 13px; border-radius: 3px; border: 1px solid var(--border); background: var(--c); cursor: pointer; padding: 0; box-shadow: 0 0 0 1px rgba(127, 127, 127, .25); }
 .swatch.active { outline: 2px solid var(--accent); outline-offset: 1px; }
 .widths { display: flex; flex-direction: column; gap: 2px; margin-top: 4px; flex: none; }
 .width-btn { width: 30px; height: 14px; display: grid; place-items: center; border: 1px solid transparent; border-radius: 4px; background: transparent; cursor: pointer; padding: 0; }
@@ -411,6 +411,8 @@ body.box-dragging, body.box-dragging .box { cursor: grabbing !important; user-se
 .seg-style input[type="color"] { width: 30px; height: 24px; padding: 0 2px; border: 1px solid var(--border); border-radius: 5px; background: none; }
 .seg-style .st-hint { flex-basis: 100%; }
 .busy-box #busyCancel { margin-left: 12px; }
+.ocr-range { flex-wrap: wrap; }
+.ocr-range input[type=text] { width: 9em; height: 28px; padding: 0 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--text); font: inherit; margin-left: 4px; }
 .ocr-langs { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 2px 12px; margin-top: 4px; }
 .error-text { color: var(--danger, #c62828); font-weight: 600; }
 .top-fs.on { color: var(--accent, #2e7d32); }
@@ -560,19 +562,19 @@ body.splitting .pages, body.splitting iframe { pointer-events: none; }
   box-shadow: 0 1px 2px rgba(20, 25, 40, .04), 0 10px 30px rgba(46, 125, 50, .08);
 }
 .upload-view .dropzone:hover, .upload-view .dropzone.over { box-shadow: 0 1px 2px rgba(20, 25, 40, .04), 0 12px 34px rgba(46, 125, 50, .16); }
-.upload-view .dz-icon { width: 66px; height: 66px; border-radius: 50%; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); }
+.upload-view .dz-icon { width: 66px; height: 66px; border-radius: 18px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); }
 .upload-view .dropzone:hover .dz-icon, .upload-view .dropzone.over .dz-icon, .upload-view .dropzone:focus-within .dz-icon { background: var(--accent); color: var(--on-accent); }
 .upload-view .dz-title { font-size: 20px; font-weight: 650; letter-spacing: -0.005em; }
 .dz-tagline { color: var(--muted); font-size: 13.5px; margin-top: -4px; }
 .upload-view .dz-formats { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
 .fmt {
-  font-size: 12px; font-weight: 650; letter-spacing: .02em; padding: 3px 10px 3px 8px; border-radius: 999px;
+  font-size: 12px; font-weight: 650; letter-spacing: .02em; padding: 3px 10px 3px 8px; border-radius: 6px;
   border: 1px solid var(--border); background: var(--surface-2); color: var(--text); display: inline-flex; align-items: center; gap: 6px;
 }
 .fmt::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--f); }
 .wf-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
 .wf-step { box-shadow: 0 1px 2px rgba(20, 25, 40, .05); }
-.wf-num { flex: none; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: var(--on-accent); font-weight: 700; font-size: 13px; }
+.wf-num { flex: none; width: 26px; height: 26px; border-radius: 7px; display: grid; place-items: center; background: var(--accent); color: var(--on-accent); font-weight: 700; font-size: 13px; }
 .wf-last .wf-num { background: var(--success); color: var(--on-success); }
 @media (min-width: 1000px) {
   .upload-view { padding: 16px 22px; gap: 14px; }
@@ -594,7 +596,7 @@ body.splitting .pages, body.splitting iframe { pointer-events: none; }
   <div class="brand">
     <span class="logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#f2c94c"/><path d="M4 24.5c7-1 17-1 24 0" fill="none" stroke="#8a5a2b" stroke-width="2.2" stroke-linecap="round"/><path d="M9.5 18.5c0-4.5 3.5-8 8-8h3.5c3.5 0 6 2.5 6 5.5 0 2.6-1.5 4.5-4 5.5h-9c-2.8 0-4.5-1.3-4.5-3z" fill="#4caf50"/><path d="M7.5 20.5c-2.3-.4-3.6 1.2-3.1 2.9.4 1.3 1.9 1.7 2.8.9.9-.8.6-2-.2-2.3" fill="none" stroke="#4caf50" stroke-width="2.2" stroke-linecap="round"/><path d="M26.5 16c1.6-1.2 3.2-.2 3.4 1.2" fill="none" stroke="#4caf50" stroke-width="2.4" stroke-linecap="round"/><circle cx="22.5" cy="14.5" r="3.1" fill="#2e7d32"/><circle cx="22.5" cy="14.5" r="1.9" fill="#fff"/><circle cx="23" cy="14.6" r=".9" fill="#1b1b1b"/><path d="M13.5 15.5c.8-1.5 2.3-2 3.8-1.6M18.5 19.5h4" fill="none" stroke="#2e7d32" stroke-width="1.3" stroke-linecap="round"/><path d="M13 21.5v2.6M19 21.5v2.6" stroke="#2e7d32" stroke-width="1.8" stroke-linecap="round"/></svg></span>
     <span class="brand-name">Kameleon</span>
-    <span class="version" id="appVersion">v1.25</span>
+    <span class="version" id="appVersion">v1.26</span>
   </div>
   <div class="topbar-actions">
     <span class="doc-name" id="docName"></span>
@@ -941,7 +943,7 @@ body.splitting .pages, body.splitting iframe { pointer-events: none; }
     <div class="ai-parts-head"><b data-i18n="ai.parts">Copy prompt + text</b> <span class="muted small" data-i18n="ai.partsHint"></span></div>
     <div class="ai-parts" id="aiParts"></div>
     </div>
-    <p class="muted small help-version help-part">Kameleon v1.25 · <span data-i18n="app.tagline"></span></p>
+    <p class="muted small help-version help-part">Kameleon v1.26 · <span data-i18n="app.tagline"></span></p>
     <div class="modal-actions">
       <button type="button" value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
       <button type="button" class="btn ai-part" id="aiCopyPrompt" data-i18n="ai.copyPrompt">Copy prompt only</button>
@@ -976,6 +978,8 @@ body.splitting .pages, body.splitting iframe { pointer-events: none; }
     <div class="field"><span data-i18n="ocr.pages">Pages</span>
       <label class="check"><input type="radio" name="ocrPages" id="ocrPagesEmpty" checked> <span data-i18n="ocr.pagesEmpty"></span> <span class="muted" id="ocrScanCount"></span></label>
       <label class="check"><input type="radio" name="ocrPages" id="ocrPagesAll"> <span data-i18n="ocr.pagesAll"></span></label>
+      <label class="check ocr-range"><input type="radio" name="ocrPages" id="ocrPagesRange"> <span data-i18n="ocr.pagesRange"></span>
+        <input type="text" id="ocrRange" inputmode="numeric" autocomplete="off" data-i18n-placeholder="ocr.rangeHint" data-i18n-aria="ocr.pagesRange"></label>
     </div>
     <label class="field"><span data-i18n="ocr.family">Font of the translation</span>
       <select id="ocrFamily"><option value="serif" data-i18n="st.serif"></option><option value="sans-serif" data-i18n="st.sans"></option></select>
@@ -1206,6 +1210,9 @@ const I18N = {
     "ocr.pages": "Seiten",
     "ocr.pagesEmpty": "Nur Seiten ohne Text",
     "ocr.pagesAll": "Alle Seiten (auch Text in Bildern)",
+    "ocr.pagesRange": "Bestimmte Seiten",
+    "ocr.rangeHint": "z. B. 1-3, 7",
+    "ocr.badRange": "Ungültige Seitenangabe – zum Beispiel „1-3, 7“ (Seiten 1 bis {n}).",
     "ocr.scanCount": "({n} gefunden)",
     "ocr.family": "Schrift der Übersetzung",
     "ocr.note": "Beim ersten Mal werden die Texterkennung (ca. 3 MB) und die Sprachdaten (je 1–4 MB) aus dem Internet geladen. Die Erkennung läuft in Ihrem Browser, etwa 2–5 s pro Seite.",
@@ -1540,6 +1547,9 @@ const I18N = {
     "ocr.pages": "Pages",
     "ocr.pagesEmpty": "Only pages without text",
     "ocr.pagesAll": "All pages (also text in pictures)",
+    "ocr.pagesRange": "Specific pages",
+    "ocr.rangeHint": "e.g. 1-3, 7",
+    "ocr.badRange": "Invalid page list – for example “1-3, 7” (pages 1 to {n}).",
     "ocr.scanCount": "({n} found)",
     "ocr.family": "Font of the translation",
     "ocr.note": "The first time, the OCR engine (about 3 MB) and the language data (1–4 MB each) are downloaded. Recognition runs in your browser, about 2–5 s per page.",
@@ -2034,6 +2044,43 @@ function pageBlocks(page, bounds, seps) {
   return unknownChars(drawn) <= unknownChars(blocks) ? drawn : blocks;
 }
 
+// Ligature glyphs without a Unicode mapping arrive as U+FFFD ("Ac\ufffdvity" in PDFs printed with
+// Calibri and similar fonts). Inside a word such a glyph is replaced by the letter pair whose
+// combined advance (from the font itself where the subset has the letters) comes closest to the
+// drawn width. Symbol fonts and lone glyphs are left alone.
+const LIGATURE_FIXES = ["ti", "fi", "fl", "ff", "tt", "ffi", "ffl", "st", "Th"];
+const GENERIC_ADV = { t: 0.33, i: 0.25, f: 0.3, l: 0.25, s: 0.38, T: 0.55, h: 0.55 };
+function ligatureGuess(font, info, w) {
+  if (!(w > 0.4) || /symbol|wingding|dingbat|webding/i.test(info.name)) return null;
+  if (!info.adv) info.adv = new Map();
+  const adv = (ch) => {
+    if (!info.adv.has(ch)) {
+      let a = null;
+      try { const g = font.encodeCharacter(ch.codePointAt(0)); a = g > 0 ? font.advanceGlyph(g, 0) : null; } catch (_) { a = null; }
+      info.adv.set(ch, a);
+    }
+    return info.adv.get(ch);
+  };
+  let best = null;
+  for (const lig of LIGATURE_FIXES) {
+    let sum = 0, generic = false;
+    for (const ch of lig) { const a = adv(ch); if (a == null) { generic = true; sum += GENERIC_ADV[ch]; } else sum += a; }
+    // Estimated widths count for less; "ti" is by far the most frequent of these pairs.
+    const d = Math.abs(sum - w) / w + (generic ? 0.03 : 0) - (lig === "ti" ? 0.03 : 0);
+    if (d < 0.12 && (!best || d < best.d)) best = { lig, d };
+  }
+  return best && best.lig;
+}
+const LETTER = /\p{L}/u;
+function applyLigatureFixes(span) {
+  for (let i = span.fixes.length - 1; i >= 0; i--) {
+    const { at, lig } = span.fixes[i], prev = span.text[at - 1], next = span.text[at + 1];
+    const edge = (ch) => ch === undefined || ch === " " || LETTER.test(ch);
+    if ((LETTER.test(prev || "") || LETTER.test(next || "")) && edge(prev) && edge(next)) span.text = span.text.slice(0, at) + lig + span.text.slice(at + 1);
+  }
+  delete span.fixes;
+}
+
 function readBlocks(page, bounds, seps, options) {
   // Font pointers are only unique while this structured-text page keeps its fonts alive;
   // MuPDF reuses the addresses later, so the pointer cache must not outlive the page.
@@ -2057,6 +2104,7 @@ function readBlocks(page, bounds, seps, options) {
       if (qb[2] < bounds[0] || qb[0] > bounds[2] || qb[3] < bounds[1] || qb[1] > bounds[3]) return; // off-page
       const blank = c === " " || !c.trim();
       const info = fontInfo(font);
+      const lig = c === "\ufffd" && Math.abs(line.dir[0]) > 0.99 ? ligatureGuess(font, info, (qb[2] - qb[0]) / size) : null;
       free(font); // release the per-character wrapper right away instead of waiting for GC
       const ck = color.length === 3 ? ((color[0] * 255) << 16) + ((color[1] * 255) << 8) + (color[2] * 255 | 0) : color.join(",");
       let col = colorCache.get(ck);
@@ -2083,6 +2131,7 @@ function readBlocks(page, bounds, seps, options) {
         span = { key, text: "", bbox: null, origin: [origin[0], origin[1]], size, font: info, color: col, gapBefore };
         line.spans.push(span);
       }
+      if (lig) (span.fixes = span.fixes || []).push({ at: span.text.length, lig });
       span.text += c;
       if (blank) { sawSpace = true; return; }
       span.bbox = union(span.bbox, qb);
@@ -2091,7 +2140,10 @@ function readBlocks(page, bounds, seps, options) {
     },
   });
   free(st);
-  for (const b of blocks) for (const l of b.lines) l.spans = l.spans.filter((sp) => sp.bbox);
+  for (const b of blocks) for (const l of b.lines) {
+    l.spans = l.spans.filter((sp) => sp.bbox);
+    for (const sp of l.spans) if (sp.fixes) applyLigatureFixes(sp);
+  }
   return blocks;
 }
 
@@ -10372,8 +10424,32 @@ function openOcrDialog() {
   $("#ocrPagesEmpty").checked = scans > 0;
   $("#ocrPagesAll").checked = scans === 0;
   $("#ocrScanCount").textContent = t("ocr.scanCount", { n: scans });
+  $("#ocrRange").value = String(currentPageIndex() + 1);
   $("#ocrFamily").value = saved.family || "serif";
   openModal($("#ocrDialog"));
+}
+
+/**
+ * Page numbers typed as in a print dialog ("1-3, 7"; "5-" runs to the end) to sorted 0-based
+ * indexes; null when the text is not a page list or names a page the document does not have.
+ */
+function parsePageRange(text, count) {
+  const out = new Set();
+  for (const part of text.split(/[,;\s]+/).filter(Boolean)) {
+    const m = /^(\d+)?(?:\s*[-–]\s*(\d+)?)?$/.exec(part);
+    if (!m || (!m[1] && !m[2])) return null;
+    const from = m[1] ? Number(m[1]) : 1, to = part.includes("-") || part.includes("–") ? (m[2] ? Number(m[2]) : count) : from;
+    if (from < 1 || to > count || from > to) return null;
+    for (let i = from; i <= to; i++) out.add(i - 1);
+  }
+  return out.size ? [...out].sort((a, b) => a - b) : null;
+}
+
+/** The pages chosen in the OCR dialog, or null when the typed page list is not valid. */
+function ocrPageChoice() {
+  if ($("#ocrPagesEmpty").checked) return scannedPages();
+  if ($("#ocrPagesRange").checked) return parsePageRange($("#ocrRange").value, state.doc.pages.length);
+  return state.doc.pages.map((p, i) => i);
 }
 
 let ocrCancel = false;
@@ -10383,7 +10459,7 @@ async function startOcr() {
   if (!langs.length) { toast(t("ocr.noLang"), "error"); return; }
   const family = $("#ocrFamily").value;
   try { localStorage.setItem(LS_OCR, JSON.stringify({ langs, family })); } catch (_) { /* fine */ }
-  const pages = $("#ocrPagesEmpty").checked ? scannedPages() : state.doc.pages.map((p, i) => i);
+  const pages = ocrPageChoice() || [];
   if (!pages.length) { toast(t("ocr.none")); return; }
   ocrCancel = false;
   const doc = state.doc, results = {};
@@ -10789,7 +10865,16 @@ function initTools() {
     }
   }, true);
   $("#btnOcr").addEventListener("click", openOcrDialog);
-  $("#ocrGo").addEventListener("click", (e) => { e.preventDefault(); $("#ocrDialog").close(); startOcr(); });
+  $("#ocrGo").addEventListener("click", (e) => {
+    e.preventDefault();
+    if ($("#ocrPagesRange").checked && !parsePageRange($("#ocrRange").value, state.doc.pages.length)) {
+      toast(t("ocr.badRange", { n: state.doc.pages.length }), "error"); $("#ocrRange").focus(); return;
+    }
+    $("#ocrDialog").close(); startOcr();
+  });
+  // Typing a page list selects that choice.
+  $("#ocrRange").addEventListener("focus", () => { $("#ocrPagesRange").checked = true; });
+  $("#ocrRange").addEventListener("input", () => { $("#ocrPagesRange").checked = true; });
 }
 
 /* ---------------------------------------------------------- comparison view */

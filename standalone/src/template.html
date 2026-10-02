@@ -398,6 +398,8 @@
     <div class="field"><span data-i18n="ocr.pages">Pages</span>
       <label class="check"><input type="radio" name="ocrPages" id="ocrPagesEmpty" checked> <span data-i18n="ocr.pagesEmpty"></span> <span class="muted" id="ocrScanCount"></span></label>
       <label class="check"><input type="radio" name="ocrPages" id="ocrPagesAll"> <span data-i18n="ocr.pagesAll"></span></label>
+      <label class="check ocr-range"><input type="radio" name="ocrPages" id="ocrPagesRange"> <span data-i18n="ocr.pagesRange"></span>
+        <input type="text" id="ocrRange" inputmode="numeric" autocomplete="off" data-i18n-placeholder="ocr.rangeHint" data-i18n-aria="ocr.pagesRange"></label>
     </div>
     <label class="field"><span data-i18n="ocr.family">Font of the translation</span>
       <select id="ocrFamily"><option value="serif" data-i18n="st.serif"></option><option value="sans-serif" data-i18n="st.sans"></option></select>
