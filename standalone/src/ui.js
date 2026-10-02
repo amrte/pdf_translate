@@ -210,7 +210,7 @@ function saveBlob(blob, filename) {
 const ERROR_KEYS = [
   [/DRM-protected/i, "err.drm"], [/not a valid (zip|\.docx)/i, "err.zip"], [/ZIP64/i, "err.zip64"],
   [/No \.fb2 file/i, "err.noFb2"], [/no package file/i, "err.noOpf"], [/XLIFF file is not valid/i, "err.xliff"],
-  [/No document is open/i, "err.noDoc"], [/is encrypted and cannot be opened/i, "err.encrypted"], [/is too old/i, "err.tooOld"], [/engine worker|worker stopped/i, "msg.workerStopped"],
+  [/No document is open/i, "err.noDoc"], [/is encrypted and cannot be opened/i, "err.encrypted"], [/is too old/i, "err.tooOld"], [/picture format is not supported|unknown image file format/i, "err.image"], [/engine worker|worker stopped/i, "msg.workerStopped"],
 ];
 function userError(err) {
   const msg = String((err && err.message) || err || "");
@@ -218,7 +218,7 @@ function userError(err) {
   return hit ? t(hit[1]) : msg;
 }
 
-const stem = () => (state.doc.name || "document.pdf").replace(/\.(pdf|epub|fb2|fbz|fb2\.zip|zip|docx|pptx|xlsx|doc|xls|ppt)$/i, "") || "document";
+const stem = () => (state.doc.name || "document.pdf").replace(/\.(pdf|epub|fb2|fbz|fb2\.zip|zip|docx|pptx|xlsx|doc|xls|ppt|png|jpe?g|gif|bmp|tiff?|webp|avif|heic)$/i, "") || "document";
 const escapeHtml = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 
 async function sha256(bytes) {
@@ -284,7 +284,7 @@ async function idbGet(key = "last") {
 
 async function openPdf(file) {
   if (!file) return;
-  if (!/\.(pdf|epub|fb2|fbz|zip|docx|pptx|xlsx|doc|xls|ppt)$/i.test(file.name) && !/pdf|epub|fictionbook|officedocument|msword|ms-excel|ms-powerpoint/i.test(file.type)) {
+  if (!/\.(pdf|epub|fb2|fbz|zip|docx|pptx|xlsx|doc|xls|ppt|png|jpe?g|gif|bmp|tiff?|webp|avif|heic)$/i.test(file.name) && !/pdf|epub|fictionbook|officedocument|msword|ms-excel|ms-powerpoint|^image\//i.test(file.type)) {
     toast(t("msg.chooseFile"), "error");
     return;
   }
@@ -339,7 +339,18 @@ async function loadBytes(bytes, name, remember, knownId = null) {
     if (stale()) return;
     // (an unlocked PDF keeps the id of the protected file, so its translations are found again)
     const id = knownId || await sha256(bytes);
-    let kind = Engine.detectKind(bytes, name), converted = null;
+    let kind = Engine.detectKind(bytes, name), converted = null, image = null;
+    const original = bytes;
+    if (kind === "image") { // a picture becomes a one-page PDF; its text is read with OCR
+      const fmt = Engine.imageKindOf(bytes);
+      setLoading(t("msg.imageToPage"));
+      const src = ["jpeg", "png", "gif", "bmp", "tiff"].includes(fmt) ? bytes : await transcodeImage(bytes);
+      if (stale()) return;
+      const r = await pool.workers[0].call("imageToPdf", { bytes: src });
+      if (stale()) return;
+      bytes = r.bytes; kind = "pdf";
+      image = { format: fmt === "jpeg" ? "jpeg" : "png", label: fmt === "jpeg" ? "JPG" : "PNG", width: r.width, height: r.height };
+    }
     if (LEGACY_KINDS.has(kind)) { // Word/Excel/PowerPoint 97–2003: converted to the modern format first
       converted = { from: kind.toUpperCase(), to: LEGACY_TO_MODERN[kind].toUpperCase() };
       setLoading(t("msg.converting", converted));
@@ -376,18 +387,49 @@ async function loadBytes(bytes, name, remember, knownId = null) {
       : (setLoading(t("msg.readingBook")), await pool.workers[0].call("extractBook"));
     if (stale()) return;
     console.info(`Extracted ${segments.length} segments from ${pageCount} pages in ${Math.round(performance.now() - started)} ms using ${pool.workers.length} worker(s)`);
-    if (remember) idbPut({ name, bytes, id });
+    if (remember) idbPut({ name, bytes: image ? original : bytes, id }); // (a picture is stored as it was)
     const restored = kind === "pdf" ? await restoreOcr(id, segments, pages) : { segments, ocr: null };
     if (stale()) return;
-    openDocument({ id, name, kind, pages, segments: restored.segments, ocr: restored.ocr }, bytes);
+    openDocument({ id, name, kind, pages, segments: restored.segments, ocr: restored.ocr, image }, bytes);
     if (converted) toast(t("msg.converted", converted));
-    suggestOcr();
+    if (image && !restored.ocr) { toast(t("msg.imageOpened", { fmt: image.label })); openOcrDialog(); } else suggestOcr();
   } catch (err) {
     if (stale()) return;
     console.error(err);
     toast(t("msg.openFailed", { err: userError(err) }), "error");
   } finally {
     if (!stale()) setLoading("");
+  }
+}
+
+/** Decode a picture the engine cannot read (WebP, AVIF, HEIC) in the browser and return it as PNG. */
+async function transcodeImage(bytes) {
+  let bmp;
+  try { bmp = await createImageBitmap(new Blob([bytes])); } catch (_) { throw new Error("This picture format is not supported."); }
+  try {
+    const canvas = new OffscreenCanvas(bmp.width, bmp.height);
+    canvas.getContext("2d").drawImage(bmp, 0, 0);
+    return new Uint8Array(await (await canvas.convertToBlob({ type: "image/png" })).arrayBuffer());
+  } finally {
+    bmp.close && bmp.close();
+  }
+}
+
+/** The translated picture: the finished page rendered at the picture's pixel size, as PNG or JPEG. */
+async function imageBlob(pdfBytes) {
+  const img = state.doc.image, page = state.doc.pages[0];
+  const zoom = img.width / page.width;
+  const png = await pool.workers[0].call("renderBytes", { bytes: pdfBytes.slice(), page: 0, zoom });
+  const blob = new Blob([png], { type: "image/png" });
+  if (img.format !== "jpeg") return { blob, ext: "png" };
+  const bmp = await createImageBitmap(blob);
+  try {
+    const canvas = new OffscreenCanvas(bmp.width, bmp.height), ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, bmp.width, bmp.height); // JPEG has no transparency
+    ctx.drawImage(bmp, 0, 0);
+    return { blob: await canvas.convertToBlob({ type: "image/jpeg", quality: 0.92 }), ext: "jpg" };
+  } finally {
+    bmp.close && bmp.close();
   }
 }
 
@@ -427,7 +469,7 @@ function openDocument(doc, bytes) {
   $("#docName").title = doc.name;
   document.body.classList.toggle("is-book", isBook());
   document.body.classList.toggle("is-office", isOffice());
-  setDocFormat(FORMAT_LABEL[doc.kind || "pdf"]);
+  setDocFormat(doc.image ? doc.image.label : FORMAT_LABEL[doc.kind || "pdf"]);
   document.title = `${doc.name} · Kameleon`;
 
   loadOverrides();
@@ -1152,6 +1194,11 @@ async function downloadOutput() {
       busy(t("msg.saving"));
       state.outBytes = await pool.workers[0].call("save", { markups: state.markups, rotations: isBook() ? {} : state.rotations });
       state.outDirty = false;
+    }
+    if (state.doc.image) { // a picture goes out as a picture again
+      const { blob, ext } = await imageBlob(state.outBytes);
+      saveBlob(blob, `${stem()}.translated.${ext}`);
+      return;
     }
     const kind = state.doc.kind || "pdf";
     const type = MIME[kind];

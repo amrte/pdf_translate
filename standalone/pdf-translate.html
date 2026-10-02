@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="Kameleon 1.26">
+  <meta name="generator" content="Kameleon 1.27">
   <meta name="description" content="Kameleon – Wechselt die Sprache, behält die Form. Changes language, keeps its shape.">
   <title>Kameleon</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%227%22 fill=%22%23f2c94c%22/%3E%3Cpath d=%22M4 24.5c7-1 17-1 24 0%22 fill=%22none%22 stroke=%22%238a5a2b%22 stroke-width=%222.2%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M9.5 18.5c0-4.5 3.5-8 8-8h3.5c3.5 0 6 2.5 6 5.5 0 2.6-1.5 4.5-4 5.5h-9c-2.8 0-4.5-1.3-4.5-3z%22 fill=%22%234caf50%22/%3E%3Cpath d=%22M7.5 20.5c-2.3-.4-3.6 1.2-3.1 2.9.4 1.3 1.9 1.7 2.8.9.9-.8.6-2-.2-2.3%22 fill=%22none%22 stroke=%22%234caf50%22 stroke-width=%222.2%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M26.5 16c1.6-1.2 3.2-.2 3.4 1.2%22 fill=%22none%22 stroke=%22%234caf50%22 stroke-width=%222.4%22 stroke-linecap=%22round%22/%3E%3Ccircle cx=%2222.5%22 cy=%2214.5%22 r=%223.1%22 fill=%22%232e7d32%22/%3E%3Ccircle cx=%2222.5%22 cy=%2214.5%22 r=%221.9%22 fill=%22%23fff%22/%3E%3Ccircle cx=%2223%22 cy=%2214.6%22 r=%22.9%22 fill=%22%231b1b1b%22/%3E%3Cpath d=%22M13.5 15.5c.8-1.5 2.3-2 3.8-1.6M18.5 19.5h4%22 fill=%22none%22 stroke=%22%232e7d32%22 stroke-width=%221.3%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M13 21.5v2.6M19 21.5v2.6%22 stroke=%22%232e7d32%22 stroke-width=%221.8%22 stroke-linecap=%22round%22/%3E%3C/svg%3E">
@@ -596,7 +596,7 @@ body.splitting .pages, body.splitting iframe { pointer-events: none; }
   <div class="brand">
     <span class="logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#f2c94c"/><path d="M4 24.5c7-1 17-1 24 0" fill="none" stroke="#8a5a2b" stroke-width="2.2" stroke-linecap="round"/><path d="M9.5 18.5c0-4.5 3.5-8 8-8h3.5c3.5 0 6 2.5 6 5.5 0 2.6-1.5 4.5-4 5.5h-9c-2.8 0-4.5-1.3-4.5-3z" fill="#4caf50"/><path d="M7.5 20.5c-2.3-.4-3.6 1.2-3.1 2.9.4 1.3 1.9 1.7 2.8.9.9-.8.6-2-.2-2.3" fill="none" stroke="#4caf50" stroke-width="2.2" stroke-linecap="round"/><path d="M26.5 16c1.6-1.2 3.2-.2 3.4 1.2" fill="none" stroke="#4caf50" stroke-width="2.4" stroke-linecap="round"/><circle cx="22.5" cy="14.5" r="3.1" fill="#2e7d32"/><circle cx="22.5" cy="14.5" r="1.9" fill="#fff"/><circle cx="23" cy="14.6" r=".9" fill="#1b1b1b"/><path d="M13.5 15.5c.8-1.5 2.3-2 3.8-1.6M18.5 19.5h4" fill="none" stroke="#2e7d32" stroke-width="1.3" stroke-linecap="round"/><path d="M13 21.5v2.6M19 21.5v2.6" stroke="#2e7d32" stroke-width="1.8" stroke-linecap="round"/></svg></span>
     <span class="brand-name">Kameleon</span>
-    <span class="version" id="appVersion">v1.26</span>
+    <span class="version" id="appVersion">v1.27</span>
   </div>
   <div class="topbar-actions">
     <span class="doc-name" id="docName"></span>
@@ -614,14 +614,14 @@ body.splitting .pages, body.splitting iframe { pointer-events: none; }
 <!-- Upload screen -->
 <main id="uploadView" class="upload-view">
   <label class="dropzone" id="dropzone">
-    <input type="file" id="fileInput" class="visually-hidden" accept="application/pdf,.pdf,application/epub+zip,.epub,.fb2,.fbz,.zip,.docx,.pptx,.xlsx,.doc,.xls,.ppt,application/msword,application/vnd.ms-excel,application/vnd.ms-powerpoint">
+    <input type="file" id="fileInput" class="visually-hidden" accept="application/pdf,.pdf,application/epub+zip,.epub,.fb2,.fbz,.zip,.docx,.pptx,.xlsx,.doc,.xls,.ppt,application/msword,application/vnd.ms-excel,application/vnd.ms-powerpoint,image/*,.png,.jpg,.jpeg,.gif,.bmp,.tif,.tiff,.webp,.avif,.heic">
     <div class="dz-icon">
       <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 17v-6"/><path d="m9 14 3-3 3 3"/></svg>
     </div>
     <div class="dz-title" data-i18n="upload.title">Drop a document here or <u>choose a file</u></div>
     <div class="dz-tagline" data-i18n="app.tagline"></div>
     <div class="dz-formats">
-      <span class="fmt" style="--f: #d64545">PDF</span><span class="fmt" style="--f: #2b6be0">Word</span><span class="fmt" style="--f: #d9752b">PowerPoint</span><span class="fmt" style="--f: #1f8a4c">Excel</span><span class="fmt" style="--f: #8a5cd1">EPUB</span><span class="fmt" style="--f: #8a5cd1">FB2</span>
+      <span class="fmt" style="--f: #d64545">PDF</span><span class="fmt" style="--f: #2b6be0">Word</span><span class="fmt" style="--f: #d9752b">PowerPoint</span><span class="fmt" style="--f: #1f8a4c">Excel</span><span class="fmt" style="--f: #8a5cd1">EPUB</span><span class="fmt" style="--f: #8a5cd1">FB2</span><span class="fmt" style="--f: #c28a12" data-i18n="fmt.images">Images</span>
     </div>
     <div class="dz-progress" id="uploadProgress" hidden><div class="spinner"></div> <span id="uploadProgressText"></span></div>
     <div class="engine-status" id="engineStatus"><div class="spinner"></div> <span data-i18n="upload.engine">Loading the PDF engine…</span></div>
@@ -943,7 +943,7 @@ body.splitting .pages, body.splitting iframe { pointer-events: none; }
     <div class="ai-parts-head"><b data-i18n="ai.parts">Copy prompt + text</b> <span class="muted small" data-i18n="ai.partsHint"></span></div>
     <div class="ai-parts" id="aiParts"></div>
     </div>
-    <p class="muted small help-version help-part">Kameleon v1.26 · <span data-i18n="app.tagline"></span></p>
+    <p class="muted small help-version help-part">Kameleon v1.27 · <span data-i18n="app.tagline"></span></p>
     <div class="modal-actions">
       <button type="button" value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
       <button type="button" class="btn ai-part" id="aiCopyPrompt" data-i18n="ai.copyPrompt">Copy prompt only</button>
@@ -1143,7 +1143,11 @@ const I18N = {
     "view.exitFullscreen": "Vollbild beenden (Esc)",
     "ai.pasteHere": "[Segmente hier einfügen]",
 
-    "msg.chooseFile": "Bitte wählen Sie eine PDF-, Word-, PowerPoint-, Excel-, EPUB- oder FB2-Datei (auch .doc, .xls, .ppt).",
+    "msg.chooseFile": "Bitte wählen Sie eine PDF-, Word-, PowerPoint-, Excel-, EPUB- oder FB2-Datei (auch .doc, .xls, .ppt) oder ein Bild (JPG, PNG, GIF, BMP, TIFF, WebP).",
+    "msg.imageToPage": "Bild wird als Seite vorbereitet…",
+    "msg.imageOpened": "Das Bild wurde als Seite geöffnet. Sein Text wird per Texterkennung gelesen; die Übersetzung wird wieder als {fmt} gespeichert.",
+    "err.image": "Dieses Bildformat wird nicht unterstützt.",
+    "fmt.images": "Bilder",
     "msg.loadingEngine": "PDF-Engine wird geladen…",
     "msg.opening": "Wird geöffnet…",
     "find.title": "Suchoptionen und Ersetzen (Strg+F sucht, Strg+H ersetzt)",
@@ -1229,6 +1233,10 @@ const I18N = {
     "ocrlang.eng": "Englisch",
     "ocrlang.deu": "Deutsch",
     "ocrlang.fra": "Französisch",
+    "ocrlang.spa": "Spanisch",
+    "ocrlang.por": "Portugiesisch",
+    "ocrlang.nld": "Niederländisch",
+    "ocrlang.swe": "Schwedisch",
     "ocrlang.ukr": "Ukrainisch",
     "ocrlang.fin": "Finnisch",
     "ocrlang.chi_sim": "Chinesisch (Kurzzeichen)",
@@ -1480,7 +1488,11 @@ const I18N = {
     "view.exitFullscreen": "Exit full screen (Esc)",
     "ai.pasteHere": "[paste the segments here]",
 
-    "msg.chooseFile": "Please choose a PDF, Word, PowerPoint, Excel, EPUB or FB2 file (.doc, .xls and .ppt too).",
+    "msg.chooseFile": "Please choose a PDF, Word, PowerPoint, Excel, EPUB or FB2 file (.doc, .xls and .ppt too) or a picture (JPG, PNG, GIF, BMP, TIFF, WebP).",
+    "msg.imageToPage": "Preparing the picture as a page…",
+    "msg.imageOpened": "The picture was opened as a page. Its text is read with text recognition; the translation is saved as {fmt} again.",
+    "err.image": "This picture format is not supported.",
+    "fmt.images": "Images",
     "msg.loadingEngine": "Loading the PDF engine…",
     "msg.opening": "Opening…",
     "find.title": "Search options and replace (Ctrl+F finds, Ctrl+H replaces)",
@@ -1566,6 +1578,10 @@ const I18N = {
     "ocrlang.eng": "English",
     "ocrlang.deu": "German",
     "ocrlang.fra": "French",
+    "ocrlang.spa": "Spanish",
+    "ocrlang.por": "Portuguese",
+    "ocrlang.nld": "Dutch",
+    "ocrlang.swe": "Swedish",
     "ocrlang.ukr": "Ukrainian",
     "ocrlang.fin": "Finnish",
     "ocrlang.chi_sim": "Chinese (simplified)",
@@ -3821,9 +3837,38 @@ function renderPNG(doc, index, zoom) {
   return png;
 }
 
+/**
+ * A picture as a one-page PDF: the page has the picture's size at its own resolution (96 dpi
+ * when the file does not say), so OCR and the translated output keep the pixel dimensions.
+ */
+function imageToPdf(bytes) {
+  const img = new M.Image(bytes);
+  try {
+    const w = img.getWidth(), h = img.getHeight();
+    const ok = (r) => (r >= 50 && r <= 1200 ? r : 0);
+    const dpiX = ok(img.getXResolution()) || 96, dpiY = ok(img.getYResolution()) || dpiX;
+    const pw = (w * 72) / dpiX, ph = (h * 72) / dpiY;
+    const doc = new M.PDFDocument();
+    try {
+      const ref = doc.addImage(img);
+      const res = doc.newDictionary(), xo = doc.newDictionary();
+      xo.put("Im0", ref);
+      res.put("XObject", xo);
+      const page = doc.addPage([0, 0, pw, ph], 0, res, `q ${pw.toFixed(4)} 0 0 ${ph.toFixed(4)} 0 0 cm /Im0 Do Q`);
+      doc.insertPage(-1, page);
+      free(page);
+      return { bytes: doc.saveToBuffer("compress").asUint8Array().slice(), width: w, height: h };
+    } finally {
+      free(doc);
+    }
+  } finally {
+    free(img);
+  }
+}
+
 const Engine = {
   init: initEngine, extract: extractDocument, extractPages, build: buildTranslated, renderPNG,
-  detectKind, openBook, saveBook, extractBook, openLaidOut, mapTranslated, openOffice, officePreviewHtml, ocrToBlocks, sampleColors, refineOcr,
+  detectKind, imageKindOf, imageToPdf, openBook, saveBook, extractBook, openLaidOut, mapTranslated, openOffice, officePreviewHtml, ocrToBlocks, sampleColors, refineOcr,
   open: (bytes) => M.Document.openDocument(bytes, "application/pdf"),
   exportTxt, exportCsv, exportJson, exportXliff, exportDocx, parseImport, parseMarkedText,
 };
@@ -4248,6 +4293,11 @@ function createHandler() {
     if (cmd === "extract") return { result: await extractPages(W.doc, args.pages, progress) };
     if (cmd === "unlock") return { result: unlockPdf(args.bytes, args.password) };
     if (cmd === "convert") return { result: await convertLegacy(args.bytes, args.kind) }; // .doc/.xls/.ppt → .docx/.xlsx/.pptx
+    if (cmd === "imageToPdf") { const r = imageToPdf(args.bytes); return { result: r, transfer: [r.bytes.buffer] }; }
+    if (cmd === "renderBytes") { // a page of a finished PDF (the translated picture) as PNG
+      const doc = M.Document.openDocument(args.bytes, "application/pdf");
+      try { const png = renderPNG(doc, args.page || 0, args.zoom); return { result: png.buffer, transfer: [png.buffer] }; } finally { free(doc); }
+    }
     if (cmd === "ocrPage") {
       const page = W.doc.loadPage(args.page);
       try {
@@ -4355,9 +4405,27 @@ const BOOK_LAYOUT = [420, 595, 11];
 const BOOK_MIME = { epub: "application/epub+zip", fb2: "application/x-fictionbook" };
 
 /** "pdf", "epub", "fb2", "docx", "pptx" or "xlsx" from the file's bytes (and its name as a hint). */
+/** "jpeg", "png", "gif", "bmp", "tiff", "webp", "avif" or "heic" for a picture file, else null. */
+function imageKindOf(bytes) {
+  const b = bytes, at = (i, ...v) => v.every((x, k) => b[i + k] === x);
+  if (at(0, 0xff, 0xd8, 0xff)) return "jpeg";
+  if (at(0, 0x89, 0x50, 0x4e, 0x47)) return "png";
+  if (at(0, 0x47, 0x49, 0x46, 0x38)) return "gif";
+  if (at(0, 0x42, 0x4d) && b.length > 26) return "bmp";
+  if (at(0, 0x49, 0x49, 0x2a, 0x00) || at(0, 0x4d, 0x4d, 0x00, 0x2a)) return "tiff";
+  if (at(0, 0x52, 0x49, 0x46, 0x46) && at(8, 0x57, 0x45, 0x42, 0x50)) return "webp";
+  if (at(4, 0x66, 0x74, 0x79, 0x70)) { // ISO media box: avif / heic
+    const brand = String.fromCharCode(...b.subarray(8, 12));
+    if (/avif|avis/i.test(brand)) return "avif";
+    if (/heic|heix|hevc|mif1|msf1/i.test(brand)) return "heic";
+  }
+  return null;
+}
+
 function detectKind(bytes, name = "") {
   const head = new TextDecoder("latin1").decode(bytes.subarray(0, 1024));
   if (head.startsWith("%PDF") || head.slice(0, 1024).includes("%PDF-")) return "pdf";
+  if (imageKindOf(bytes)) return "image"; // a picture: wrapped into a one-page PDF when opened
   if (isCfb(bytes)) return legacyKindOf(bytes, name) || "pdf"; // .doc/.xls/.ppt (converted when opened)
   if (head.startsWith("PK")) {
     if (head.includes("mimetypeapplication/epub+zip") || /\.epub$/i.test(name)) return "epub";
@@ -8076,7 +8144,7 @@ function saveBlob(blob, filename) {
 const ERROR_KEYS = [
   [/DRM-protected/i, "err.drm"], [/not a valid (zip|\.docx)/i, "err.zip"], [/ZIP64/i, "err.zip64"],
   [/No \.fb2 file/i, "err.noFb2"], [/no package file/i, "err.noOpf"], [/XLIFF file is not valid/i, "err.xliff"],
-  [/No document is open/i, "err.noDoc"], [/is encrypted and cannot be opened/i, "err.encrypted"], [/is too old/i, "err.tooOld"], [/engine worker|worker stopped/i, "msg.workerStopped"],
+  [/No document is open/i, "err.noDoc"], [/is encrypted and cannot be opened/i, "err.encrypted"], [/is too old/i, "err.tooOld"], [/picture format is not supported|unknown image file format/i, "err.image"], [/engine worker|worker stopped/i, "msg.workerStopped"],
 ];
 function userError(err) {
   const msg = String((err && err.message) || err || "");
@@ -8084,7 +8152,7 @@ function userError(err) {
   return hit ? t(hit[1]) : msg;
 }
 
-const stem = () => (state.doc.name || "document.pdf").replace(/\.(pdf|epub|fb2|fbz|fb2\.zip|zip|docx|pptx|xlsx|doc|xls|ppt)$/i, "") || "document";
+const stem = () => (state.doc.name || "document.pdf").replace(/\.(pdf|epub|fb2|fbz|fb2\.zip|zip|docx|pptx|xlsx|doc|xls|ppt|png|jpe?g|gif|bmp|tiff?|webp|avif|heic)$/i, "") || "document";
 const escapeHtml = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 
 async function sha256(bytes) {
@@ -8150,7 +8218,7 @@ async function idbGet(key = "last") {
 
 async function openPdf(file) {
   if (!file) return;
-  if (!/\.(pdf|epub|fb2|fbz|zip|docx|pptx|xlsx|doc|xls|ppt)$/i.test(file.name) && !/pdf|epub|fictionbook|officedocument|msword|ms-excel|ms-powerpoint/i.test(file.type)) {
+  if (!/\.(pdf|epub|fb2|fbz|zip|docx|pptx|xlsx|doc|xls|ppt|png|jpe?g|gif|bmp|tiff?|webp|avif|heic)$/i.test(file.name) && !/pdf|epub|fictionbook|officedocument|msword|ms-excel|ms-powerpoint|^image\//i.test(file.type)) {
     toast(t("msg.chooseFile"), "error");
     return;
   }
@@ -8205,7 +8273,18 @@ async function loadBytes(bytes, name, remember, knownId = null) {
     if (stale()) return;
     // (an unlocked PDF keeps the id of the protected file, so its translations are found again)
     const id = knownId || await sha256(bytes);
-    let kind = Engine.detectKind(bytes, name), converted = null;
+    let kind = Engine.detectKind(bytes, name), converted = null, image = null;
+    const original = bytes;
+    if (kind === "image") { // a picture becomes a one-page PDF; its text is read with OCR
+      const fmt = Engine.imageKindOf(bytes);
+      setLoading(t("msg.imageToPage"));
+      const src = ["jpeg", "png", "gif", "bmp", "tiff"].includes(fmt) ? bytes : await transcodeImage(bytes);
+      if (stale()) return;
+      const r = await pool.workers[0].call("imageToPdf", { bytes: src });
+      if (stale()) return;
+      bytes = r.bytes; kind = "pdf";
+      image = { format: fmt === "jpeg" ? "jpeg" : "png", label: fmt === "jpeg" ? "JPG" : "PNG", width: r.width, height: r.height };
+    }
     if (LEGACY_KINDS.has(kind)) { // Word/Excel/PowerPoint 97–2003: converted to the modern format first
       converted = { from: kind.toUpperCase(), to: LEGACY_TO_MODERN[kind].toUpperCase() };
       setLoading(t("msg.converting", converted));
@@ -8242,18 +8321,49 @@ async function loadBytes(bytes, name, remember, knownId = null) {
       : (setLoading(t("msg.readingBook")), await pool.workers[0].call("extractBook"));
     if (stale()) return;
     console.info(`Extracted ${segments.length} segments from ${pageCount} pages in ${Math.round(performance.now() - started)} ms using ${pool.workers.length} worker(s)`);
-    if (remember) idbPut({ name, bytes, id });
+    if (remember) idbPut({ name, bytes: image ? original : bytes, id }); // (a picture is stored as it was)
     const restored = kind === "pdf" ? await restoreOcr(id, segments, pages) : { segments, ocr: null };
     if (stale()) return;
-    openDocument({ id, name, kind, pages, segments: restored.segments, ocr: restored.ocr }, bytes);
+    openDocument({ id, name, kind, pages, segments: restored.segments, ocr: restored.ocr, image }, bytes);
     if (converted) toast(t("msg.converted", converted));
-    suggestOcr();
+    if (image && !restored.ocr) { toast(t("msg.imageOpened", { fmt: image.label })); openOcrDialog(); } else suggestOcr();
   } catch (err) {
     if (stale()) return;
     console.error(err);
     toast(t("msg.openFailed", { err: userError(err) }), "error");
   } finally {
     if (!stale()) setLoading("");
+  }
+}
+
+/** Decode a picture the engine cannot read (WebP, AVIF, HEIC) in the browser and return it as PNG. */
+async function transcodeImage(bytes) {
+  let bmp;
+  try { bmp = await createImageBitmap(new Blob([bytes])); } catch (_) { throw new Error("This picture format is not supported."); }
+  try {
+    const canvas = new OffscreenCanvas(bmp.width, bmp.height);
+    canvas.getContext("2d").drawImage(bmp, 0, 0);
+    return new Uint8Array(await (await canvas.convertToBlob({ type: "image/png" })).arrayBuffer());
+  } finally {
+    bmp.close && bmp.close();
+  }
+}
+
+/** The translated picture: the finished page rendered at the picture's pixel size, as PNG or JPEG. */
+async function imageBlob(pdfBytes) {
+  const img = state.doc.image, page = state.doc.pages[0];
+  const zoom = img.width / page.width;
+  const png = await pool.workers[0].call("renderBytes", { bytes: pdfBytes.slice(), page: 0, zoom });
+  const blob = new Blob([png], { type: "image/png" });
+  if (img.format !== "jpeg") return { blob, ext: "png" };
+  const bmp = await createImageBitmap(blob);
+  try {
+    const canvas = new OffscreenCanvas(bmp.width, bmp.height), ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, bmp.width, bmp.height); // JPEG has no transparency
+    ctx.drawImage(bmp, 0, 0);
+    return { blob: await canvas.convertToBlob({ type: "image/jpeg", quality: 0.92 }), ext: "jpg" };
+  } finally {
+    bmp.close && bmp.close();
   }
 }
 
@@ -8293,7 +8403,7 @@ function openDocument(doc, bytes) {
   $("#docName").title = doc.name;
   document.body.classList.toggle("is-book", isBook());
   document.body.classList.toggle("is-office", isOffice());
-  setDocFormat(FORMAT_LABEL[doc.kind || "pdf"]);
+  setDocFormat(doc.image ? doc.image.label : FORMAT_LABEL[doc.kind || "pdf"]);
   document.title = `${doc.name} · Kameleon`;
 
   loadOverrides();
@@ -9018,6 +9128,11 @@ async function downloadOutput() {
       busy(t("msg.saving"));
       state.outBytes = await pool.workers[0].call("save", { markups: state.markups, rotations: isBook() ? {} : state.rotations });
       state.outDirty = false;
+    }
+    if (state.doc.image) { // a picture goes out as a picture again
+      const { blob, ext } = await imageBlob(state.outBytes);
+      saveBlob(blob, `${stem()}.translated.${ext}`);
+      return;
     }
     const kind = state.doc.kind || "pdf";
     const type = MIME[kind];
@@ -10382,7 +10497,7 @@ const OCR_LIB = "https://cdn.jsdelivr.net/npm/tesseract.js@6.0.1/dist/tesseract.
 const OCR_WORKER = "https://cdn.jsdelivr.net/npm/tesseract.js@6.0.1/dist/worker.min.js";
 const OCR_CORE = "https://cdn.jsdelivr.net/npm/tesseract.js-core@6.0.0";
 const OCR_LANG_PATH = ""; // "" = the language data on jsDelivr (@tesseract.js-data/<lang>)
-const OCR_LANGS = ["eng", "deu", "fra", "ukr", "fin", "chi_sim", "chi_tra"];
+const OCR_LANGS = ["eng", "deu", "fra", "spa", "por", "nld", "swe", "ukr", "fin", "chi_sim", "chi_tra"];
 const LS_OCR = "pdftr:ocr-options";
 
 /** Pages with no text but a picture covering much of the page (scans). */

@@ -50,6 +50,9 @@ numbers stay as they are, and you download a new file in the same format. The vi
 preview of the text (the document as one flow, one page per slide, one page per sheet), not the
 exact Office layout.
 
+**Pictures** (JPG, PNG, GIF, BMP, TIFF, WebP, AVIF, HEIC) open as a one-page document whose text
+is read with OCR; the translation is saved as a picture of the same size and format.
+
 **Older Office files** (`.doc`, `.xls`, `.ppt` of Office 97–2003) are converted to the modern
 format when they are opened: text, tables, headers and footers, footnotes, slide text and speaker
 notes, sheet names, cell values (formulas keep their last calculated value) and simple formatting

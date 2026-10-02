@@ -4,6 +4,14 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.27
+
+- **Pictures can be translated.** A JPG, PNG, GIF, BMP, TIFF, WebP, AVIF or HEIC file opens as a
+  one-page document; the text recognition dialog opens right away, and the recognised text is
+  translated like any scanned page. The download is a picture again (JPG for JPG, PNG otherwise)
+  with the original pixel size; the bilingual version is a PDF.
+- **More OCR languages:** Spanish, Portuguese, Dutch and Swedish.
+
 ## 1.26
 
 - **No more "�" in words.** Some PDFs (typically printed from Word or Excel with Calibri) draw

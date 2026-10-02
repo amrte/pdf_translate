@@ -34,14 +34,14 @@
 <!-- Upload screen -->
 <main id="uploadView" class="upload-view">
   <label class="dropzone" id="dropzone">
-    <input type="file" id="fileInput" class="visually-hidden" accept="application/pdf,.pdf,application/epub+zip,.epub,.fb2,.fbz,.zip,.docx,.pptx,.xlsx,.doc,.xls,.ppt,application/msword,application/vnd.ms-excel,application/vnd.ms-powerpoint">
+    <input type="file" id="fileInput" class="visually-hidden" accept="application/pdf,.pdf,application/epub+zip,.epub,.fb2,.fbz,.zip,.docx,.pptx,.xlsx,.doc,.xls,.ppt,application/msword,application/vnd.ms-excel,application/vnd.ms-powerpoint,image/*,.png,.jpg,.jpeg,.gif,.bmp,.tif,.tiff,.webp,.avif,.heic">
     <div class="dz-icon">
       <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 17v-6"/><path d="m9 14 3-3 3 3"/></svg>
     </div>
     <div class="dz-title" data-i18n="upload.title">Drop a document here or <u>choose a file</u></div>
     <div class="dz-tagline" data-i18n="app.tagline"></div>
     <div class="dz-formats">
-      <span class="fmt" style="--f: #d64545">PDF</span><span class="fmt" style="--f: #2b6be0">Word</span><span class="fmt" style="--f: #d9752b">PowerPoint</span><span class="fmt" style="--f: #1f8a4c">Excel</span><span class="fmt" style="--f: #8a5cd1">EPUB</span><span class="fmt" style="--f: #8a5cd1">FB2</span>
+      <span class="fmt" style="--f: #d64545">PDF</span><span class="fmt" style="--f: #2b6be0">Word</span><span class="fmt" style="--f: #d9752b">PowerPoint</span><span class="fmt" style="--f: #1f8a4c">Excel</span><span class="fmt" style="--f: #8a5cd1">EPUB</span><span class="fmt" style="--f: #8a5cd1">FB2</span><span class="fmt" style="--f: #c28a12" data-i18n="fmt.images">Images</span>
     </div>
     <div class="dz-progress" id="uploadProgress" hidden><div class="spinner"></div> <span id="uploadProgressText"></span></div>
     <div class="engine-status" id="engineStatus"><div class="spinner"></div> <span data-i18n="upload.engine">Loading the PDF engine…</span></div>

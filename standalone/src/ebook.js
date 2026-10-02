@@ -10,9 +10,27 @@ const BOOK_LAYOUT = [420, 595, 11];
 const BOOK_MIME = { epub: "application/epub+zip", fb2: "application/x-fictionbook" };
 
 /** "pdf", "epub", "fb2", "docx", "pptx" or "xlsx" from the file's bytes (and its name as a hint). */
+/** "jpeg", "png", "gif", "bmp", "tiff", "webp", "avif" or "heic" for a picture file, else null. */
+function imageKindOf(bytes) {
+  const b = bytes, at = (i, ...v) => v.every((x, k) => b[i + k] === x);
+  if (at(0, 0xff, 0xd8, 0xff)) return "jpeg";
+  if (at(0, 0x89, 0x50, 0x4e, 0x47)) return "png";
+  if (at(0, 0x47, 0x49, 0x46, 0x38)) return "gif";
+  if (at(0, 0x42, 0x4d) && b.length > 26) return "bmp";
+  if (at(0, 0x49, 0x49, 0x2a, 0x00) || at(0, 0x4d, 0x4d, 0x00, 0x2a)) return "tiff";
+  if (at(0, 0x52, 0x49, 0x46, 0x46) && at(8, 0x57, 0x45, 0x42, 0x50)) return "webp";
+  if (at(4, 0x66, 0x74, 0x79, 0x70)) { // ISO media box: avif / heic
+    const brand = String.fromCharCode(...b.subarray(8, 12));
+    if (/avif|avis/i.test(brand)) return "avif";
+    if (/heic|heix|hevc|mif1|msf1/i.test(brand)) return "heic";
+  }
+  return null;
+}
+
 function detectKind(bytes, name = "") {
   const head = new TextDecoder("latin1").decode(bytes.subarray(0, 1024));
   if (head.startsWith("%PDF") || head.slice(0, 1024).includes("%PDF-")) return "pdf";
+  if (imageKindOf(bytes)) return "image"; // a picture: wrapped into a one-page PDF when opened
   if (isCfb(bytes)) return legacyKindOf(bytes, name) || "pdf"; // .doc/.xls/.ppt (converted when opened)
   if (head.startsWith("PK")) {
     if (head.includes("mimetypeapplication/epub+zip") || /\.epub$/i.test(name)) return "epub";

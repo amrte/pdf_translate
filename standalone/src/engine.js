@@ -2011,9 +2011,38 @@ function renderPNG(doc, index, zoom) {
   return png;
 }
 
+/**
+ * A picture as a one-page PDF: the page has the picture's size at its own resolution (96 dpi
+ * when the file does not say), so OCR and the translated output keep the pixel dimensions.
+ */
+function imageToPdf(bytes) {
+  const img = new M.Image(bytes);
+  try {
+    const w = img.getWidth(), h = img.getHeight();
+    const ok = (r) => (r >= 50 && r <= 1200 ? r : 0);
+    const dpiX = ok(img.getXResolution()) || 96, dpiY = ok(img.getYResolution()) || dpiX;
+    const pw = (w * 72) / dpiX, ph = (h * 72) / dpiY;
+    const doc = new M.PDFDocument();
+    try {
+      const ref = doc.addImage(img);
+      const res = doc.newDictionary(), xo = doc.newDictionary();
+      xo.put("Im0", ref);
+      res.put("XObject", xo);
+      const page = doc.addPage([0, 0, pw, ph], 0, res, `q ${pw.toFixed(4)} 0 0 ${ph.toFixed(4)} 0 0 cm /Im0 Do Q`);
+      doc.insertPage(-1, page);
+      free(page);
+      return { bytes: doc.saveToBuffer("compress").asUint8Array().slice(), width: w, height: h };
+    } finally {
+      free(doc);
+    }
+  } finally {
+    free(img);
+  }
+}
+
 const Engine = {
   init: initEngine, extract: extractDocument, extractPages, build: buildTranslated, renderPNG,
-  detectKind, openBook, saveBook, extractBook, openLaidOut, mapTranslated, openOffice, officePreviewHtml, ocrToBlocks, sampleColors, refineOcr,
+  detectKind, imageKindOf, imageToPdf, openBook, saveBook, extractBook, openLaidOut, mapTranslated, openOffice, officePreviewHtml, ocrToBlocks, sampleColors, refineOcr,
   open: (bytes) => M.Document.openDocument(bytes, "application/pdf"),
   exportTxt, exportCsv, exportJson, exportXliff, exportDocx, parseImport, parseMarkedText,
 };
@@ -2438,6 +2467,11 @@ function createHandler() {
     if (cmd === "extract") return { result: await extractPages(W.doc, args.pages, progress) };
     if (cmd === "unlock") return { result: unlockPdf(args.bytes, args.password) };
     if (cmd === "convert") return { result: await convertLegacy(args.bytes, args.kind) }; // .doc/.xls/.ppt → .docx/.xlsx/.pptx
+    if (cmd === "imageToPdf") { const r = imageToPdf(args.bytes); return { result: r, transfer: [r.bytes.buffer] }; }
+    if (cmd === "renderBytes") { // a page of a finished PDF (the translated picture) as PNG
+      const doc = M.Document.openDocument(args.bytes, "application/pdf");
+      try { const png = renderPNG(doc, args.page || 0, args.zoom); return { result: png.buffer, transfer: [png.buffer] }; } finally { free(doc); }
+    }
     if (cmd === "ocrPage") {
       const page = W.doc.loadPage(args.page);
       try {
