@@ -214,6 +214,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 15V3m0 0L8 7m4-4 4 4M5 21h14"/></svg>
         <span data-i18n="tb.import">Import</span>
       </button>
+      <button class="btn" id="btnKeywords" data-i18n-title="kw.button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5M8 7h7M8 11h7"/></svg>
+        <span data-i18n="kw.short">Terms</span><span class="kw-count"></span>
+      </button>
       <button class="btn" id="btnFind" data-i18n-title="find.title">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg>
       </button>
@@ -394,6 +398,7 @@
       <label><span data-i18n="ai.partSize">Segments per part</span> <input id="aiPartSize" type="number" min="20" step="1" value="1000"></label>
       <label class="check"><input type="checkbox" id="aiOnlyTodo"> <span data-i18n="ai.onlyTodo"></span></label>
       <label class="check pptx-only"><input type="checkbox" id="aiHidden"> <span data-i18n="ai.hidden"></span></label>
+      <label class="check"><input type="checkbox" id="aiKeywords" checked> <span data-i18n="ai.keywords"></span> <input id="aiKeywordCount" class="kw-n" type="number" min="1" max="100" value="10" data-i18n-aria="ai.keywordCount"></label>
     </div>
     <label class="field"><span><span data-i18n="ai.context"></span> <span class="muted" data-i18n="ai.contextHint"></span></span>
       <input id="aiContext" data-i18n-placeholder="ai.contextPh">
@@ -452,6 +457,23 @@
 
 <!-- OCR dialog -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><linearGradient id="kamRainbow" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c1121f"/><stop offset=".2" stop-color="#e36414"/><stop offset=".4" stop-color="#c99a06"/><stop offset=".6" stop-color="#2d8f4e"/><stop offset=".8" stop-color="#1e6fb8"/><stop offset="1" stop-color="#6a3fa0"/></linearGradient></defs></svg>
+<dialog id="kwDialog" class="modal wide" aria-labelledby="kwTitle">
+  <form method="dialog">
+    <h2 id="kwTitle" data-i18n="kw.title">Keywords</h2>
+    <p class="muted small" data-i18n="kw.text"></p>
+    <div class="kw-wrap">
+      <div class="kw-list" id="kwList"></div>
+      <div class="kw-preview"><img id="kwPreview" alt=""></div>
+    </div>
+    <div class="modal-actions kw-actions">
+      <button type="button" class="btn" id="kwAdd" data-i18n="kw.add"></button>
+      <button type="button" class="btn" id="kwCopy" data-i18n="kw.copy"></button>
+      <span class="spacer"></span>
+      <button value="close" class="btn ghost" data-i18n="kw.close"></button>
+      <button type="button" class="btn primary" id="kwDownload" data-i18n="kw.download"></button>
+    </div>
+  </form>
+</dialog>
 <dialog id="pagesDialog" class="modal" aria-labelledby="pagesTitle">
   <form method="dialog">
     <h2 id="pagesTitle" data-i18n="pages.title">Arrange pages</h2>

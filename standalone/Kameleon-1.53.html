@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="Kameleon 1.52">
+  <meta name="generator" content="Kameleon 1.53">
   <meta name="description" content="Kameleon – Wechselt die Sprache, behält die Form. Changes language, keeps its shape.">
   <title>Kameleon</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2216%22 fill=%22%23287130%22/%3E%3Cg transform=%22translate(2.5 1) scale(0.9)%22 fill=%22%23ffffff%22 stroke=%22%23ffffff%22%3E%3Cpath d=%22M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6%22 fill=%22none%22 stroke-width=%223.8%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M21 43l-1 10M30 44v9M38 43l1 10%22 stroke-width=%223.6%22 stroke-linecap=%22round%22/%3E%3Cellipse cx=%2221%22 cy=%2225%22 rx=%227%22 ry=%227.5%22 stroke=%22none%22/%3E%3Cellipse cx=%2233%22 cy=%2223.5%22 rx=%227.5%22 ry=%228%22 stroke=%22none%22/%3E%3Cpath d=%22M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z%22 stroke=%22none%22/%3E%3Cpath d=%22M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z%22 stroke=%22none%22/%3E%3Cpath d=%22M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z%22 stroke=%22none%22/%3E%3Cpath d=%22M16 37l4-3 4 3 4-3 4 3 4-3 4 3%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%222.1%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3Cpath d=%22M43.5 33.9L57 32.6%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%221.5%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M58.5 33.6c4.5 1.4 6.2 5 4 8.4-1 1.6-3 1.6-3.6.1%22 fill=%22none%22 stroke-width=%222.6%22 stroke-linecap=%22round%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%224.4%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%222.7%22 stroke=%22none%22/%3E%3Ccircle cx=%2246.2%22 cy=%2226.7%22 r=%221.3%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Cpath d=%22M4 55.5c15-3 39-3 54 0%22 fill=%22none%22 stroke-width=%222.4%22 stroke-linecap=%22round%22/%3E%3C/g%3E%3C/svg%3E">
@@ -685,6 +685,19 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
 .pg-card.hidden-slide .pg-thumb { opacity: .55; }
 .pg-card.hidden-slide .pg-badge { color: var(--danger, #b3261e); }
 
+/* ---------- v1.53: keywords ---------- */
+.kw-n { width: 60px; margin-left: 6px; }
+.kw-count:not(:empty) { background: var(--accent); color: var(--on-accent); border-radius: 9px; padding: 0 6px; font-size: 11px; line-height: 16px; margin-left: 4px; }
+#kwDialog { width: min(980px, calc(100% - 32px)); }
+.kw-wrap { display: grid; grid-template-columns: 1fr 280px; gap: 14px; align-items: start; }
+.kw-list { display: grid; gap: 6px; max-height: min(56vh, 560px); overflow: auto; padding: 2px; }
+.kw-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 6px; align-items: center; }
+.kw-row input { min-width: 0; }
+.kw-preview img { width: 100%; border: 1px solid var(--border); border-radius: 6px; background: #fff; display: block; min-height: 120px; }
+.kw-actions { align-items: center; flex-wrap: wrap; }
+.kw-actions .spacer { flex: 1; }
+@media (max-width: 760px) { .kw-wrap { grid-template-columns: 1fr; } }
+
   </style>
 </head>
 <body>
@@ -692,7 +705,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
   <div class="brand">
     <span class="logo"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#287130"/><g transform="translate(2.5 1) scale(0.9)" fill="#ffffff" stroke="#ffffff"><path d="M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6" fill="none" stroke-width="3.8" stroke-linecap="round"/><path d="M21 43l-1 10M30 44v9M38 43l1 10" stroke-width="3.6" stroke-linecap="round"/><ellipse cx="21" cy="25" rx="7" ry="7.5" stroke="none"/><ellipse cx="33" cy="23.5" rx="7.5" ry="8" stroke="none"/><path d="M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z" stroke="none"/><path d="M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z" stroke="none"/><path d="M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z" stroke="none"/><path d="M16 37l4-3 4 3 4-3 4 3 4-3 4 3" fill="none" stroke="#287130" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M43.5 33.9L57 32.6" fill="none" stroke="#287130" stroke-width="1.5" stroke-linecap="round"/><path d="M58.5 33.6c4.5 1.4 6.2 5 4 8.4-1 1.6-3 1.6-3.6.1" fill="none" stroke-width="2.6" stroke-linecap="round"/><circle cx="45.5" cy="26.5" r="4.4" fill="#287130" stroke="none"/><circle cx="45.5" cy="26.5" r="2.7" stroke="none"/><circle cx="46.2" cy="26.7" r="1.3" fill="#287130" stroke="none"/><path d="M4 55.5c15-3 39-3 54 0" fill="none" stroke-width="2.4" stroke-linecap="round"/></g></svg></span>
     <span class="brand-name">Kameleon</span>
-    <span class="version" id="appVersion">v1.52</span>
+    <span class="version" id="appVersion">v1.53</span>
   </div>
   <div class="topbar-actions">
     <span class="doc-name" id="docName"></span>
@@ -890,6 +903,10 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 15V3m0 0L8 7m4-4 4 4M5 21h14"/></svg>
         <span data-i18n="tb.import">Import</span>
       </button>
+      <button class="btn" id="btnKeywords" data-i18n-title="kw.button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5M8 7h7M8 11h7"/></svg>
+        <span data-i18n="kw.short">Terms</span><span class="kw-count"></span>
+      </button>
       <button class="btn" id="btnFind" data-i18n-title="find.title">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg>
       </button>
@@ -1070,6 +1087,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
       <label><span data-i18n="ai.partSize">Segments per part</span> <input id="aiPartSize" type="number" min="20" step="1" value="1000"></label>
       <label class="check"><input type="checkbox" id="aiOnlyTodo"> <span data-i18n="ai.onlyTodo"></span></label>
       <label class="check pptx-only"><input type="checkbox" id="aiHidden"> <span data-i18n="ai.hidden"></span></label>
+      <label class="check"><input type="checkbox" id="aiKeywords" checked> <span data-i18n="ai.keywords"></span> <input id="aiKeywordCount" class="kw-n" type="number" min="1" max="100" value="10" data-i18n-aria="ai.keywordCount"></label>
     </div>
     <label class="field"><span><span data-i18n="ai.context"></span> <span class="muted" data-i18n="ai.contextHint"></span></span>
       <input id="aiContext" data-i18n-placeholder="ai.contextPh">
@@ -1100,7 +1118,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
     </div>
     <input type="file" id="offlineZip" class="visually-hidden" accept=".zip,application/zip" multiple tabindex="-1">
     <input type="file" id="offlineFolder" class="visually-hidden" webkitdirectory multiple tabindex="-1">
-    <p class="muted small help-version help-part">Kameleon v1.52 · <span data-i18n="app.tagline"></span></p>
+    <p class="muted small help-version help-part">Kameleon v1.53 · <span data-i18n="app.tagline"></span></p>
     <div class="modal-actions">
       <button type="button" value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
       <button type="button" class="btn ai-part" id="aiCopyPrompt" data-i18n="ai.copyPrompt">Copy prompt only</button>
@@ -1128,6 +1146,23 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
 
 <!-- OCR dialog -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><linearGradient id="kamRainbow" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c1121f"/><stop offset=".2" stop-color="#e36414"/><stop offset=".4" stop-color="#c99a06"/><stop offset=".6" stop-color="#2d8f4e"/><stop offset=".8" stop-color="#1e6fb8"/><stop offset="1" stop-color="#6a3fa0"/></linearGradient></defs></svg>
+<dialog id="kwDialog" class="modal wide" aria-labelledby="kwTitle">
+  <form method="dialog">
+    <h2 id="kwTitle" data-i18n="kw.title">Keywords</h2>
+    <p class="muted small" data-i18n="kw.text"></p>
+    <div class="kw-wrap">
+      <div class="kw-list" id="kwList"></div>
+      <div class="kw-preview"><img id="kwPreview" alt=""></div>
+    </div>
+    <div class="modal-actions kw-actions">
+      <button type="button" class="btn" id="kwAdd" data-i18n="kw.add"></button>
+      <button type="button" class="btn" id="kwCopy" data-i18n="kw.copy"></button>
+      <span class="spacer"></span>
+      <button value="close" class="btn ghost" data-i18n="kw.close"></button>
+      <button type="button" class="btn primary" id="kwDownload" data-i18n="kw.download"></button>
+    </div>
+  </form>
+</dialog>
 <dialog id="pagesDialog" class="modal" aria-labelledby="pagesTitle">
   <form method="dialog">
     <h2 id="pagesTitle" data-i18n="pages.title">Arrange pages</h2>
@@ -1492,6 +1527,23 @@ const I18N = {
     "nav.next": "Nächste Seite (Bild ↓)",
     "nav.page": "Zu Seite springen",
     "pic.title": "Bild bearbeiten",
+    "ai.keywords": "Zusätzlich die wichtigsten Begriffe mit Übersetzung auflisten, Anzahl:",
+    "ai.keywordCount": "Anzahl der Begriffe",
+    "kw.title": "Schlüsselwörter",
+    "kw.short": "Begriffe",
+    "kw.button": "Schlüsselwörter: die wichtigsten Begriffe mit Übersetzung ansehen, bearbeiten und als PDF speichern",
+    "kw.text": "Die Begriffe kommen mit dem Import einer KI-Antwort, die eine Liste nach der Zeile [[keywords]] enthält, oder werden hier eingetragen. Rechts die PDF-Seite, wie sie gespeichert wird.",
+    "kw.term": "Begriff",
+    "kw.translation": "Übersetzung",
+    "kw.add": "Zeile hinzufügen",
+    "kw.copy": "Kopieren",
+    "kw.close": "Schließen",
+    "kw.download": "PDF herunterladen",
+    "kw.remove": "Entfernen",
+    "kw.empty": "Noch keine Schlüsselwörter.",
+    "kw.imported": "{n} Schlüsselwörter übernommen.",
+    "kw.copied": "Schlüsselwörter kopiert.",
+    "kw.subtitle": "{name} · {n} Begriffe · {date}",
     "theme.system": "Design: wie das System eingestellt ist – klicken für hell",
     "theme.light": "Design: hell – klicken für dunkel",
     "theme.dark": "Design: dunkel – klicken für wie das System",
@@ -1920,6 +1972,23 @@ const I18N = {
     "nav.next": "Next page (Page Down)",
     "nav.page": "Go to page",
     "pic.title": "Edit picture",
+    "ai.keywords": "Also list the most important terms with their translation, how many:",
+    "ai.keywordCount": "Number of terms",
+    "kw.title": "Keywords",
+    "kw.short": "Terms",
+    "kw.button": "Keywords: view and edit the most important terms with their translations, save them as PDF",
+    "kw.text": "The terms arrive with the import of an AI answer that holds a list after the line [[keywords]], or are entered here. On the right: the PDF page as it will be saved.",
+    "kw.term": "Term",
+    "kw.translation": "Translation",
+    "kw.add": "Add row",
+    "kw.copy": "Copy",
+    "kw.close": "Close",
+    "kw.download": "Download PDF",
+    "kw.remove": "Remove",
+    "kw.empty": "No keywords yet.",
+    "kw.imported": "{n} keywords taken over.",
+    "kw.copied": "Keywords copied.",
+    "kw.subtitle": "{name} · {n} terms · {date}",
     "theme.system": "Theme: as the system is set – click for light",
     "theme.light": "Theme: light – click for dark",
     "theme.dark": "Theme: dark – click to follow the system",
@@ -2061,6 +2130,7 @@ const AI_PROMPT = {
     context: (c) => `Kontext: Das Dokument ist ${c}. Verwende die Fachsprache dieses Gebiets.`,
     glossary: "Verwende für die folgenden Begriffe diese Übersetzungen:",
     segments: "Segmente:",
+    keywords: (n) => `Nenne zum Schluss die ${n} wichtigsten Fachbegriffe oder Schlüsselwörter des Textes mit ihrer Übersetzung. Beginne diese Liste mit einer eigenen Zeile [[keywords]] und schreibe danach je Zeile „Begriff = Übersetzung“, ohne Nummerierung.`,
     officeRules: [
       "Die Segmente stammen aus einem Office-Dokument (Word, PowerPoint oder Excel). Jede Übersetzung ersetzt den Originaltext an derselben Stelle der Datei. Halte dich strikt an diese Regeln:",
       "",
@@ -2103,6 +2173,7 @@ const AI_PROMPT = {
     context: (c) => `Context: the document is ${c}. Use the terminology of that field.`,
     glossary: "Use these translations for the following terms:",
     segments: "Segments:",
+    keywords: (n) => `At the end, list the ${n} most important technical terms or keywords of the text with their translation. Start that list with a line of its own, [[keywords]], then write one term per line as "term = translation", without numbering.`,
     officeRules: [
       "The segments were extracted from an Office document (Word, PowerPoint or Excel). Each translation replaces the original text at the same place in the file. Follow these rules strictly:",
       "",
@@ -4212,9 +4283,87 @@ function imageToPdf(bytes) {
   }
 }
 
+/**
+ * A PDF with keywords and their translations: title, subtitle and a two-column table on A4
+ * pages. `args`: {title, subtitle, headers: [a, b], rows: [{term, translation}]}.
+ */
+function keywordsPdf(args) {
+  const W = 595.28, H = 841.89, MARGIN = 56, GAP = 14;
+  const doc = new M.PDFDocument();
+  const fk = new FontKit(doc, { fontMode: "auto" });
+  try {
+    const colW = [(W - 2 * MARGIN) * 0.42 - GAP / 2, (W - 2 * MARGIN) * 0.58 - GAP / 2];
+    const pages = [];
+    let ops = [], used = new Set(), y = MARGIN;
+    const layout = (text, size, bold, width) => {
+      const chain = fk.chain({ family: "sans-serif", bold, italic: false }, text || " ");
+      const tok = tokenize(text || " ", fk, chain);
+      return { tok, lines: wrap(tok, width / size) };
+    };
+    /** Draw laid-out lines at (x, top); returns the height used. */
+    const draw = (laid, x, top, size, color) => {
+      const L = 1.3 * size;
+      let base = top + 0.85 * size;
+      for (const line of laid.lines) {
+        let cx = x, run = null;
+        const flush = () => { if (run) ops.push(`BT /${run.e.res} 1 Tf ${rg(color)} ${fmt(size)} 0 0 ${fmt(-size)} ${fmt(run.x)} ${fmt(base)} Tm <${run.hex}> Tj ET`); run = null; };
+        line.tokens.forEach((tk, j) => {
+          if (j && tk.sp) { flush(); cx += laid.tok.spaceAdv * size; } // (a new run after the space: the pen moves)
+          for (const g of tk.glyphs) {
+            if (g.own !== undefined) flush();
+            if (!run || run.e !== g.e) { flush(); run = { e: g.e, x: cx - (g.own || 0) * size, hex: "" }; fk.ref(g.e); used.add(g.e); }
+            run.hex += g.gid.toString(16).padStart(4, "0");
+            cx += g.adv * size;
+            if (g.own !== undefined) flush();
+          }
+        });
+        flush();
+        base += L;
+      }
+      return laid.lines.length * L;
+    };
+    const rule = (yy, grey, w) => ops.push(`q ${grey} ${grey} ${grey} RG ${w} w ${fmt(MARGIN)} ${fmt(yy)} m ${fmt(W - MARGIN)} ${fmt(yy)} l S Q`);
+    const newPage = () => { pages.push({ ops, used }); ops = []; used = new Set(); y = MARGIN; };
+    const header = () => {
+      const h = Math.max(draw(layout(args.headers[0], 10.5, true, colW[0]), MARGIN, y, 10.5, "#333333"), draw(layout(args.headers[1], 10.5, true, colW[1]), MARGIN + colW[0] + GAP, y, 10.5, "#333333"));
+      y += h + 3; rule(y, 0.3, 0.8); y += 7;
+    };
+    y += draw(layout(args.title, 18, true, W - 2 * MARGIN), MARGIN, y, 18, "#111111") + 4;
+    y += draw(layout(args.subtitle, 10, false, W - 2 * MARGIN), MARGIN, y, 10, "#666666") + 16;
+    header();
+    for (const row of args.rows) {
+      const a = layout(row.term, 11, true, colW[0]), b = layout(row.translation, 11, false, colW[1]);
+      const h = Math.max(a.lines.length, b.lines.length) * 1.3 * 11 + 9;
+      if (y + h > H - MARGIN) { newPage(); header(); }
+      draw(a, MARGIN, y + 2, 11, "#111111");
+      draw(b, MARGIN + colW[0] + GAP, y + 2, 11, "#111111");
+      y += h; rule(y - 3, 0.85, 0.5);
+    }
+    newPage();
+    pages.forEach((p, i) => {
+      // page number at the foot
+      ops = p.ops; used = p.used;
+      draw(layout(`${i + 1} / ${pages.length}`, 9, false, 100), W - MARGIN - 100 + 100 - 30, H - MARGIN + 14, 9, "#888888");
+      const res = doc.newDictionary();
+      if (used.size) { const fonts = doc.newDictionary(); for (const e of used) fonts.put(e.res, fk.ref(e)); res.put("Font", fonts); }
+      const pg = doc.addPage([0, 0, W, H], 0, res, `q 1 0 0 -1 0 ${fmt(H)} cm\n${ops.join("\n")}\nQ`);
+      doc.insertPage(-1, pg);
+      free(pg);
+    });
+    doc.subsetFonts();
+    const buf = doc.saveToBuffer("compress");
+    const out = buf.asUint8Array().slice();
+    free(buf);
+    return out;
+  } finally {
+    fk.dispose();
+    free(doc);
+  }
+}
+
 const Engine = {
   init: initEngine, extract: extractDocument, extractPages, build: buildTranslated, renderPNG,
-  detectKind, imageKindOf, imageToPdf, openBook, saveBook, extractBook, openLaidOut, mapTranslated, openOffice, officePreviewHtml, ocrToBlocks, sampleColors, refineOcr,
+  detectKind, imageKindOf, imageToPdf, keywordsPdf, openBook, saveBook, extractBook, openLaidOut, mapTranslated, openOffice, officePreviewHtml, ocrToBlocks, sampleColors, refineOcr,
   open: (bytes) => M.Document.openDocument(bytes, "application/pdf"),
   exportTxt, exportCsv, exportJson, exportXliff, exportDocx, parseImport, parseMarkedText,
 };
@@ -4670,6 +4819,7 @@ function createHandler() {
       const bytes = await rearrangeDocument(W.kind, W.bytes, args.plan, W.extras.map((e) => e.bytes));
       return { result: bytes, transfer: [bytes.buffer] };
     }
+    if (cmd === "keywordsPdf") { const b = keywordsPdf(args); return { result: b, transfer: [b.buffer] }; }
     if (cmd === "renderBytes") { // a page of a finished PDF (the translated picture) as PNG
       const doc = M.Document.openDocument(args.bytes, "application/pdf");
       try { const png = renderPNG(doc, args.page || 0, args.zoom); return { result: png.buffer, transfer: [png.buffer] }; } finally { free(doc); }
@@ -10229,6 +10379,7 @@ function openDocument(doc, bytes) {
 
   loadOverrides();
   loadRotations();
+  kwLoad();
   fillPageFilter();
   $("#search").value = "";
   $("#filterStatus").value = "all";
@@ -10937,7 +11088,8 @@ async function importFile(file) {
   $("#importDialog").close();
   try {
     const bytes = new Uint8Array(await file.arrayBuffer());
-    mergeImported(await Engine.parseImport(file.name, bytes));
+    if (/\.txt$/i.test(file.name)) mergeImported(Engine.parseMarkedText(kwExtract(new TextDecoder().decode(bytes)))); // (a keyword list may be in it)
+    else mergeImported(await Engine.parseImport(file.name, bytes));
   } catch (err) {
     toast(t("msg.readFailed", { file: file.name, err: err.message }), "error");
   } finally {
@@ -10948,7 +11100,7 @@ async function importFile(file) {
 function importPasted() {
   const text = $("#pasteArea").value;
   if (!text.trim()) { toast(t("msg.pasteFirst"), "error"); return; }
-  mergeImported(Engine.parseMarkedText(text));
+  mergeImported(Engine.parseMarkedText(kwExtract(text)));
   $("#pasteArea").value = "";
 }
 
@@ -11477,6 +11629,7 @@ function aiPromptText(part) {
   if (context) lines.push("", P.context(context.replace(/\.$/, "")));
   if (glossary) lines.push("", P.glossary, ...glossary.split(/\n/).map((l) => l.trim()).filter(Boolean).map((l) => `- ${l}`));
   if (part && part.total > 1) lines.push("", P.part(part.k, part.total, part.a, part.b));
+  if ($("#aiKeywords").checked) lines.push("", P.keywords(Math.max(1, Math.min(100, Number($("#aiKeywordCount").value) || 10))));
   lines.push("", P.segments);
   return lines.join("\n");
 }
@@ -11556,7 +11709,7 @@ function initHelp() {
   addCloseButtons();
   $("#btnHelp").addEventListener("click", () => openHelp(false));
   $("#btnAi").addEventListener("click", () => openHelp(true));
-  for (const id of ["#aiTarget", "#aiFrom", "#aiTo", "#aiOnlyTodo", "#aiHidden", "#aiContext", "#aiGlossary", "#aiPartSize"]) {
+  for (const id of ["#aiTarget", "#aiFrom", "#aiTo", "#aiOnlyTodo", "#aiHidden", "#aiKeywords", "#aiKeywordCount", "#aiContext", "#aiGlossary", "#aiPartSize"]) {
     $(id).addEventListener("input", refreshAiPrompt);
   }
   $("#aiParts").addEventListener("click", (e) => {
@@ -13469,7 +13622,7 @@ function initPicture() {
 // from its own browser cache before the network, so language files are written into that cache.
 // ======================================================================
 
-const APP_VERSION = "1.52";
+const APP_VERSION = "1.53";
 // (a change of library version makes a stored set outdated: it is then ignored)
 const OFFLINE_VERSION = `${MUPDF_URL} ${OCR_LIB}`;
 const CORE_SIMD = "tesseract-core-simd-lstm.wasm.js", CORE_PLAIN = "tesseract-core-lstm.wasm.js";
@@ -13965,6 +14118,125 @@ function initPagesManager() {
   grid.addEventListener("drop", (e) => { const c = e.target.closest(".pg-card"); if (!c || dragFrom === null) return; e.preventDefault(); pmMove(dragFrom, Number(c.dataset.i)); dragFrom = null; });
 }
 
+/* ------------------------------------------------------------- keywords (glossary) */
+// The AI can be asked for the most important terms of the text with their translations. They
+// arrive in the answer after a line "[[keywords]]", are kept per document, can be edited, and
+// become a PDF page of their own (shown in the dialog, downloadable).
+
+const KW_MARK = /^[ \t]*\[\[\s*keywords?\s*\]\][ \t]*$/im;
+const kwKey = (id) => `pdftr:kw:${id}`;
+let kwPreviewTimer = null, kwPreviewUrl = null;
+
+function kwLoad() {
+  try { state.keywords = JSON.parse(localStorage.getItem(kwKey(state.doc.id)) || "[]"); } catch (_) { state.keywords = []; }
+  if (!Array.isArray(state.keywords)) state.keywords = [];
+  kwRefreshButton();
+}
+function kwSave() {
+  try { localStorage.setItem(kwKey(state.doc.id), JSON.stringify(state.keywords)); } catch (_) { /* storage blocked */ }
+  kwRefreshButton();
+}
+function kwRefreshButton() {
+  const b = $("#btnKeywords");
+  if (!b) return;
+  const n = state.doc ? (state.keywords || []).filter((r) => r.term.trim()).length : 0;
+  b.querySelector(".kw-count").textContent = n ? String(n) : "";
+}
+
+/** Take the keyword list out of an imported text (stored); the rest is returned for the translations. */
+function kwExtract(text) {
+  const m = KW_MARK.exec(text);
+  if (!m || !state.doc) return text;
+  const after = text.slice(m.index + m[0].length);
+  const end = after.search(/^\s*\[\[\s*\d+\s*\]\]/m); // (a numbered marker ends the list)
+  const block = end < 0 ? after : after.slice(0, end);
+  const rows = [];
+  for (const raw of block.split(/\r?\n/)) {
+    const line = raw.replace(/^\s*(?:[-*•]|\d+[.)])\s*/, "").trim();
+    if (!line) continue;
+    const mm = /^(.+?)\s*(?:=|—|–|->|→|\||\t)\s*(.+)$/.exec(line) || /^(.+?):\s+(.+)$/.exec(line);
+    if (mm) rows.push({ term: mm[1].trim(), translation: mm[2].trim() });
+  }
+  if (rows.length) { kwMerge(rows); toast(t("kw.imported", { n: rows.length }), "ok"); }
+  return text.slice(0, m.index) + (end < 0 ? "" : after.slice(end));
+}
+function kwMerge(rows) {
+  const have = new Map((state.keywords || []).map((r) => [r.term.trim().toLowerCase(), r]));
+  for (const r of rows) {
+    const k = r.term.trim().toLowerCase();
+    if (!k) continue;
+    if (have.has(k)) have.get(k).translation = r.translation; else { state.keywords.push({ term: r.term, translation: r.translation }); have.set(k, r); }
+  }
+  kwSave();
+}
+
+const kwRows = () => (state.keywords || []).filter((r) => r.term.trim() || r.translation.trim());
+function kwPdfArgs() {
+  const rows = kwRows();
+  return {
+    title: t("kw.title"), headers: [t("kw.term"), t("kw.translation")], rows,
+    subtitle: t("kw.subtitle", { name: state.doc.name, n: rows.length, date: new Date().toLocaleDateString(LANG === "de" ? "de-DE" : "en-GB") }),
+  };
+}
+async function kwPdfBytes() { return new Uint8Array(await pool.workers[0].call("keywordsPdf", kwPdfArgs())); }
+
+function openKeywordsDialog() {
+  if (!state.doc) return;
+  kwRenderList();
+  kwSchedulePreview(0);
+  openModal($("#kwDialog"));
+}
+function kwRenderList() {
+  const list = $("#kwList");
+  const rows = state.keywords || [];
+  list.innerHTML = rows.length ? rows.map((r, i) => `<div class="kw-row" data-i="${i}">
+      <input data-k="term" value="${escapeHtml(r.term)}" data-i18n-placeholder="kw.term" placeholder="${escapeHtml(t("kw.term"))}">
+      <input data-k="translation" value="${escapeHtml(r.translation)}" placeholder="${escapeHtml(t("kw.translation"))}">
+      <button type="button" class="mini" data-act="del" title="${escapeHtml(t("kw.remove"))}" aria-label="${escapeHtml(t("kw.remove"))}">✕</button>
+    </div>`).join("") : `<p class="muted small">${escapeHtml(t("kw.empty"))}</p>`;
+}
+function kwSchedulePreview(delay = 500) {
+  clearTimeout(kwPreviewTimer);
+  kwPreviewTimer = setTimeout(async () => {
+    const img = $("#kwPreview");
+    try {
+      const bytes = await kwPdfBytes();
+      const png = await pool.workers[0].call("renderBytes", { bytes, page: 0, zoom: 1.2 });
+      if (kwPreviewUrl) URL.revokeObjectURL(kwPreviewUrl);
+      kwPreviewUrl = URL.createObjectURL(new Blob([png], { type: "image/png" }));
+      img.src = kwPreviewUrl;
+    } catch (err) { console.warn("keyword preview failed", err); }
+  }, delay);
+}
+
+function initKeywords() {
+  $("#btnKeywords").addEventListener("click", openKeywordsDialog);
+  const list = $("#kwList");
+  list.addEventListener("input", (e) => {
+    const row = e.target.closest(".kw-row"), k = e.target.dataset.k;
+    if (!row || !k) return;
+    state.keywords[Number(row.dataset.i)][k] = e.target.value;
+    kwSave();
+    kwSchedulePreview();
+  });
+  list.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-act=del]"), row = e.target.closest(".kw-row");
+    if (!b || !row) return;
+    state.keywords.splice(Number(row.dataset.i), 1);
+    kwSave(); kwRenderList(); kwSchedulePreview();
+  });
+  $("#kwAdd").addEventListener("click", () => {
+    state.keywords.push({ term: "", translation: "" });
+    kwSave(); kwRenderList();
+    const inputs = list.querySelectorAll('[data-k="term"]');
+    if (inputs.length) inputs[inputs.length - 1].focus();
+  });
+  $("#kwCopy").addEventListener("click", () => copyText(kwRows().map((r) => `${r.term} = ${r.translation}`).join("\n"), t("kw.copied")));
+  $("#kwDownload").addEventListener("click", async () => {
+    try { saveBlob(new Blob([await kwPdfBytes()], { type: "application/pdf" }), `${stem()}.keywords.pdf`); } catch (err) { toast(userError(err), "error"); }
+  });
+}
+
 /* ------------------------------------------------------------- the app's colour */
 // Kameleon changes colour: at every start one of these accents is chosen at random. Each entry
 // has the colour for the light theme and a lighter one for the dark theme (both checked for
@@ -14078,6 +14350,7 @@ initTools();
 initPicture();
 initOffline();
 initPagesManager();
+initKeywords();
 init();
 
 </script>

@@ -674,3 +674,16 @@ html:not([data-theme]) .theme-btn .ic-auto, html[data-theme="light"] .theme-btn 
 body:not(.is-pptx) .pptx-only { display: none !important; }
 .pg-card.hidden-slide .pg-thumb { opacity: .55; }
 .pg-card.hidden-slide .pg-badge { color: var(--danger, #b3261e); }
+
+/* ---------- v1.53: keywords ---------- */
+.kw-n { width: 60px; margin-left: 6px; }
+.kw-count:not(:empty) { background: var(--accent); color: var(--on-accent); border-radius: 9px; padding: 0 6px; font-size: 11px; line-height: 16px; margin-left: 4px; }
+#kwDialog { width: min(980px, calc(100% - 32px)); }
+.kw-wrap { display: grid; grid-template-columns: 1fr 280px; gap: 14px; align-items: start; }
+.kw-list { display: grid; gap: 6px; max-height: min(56vh, 560px); overflow: auto; padding: 2px; }
+.kw-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 6px; align-items: center; }
+.kw-row input { min-width: 0; }
+.kw-preview img { width: 100%; border: 1px solid var(--border); border-radius: 6px; background: #fff; display: block; min-height: 120px; }
+.kw-actions { align-items: center; flex-wrap: wrap; }
+.kw-actions .spacer { flex: 1; }
+@media (max-width: 760px) { .kw-wrap { grid-template-columns: 1fr; } }

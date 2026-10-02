@@ -8,4 +8,5 @@ initTools();
 initPicture();
 initOffline();
 initPagesManager();
+initKeywords();
 init();

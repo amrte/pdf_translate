@@ -2045,9 +2045,87 @@ function imageToPdf(bytes) {
   }
 }
 
+/**
+ * A PDF with keywords and their translations: title, subtitle and a two-column table on A4
+ * pages. `args`: {title, subtitle, headers: [a, b], rows: [{term, translation}]}.
+ */
+function keywordsPdf(args) {
+  const W = 595.28, H = 841.89, MARGIN = 56, GAP = 14;
+  const doc = new M.PDFDocument();
+  const fk = new FontKit(doc, { fontMode: "auto" });
+  try {
+    const colW = [(W - 2 * MARGIN) * 0.42 - GAP / 2, (W - 2 * MARGIN) * 0.58 - GAP / 2];
+    const pages = [];
+    let ops = [], used = new Set(), y = MARGIN;
+    const layout = (text, size, bold, width) => {
+      const chain = fk.chain({ family: "sans-serif", bold, italic: false }, text || " ");
+      const tok = tokenize(text || " ", fk, chain);
+      return { tok, lines: wrap(tok, width / size) };
+    };
+    /** Draw laid-out lines at (x, top); returns the height used. */
+    const draw = (laid, x, top, size, color) => {
+      const L = 1.3 * size;
+      let base = top + 0.85 * size;
+      for (const line of laid.lines) {
+        let cx = x, run = null;
+        const flush = () => { if (run) ops.push(`BT /${run.e.res} 1 Tf ${rg(color)} ${fmt(size)} 0 0 ${fmt(-size)} ${fmt(run.x)} ${fmt(base)} Tm <${run.hex}> Tj ET`); run = null; };
+        line.tokens.forEach((tk, j) => {
+          if (j && tk.sp) { flush(); cx += laid.tok.spaceAdv * size; } // (a new run after the space: the pen moves)
+          for (const g of tk.glyphs) {
+            if (g.own !== undefined) flush();
+            if (!run || run.e !== g.e) { flush(); run = { e: g.e, x: cx - (g.own || 0) * size, hex: "" }; fk.ref(g.e); used.add(g.e); }
+            run.hex += g.gid.toString(16).padStart(4, "0");
+            cx += g.adv * size;
+            if (g.own !== undefined) flush();
+          }
+        });
+        flush();
+        base += L;
+      }
+      return laid.lines.length * L;
+    };
+    const rule = (yy, grey, w) => ops.push(`q ${grey} ${grey} ${grey} RG ${w} w ${fmt(MARGIN)} ${fmt(yy)} m ${fmt(W - MARGIN)} ${fmt(yy)} l S Q`);
+    const newPage = () => { pages.push({ ops, used }); ops = []; used = new Set(); y = MARGIN; };
+    const header = () => {
+      const h = Math.max(draw(layout(args.headers[0], 10.5, true, colW[0]), MARGIN, y, 10.5, "#333333"), draw(layout(args.headers[1], 10.5, true, colW[1]), MARGIN + colW[0] + GAP, y, 10.5, "#333333"));
+      y += h + 3; rule(y, 0.3, 0.8); y += 7;
+    };
+    y += draw(layout(args.title, 18, true, W - 2 * MARGIN), MARGIN, y, 18, "#111111") + 4;
+    y += draw(layout(args.subtitle, 10, false, W - 2 * MARGIN), MARGIN, y, 10, "#666666") + 16;
+    header();
+    for (const row of args.rows) {
+      const a = layout(row.term, 11, true, colW[0]), b = layout(row.translation, 11, false, colW[1]);
+      const h = Math.max(a.lines.length, b.lines.length) * 1.3 * 11 + 9;
+      if (y + h > H - MARGIN) { newPage(); header(); }
+      draw(a, MARGIN, y + 2, 11, "#111111");
+      draw(b, MARGIN + colW[0] + GAP, y + 2, 11, "#111111");
+      y += h; rule(y - 3, 0.85, 0.5);
+    }
+    newPage();
+    pages.forEach((p, i) => {
+      // page number at the foot
+      ops = p.ops; used = p.used;
+      draw(layout(`${i + 1} / ${pages.length}`, 9, false, 100), W - MARGIN - 100 + 100 - 30, H - MARGIN + 14, 9, "#888888");
+      const res = doc.newDictionary();
+      if (used.size) { const fonts = doc.newDictionary(); for (const e of used) fonts.put(e.res, fk.ref(e)); res.put("Font", fonts); }
+      const pg = doc.addPage([0, 0, W, H], 0, res, `q 1 0 0 -1 0 ${fmt(H)} cm\n${ops.join("\n")}\nQ`);
+      doc.insertPage(-1, pg);
+      free(pg);
+    });
+    doc.subsetFonts();
+    const buf = doc.saveToBuffer("compress");
+    const out = buf.asUint8Array().slice();
+    free(buf);
+    return out;
+  } finally {
+    fk.dispose();
+    free(doc);
+  }
+}
+
 const Engine = {
   init: initEngine, extract: extractDocument, extractPages, build: buildTranslated, renderPNG,
-  detectKind, imageKindOf, imageToPdf, openBook, saveBook, extractBook, openLaidOut, mapTranslated, openOffice, officePreviewHtml, ocrToBlocks, sampleColors, refineOcr,
+  detectKind, imageKindOf, imageToPdf, keywordsPdf, openBook, saveBook, extractBook, openLaidOut, mapTranslated, openOffice, officePreviewHtml, ocrToBlocks, sampleColors, refineOcr,
   open: (bytes) => M.Document.openDocument(bytes, "application/pdf"),
   exportTxt, exportCsv, exportJson, exportXliff, exportDocx, parseImport, parseMarkedText,
 };
@@ -2503,6 +2581,7 @@ function createHandler() {
       const bytes = await rearrangeDocument(W.kind, W.bytes, args.plan, W.extras.map((e) => e.bytes));
       return { result: bytes, transfer: [bytes.buffer] };
     }
+    if (cmd === "keywordsPdf") { const b = keywordsPdf(args); return { result: b, transfer: [b.buffer] }; }
     if (cmd === "renderBytes") { // a page of a finished PDF (the translated picture) as PNG
       const doc = M.Document.openDocument(args.bytes, "application/pdf");
       try { const png = renderPNG(doc, args.page || 0, args.zoom); return { result: png.buffer, transfer: [png.buffer] }; } finally { free(doc); }

@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.53
+
+- Keywords: "Translate with AI" now also asks for the most important terms of the text with their translations (10 by default, adjustable, can be switched off). When the answer is imported, the list after the line [[keywords]] is taken over. The new "Terms" button opens them: edit the list, see the PDF page, copy it or download it as a separate PDF file.
+
 ## 1.52
 
 - Presentations: fields can be moved, resized and restyled like in a PDF. Drag a segment's box on the slide to move its text box, drag the handles to resize it, and use "Aa" on the card to set size, font, bold/italic and colour. The preview and the rebuilt file follow: the shape gets its new place and size, the text its new style.

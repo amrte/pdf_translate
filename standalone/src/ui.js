@@ -513,6 +513,7 @@ function openDocument(doc, bytes) {
 
   loadOverrides();
   loadRotations();
+  kwLoad();
   fillPageFilter();
   $("#search").value = "";
   $("#filterStatus").value = "all";
@@ -1221,7 +1222,8 @@ async function importFile(file) {
   $("#importDialog").close();
   try {
     const bytes = new Uint8Array(await file.arrayBuffer());
-    mergeImported(await Engine.parseImport(file.name, bytes));
+    if (/\.txt$/i.test(file.name)) mergeImported(Engine.parseMarkedText(kwExtract(new TextDecoder().decode(bytes)))); // (a keyword list may be in it)
+    else mergeImported(await Engine.parseImport(file.name, bytes));
   } catch (err) {
     toast(t("msg.readFailed", { file: file.name, err: err.message }), "error");
   } finally {
@@ -1232,7 +1234,7 @@ async function importFile(file) {
 function importPasted() {
   const text = $("#pasteArea").value;
   if (!text.trim()) { toast(t("msg.pasteFirst"), "error"); return; }
-  mergeImported(Engine.parseMarkedText(text));
+  mergeImported(Engine.parseMarkedText(kwExtract(text)));
   $("#pasteArea").value = "";
 }
 
@@ -1761,6 +1763,7 @@ function aiPromptText(part) {
   if (context) lines.push("", P.context(context.replace(/\.$/, "")));
   if (glossary) lines.push("", P.glossary, ...glossary.split(/\n/).map((l) => l.trim()).filter(Boolean).map((l) => `- ${l}`));
   if (part && part.total > 1) lines.push("", P.part(part.k, part.total, part.a, part.b));
+  if ($("#aiKeywords").checked) lines.push("", P.keywords(Math.max(1, Math.min(100, Number($("#aiKeywordCount").value) || 10))));
   lines.push("", P.segments);
   return lines.join("\n");
 }
@@ -1840,7 +1843,7 @@ function initHelp() {
   addCloseButtons();
   $("#btnHelp").addEventListener("click", () => openHelp(false));
   $("#btnAi").addEventListener("click", () => openHelp(true));
-  for (const id of ["#aiTarget", "#aiFrom", "#aiTo", "#aiOnlyTodo", "#aiHidden", "#aiContext", "#aiGlossary", "#aiPartSize"]) {
+  for (const id of ["#aiTarget", "#aiFrom", "#aiTo", "#aiOnlyTodo", "#aiHidden", "#aiKeywords", "#aiKeywordCount", "#aiContext", "#aiGlossary", "#aiPartSize"]) {
     $(id).addEventListener("input", refreshAiPrompt);
   }
   $("#aiParts").addEventListener("click", (e) => {
