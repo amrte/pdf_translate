@@ -73,6 +73,26 @@ const xmlAttr = (src, el, name) => {
 };
 const kidsNamed = (el, name) => (el.kids || []).filter((k) => k.name === name);
 const firstNamed = (el, name) => (el.kids || []).find((k) => k.name === name);
+
+/* Pictures in the slide preview: the media parts become data URIs, sized from their EMU extents. */
+const PIC_MIME = { png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", gif: "image/gif", bmp: "image/bmp", tif: "image/tiff", tiff: "image/tiff" };
+const PIC_MAX_BYTES = 8 * 1048576, PIC_MAX_W = 680, PIC_MAX_H = 240;
+function toBase64(bytes) {
+  let str = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) str += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  return btoa(str);
+}
+/** `<img>` for a `p:pic` whose picture is among `ctx.images` (relationship id → data URI). */
+function oxPicHtml(src, pic, ctx) {
+  const blip = findAll(pic, (x) => x.name === "blip")[0];
+  const uri = blip && ctx.images[xmlAttr(src, blip, "r:embed") || ""];
+  if (!uri) return "";
+  const ext = findAll(pic, (x) => x.name === "ext" && xmlAttr(src, x, "cx"))[0];
+  let w = ext ? +xmlAttr(src, ext, "cx") * ctx.scale : 120, h = ext ? +xmlAttr(src, ext, "cy") * ctx.scale : 90;
+  if (!(w > 0 && h > 0)) { w = 120; h = 90; }
+  const cap = Math.min(1, PIC_MAX_W / w, PIC_MAX_H / h);
+  return `<img src="${uri}" width="${Math.max(6, Math.round(w * cap))}" height="${Math.max(6, Math.round(h * cap))}"/>`;
+}
 const hasDeep = (el, names) => (el.kids || []).some((k) => k.kids && (names.has(k.name) || hasDeep(k, names)));
 
 /** Style key of a run: its properties without language and spelling flags. */
@@ -442,7 +462,10 @@ function oxDrawing(src, el, ctx) {
   const chunks = [];
   for (const k of el.kids || []) {
     if (!k.kids || k.name === "fallback") continue;
-    if (k.name === "sp") {
+    if (ctx.picsOnly && !/^(pic|grpsp)$/.test(k.name)) continue;
+    if (k.name === "pic") {
+      if (ctx.images) chunks.push(oxPicHtml(src, k, ctx));
+    } else if (k.name === "sp") {
       const ph = findAll(k, (x) => x.name === "ph")[0];
       const type = ph ? xmlAttr(src, ph, "type") || "" : "";
       if (ctx.notes && /^(sldNum|sldImg|hdr|ftr|dt)$/.test(type)) continue;
@@ -547,13 +570,52 @@ async function openOffice(bytes, kind) {
     const rels = await relsOf(mainPath);
     const presRoot = parseXml(pres || "");
     const slides = findAll(presRoot, (k) => k.name === "sldid").map((k) => rels[xmlAttr(pres, k, "r:id")]).filter(Boolean).map((r) => r.target);
+    // Pictures: EMU → preview pixels; the media parts as data URIs (each read once).
+    const sldSz = findAll(presRoot, (k) => k.name === "sldsz")[0];
+    const sldCx = (sldSz && +xmlAttr(pres, sldSz, "cx")) || 9144000, sldCy = (sldSz && +xmlAttr(pres, sldSz, "cy")) || 6858000;
+    const scale = Math.min(PIC_MAX_W / sldCx, 480 / sldCy);
+    const uris = new Map();
+    const dataUri = async (target) => {
+      if (uris.has(target)) return uris.get(target);
+      const e = byName.get(target), mime = PIC_MIME[(target.split(".").pop() || "").toLowerCase()];
+      let uri = null;
+      if (e && mime) { const data = await zipRead(e); if (data.length <= PIC_MAX_BYTES) uri = `data:${mime};base64,${toBase64(data)}`; }
+      uris.set(target, uri);
+      return uri;
+    };
+    const imagesOf = async (part) => {
+      const out = {};
+      for (const [id, r] of Object.entries(await relsOf(part))) if (/\/image$/.test(r.type)) { const u = await dataUri(r.target); if (u) out[id] = u; }
+      return out;
+    };
+    const partOf = async (part) => { const src = await text(part); return src === null ? null : { part, src, root: parseXml(src), images: await imagesOf(part) }; };
+    const bgHtml = (p) => {
+      const bg = findAll(p.root, (k) => k.name === "bg")[0], blip = bg && findAll(bg, (k) => k.name === "blip")[0];
+      const uri = blip && p.images[xmlAttr(p.src, blip, "r:embed") || ""];
+      return uri ? `<img class="bg" src="${uri}" width="${Math.round((72 * sldCx) / sldCy)}" height="72"/>` : "";
+    };
     for (const [i, path] of slides.entries()) {
       const f = await addFile(path);
       if (!f) continue;
       if (i) preview.push(pageBreak);
       preview.push(`<p class="slide-no">${label(String(i + 1))}</p>`);
+      // The slide's artwork: its background (own, or the layout's, or the master's) as a small
+      // strip, then the pictures of the master and layout, then its own shapes in order.
+      const slide = { part: path, src: f.src, root: f.root, images: await imagesOf(path) };
+      const layoutRel = Object.values(await relsOf(path)).find((r) => /\/slideLayout$/.test(r.type));
+      const layout = layoutRel ? await partOf(layoutRel.target) : null;
+      const masterRel = layout && Object.values(await relsOf(layout.part)).find((r) => /\/slideMaster$/.test(r.type));
+      const master = masterRel ? await partOf(masterRel.target) : null;
+      preview.push(bgHtml(slide) || (layout && bgHtml(layout)) || (master && bgHtml(master)) || "");
+      const cSld = findAll(f.root, (k) => k.name === "csld")[0];
+      if (!cSld || xmlAttr(f.src, cSld, "showMasterSp") !== "0") {
+        for (const p of [master, layout]) {
+          const ptree = p && findAll(p.root, (k) => k.name === "sptree")[0];
+          if (ptree) preview.push(...oxDrawing(p.src, ptree, { images: p.images, scale, picsOnly: true }));
+        }
+      }
       const tree = findAll(f.root, (k) => k.name === "sptree")[0];
-      if (tree) preview.push(...oxDrawing(f.src, tree, { file: f.fi, out: segments, tag: "p" }));
+      if (tree) preview.push(...oxDrawing(f.src, tree, { file: f.fi, out: segments, tag: "p", images: slide.images, scale }));
       const notesRel = Object.values(await relsOf(path)).find((r) => /\/notesSlide$/.test(r.type));
       const nf = notesRel && await addFile(notesRel.target);
       const ntree = nf && findAll(nf.root, (k) => k.name === "sptree")[0];
@@ -636,6 +698,8 @@ td p { margin: 0; }
 .title p { font-size: 1.5em; font-weight: bold; }
 .shape { margin: 0 0 0.6em; }
 .pb { page-break-after: always; }
+img { display: block; margin: 0 0 0.4em; }
+img.bg { margin: 0 0 0.5em; }
 `;
 
 /** CSS for a run's properties (bold, italic, underline, colour). */

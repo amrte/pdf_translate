@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="Kameleon 1.43">
+  <meta name="generator" content="Kameleon 1.44">
   <meta name="description" content="Kameleon – Wechselt die Sprache, behält die Form. Changes language, keeps its shape.">
   <title>Kameleon</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2216%22 fill=%22%23287130%22/%3E%3Cg transform=%22translate(2.5 1) scale(0.9)%22 fill=%22%23ffffff%22 stroke=%22%23ffffff%22%3E%3Cpath d=%22M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6%22 fill=%22none%22 stroke-width=%223.8%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M21 43l-1 10M30 44v9M38 43l1 10%22 stroke-width=%223.6%22 stroke-linecap=%22round%22/%3E%3Cellipse cx=%2221%22 cy=%2225%22 rx=%227%22 ry=%227.5%22 stroke=%22none%22/%3E%3Cellipse cx=%2233%22 cy=%2223.5%22 rx=%227.5%22 ry=%228%22 stroke=%22none%22/%3E%3Cpath d=%22M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z%22 stroke=%22none%22/%3E%3Cpath d=%22M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z%22 stroke=%22none%22/%3E%3Cpath d=%22M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z%22 stroke=%22none%22/%3E%3Cpath d=%22M16 37l4-3 4 3 4-3 4 3 4-3 4 3%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%222.1%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3Cpath d=%22M41.5 34.1L58.4 32.5%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%221.5%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M58.5 33.6c4.5 1.4 6.2 5 4 8.4-1 1.6-3 1.6-3.6.1%22 fill=%22none%22 stroke-width=%222.6%22 stroke-linecap=%22round%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%224.4%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%222.7%22 stroke=%22none%22/%3E%3Ccircle cx=%2246.2%22 cy=%2226.7%22 r=%221.3%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Cpath d=%22M4 55.5c15-3 39-3 54 0%22 fill=%22none%22 stroke-width=%222.4%22 stroke-linecap=%22round%22/%3E%3C/g%3E%3C/svg%3E">
@@ -75,6 +75,7 @@ code { font-size: 12.5px; background: var(--surface-2); border: 1px solid var(--
 }
 .brand { display: flex; align-items: center; gap: 10px; font-weight: 650; font-size: 16px; }
 .brand-name { font-weight: 700; letter-spacing: .01em; color: var(--accent); }
+.brand-name, .brand .version { align-self: baseline; } /* the version number sits on the same baseline as the name */
 .logo {
   display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 8px;
   background: var(--accent); color: var(--on-accent); font-size: 13px; font-weight: 700;
@@ -652,7 +653,7 @@ body.is-image .page img { filter: var(--pic-filter, none); }
   <div class="brand">
     <span class="logo"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#287130"/><g transform="translate(2.5 1) scale(0.9)" fill="#ffffff" stroke="#ffffff"><path d="M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6" fill="none" stroke-width="3.8" stroke-linecap="round"/><path d="M21 43l-1 10M30 44v9M38 43l1 10" stroke-width="3.6" stroke-linecap="round"/><ellipse cx="21" cy="25" rx="7" ry="7.5" stroke="none"/><ellipse cx="33" cy="23.5" rx="7.5" ry="8" stroke="none"/><path d="M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z" stroke="none"/><path d="M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z" stroke="none"/><path d="M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z" stroke="none"/><path d="M16 37l4-3 4 3 4-3 4 3 4-3 4 3" fill="none" stroke="#287130" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M41.5 34.1L58.4 32.5" fill="none" stroke="#287130" stroke-width="1.5" stroke-linecap="round"/><path d="M58.5 33.6c4.5 1.4 6.2 5 4 8.4-1 1.6-3 1.6-3.6.1" fill="none" stroke-width="2.6" stroke-linecap="round"/><circle cx="45.5" cy="26.5" r="4.4" fill="#287130" stroke="none"/><circle cx="45.5" cy="26.5" r="2.7" stroke="none"/><circle cx="46.2" cy="26.7" r="1.3" fill="#287130" stroke="none"/><path d="M4 55.5c15-3 39-3 54 0" fill="none" stroke-width="2.4" stroke-linecap="round"/></g></svg></span>
     <span class="brand-name">Kameleon</span>
-    <span class="version" id="appVersion">v1.43</span>
+    <span class="version" id="appVersion">v1.44</span>
   </div>
   <div class="topbar-actions">
     <span class="doc-name" id="docName"></span>
@@ -1053,7 +1054,7 @@ body.is-image .page img { filter: var(--pic-filter, none); }
     </div>
     <input type="file" id="offlineZip" class="visually-hidden" accept=".zip,application/zip" multiple tabindex="-1">
     <input type="file" id="offlineFolder" class="visually-hidden" webkitdirectory multiple tabindex="-1">
-    <p class="muted small help-version help-part">Kameleon v1.43 · <span data-i18n="app.tagline"></span></p>
+    <p class="muted small help-version help-part">Kameleon v1.44 · <span data-i18n="app.tagline"></span></p>
     <div class="modal-actions">
       <button type="button" value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
       <button type="button" class="btn ai-part" id="aiCopyPrompt" data-i18n="ai.copyPrompt">Copy prompt only</button>
@@ -5523,6 +5524,26 @@ const xmlAttr = (src, el, name) => {
 };
 const kidsNamed = (el, name) => (el.kids || []).filter((k) => k.name === name);
 const firstNamed = (el, name) => (el.kids || []).find((k) => k.name === name);
+
+/* Pictures in the slide preview: the media parts become data URIs, sized from their EMU extents. */
+const PIC_MIME = { png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", gif: "image/gif", bmp: "image/bmp", tif: "image/tiff", tiff: "image/tiff" };
+const PIC_MAX_BYTES = 8 * 1048576, PIC_MAX_W = 680, PIC_MAX_H = 240;
+function toBase64(bytes) {
+  let str = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) str += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  return btoa(str);
+}
+/** `<img>` for a `p:pic` whose picture is among `ctx.images` (relationship id → data URI). */
+function oxPicHtml(src, pic, ctx) {
+  const blip = findAll(pic, (x) => x.name === "blip")[0];
+  const uri = blip && ctx.images[xmlAttr(src, blip, "r:embed") || ""];
+  if (!uri) return "";
+  const ext = findAll(pic, (x) => x.name === "ext" && xmlAttr(src, x, "cx"))[0];
+  let w = ext ? +xmlAttr(src, ext, "cx") * ctx.scale : 120, h = ext ? +xmlAttr(src, ext, "cy") * ctx.scale : 90;
+  if (!(w > 0 && h > 0)) { w = 120; h = 90; }
+  const cap = Math.min(1, PIC_MAX_W / w, PIC_MAX_H / h);
+  return `<img src="${uri}" width="${Math.max(6, Math.round(w * cap))}" height="${Math.max(6, Math.round(h * cap))}"/>`;
+}
 const hasDeep = (el, names) => (el.kids || []).some((k) => k.kids && (names.has(k.name) || hasDeep(k, names)));
 
 /** Style key of a run: its properties without language and spelling flags. */
@@ -5892,7 +5913,10 @@ function oxDrawing(src, el, ctx) {
   const chunks = [];
   for (const k of el.kids || []) {
     if (!k.kids || k.name === "fallback") continue;
-    if (k.name === "sp") {
+    if (ctx.picsOnly && !/^(pic|grpsp)$/.test(k.name)) continue;
+    if (k.name === "pic") {
+      if (ctx.images) chunks.push(oxPicHtml(src, k, ctx));
+    } else if (k.name === "sp") {
       const ph = findAll(k, (x) => x.name === "ph")[0];
       const type = ph ? xmlAttr(src, ph, "type") || "" : "";
       if (ctx.notes && /^(sldNum|sldImg|hdr|ftr|dt)$/.test(type)) continue;
@@ -5997,13 +6021,52 @@ async function openOffice(bytes, kind) {
     const rels = await relsOf(mainPath);
     const presRoot = parseXml(pres || "");
     const slides = findAll(presRoot, (k) => k.name === "sldid").map((k) => rels[xmlAttr(pres, k, "r:id")]).filter(Boolean).map((r) => r.target);
+    // Pictures: EMU → preview pixels; the media parts as data URIs (each read once).
+    const sldSz = findAll(presRoot, (k) => k.name === "sldsz")[0];
+    const sldCx = (sldSz && +xmlAttr(pres, sldSz, "cx")) || 9144000, sldCy = (sldSz && +xmlAttr(pres, sldSz, "cy")) || 6858000;
+    const scale = Math.min(PIC_MAX_W / sldCx, 480 / sldCy);
+    const uris = new Map();
+    const dataUri = async (target) => {
+      if (uris.has(target)) return uris.get(target);
+      const e = byName.get(target), mime = PIC_MIME[(target.split(".").pop() || "").toLowerCase()];
+      let uri = null;
+      if (e && mime) { const data = await zipRead(e); if (data.length <= PIC_MAX_BYTES) uri = `data:${mime};base64,${toBase64(data)}`; }
+      uris.set(target, uri);
+      return uri;
+    };
+    const imagesOf = async (part) => {
+      const out = {};
+      for (const [id, r] of Object.entries(await relsOf(part))) if (/\/image$/.test(r.type)) { const u = await dataUri(r.target); if (u) out[id] = u; }
+      return out;
+    };
+    const partOf = async (part) => { const src = await text(part); return src === null ? null : { part, src, root: parseXml(src), images: await imagesOf(part) }; };
+    const bgHtml = (p) => {
+      const bg = findAll(p.root, (k) => k.name === "bg")[0], blip = bg && findAll(bg, (k) => k.name === "blip")[0];
+      const uri = blip && p.images[xmlAttr(p.src, blip, "r:embed") || ""];
+      return uri ? `<img class="bg" src="${uri}" width="${Math.round((72 * sldCx) / sldCy)}" height="72"/>` : "";
+    };
     for (const [i, path] of slides.entries()) {
       const f = await addFile(path);
       if (!f) continue;
       if (i) preview.push(pageBreak);
       preview.push(`<p class="slide-no">${label(String(i + 1))}</p>`);
+      // The slide's artwork: its background (own, or the layout's, or the master's) as a small
+      // strip, then the pictures of the master and layout, then its own shapes in order.
+      const slide = { part: path, src: f.src, root: f.root, images: await imagesOf(path) };
+      const layoutRel = Object.values(await relsOf(path)).find((r) => /\/slideLayout$/.test(r.type));
+      const layout = layoutRel ? await partOf(layoutRel.target) : null;
+      const masterRel = layout && Object.values(await relsOf(layout.part)).find((r) => /\/slideMaster$/.test(r.type));
+      const master = masterRel ? await partOf(masterRel.target) : null;
+      preview.push(bgHtml(slide) || (layout && bgHtml(layout)) || (master && bgHtml(master)) || "");
+      const cSld = findAll(f.root, (k) => k.name === "csld")[0];
+      if (!cSld || xmlAttr(f.src, cSld, "showMasterSp") !== "0") {
+        for (const p of [master, layout]) {
+          const ptree = p && findAll(p.root, (k) => k.name === "sptree")[0];
+          if (ptree) preview.push(...oxDrawing(p.src, ptree, { images: p.images, scale, picsOnly: true }));
+        }
+      }
       const tree = findAll(f.root, (k) => k.name === "sptree")[0];
-      if (tree) preview.push(...oxDrawing(f.src, tree, { file: f.fi, out: segments, tag: "p" }));
+      if (tree) preview.push(...oxDrawing(f.src, tree, { file: f.fi, out: segments, tag: "p", images: slide.images, scale }));
       const notesRel = Object.values(await relsOf(path)).find((r) => /\/notesSlide$/.test(r.type));
       const nf = notesRel && await addFile(notesRel.target);
       const ntree = nf && findAll(nf.root, (k) => k.name === "sptree")[0];
@@ -6086,6 +6149,8 @@ td p { margin: 0; }
 .title p { font-size: 1.5em; font-weight: bold; }
 .shape { margin: 0 0 0.6em; }
 .pb { page-break-after: always; }
+img { display: block; margin: 0 0 0.4em; }
+img.bg { margin: 0 0 0.5em; }
 `;
 
 /** CSS for a run's properties (bold, italic, underline, colour). */
@@ -11986,7 +12051,7 @@ function initPicture() {
 // from its own browser cache before the network, so language files are written into that cache.
 // ======================================================================
 
-const APP_VERSION = "1.43";
+const APP_VERSION = "1.44";
 // (a change of library version makes a stored set outdated: it is then ignored)
 const OFFLINE_VERSION = `${MUPDF_URL} ${OCR_LIB}`;
 const CORE_SIMD = "tesseract-core-simd-lstm.wasm.js", CORE_PLAIN = "tesseract-core-lstm.wasm.js";
