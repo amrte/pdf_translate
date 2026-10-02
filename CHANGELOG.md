@@ -4,6 +4,14 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.32
+
+- **New logo: the Caravan.** The app icon, the favicon and the top-bar logo are now the one-colour
+  camel-chameleon on forest green. In the drop area the same animal opens its mouth and puts out
+  its tongue while a file hovers over it, and snaps when the file lands.
+- **Colours tuned to the green mark:** a cooler, slightly green-tinted paper and borders in light
+  and dark mode, a green brand line along the top bar, and the app name in the accent green.
+
 ## 1.31
 
 - **The chameleon greets your file.** The drop area shows a larger Kameleon instead of the generic
