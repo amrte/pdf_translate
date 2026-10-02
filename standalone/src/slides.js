@@ -349,7 +349,7 @@ function xfrmOf(src, xfrm) {
     m = mmul(m, mscale(cw ? w / cw : 1, ch ? h / ch : 1));
     m = mmul(m, mtranslate(-num(xmlAttr(src, chOff, "x")) * EMU_PT, -num(xmlAttr(src, chOff, "y")) * EMU_PT));
   }
-  return { m, w, h, rot, flipH, flipV };
+  return { m, w, h, rot, flipH, flipV, x, y };
 }
 
 /* ---------------------------------------------------------------- the renderer */
@@ -463,6 +463,17 @@ class SlideRenderer {
     let xf = spPr && xfrmOf(src, firstNamed(spPr, "xfrm"));
     if (!xf) for (const c of inh.chain) { const cp = firstNamed(c.sp, "sppr"); xf = cp && xfrmOf(c.part.src, firstNamed(cp, "xfrm")); if (xf) break; }
     if (!xf || xf.w < 0 || xf.h < 0) return;
+    // The segments shown in this shape learn its box; a field the user moved or resized moves
+    // or resizes the whole shape by the same amount.
+    const body = firstNamed(sp, "txbody");
+    const segs = body && !inherited ? this.segs.filter((s) => s.file === part.fi && s.s >= body.s && s.e <= body.e) : [];
+    for (const s of segs) s.shape = { x: xf.x, y: xf.y, w: xf.w, h: xf.h };
+    const moved = segs.find((s) => s.ov && s.ov.bbox && s.bbox);
+    if (moved) {
+      const [ax0, ay0, ax1, ay1] = moved.bbox, [bx0, by0, bx1, by1] = moved.ov.bbox;
+      const dx = bx0 - ax0, dy = by0 - ay0, dw = (bx1 - bx0) - (ax1 - ax0), dh = (by1 - by0) - (ay1 - ay0);
+      xf = { ...xf, m: mmul(xf.m, mtranslate(dx, dy)), w: Math.max(4, xf.w + dw), h: Math.max(4, xf.h + dh) };
+    }
     const M = mmul(m, xf.m), ctx = this.ctx();
     const style = firstNamed(sp, "style");
     // fill: the shape's own, else the theme fill its style refers to (placeholders: none)
@@ -490,7 +501,6 @@ class SlideRenderer {
       const op = doFill && doStroke ? "B" : doFill ? "f" : "S";
       this.ops.push(`q ${mfmt(M)} cm ${doFill ? rg(fill.color) : ""} ${doStroke ? `${RG(line.color)} ${fmt(Math.max(0.3, line.width))} w` : ""} ${geom.d} ${op} Q`);
     }
-    const body = firstNamed(sp, "txbody");
     if (body && !inherited) {
       const fontRef = style && firstNamed(style, "fontref");
       const refColor = fontRef ? firstColor(src, fontRef, ctx) : null;
@@ -713,6 +723,7 @@ class SlideRenderer {
     }
     const lst = firstNamed(body, "lststyle");
     const paras = [];
+    let fixedSize = false; // a size the user chose is kept, even if the text then overflows
     for (const p of kidsNamed(body, "p")) {
       const pPr = firstNamed(p, "ppr");
       const level = pPr ? num(xmlAttr(src, pPr, "lvl")) : 0;
@@ -728,6 +739,17 @@ class SlideRenderer {
       this.runStyle(src, rPr, st);
       // a mixed paragraph: bold/italic are taken from the first run, the size from the largest run
       for (const r of kidsNamed(p, "r")) { const rp = firstNamed(r, "rpr"), sz = rp && xmlAttr(src, rp, "sz"); if (sz && num(sz) / 100 > st.size) st.size = num(sz) / 100; }
+      // the segments of this paragraph learn its style; the user's choices for them apply
+      const segs = part.fi >= 0 ? this.segs.filter((s) => s.file === part.fi && s.s >= p.s && s.e <= p.e) : [];
+      for (const s of segs) { s.size = Math.round(st.size * 10) / 10; s.bold = Boolean(st.bold); s.italic = Boolean(st.italic); s.color = st.color; s.family = st.family; }
+      const ov = (segs.find((s) => s.ov) || {}).ov;
+      if (ov) {
+        if (ov.size) { st.size = ov.size; fixedSize = true; }
+        if (ov.bold !== undefined) st.bold = ov.bold;
+        if (ov.italic !== undefined) st.italic = ov.italic;
+        if (ov.color) st.color = ov.color;
+        if (ov.font && ov.font !== "custom") st.family = ov.font;
+      }
       const text = this.paraText(part, p);
       paras.push({ ...st, text, level });
     }
@@ -749,7 +771,7 @@ class SlideRenderer {
       return height;
     };
     let k = Math.min(1, o.scale || 1), height = measure(k);
-    if (height > box.h + 0.5 && box.h > 4) {
+    if (!fixedSize && height > box.h + 0.5 && box.h > 4) {
       let lo = 0.25, hi = k;
       for (let i = 0; i < 8; i++) { const mid = (lo + hi) / 2; if (measure(mid) <= box.h + 0.5) lo = mid; else hi = mid; }
       k = lo; height = measure(k);
@@ -920,5 +942,44 @@ function mirrorDiagramDrawings(book, segments, translations, changed, opts = {})
       out += d.src.slice(pos);
       changed.set(d.path, out);
     }
+  }
+}
+
+/* ---------------------------------------------------------------- fields moved by the user */
+
+/**
+ * Edits of the slide XML for fields the user moved or resized: the shape gets a new xfrm,
+ * shifted and resized by the same amount as the field (one field per shape decides).
+ */
+function slideShapeEdits(book, segments, edits) {
+  const deck = book.deck;
+  if (!deck) return;
+  for (const seg of segments) {
+    if (!seg.ov || !seg.ov.bbox || !seg.bbox || !seg.shape) continue;
+    const sl = deck.slides.find((x) => x && x.fi === seg.file);
+    if (!sl) continue;
+    let p = null;
+    const find = (el) => { for (const k of el.kids || []) { if (!k.kids || p) continue; if (k.s <= seg.s && k.e >= seg.e) { if (k.name === "p") { p = k; return; } find(k); } } };
+    find(sl.root);
+    let sp = p;
+    while (sp && sp.name !== "sp") sp = sp.parent;
+    const spPr = sp && firstNamed(sp, "sppr");
+    if (!spPr) continue;
+    const list = edits.get(seg.file) || [];
+    edits.set(seg.file, list);
+    if (list.some((e) => e.shape === sp)) continue;
+    const [ax0, ay0, ax1, ay1] = seg.bbox, [bx0, by0, bx1, by1] = seg.ov.bbox;
+    const emu = (v) => Math.round(v / EMU_PT);
+    const x = emu(seg.shape.x + bx0 - ax0), y = emu(seg.shape.y + by0 - ay0);
+    const cx = Math.max(12700, emu(seg.shape.w + (bx1 - bx0) - (ax1 - ax0))), cy = Math.max(12700, emu(seg.shape.h + (by1 - by0) - (ay1 - ay0)));
+    const xfrm = firstNamed(spPr, "xfrm");
+    if (xfrm) {
+      const off = firstNamed(xfrm, "off"), ext = firstNamed(xfrm, "ext");
+      if (off) list.push({ s: off.s, e: off.e, text: `<${off.qname} x="${x}" y="${y}"/>`, shape: sp });
+      if (ext) list.push({ s: ext.s, e: ext.e, text: `<${ext.qname} cx="${cx}" cy="${cy}"/>`, shape: sp });
+      if (!off && !ext) list.push({ s: xfrm.cs, e: xfrm.cs, text: `<a:off x="${x}" y="${y}"/><a:ext cx="${cx}" cy="${cy}"/>`, shape: sp });
+    } else if (spPr.empty) {
+      list.push({ s: spPr.s, e: spPr.e, text: `<${spPr.qname}><a:xfrm><a:off x="${x}" y="${y}"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm></${spPr.qname}>`, shape: sp });
+    } else list.push({ s: spPr.cs, e: spPr.cs, text: `<a:xfrm><a:off x="${x}" y="${y}"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm>`, shape: sp });
   }
 }

@@ -268,7 +268,8 @@ function oxMarkup(translation, seg, opts = {}) {
     return `${ox.pre.join("")}<${tq} xml:space="preserve">${escapeXmlText(plainText)}</${tq}>${ox.post.join("")}`;
   }
   const used = new Set(), open = [], out = []; // out: [{xml, id?, wraps?}]
-  const styleNow = () => (open.length && ox.styles[open[open.length - 1]]) || ox.base;
+  const ovStyle = seg.ov && ox.fmt === "a" ? (st) => ({ ...st, rpr: ovRpr(st.rpr, seg.ov) }) : (st) => st; // the user's size, style, colour, font
+  const styleNow = () => ovStyle((open.length && ox.styles[open[open.length - 1]]) || ox.base);
   const atomWraps = (id) => ({ wraps: (ox.styles[id] || {}).wraps });
   pieces.forEach((p, i) => {
     if (p.text !== undefined) { const st = styleNow(); out.push({ xml: oxRun(st, unescapeMarkers(p.text), ox.fmt, opts), wraps: st.wraps }); return; }
@@ -348,6 +349,30 @@ function oxBreak(style, fmt, opts) {
   }
   const runOpen = style.open && !style.open.endsWith("/>") ? style.open : `<${q}>`;
   return `${runOpen}${rpr}<${q.replace(/r$/, "br")}/></${q}>`;
+}
+
+const OV_FONTS = { "sans-serif": "Arial", serif: "Times New Roman", monospace: "Courier New" };
+
+/** A DrawingML run's properties (<a:rPr>) with the user's size, bold/italic, colour and font applied. */
+function ovRpr(rpr, ov) {
+  const m = /^<a:rPr\b([^>]*?)(\/?)>([\s\S]*)$/.exec(rpr || "");
+  let open = m ? m[1] : "", inner = m && !m[2] ? m[3].replace(/<\/a:rPr>\s*$/, "") : "";
+  const setAttr = (name, value) => { open = open.replace(new RegExp(`\\s${name}="[^"]*"`), ""); open += ` ${name}="${value}"`; };
+  if (ov.size) setAttr("sz", Math.round(ov.size * 100));
+  if (ov.bold !== undefined) setAttr("b", ov.bold ? "1" : "0");
+  if (ov.italic !== undefined) setAttr("i", ov.italic ? "1" : "0");
+  if (ov.color) {
+    inner = inner.replace(/<a:solidFill>[\s\S]*?<\/a:solidFill>|<a:noFill\/>|<a:gradFill\b[\s\S]*?<\/a:gradFill>/, "");
+    const ln = /^(\s*<a:ln\b[^>]*\/>|\s*<a:ln\b[\s\S]*?<\/a:ln>)/.exec(inner), at = ln ? ln[0].length : 0; // (the fill follows the outline)
+    inner = inner.slice(0, at) + `<a:solidFill><a:srgbClr val="${ov.color.slice(1).toUpperCase()}"/></a:solidFill>` + inner.slice(at);
+  }
+  const face = ov.font && OV_FONTS[ov.font];
+  if (face) {
+    inner = inner.replace(/<a:latin\b[^>]*\/>|<a:latin\b[^>]*>[\s\S]*?<\/a:latin>/, "");
+    const at = inner.search(/<a:(ea|cs|sym|hlinkClick|hlinkMouseOver|rtl|extLst)\b/), latin = `<a:latin typeface="${face}"/>`;
+    inner = at < 0 ? inner + latin : inner.slice(0, at) + latin + inner.slice(at);
+  }
+  return inner ? `<a:rPr${open}>${inner}</a:rPr>` : `<a:rPr${open}/>`;
 }
 
 /** Elements that must not be repeated in a paragraph's bilingual copy. */

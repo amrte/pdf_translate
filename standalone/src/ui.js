@@ -804,9 +804,9 @@ function ensureBoxes(i) {
   const page = viewPages()[i];
   const html = (boxesByPage.get(i) || []).map(([s, bbox]) => {
     const [x0, y0, x1, y1] = bbox;
-    const active = s.id === state.activeId, custom = !isBook() && state.overrides[s.id] && state.overrides[s.id].bbox;
+    const active = s.id === state.activeId, custom = fieldsEditable() && state.overrides[s.id] && state.overrides[s.id].bbox;
     const cls = "box" + (hasTr(s.id) ? " done" : "") + (s.skip ? " skip" : "") + (active ? " active" : "") + (custom ? " custom" : "");
-    return `<div class="${cls}" data-id="${s.id}" title="#${s.id}" style="left:${((x0 - page.x0) / page.width) * 100}%;top:${((y0 - page.y0) / page.height) * 100}%;width:${((x1 - x0) / page.width) * 100}%;height:${((y1 - y0) / page.height) * 100}%">${active && !isBook() ? HANDLES : ""}</div>`;
+    return `<div class="${cls}" data-id="${s.id}" title="#${s.id}" style="left:${((x0 - page.x0) / page.width) * 100}%;top:${((y0 - page.y0) / page.height) * 100}%;width:${((x1 - x0) / page.width) * 100}%;height:${((y1 - y0) / page.height) * 100}%">${active && fieldsEditable() ? HANDLES : ""}</div>`;
   }).join("");
   el.querySelector(".page-body").insertAdjacentHTML("beforeend", html);
   renderMarkups(i);
@@ -1048,7 +1048,7 @@ function makeCard(id) {
       <span class="seg-meta" data-shrunk="${escapeHtml(t("meta.shrunk"))}">${escapeHtml(segMeta(s))}</span>
       <button type="button" class="mini" data-act="copy" title="${escapeHtml(t("card.copyTitle"))}">${t("card.copy")}</button>
       <button type="button" class="mini" data-act="same" title="${escapeHtml(t("card.keepTitle"))}">${t("card.keep")}</button>
-      ${isBook() ? "" : `<button type="button" class="mini${state.overrides[id] ? " on" : ""}" data-act="style" title="${escapeHtml(t("card.styleTitle"))}">Aa</button>`}
+      ${!fieldsEditable() ? "" : `<button type="button" class="mini${state.overrides[id] ? " on" : ""}" data-act="style" title="${escapeHtml(t("card.styleTitle"))}">Aa</button>`}
       <button type="button" class="mini apply" data-act="apply" title="${escapeHtml(t("card.applyTitle"))}">${t("card.apply")}</button>
     </div>
     ${styleOpen.has(id) && !isBook() ? stylePanelHtml(s) : ""}
@@ -1352,7 +1352,7 @@ function applyField(id) {
 async function applyBook(id) {
   try {
     busy(t("msg.updating"));
-    const { bytes, view } = await pool.workers[0].call("build", { segments: state.doc.segments, translations: state.applied, opts: buildOptions() });
+    const { bytes, view } = await pool.workers[0].call("build", { segments: state.doc.segments.map(effSeg), translations: state.applied, opts: buildOptions() });
     state.outBytes = bytes;
     state.outView = view;
     state.hasOutput = true;

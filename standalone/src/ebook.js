@@ -545,7 +545,7 @@ async function saveBook(book, bytes, segments, translations, opts = {}) {
   const edits = new Map(); // file index -> [{s, e, text}]
   let replaced = 0;
   for (const seg of segments) {
-    const tr = (translations[seg.id] || "").trim();
+    const tr = (translations[seg.id] || "").trim() || (seg.ov && seg.ox && book.deck ? seg.text : ""); // (a restyled slide field keeps its text)
     if (!tr) continue;
     const f = book.files[seg.file];
     const raw = f.src.slice(seg.s, seg.e);
@@ -561,6 +561,7 @@ async function saveBook(book, bytes, segments, translations, opts = {}) {
     else edits.get(seg.file).push({ s: seg.s, e: seg.e, text: lead + markup + trail });
     replaced++;
   }
+  if (book.deck) slideShapeEdits(book, segments, edits); // slide fields the user moved or resized
   const lang = opts.bilingual ? "" : (opts.lang || "").trim(); // (a bilingual book keeps its language)
   const changed = new Map();
   book.files.forEach((f, fi) => {

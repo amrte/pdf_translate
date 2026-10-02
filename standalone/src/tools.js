@@ -7,9 +7,11 @@
 
 // state.overrides: segment id -> {bbox, size, font, bold, italic, color}, stored per document.
 const ovKey = (id) => `pdftr:ov:${id}`;
+/** Fields can be moved, resized and restyled in PDFs and in presentations (not in e-books, Word, Excel). */
+const fieldsEditable = () => Boolean(state.doc && (!isBook() || state.doc.kind === "pptx"));
 
 function loadOverrides() {
-  try { state.overrides = isBook() ? {} : JSON.parse(localStorage.getItem(ovKey(state.doc.id)) || "{}"); } catch (_) { state.overrides = {}; }
+  try { state.overrides = !fieldsEditable() ? {} : JSON.parse(localStorage.getItem(ovKey(state.doc.id)) || "{}"); } catch (_) { state.overrides = {}; }
 }
 
 function saveOverrides() {
@@ -24,7 +26,8 @@ const shownBox = (s) => (state.overrides[s.id] && state.overrides[s.id].bbox) ||
 /** A segment as the rebuild lays it out: with the user's box, size, font, style and colour. */
 function effSeg(s) {
   const o = state.overrides && state.overrides[s.id];
-  if (!o || isBook()) return s;
+  if (!o) return s;
+  if (isBook()) return state.doc.kind === "pptx" ? { ...s, ov: { ...o } } : s; // (slides: the engine applies the choices)
   // (styled: an untranslated field is set again in its own style; orig_size: for formulas,
   // which are drawn again from the original, scaled)
   const e = { ...s, styled: true, orig_size: s.size };
@@ -108,7 +111,7 @@ function placeBox(el, bbox, page) {
 
 function refreshBox(id) {
   const s = segById(id);
-  if (!s || isBook()) return;
+  if (!s || !fieldsEditable()) return;
   document.querySelectorAll(`.box[data-id="${id}"]`).forEach((el) => {
     const page = viewPages()[Number(el.closest(".page").dataset.page)];
     placeBox(el, shownBox(s), page);
@@ -121,7 +124,7 @@ const HANDLES = ["nw", "n", "ne", "e", "se", "s", "sw", "w"].map((h) => `<span c
 /** Resize handles on the selected box (PDFs only). */
 function showHandles(id) {
   document.querySelectorAll(".box .rh").forEach((h) => h.remove());
-  if (isBook() || id === null || id === undefined) return;
+  if (!fieldsEditable() || id === null || id === undefined) return;
   document.querySelectorAll(`.box[data-id="${id}"]`).forEach((el) => el.insertAdjacentHTML("beforeend", HANDLES));
 }
 
@@ -141,7 +144,7 @@ function pagePoint(pageEl, e) {
 }
 
 function onBoxDown(e) {
-  if (e.button !== 0 || !state.doc || isBook() || mk.tool !== "select") return;
+  if (e.button !== 0 || !state.doc || !fieldsEditable() || mk.tool !== "select") return;
   const box = e.target.closest(".box");
   if (!box) return;
   const pageEl = box.closest(".page"), id = Number(box.dataset.id), s = segById(id);

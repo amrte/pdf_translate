@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.52
+
+- Presentations: fields can be moved, resized and restyled like in a PDF. Drag a segment's box on the slide to move its text box, drag the handles to resize it, and use "Aa" on the card to set size, font, bold/italic and colour. The preview and the rebuilt file follow: the shape gets its new place and size, the text its new style.
+
 ## 1.51
 
 - A theme switch in the top bar: click to go from "as the system" to light to dark and back; the choice is remembered.
