@@ -4,6 +4,11 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.51
+
+- A theme switch in the top bar: click to go from "as the system" to light to dark and back; the choice is remembered.
+- Presentations: hidden slides are marked in "Arrange slides" and shown there only with the new "Show hidden slides" toggle; in "Translate with AI" a new tickbox, off by default, decides whether segments of hidden slides go into the prompt.
+
 ## 1.50
 
 - The colour set is now 23 colours: Teal, Slate, Steel, Graphite and Aubergine are gone, the yellows Lemon, Mustard and Saffron are new, plus two rare ones: Black turns up once in about 500 starts, and the Rainbow, with the icon, name, buttons and progress bar in a rainbow gradient, once in about 1000. Both can be forced with `#accent=Black` or `#accent=Rainbow`.

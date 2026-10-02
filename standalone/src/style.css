@@ -21,8 +21,9 @@
   --radius: 10px;
   color-scheme: light;
 }
-@media (prefers-color-scheme: dark) {
-  :root {
+/* Dark theme: forced with data-theme="dark", or the system's choice (class os-dark, set by theme.js)
+   unless the light theme is forced. */
+:root:is([data-theme="dark"], .os-dark:not([data-theme="light"])) {
     --bg: color-mix(in srgb, var(--accent) 5%, #16181a);
     --surface: #1c241e;
     --surface-2: #232c25;
@@ -40,7 +41,6 @@
     --on-danger: #1c0f0d;
     --page-shadow: 0 1px 3px rgba(0, 0, 0, .5);
     color-scheme: dark;
-  }
 }
 
 * { box-sizing: border-box; }
@@ -666,3 +666,11 @@ html[data-accent="Rainbow"] .btn.primary, html[data-accent="Rainbow"] .btn.succe
 html[data-accent="Rainbow"] .topbar { border-top: 3px solid transparent; border-image: var(--rainbow) 1; }
 html[data-accent="Rainbow"] svg [fill="#287130"] { fill: url(#kamRainbow); }
 html[data-accent="Rainbow"] svg [stroke="#287130"] { stroke: url(#kamRainbow); }
+
+/* ---------- v1.51: theme switch, hidden slides ---------- */
+.theme-btn { width: 32px; padding: 0; display: inline-grid; place-items: center; }
+.theme-btn svg { display: none; width: 16px; height: 16px; }
+html:not([data-theme]) .theme-btn .ic-auto, html[data-theme="light"] .theme-btn .ic-light, html[data-theme="dark"] .theme-btn .ic-dark { display: block; }
+body:not(.is-pptx) .pptx-only { display: none !important; }
+.pg-card.hidden-slide .pg-thumb { opacity: .55; }
+.pg-card.hidden-slide .pg-badge { color: var(--danger, #b3261e); }

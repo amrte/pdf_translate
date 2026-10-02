@@ -3,7 +3,9 @@
 // pages of other files inserted. "Apply" has the engine put the file together anew; the new file
 // is opened and the translations of the kept pages are carried over.
 
-const pm = { items: [], extras: [], thumbs: new Map(), swapFrom: null, slides: null, insertAt: null };
+const pm = { items: [], extras: [], thumbs: new Map(), swapFrom: null, slides: null, hidden: null, showHidden: false, insertAt: null };
+const pmHiddenItem = (it) => Boolean(it.from === 0 && pm.hidden && pm.hidden[it.page]);
+const pmShown = (it) => pm.showHidden || !pmHiddenItem(it);
 
 const pagesSupported = () => Boolean(state.doc && !state.doc.image && (state.doc.kind === "pdf" || state.doc.kind === "pptx"));
 const pmSlides = () => pm.slides !== null;
@@ -21,6 +23,9 @@ async function openPagesDialog() {
   if (!pagesSupported()) return;
   const info = await pool.workers[0].call("pagesInfo");
   pm.slides = info && info.slides ? info.slides : null;
+  pm.hidden = info && info.hidden ? info.hidden : null;
+  pm.showHidden = $("#pagesShowHidden").checked;
+  $("#pagesHiddenWrap").hidden = !(pm.hidden && pm.hidden.some(Boolean));
   pm.extras = []; pm.swapFrom = null; pm.insertAt = null;
   for (const url of pm.thumbs.values()) URL.revokeObjectURL(url);
   pm.thumbs.clear();
@@ -35,13 +40,16 @@ async function openPagesDialog() {
 function renderPagesGrid() {
   const grid = $("#pagesGrid");
   grid.innerHTML = pm.items.map((it, i) => {
+    if (!pmShown(it)) return "";
     const size = pmPageSize(it);
     let badge = "";
+    if (pmHiddenItem(it)) badge = t("pages.hiddenLabel") + " · ";
     if (it.from < 0) badge = t("pages.blankLabel");
     else if (it.from > 0) { const ex = pm.extras.find((e) => e.index === it.from); badge = `${ex ? ex.name : ""} · ${it.page + 1}`; }
-    else if (it.page !== i) badge = t("pages.origin", { n: it.page + 1 });
+    else if (it.page !== i) badge += t("pages.origin", { n: it.page + 1 });
+    else badge = badge.replace(/ · $/, "");
     const btn = (act, key, label) => `<button type="button" data-act="${act}" title="${t(key)}" aria-label="${t(key)}">${label}</button>`;
-    return `<div class="pg-card${pm.swapFrom === i ? " swap" : ""}" draggable="true" data-i="${i}">
+    return `<div class="pg-card${pm.swapFrom === i ? " swap" : ""}${pmHiddenItem(it) ? " hidden-slide" : ""}" draggable="true" data-i="${i}">
       <div class="pg-thumb" style="aspect-ratio: ${size.width} / ${size.height}">${it.from < 0 ? `<span>${t("pages.blankLabel")}</span>` : '<img alt="">'}</div>
       <div class="pg-label"><b>${i + 1}</b><span class="pg-badge" title="${badge.replace(/"/g, "&quot;")}">${badge}</span></div>
       <div class="pg-btns">${btn("left", "pages.left", "‹")}${btn("right", "pages.right", "›")}${btn("swap", "pages.swap", "⇄")}${btn("blank", "pages.insertBlank", "+")}${btn("file", "pages.insertFile", "+⎙")}${btn("remove", "pages.remove", "✕")}</div>
@@ -167,8 +175,9 @@ function initPagesManager() {
     const b = e.target.closest("button[data-act]"), card = e.target.closest(".pg-card");
     if (!b || !card) return;
     const i = Number(card.dataset.i), act = b.dataset.act;
-    if (act === "left") pmMove(i, i - 1);
-    else if (act === "right") pmMove(i, i + 1);
+    const neighbour = (dir) => { let j = i + dir; while (j >= 0 && j < pm.items.length && !pmShown(pm.items[j])) j += dir; return j; };
+    if (act === "left") pmMove(i, neighbour(-1));
+    else if (act === "right") pmMove(i, neighbour(1));
     else if (act === "remove") {
       if (pm.items.length <= 1) { toast(t("pages.none"), "error"); return; }
       pm.items.splice(i, 1); pm.swapFrom = null; renderPagesGrid();
@@ -186,6 +195,7 @@ function initPagesManager() {
     pm.items.push({ from: -1, w: size.width, h: size.height }); renderPagesGrid();
   });
   $("#pagesAddFile").addEventListener("click", () => { pm.insertAt = pm.items.length; $("#pagesFile").click(); });
+  $("#pagesShowHidden").addEventListener("change", (e) => { pm.showHidden = e.target.checked; pm.swapFrom = null; renderPagesGrid(); });
   $("#pagesFile").addEventListener("change", async (e) => {
     const files = [...e.target.files];
     e.target.value = "";

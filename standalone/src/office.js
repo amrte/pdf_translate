@@ -576,6 +576,8 @@ async function openOffice(bytes, kind) {
     for (const [i, sl] of book.deck.slides.entries()) {
       if (!sl) continue;
       const before = segments.length;
+      const sldEl = findAll(sl.root, (k) => k.name === "sld")[0];
+      sl.hidden = Boolean(sldEl && xmlAttr(sl.src, sldEl, "show") === "0"); // a hidden slide (not shown in the show)
       if (i) preview.push(pageBreak);
       preview.push(`<p class="slide-no">${label(String(i + 1))}</p>`);
       const tree = findAll(sl.root, (k) => k.name === "sptree")[0];
@@ -587,7 +589,7 @@ async function openOffice(bytes, kind) {
         const chunks = oxDrawing(nf.src, ntree, { file: nf.fi, out: segments, tag: "notes", notes: true });
         if (chunks.some((c) => typeof c === "object")) { preview.push('<div class="notes">', ...chunks, "</div>"); sl.notesFi = nf.fi; }
       }
-      for (let k = before; k < segments.length; k++) segments[k].slide = i; // (the page manager finds translations again by slide)
+      for (let k = before; k < segments.length; k++) { segments[k].slide = i; if (sl.hidden) segments[k].hiddenSlide = true; } // (the page manager finds translations again by slide)
     }
   } else {
     const wbPath = mainPath;

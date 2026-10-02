@@ -2497,7 +2497,7 @@ function createHandler() {
       return { result: png.buffer, transfer: [png.buffer] };
     }
     if (cmd === "extraClear") { clearExtras(); return { result: true }; }
-    if (cmd === "pagesInfo") return { result: { slides: (W.book && W.book.deck && W.book.deck.slidePages) || null } };
+    if (cmd === "pagesInfo") { const deck = W.book && W.book.deck; return { result: { slides: (deck && deck.slidePages) || null, hidden: deck ? deck.slides.map((sl) => Boolean(sl && sl.hidden)) : null } }; }
     if (cmd === "rearrange") {
       if (!W.bytes) throw new Error("No document is open.");
       const bytes = await rearrangeDocument(W.kind, W.bytes, args.plan, W.extras.map((e) => e.bytes));

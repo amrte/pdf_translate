@@ -506,6 +506,7 @@ function openDocument(doc, bytes) {
   document.body.classList.toggle("is-office", isOffice());
   document.body.classList.toggle("is-image", Boolean(doc.image));
   document.body.classList.toggle("has-pages", pagesSupported());
+  document.body.classList.toggle("is-pptx", doc.kind === "pptx");
   picDocumentChanged();
   setDocFormat(doc.image ? doc.image.label : FORMAT_LABEL[doc.kind || "pdf"]);
   document.title = `${doc.name} · Kameleon`;
@@ -637,7 +638,7 @@ function closeDocument() {
   $("#btnClose").hidden = true;
   $("#docName").textContent = "";
   document.title = "Kameleon";
-  document.body.classList.remove("is-book", "is-office", "is-image", "has-pages");
+  document.body.classList.remove("is-book", "is-office", "is-image", "has-pages", "is-pptx");
   picDocumentChanged();
   setDocFormat("PDF");
 }
@@ -1739,7 +1740,7 @@ function aiSegments() {
   const n = state.doc.pages.length;
   const from = Math.min(n, Math.max(1, Number($("#aiFrom").value) || 1)) - 1;
   const to = Math.min(n, Math.max(from + 1, Number($("#aiTo").value) || n)) - 1;
-  return state.doc.segments.filter((s) => !s.skip && s.page >= from && s.page <= to && (!$("#aiOnlyTodo").checked || !hasTr(s.id)));
+  return state.doc.segments.filter((s) => !s.skip && s.page >= from && s.page <= to && (!$("#aiOnlyTodo").checked || !hasTr(s.id)) && (!s.hiddenSlide || $("#aiHidden").checked));
 }
 
 /** The selected segments split into parts of "Fields per part" (numbers stay global). */
@@ -1839,7 +1840,7 @@ function initHelp() {
   addCloseButtons();
   $("#btnHelp").addEventListener("click", () => openHelp(false));
   $("#btnAi").addEventListener("click", () => openHelp(true));
-  for (const id of ["#aiTarget", "#aiFrom", "#aiTo", "#aiOnlyTodo", "#aiContext", "#aiGlossary", "#aiPartSize"]) {
+  for (const id of ["#aiTarget", "#aiFrom", "#aiTo", "#aiOnlyTodo", "#aiHidden", "#aiContext", "#aiGlossary", "#aiPartSize"]) {
     $(id).addEventListener("input", refreshAiPrompt);
   }
   $("#aiParts").addEventListener("click", (e) => {

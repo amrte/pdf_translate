@@ -67,7 +67,28 @@ function applyAccent(i) {
 }
 
 // (for tests and the console)
-window.Kameleon = Object.assign(window.Kameleon || {}, { ACCENTS, pickAccent, applyAccent });
+/* Light or dark: as the system says (default), or forced; the choice is kept in the browser. */
+const LS_THEME = "pdftr:theme";
+const THEME_MODES = ["system", "light", "dark"];
+function themeMode() { try { return THEME_MODES.includes(localStorage.getItem(LS_THEME)) ? localStorage.getItem(LS_THEME) : "system"; } catch (_) { return "system"; } }
+function setThemeMode(mode) {
+  const root = document.documentElement;
+  if (mode === "system") delete root.dataset.theme; else root.dataset.theme = mode;
+  try { if (mode === "system") localStorage.removeItem(LS_THEME); else localStorage.setItem(LS_THEME, mode); } catch (_) { /* storage blocked */ }
+  const btn = document.getElementById("themeBtn");
+  if (btn && typeof t === "function") { btn.title = t(`theme.${mode}`); btn.setAttribute("aria-label", btn.title); btn.dataset.i18nTitle = `theme.${mode}`; }
+}
+function initThemeMode() {
+  const mq = matchMedia("(prefers-color-scheme: dark)");
+  const follow = () => document.documentElement.classList.toggle("os-dark", mq.matches);
+  follow();
+  mq.addEventListener("change", follow);
+  setThemeMode(themeMode());
+  const btn = document.getElementById("themeBtn");
+  if (btn) btn.addEventListener("click", () => setThemeMode(THEME_MODES[(THEME_MODES.indexOf(themeMode()) + 1) % THEME_MODES.length]));
+}
+
+window.Kameleon = Object.assign(window.Kameleon || {}, { ACCENTS, pickAccent, applyAccent, setThemeMode, themeMode });
 
 function initTheme() {
   const m = /[?#&]accent=([^&#]+)/.exec(location.href);
