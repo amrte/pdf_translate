@@ -5,4 +5,5 @@ initMarkup();
 initTools();
 initPicture();
 initOffline();
+initPagesManager();
 init();

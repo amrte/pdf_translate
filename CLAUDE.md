@@ -18,11 +18,12 @@
   `ebook.js` (EPUB/FB2: segments from the XHTML/FictionBook source, rebuild, zip; runs with the engine),
   `office.js` (DOCX/PPTX/XLSX: segments from the Office Open XML parts, rebuild, HTML preview; runs with the engine),
   `slides.js` (PPTX preview: the slides drawn as PDF pages – background, shapes, pictures, tables, text in place; runs with the engine),
+  `pages.js` (page manager, engine side: a PDF or PPTX put together anew from reordered, removed, blank and copied pages/slides),
   `legacy.js` (OLE compound file reader; converts .doc/.xls/.ppt to the modern format on open),
   `doc.js`, `xls.js`, `ppt.js` (the three converters: Word 97–2003 → DOCX, BIFF8 → XLSX, PowerPoint 97–2003 → PPTX),
   `icon.svg` (app icon; the template embeds it as favicon and logo), `ui.js` (interface), `markup.js` (markup tools, page navigation, undo/redo), `tools.js`
   (moving/resizing fields, per-field style, full screen, passwords, OCR, comparison view), `picture.js`
-  (brightness, contrast, rotation and crop for an opened picture), `offline.js`
+  (brightness, contrast, rotation and crop for an opened picture), `pagesui.js` (the page manager dialog), `offline.js`
   (libraries stored in the browser for offline use), `main.js`
   (start-up). `standalone/Kameleon-<version>.html` is generated – do not edit it by hand.
 - `app.py`, `pdf_engine.py`, `static/` – the older server version (Flask + PyMuPDF).

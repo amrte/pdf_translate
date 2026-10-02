@@ -505,6 +505,7 @@ function openDocument(doc, bytes) {
   document.body.classList.toggle("is-book", isBook());
   document.body.classList.toggle("is-office", isOffice());
   document.body.classList.toggle("is-image", Boolean(doc.image));
+  document.body.classList.toggle("has-pages", pagesSupported());
   picDocumentChanged();
   setDocFormat(doc.image ? doc.image.label : FORMAT_LABEL[doc.kind || "pdf"]);
   document.title = `${doc.name} · Kameleon`;
@@ -636,7 +637,7 @@ function closeDocument() {
   $("#btnClose").hidden = true;
   $("#docName").textContent = "";
   document.title = "Kameleon";
-  document.body.classList.remove("is-book", "is-office", "is-image");
+  document.body.classList.remove("is-book", "is-office", "is-image", "has-pages");
   picDocumentChanged();
   setDocFormat("PDF");
 }

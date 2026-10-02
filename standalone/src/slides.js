@@ -813,8 +813,9 @@ class SlideRenderer {
 /* ---------------------------------------------------------------- the document */
 
 /** The slides as a PDF (one page per slide, then a page for each slide's notes). */
-function renderSlides(book, segments, translations = {}) {
+function renderSlides(book, segments, translations = {}, opts = {}) {
   const deck = book.deck;
+  deck.slidePages = []; // page index of each slide (notes pages come between)
   const doc = new M.PDFDocument();
   const fk = new FontKit(doc, { fontMode: "auto" });
   const images = new Map();
@@ -832,13 +833,14 @@ function renderSlides(book, segments, translations = {}) {
       free(page);
     };
     for (const sl of deck.slides) {
+      deck.slidePages.push(doc.countPages());
       if (!sl) { addPage("", new Set(), new Map()); continue; }
       const R = new SlideRenderer(doc, fk, images, deck, sl, (byFile.get(sl.fi) || []).sort((a, b) => a.s - b.s), translations, byFile);
       let content;
       try { content = R.render(); } catch (e) { content = R.ops.join("\n"); } // a damaged shape costs the rest of its slide, not the deck
       addPage(content, R.used, R.xobjs);
       // the slide's notes on a page of their own
-      const notes = sl.notesFi >= 0 ? (byFile.get(sl.notesFi) || []).filter((s) => /\S/.test(s.text)) : [];
+      const notes = sl.notesFi >= 0 && opts.notes !== false ? (byFile.get(sl.notesFi) || []).filter((s) => /\S/.test(s.text)) : [];
       if (notes.length) {
         const N = new SlideRenderer(doc, fk, images, deck, sl, notes, translations);
         const text = notes.map((s) => unescapeMarkers(shownText((translations[s.id] || "").trim() || s.text, s.tags).replace(/<\/?\d+\/?>/g, ""))).join("\n");

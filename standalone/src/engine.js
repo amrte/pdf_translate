@@ -2432,7 +2432,8 @@ function createHandler() {
   // edit: the translated document (an editable PDF, or the laid-out translated e-book);
   // editMap/editFk: the graft map from the original and the font kit of an editable PDF
   // (see updatePage); opened: the parse of an Office file made for its preview on "open".
-  const W = { doc: null, bytes: null, edit: null, editMap: null, editFk: null, kind: "pdf", book: null, opened: null, outBytes: null };
+  const W = { doc: null, bytes: null, edit: null, editMap: null, editFk: null, kind: "pdf", book: null, opened: null, outBytes: null, extras: [] };
+  const clearExtras = () => { for (const e of W.extras) free(e.doc); W.extras = []; }; // (files added in the page manager)
   const dropEdit = () => {
     if (W.editFk) W.editFk.dispose();
     free(W.editMap); free(W.edit);
@@ -2446,7 +2447,7 @@ function createHandler() {
       return { result: true };
     }
     if (cmd === "open") {
-      dropEdit(); free(W.doc);
+      dropEdit(); free(W.doc); clearExtras();
       W.doc = W.bytes = W.book = W.opened = W.outBytes = null;
       clearCaches(); // (fonts of another document with the same names are analysed afresh)
       const kind = args.kind || "pdf";
@@ -2473,6 +2474,35 @@ function createHandler() {
     if (cmd === "unlock") return { result: unlockPdf(args.bytes, args.password) };
     if (cmd === "convert") return { result: await convertLegacy(args.bytes, args.kind) }; // .doc/.xls/.ppt → .docx/.xlsx/.pptx
     if (cmd === "imageToPdf") { const r = imageToPdf(args.bytes); return { result: r, transfer: [r.bytes.buffer] }; }
+    // --- the page manager: extra files held here for thumbnails, then the file put together anew
+    if (cmd === "extraOpen") {
+      let doc;
+      if (args.kind === "pdf") {
+        doc = M.Document.openDocument(args.bytes.slice(), "application/pdf");
+        if (doc.needsPassword && doc.needsPassword()) { free(doc); throw new Error("The file is password-protected."); }
+      } else {
+        const opened = await openOffice(args.bytes, "pptx");
+        opened.segments.forEach((sg, i) => { sg.id = i + 1; });
+        doc = M.Document.openDocument(renderSlides(opened.book, opened.segments, {}, { notes: false }), "application/pdf");
+      }
+      const pages = [];
+      for (let i = 0; i < doc.countPages(); i++) { const pg = doc.loadPage(i); const b = pg.getBounds(); pages.push({ width: b[2] - b[0], height: b[3] - b[1] }); free(pg); }
+      W.extras.push({ bytes: args.bytes, kind: args.kind, doc });
+      return { result: { index: W.extras.length, pages } };
+    }
+    if (cmd === "extraRender") {
+      const e = W.extras[args.index - 1];
+      if (!e) throw new Error("No such file.");
+      const png = renderPNG(e.doc, args.page, args.zoom);
+      return { result: png.buffer, transfer: [png.buffer] };
+    }
+    if (cmd === "extraClear") { clearExtras(); return { result: true }; }
+    if (cmd === "pagesInfo") return { result: { slides: (W.book && W.book.deck && W.book.deck.slidePages) || null } };
+    if (cmd === "rearrange") {
+      if (!W.bytes) throw new Error("No document is open.");
+      const bytes = await rearrangeDocument(W.kind, W.bytes, args.plan, W.extras.map((e) => e.bytes));
+      return { result: bytes, transfer: [bytes.buffer] };
+    }
     if (cmd === "renderBytes") { // a page of a finished PDF (the translated picture) as PNG
       const doc = M.Document.openDocument(args.bytes, "application/pdf");
       try { const png = renderPNG(doc, args.page || 0, args.zoom); return { result: png.buffer, transfer: [png.buffer] }; } finally { free(doc); }
@@ -2549,7 +2579,7 @@ function createHandler() {
       return { result: true };
     }
     if (cmd === "close") {
-      dropEdit(); free(W.doc);
+      dropEdit(); free(W.doc); clearExtras();
       W.doc = W.bytes = W.book = W.opened = W.outBytes = null;
       clearCaches();
       return { result: true };

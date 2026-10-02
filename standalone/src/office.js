@@ -575,6 +575,7 @@ async function openOffice(bytes, kind) {
     book.deck = await collectDeck({ text, relsOf, byName, slides, addFile, pres, presRoot });
     for (const [i, sl] of book.deck.slides.entries()) {
       if (!sl) continue;
+      const before = segments.length;
       if (i) preview.push(pageBreak);
       preview.push(`<p class="slide-no">${label(String(i + 1))}</p>`);
       const tree = findAll(sl.root, (k) => k.name === "sptree")[0];
@@ -586,6 +587,7 @@ async function openOffice(bytes, kind) {
         const chunks = oxDrawing(nf.src, ntree, { file: nf.fi, out: segments, tag: "notes", notes: true });
         if (chunks.some((c) => typeof c === "object")) { preview.push('<div class="notes">', ...chunks, "</div>"); sl.notesFi = nf.fi; }
       }
+      for (let k = before; k < segments.length; k++) segments[k].slide = i; // (the page manager finds translations again by slide)
     }
   } else {
     const wbPath = mainPath;

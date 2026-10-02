@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.48
+
+- Pages of a PDF and slides of a presentation (PPTX, PPT) can be rearranged: the new "Arrange pages" button in the page view opens a grid of thumbnails where pages are dragged to another place, moved, swapped, removed, and blank pages or the pages of other files (PDF and pictures for a PDF, PPTX/PPT decks for a presentation) are inserted. Apply puts the file together anew and carries the translations of the kept pages over.
+
 ## 1.47
 
 - PowerPoint: the text of SmartArt diagrams is now translated. Each line of a diagram is a segment (marked "diagram") in the slide's order, the "Translated" view shows the translations inside the drawn diagram, and the rebuilt file carries them both in the diagram's data and in the stored drawing, so PowerPoint and other programs show the translation.

@@ -136,6 +136,7 @@
       <span class="zoom-label" id="zoomLabel">100%</span>
       <button class="icon-btn" id="zoomIn" data-i18n-title="zoom.in">+</button>
       <button class="icon-btn" id="zoomFit" data-i18n-title="zoom.fit"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5v14M21 5v14M7 12h10M10 9l-3 3 3 3M14 9l3 3-3 3"/></svg></button>
+      <button class="icon-btn pages-only" id="btnPages" data-i18n-title="pages.button"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="7" height="7" rx="1"/><rect x="14" y="4" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M17.5 14v7M14 17.5h7"/></svg></button>
       <button class="icon-btn" id="zoomPage" data-i18n-title="zoom.page"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3" width="12" height="18" rx="1.5"/><path d="M10 8h4M10 12h4M10 16h2"/></svg></button>
       <button class="icon-btn" id="btnFullscreen" data-i18n-title="view.fullscreen">
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path class="fs-on" d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/><path class="fs-off" d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg>
@@ -444,6 +445,22 @@
 </dialog>
 
 <!-- OCR dialog -->
+<dialog id="pagesDialog" class="modal" aria-labelledby="pagesTitle">
+  <form method="dialog">
+    <h2 id="pagesTitle" data-i18n="pages.title">Arrange pages</h2>
+    <p class="muted" data-i18n="pages.text"></p>
+    <div class="pages-grid" id="pagesGrid"></div>
+    <div class="modal-actions pages-actions">
+      <button type="button" class="btn" id="pagesAddBlank" data-i18n="pages.blank"></button>
+      <button type="button" class="btn" id="pagesAddFile" data-i18n="pages.fromFile"></button>
+      <span class="muted" id="pagesCount"></span>
+      <span class="spacer"></span>
+      <button value="cancel" class="btn ghost" data-i18n="common.cancel">Cancel</button>
+      <button value="ok" class="btn primary" id="pagesGo" data-i18n="pages.apply">Apply</button>
+    </div>
+  </form>
+</dialog>
+<input type="file" id="pagesFile" hidden multiple accept=".pdf,.pptx,.ppt,image/*">
 <dialog id="ocrDialog" class="modal" aria-labelledby="ocrTitle">
   <form method="dialog">
     <h2 id="ocrTitle" data-i18n="ocr.title">Text recognition (OCR)</h2>
