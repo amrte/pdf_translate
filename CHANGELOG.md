@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.97
+
+- PDF: the recognition of unknown maths-font glyphs is more robust – the two reading passes are matched by glyph position instead of order, the glyph is found by its position when drawn in isolation, and when it cannot be drawn alone its box is used instead. Glyphs that still stay unknown are reported in the browser console ("unknown glyphs"), with font, code and the nearest shape, for bug reports.
+
 ## 1.96
 
 - PDF: characters from maths fonts that have no Unicode value are now recognised by their drawn shape – Greek letters (φ, ε, θ, Ω, Δ …), the degree sign, primes and operators – instead of being guessed from the Symbol encoding, which gave "θC" for "°C", "M" for "φ" and "H" for "ε". Only the Symbol font itself is still read by its encoding.

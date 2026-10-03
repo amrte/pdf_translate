@@ -433,6 +433,7 @@ function glyphInk(page, u) {
     pix.clear(255);
     draw = new M.DrawDevice(M.Matrix.identity, pix);
     const toDevice = M.Matrix.scale(scale, scale);
+    let found = 0;
     const drawOnly = (text, ctm) => {
       const picked = new M.Text();
       let any = false;
@@ -440,7 +441,7 @@ function glyphInk(page, u) {
         text.walk({
           showGlyph(font, trm, gid, uni, wmode) {
             const x = ctm[0] * trm[4] + ctm[2] * trm[5] + ctm[4], y = ctm[1] * trm[4] + ctm[3] * trm[5] + ctm[5];
-            if (uni === 0xfffd && Math.abs(x - u.origin[0]) < 0.6 && Math.abs(y - u.origin[1]) < 0.6) { picked.showGlyph(font, trm, gid, uni, wmode); any = true; }
+            if (Math.abs(x - u.origin[0]) < 0.6 && Math.abs(y - u.origin[1]) < 0.6) { picked.showGlyph(font, trm, gid, uni, wmode); any = true; found++; }
           },
         });
         if (any) draw.fillText(picked, M.Matrix.concat(ctm, toDevice), M.ColorSpace.DeviceGray, [0], 1);
@@ -454,6 +455,13 @@ function glyphInk(page, u) {
     page.run(dev, M.Matrix.identity);
     try { dev.close(); } catch (_) { /* not needed */ }
     draw.close();
+    if (!found) { // the glyph was not reachable alone (drawn in another way): its box, neighbours included
+      free(draw); draw = null;
+      pix.clear(255);
+      draw = new M.DrawDevice(M.Matrix.identity, pix);
+      page.run(draw, toDevice);
+      draw.close();
+    }
     return inkFeatures(pix.getPixels(), w, h, u.origin[1] * scale - y0, em, 0, ((u.qb[0] + u.qb[2]) / 2) * scale - x0);
   } catch (_) {
     return null;
@@ -465,11 +473,12 @@ function glyphInk(page, u) {
 }
 
 /** The character an unknown glyph most likely is, by its shape; `prior` (from the Symbol encoding) wins a close call. */
-function recogniseGlyph(page, u, prior, maxDistance = 0.5) {
+function recogniseGlyph(page, u, prior, maxDistance = 0.5, why = {}) {
   if (!glyphTemplates) glyphTemplates = buildGlyphTemplates();
-  if (!glyphTemplates.length) return null;
+  if (!glyphTemplates.length) { why.note = "no templates"; return null; }
   const f = glyphInk(page, u);
-  if (!f) return null;
+  if (!f) { why.note = "no ink"; return null; }
+  why.h = +f.height.toFixed(2); why.above = +f.bottomAbove.toFixed(2);
   let best = null, second = null, priorD = Infinity;
   for (const tpl of glyphTemplates) {
     const d = glyphDistance(f, tpl);
@@ -477,6 +486,7 @@ function recogniseGlyph(page, u, prior, maxDistance = 0.5) {
     if (!best || d < best.d) { if (best && best.ch !== tpl.ch) second = best; best = { ch: tpl.ch, d }; }
     else if (tpl.ch !== best.ch && (!second || d < second.d)) second = { ch: tpl.ch, d };
   }
+  if (best) { why.best = best.ch; why.d = +best.d.toFixed(2); }
   if (!best || best.d > maxDistance) return null;
   if (prior && priorD <= best.d + 0.08) return prior;
   return best.ch;
@@ -493,15 +503,22 @@ function recoverUnknownChars(page, options, unknown, total) {
   let st2 = null;
   try {
     st2 = page.toStructuredText(`${options},use-cid-for-unknown-unicode`);
-    const want = new Map(unknown.map((u) => [u.idx, u]));
-    let i = -1, n = 0;
-    st2.walk({ onChar(c, origin, font) { i++; n++; free(font); const u = want.get(i); if (u) u.code = c.codePointAt(0); } });
-    if (n !== total) return; // (the passes differ: nothing can be aligned)
+    // The passes are aligned by glyph position (rounded to a quarter point); by order when
+    // the position is not found and both passes hold the same number of glyphs.
+    const posKey = (o) => `${Math.round(o[0] * 4)}|${Math.round(o[1] * 4)}`;
+    const byPos = new Map(), byIdx = [];
+    st2.walk({ onChar(c, origin, font) { free(font); const code = c.codePointAt(0); byIdx.push(code); if (c !== "\ufffd") byPos.set(posKey(origin), code); } });
+    for (const u of unknown) {
+      const code = byPos.get(posKey(u.origin));
+      if (code !== undefined) u.code = code;
+      else if (byIdx.length === total && byIdx[u.idx] !== undefined && byIdx[u.idx] !== 0xfffd) u.code = byIdx[u.idx];
+    }
+    const diag = { unknown: unknown.length, recovered: 0, samples: [] };
     const bySpan = new Map();
     for (const u of unknown) { if (!bySpan.has(u.span)) bySpan.set(u.span, []); bySpan.get(u.span).push(u); }
     for (const [span, list] of bySpan) {
       for (const u of list.sort((a, b) => b.at - a.at)) {
-        if (u.code === undefined) continue;
+        if (u.code === undefined) { if (diag.samples.length < 4) diag.samples.push({ font: span.font.name, code: null, note: "no code" }); continue; }
         const spans = u.line.spans, k = spans.indexOf(span);
         const before = spans.slice(0, k).map((sp) => sp.text).join("") + span.text.slice(0, u.at);
         const after = span.text.slice(u.at + 1) + spans.slice(k + 1).map((sp) => sp.text).join("");
@@ -511,8 +528,10 @@ function recoverUnknownChars(page, options, unknown, total) {
         const prior = symbolChar(u.code); // what the code means in the Symbol encoding
         // The Symbol font itself is read by its encoding; any other font by the drawn shape
         // (its codes mean whatever the font's designer chose), with the encoding as tiebreaker.
-        let mapped = u.symbolFont ? prior : recogniseGlyph(page, u, prior && prior.length === 1 ? prior : null, inWord ? 0.2 : 0.5);
-        if (!mapped || mapped.length !== 1 || mapped === "\ufffd") continue;
+        const why = {};
+        let mapped = u.symbolFont ? prior : recogniseGlyph(page, u, prior && prior.length === 1 ? prior : null, inWord ? 0.2 : 0.5, why);
+        if (!mapped || mapped.length !== 1 || mapped === "\ufffd") { if (diag.samples.length < 4) diag.samples.push({ font: span.font.name, code: u.code, ...why }); continue; }
+        diag.recovered++;
         if (mapped === "′" || mapped === "°") { // a small raised ring or stroke: degree before C/F/K or after a number, prime otherwise
           const prev = before.trimEnd().slice(-1), next = after.trimStart().charAt(0);
           mapped = /[CFK]/.test(next) || /\d/.test(prev) ? "°" : "′";
@@ -521,7 +540,8 @@ function recoverUnknownChars(page, options, unknown, total) {
         if (u.lig && span.fixes) span.fixes = span.fixes.filter((f) => f.at !== u.at); // (recognised: no ligature guess for it)
       }
     }
-  } catch (_) { /* an older engine without the option: the glyphs stay unknown */ } finally {
+    if (diag.recovered < diag.unknown) console.warn("unknown glyphs", JSON.stringify(diag)); // (what stayed unknown and why, for bug reports)
+  } catch (err) { console.warn("unknown glyphs: recovery failed", err); } finally {
     if (st2) free(st2);
   }
 }
