@@ -786,12 +786,17 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
 .kw-back .kw-fav.on { color: var(--accent); }
 .kw-fav .kam-ic { width: 22px; height: 22px; }
 .kw-cards { display: grid; gap: 14px; grid-template-rows: auto 1fr auto; align-items: stretch; }
+.kw-cards:has(> .kw-scope) { grid-template-rows: auto auto 1fr auto; } /* scope switch, progress, card, actions */
 .kw-cards:has(.kw-done), .kw-cards:has(> p) { grid-template-rows: 1fr; align-items: center; justify-items: center; }
+.kw-cards:has(> .kw-scope):is(:has(.kw-done), :has(> p)) { grid-template-rows: auto 1fr; }
 .kw-fc-nav, .kw-fc-judge { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; }
 .kw-fc-arrow { width: 50px; height: 44px; padding: 0; font-size: 26px; border-radius: 12px; justify-content: center; }
 .kw-fc-flip { min-width: 170px; height: 44px; font-size: 15px; border-radius: 12px; }
 .kw-fc-judge .btn { height: 36px; }
 .kw-progress { display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; }
+.kw-scope { display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap; }
+.kw-scope .seg-toggle button { padding: 3px 12px; font-size: 13px; }
+.kw-scope-reset { height: 28px; font-size: 12.5px; color: var(--muted); }
 .kw-card { perspective: 1200px; min-height: 220px; cursor: pointer; outline: none; }
 .kw-card:focus-visible .kw-card-inner { box-shadow: 0 0 0 3px var(--accent-soft), 0 0 0 5px var(--accent); }
 .kw-card-inner { position: relative; width: 100%; height: 100%; transition: transform .45s cubic-bezier(.2, .7, .2, 1); transform-style: preserve-3d; border-radius: 16px; }

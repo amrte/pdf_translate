@@ -142,28 +142,59 @@ function initKeywords() {
 /* ---------------------------------------------------------------- learning cards */
 // The terms as flashcards: front the term (with its example sentence), back the translation.
 // Click or Space turns a card; "Known" takes it out of the round, "Again" puts it at the end.
-const fc = { queue: [], index: 0, flipped: false, known: 0, total: 0 };
+const fc = { queue: [], index: 0, flipped: false, known: 0, total: 0, all: [], scope: "new" };
+const LS_FC_SCOPE = "pdftr:fcscope";
+/** The vocabulary remembers which words were marked known (how often, and when). */
+const rowKnown = (r) => Number(r.known) > 0;
+function fcScopeRows() { return fc.scope === "new" ? fc.all.filter((r) => !rowKnown(r)) : fc.all; }
+function fcSetScope(scope, remember = true) {
+  fc.scope = scope;
+  if (remember) try { localStorage.setItem(LS_FC_SCOPE, scope); } catch (_) { /* fine */ }
+  const rows = fcScopeRows();
+  fc.queue = rows.map((_, i) => i); fc.rows = rows; fc.index = 0; fc.flipped = false; fc.known = 0; fc.total = rows.length;
+  fcRender();
+}
 
 let fcSource = null, fcPair = ""; // rows other than the document's (the vocabulary) and their pair, while set
 function fcStart() {
   fc.pair = fcSource ? fcPair : currentPair();
-  const rows = (fcSource || kwRows()).filter((r) => r.term.trim() && r.translation.trim());
-  fc.queue = rows.map((_, i) => i); fc.rows = rows; fc.index = 0; fc.flipped = false; fc.known = 0; fc.total = rows.length;
-  fcRender();
+  let rows = (fcSource || kwRows()).filter((r) => r.term.trim() && r.translation.trim());
+  if (!fcSource && fc.pair) { // the document's terms: their learning state is kept in the vocabulary
+    const known = new Map(vocabRows(fc.pair).map((r) => [r.term, r.known || 0]));
+    rows = rows.map((r) => ({ ...r, known: known.get(r.term) || 0 }));
+  }
+  fc.all = rows;
+  let scope = "new";
+  try { scope = localStorage.getItem(LS_FC_SCOPE) || "new"; } catch (_) { /* fine */ }
+  if (scope === "new" && rows.length && !rows.some((r) => !rowKnown(r))) scope = "all"; // nothing new left: the whole set
+  fcSetScope(scope, false);
+}
+/** New words / the whole set, above the card; the number of words in each. */
+function fcScopeHtml() {
+  const fresh = fc.all.filter((r) => !rowKnown(r)).length, known = fc.all.length - fresh;
+  if (!fc.all.length) return "";
+  return `<div class="kw-scope">
+    <div class="seg-toggle" role="group" title="${escapeHtml(t("kw.scopeTitle"))}">
+      <button type="button" class="${fc.scope === "new" ? "active" : ""}" data-fc="scope-new"${fresh ? "" : " disabled"}>${escapeHtml(t("kw.scopeNew", { n: fresh }))}</button>
+      <button type="button" class="${fc.scope === "all" ? "active" : ""}" data-fc="scope-all">${escapeHtml(t(fcSource ? "kw.scopeAll" : "kw.scopeAllDoc", { n: fc.all.length }))}</button>
+    </div>
+    ${known ? `<button type="button" class="btn ghost kw-scope-reset" data-fc="reset" title="${escapeHtml(t("kw.resetTitle"))}">${escapeHtml(t("kw.reset", { n: known }))}</button>` : ""}
+  </div>`;
 }
 function fcShuffle() { for (let i = fc.queue.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [fc.queue[i], fc.queue[j]] = [fc.queue[j], fc.queue[i]]; } fc.index = 0; fc.flipped = false; fcRender(); }
 function fcRender() {
   const box = $("#kwCards");
-  if (!fc.total) { box.innerHTML = `<p class="muted small">${escapeHtml(t("kw.noCards"))}</p>`; return; }
+  const scope = fcScopeHtml();
+  if (!fc.total) { box.innerHTML = `${scope}<p class="muted small">${escapeHtml(t(fc.all.length ? "kw.noNew" : "kw.noCards"))}</p>`; return; }
   if (!fc.queue.length) {
-    box.innerHTML = `<div class="kw-done"><div class="kw-done-text">${escapeHtml(t("kw.allDone"))}</div><button type="button" class="btn primary" data-fc="restart">${escapeHtml(t("kw.restart"))}</button></div>`;
-    box.querySelector("[data-fc]").focus({ preventScroll: true });
+    box.innerHTML = `${scope}<div class="kw-done"><div class="kw-done-text">${escapeHtml(t("kw.allDone"))}</div><button type="button" class="btn primary" data-fc="restart">${escapeHtml(t("kw.restart"))}</button></div>`;
+    box.querySelector(".kw-done [data-fc]").focus({ preventScroll: true });
     return;
   }
   const r = fc.rows[fc.queue[fc.index]];
   const pair = r._pair || fc.pair, fav = pair ? isFav(pair, r.term) : false;
   const favBtn = `<button type="button" class="kw-fav${fav ? " on" : ""}" data-fc="fav" title="${escapeHtml(t("vocab.favTitle"))}" aria-label="${escapeHtml(t("vocab.fav"))}" aria-pressed="${fav ? "true" : "false"}"${pair ? "" : " disabled"}>${KAM_ICON}</button>`;
-  box.innerHTML = `
+  box.innerHTML = `${scope}
     <div class="kw-progress"><span>${escapeHtml(t("kw.progress", { i: fc.index + 1, n: fc.queue.length }))}</span><span class="muted">${escapeHtml(t("kw.knownCount", { n: fc.known, total: fc.total }))}</span></div>
     <div class="kw-card${fc.flipped ? " flipped" : ""}" tabindex="0" role="button" aria-label="${escapeHtml(t("kw.flip"))}" data-fc="flip">
       <div class="kw-card-inner">
@@ -187,6 +218,14 @@ function fcRender() {
   (box.querySelector(".kw-card") || box.querySelector("[data-fc]"))?.focus({ preventScroll: true });
 }
 function fcAction(act) {
+  if (act === "scope-new" || act === "scope-all") { fcSetScope(act.slice(6)); return; }
+  if (act === "reset") { // the learning state of these words is forgotten: all of them are new again
+    const known = fc.all.filter(rowKnown);
+    if (!known.length || !confirm(t("kw.resetConfirm", { n: known.length }))) return;
+    for (const r of known) { if (r._pair || fc.pair) vocabMarkKnown(r._pair || fc.pair, r.term, 0); r.known = 0; }
+    fcSetScope("new");
+    return;
+  }
   if (!fc.queue.length && act !== "restart") return;
   if (act === "flip") { fc.flipped = !fc.flipped; $("#kwCards .kw-card")?.classList.toggle("flipped", fc.flipped); return; }
   if (act === "fav") { // the chameleon: this card into the favourites (and out again)
@@ -199,7 +238,11 @@ function fcAction(act) {
   }
   if (act === "next") fc.index = (fc.index + 1) % fc.queue.length;
   else if (act === "prev") fc.index = (fc.index - 1 + fc.queue.length) % fc.queue.length;
-  else if (act === "known") { fc.queue.splice(fc.index, 1); fc.known++; if (fc.index >= fc.queue.length) fc.index = 0; }
+  else if (act === "known") {
+    const r = fc.rows[fc.queue[fc.index]], pair = r._pair || fc.pair;
+    if (pair) r.known = vocabMarkKnown(pair, r.term); // (remembered: the word is not "new" any more)
+    fc.queue.splice(fc.index, 1); fc.known++; if (fc.index >= fc.queue.length) fc.index = 0;
+  }
   else if (act === "again") { const [i] = fc.queue.splice(fc.index, 1); fc.queue.push(i); if (fc.index >= fc.queue.length) fc.index = 0; }
   else if (act === "shuffle") { fcShuffle(); return; }
   else if (act === "restart") { fcStart(); return; }
@@ -207,8 +250,8 @@ function fcAction(act) {
   fcRender();
 }
 function kwSetMode(mode) {
+  if (!state.doc && mode !== "vocab" && !(mode === "cards" && fcSource)) mode = "vocab"; // without a document: the vocabulary, and cards made from it
   const cards = mode === "cards", vocab = mode === "vocab";
-  if (!state.doc && !vocab) mode = "vocab"; // without a document only the vocabulary is there
   $("#kwDialog").dataset.mode = mode;
   $("#kwModeList").classList.toggle("active", mode === "list");
   $("#kwModeCards").classList.toggle("active", cards);

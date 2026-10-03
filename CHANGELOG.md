@@ -4,6 +4,11 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.82
+
+- Flashcards started from the vocabulary on the start screen (no document open) work again: the window switched straight back to the vocabulary and the cards stayed hidden.
+- Flashcards: a switch above the card chooses between the new words and the whole vocabulary (or all terms of the document). "Known" is remembered in the vocabulary, so a word marked known once is no longer new; the choice is kept, and "Reset learning state" makes the words new again.
+
 ## 1.81
 
 - The "Learn" button has moved from the editor toolbar into the top bar, left of "Help". It is there on the start screen too and opens the vocabulary when no document is open; the separate "Vocabulary" button of the start screen is gone.

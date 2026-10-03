@@ -262,6 +262,20 @@ function vocabUpdateRow(pair, termKey, k, value) {
   v[pair] = list;
   vocabSave(v);
 }
+/**
+ * A word marked "known" on a flashcard: the count goes up and the time is noted (count 0 resets
+ * it). Returns the new count; a word that is not in the pair's vocabulary stays unrecorded (0).
+ */
+function vocabMarkKnown(pair, term, count = null) {
+  const v = vocabLoad(), list = v[pair] || [];
+  const row = list.find((r) => r.term === term);
+  if (!row) return 0;
+  row.known = count === null ? (Number(row.known) || 0) + 1 : count;
+  row.last = Date.now();
+  v[pair] = list;
+  vocabSave(v);
+  return row.known;
+}
 /** The exports take the rows as shown: the whole pair, the favourites, or a search's hits. */
 async function vocabPdfBytes() {
   const rows = vocabFiltered();
