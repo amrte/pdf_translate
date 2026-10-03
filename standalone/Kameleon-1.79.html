@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="Kameleon 1.78">
+  <meta name="generator" content="Kameleon 1.79">
   <meta name="description" content="Kameleon – Wechselt die Sprache, behält die Form. Changes language, keeps its shape.">
   <title>Kameleon</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2216%22 fill=%22%23287130%22/%3E%3Cg transform=%22translate(2.5 1) scale(0.9)%22 fill=%22%23ffffff%22 stroke=%22%23ffffff%22%3E%3Cpath d=%22M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6%22 fill=%22none%22 stroke-width=%223.8%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M21 43l-1 10M30 44v9M38 43l1 10%22 stroke-width=%223.6%22 stroke-linecap=%22round%22/%3E%3Cellipse cx=%2221%22 cy=%2225%22 rx=%227%22 ry=%227.5%22 stroke=%22none%22/%3E%3Cellipse cx=%2233%22 cy=%2223.5%22 rx=%227.5%22 ry=%228%22 stroke=%22none%22/%3E%3Cpath d=%22M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z%22 stroke=%22none%22/%3E%3Cpath d=%22M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z%22 stroke=%22none%22/%3E%3Cpath d=%22M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z%22 stroke=%22none%22/%3E%3Cpath d=%22M16 37l4-3 4 3 4-3 4 3 4-3 4 3%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%222.1%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3Cpath d=%22M43.5 33.9L57 32.6%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%221.5%22 stroke-linecap=%22round%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%224.4%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%222.7%22 stroke=%22none%22/%3E%3Ccircle cx=%2246.2%22 cy=%2226.7%22 r=%221.3%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Cpath d=%22M4 55.5c15-3 39-3 54 0%22 fill=%22none%22 stroke-width=%222.4%22 stroke-linecap=%22round%22/%3E%3C/g%3E%3C/svg%3E">
@@ -299,9 +299,11 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); ou
 kbd { font: 11.5px ui-monospace, monospace; border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; background: var(--surface-2); }
 .ai-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px 16px; align-items: center; }
 .ai-grid label:not(.check) { display: flex; flex-direction: column; gap: 4px; font-weight: 550; }
-.ai-grid input, .field input { font: inherit; color: var(--text); background: var(--surface-2); border: 1px solid var(--border); border-radius: 7px; padding: 6px 9px; font-weight: 400; }
+.ai-grid input, .ai-checks input[type="number"], .field input { font: inherit; color: var(--text); background: var(--surface-2); border: 1px solid var(--border); border-radius: 7px; padding: 6px 9px; font-weight: 400; }
 .ai-grid .range { display: flex; align-items: center; gap: 6px; font-weight: 400; }
 .ai-grid .range input { width: 80px; }
+.ai-checks { display: flex; flex-wrap: wrap; gap: 8px 22px; align-items: center; } /* the tick boxes in a row of their own, under the fields */
+.ai-checks .check { white-space: nowrap; }
 #helpDialog { max-height: calc(100vh - 40px); }
 .offline-part { border-top: 1px solid var(--border); padding-top: 14px; gap: 8px; }
 .offline-title { margin: 0; font-size: 15px; }
@@ -335,7 +337,7 @@ kbd { font: 11.5px ui-monospace, monospace; border: 1px solid var(--border); bor
 .version { font-size: 11px; color: var(--muted); font-weight: 500; }
 .help-version { margin-top: 4px; }
 .help-part, .ai-part { display: flex; flex-direction: column; gap: 12px; }
-p.help-part, button.ai-part { display: block; }
+p.help-part { display: block; }
 #helpDialog.mode-ai .help-part, #helpDialog.mode-help .ai-part { display: none; }
 #helpDialog.mode-help { width: min(720px, calc(100% - 32px)); }
 .modal-x {
@@ -425,6 +427,7 @@ body.viewer-only #btnFullscreen .fs-off { display: inline; }
 .ai-left, .ai-right { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 .ai-right { border-left: 1px solid var(--border); padding-left: 24px; }
 .ai-right-title { margin: 0; font-size: 15px; }
+.ai-left-actions { display: flex; justify-content: flex-end; margin-top: auto; } /* "Copy prompt only" at the foot of the left column */
 .ai-right #aiPasteArea { flex: 1; min-height: 160px; resize: vertical; }
 .ai-import-row { display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
 #aiImportStatus:empty { display: none; }
@@ -821,7 +824,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
   <div class="brand">
     <span class="logo"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#287130"/><g transform="translate(2.5 1) scale(0.9)" fill="#ffffff" stroke="#ffffff"><path d="M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6" fill="none" stroke-width="3.8" stroke-linecap="round"/><path d="M21 43l-1 10M30 44v9M38 43l1 10" stroke-width="3.6" stroke-linecap="round"/><ellipse cx="21" cy="25" rx="7" ry="7.5" stroke="none"/><ellipse cx="33" cy="23.5" rx="7.5" ry="8" stroke="none"/><path d="M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z" stroke="none"/><path d="M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z" stroke="none"/><path d="M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z" stroke="none"/><path d="M16 37l4-3 4 3 4-3 4 3 4-3 4 3" fill="none" stroke="#287130" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M43.5 33.9L57 32.6" fill="none" stroke="#287130" stroke-width="1.5" stroke-linecap="round"/><circle cx="45.5" cy="26.5" r="4.4" fill="#287130" stroke="none"/><circle cx="45.5" cy="26.5" r="2.7" stroke="none"/><circle cx="46.2" cy="26.7" r="1.3" fill="#287130" stroke="none"/><path d="M4 55.5c15-3 39-3 54 0" fill="none" stroke-width="2.4" stroke-linecap="round"/></g></svg></span>
     <span class="brand-name">Kameleon</span>
-    <span class="version" id="appVersion">v1.78</span>
+    <span class="version" id="appVersion">v1.79</span>
   </div>
   <div class="topbar-actions">
     <span class="doc-name" id="docName"></span>
@@ -1014,7 +1017,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
         <span data-i18n="tb.copy">Copy</span>
       </button>
-      <button class="btn" id="btnAi" data-i18n-title="tb.aiTitle">
+      <button class="btn primary" id="btnAi" data-i18n-title="tb.aiTitle">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>
         <span data-i18n="tb.ai">AI</span>
       </button>
@@ -1205,6 +1208,8 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
       <label><span data-i18n="lang.target">Target language</span> <input id="aiTarget" data-i18n-placeholder="ai.targetPh"></label>
       <label><span data-i18n="ai.pages">Pages</span> <span class="range"><input id="aiFrom" type="number" min="1" value="1"> – <input id="aiTo" type="number" min="1"></span></label>
       <label><span data-i18n="ai.partSize">Segments per part</span> <input id="aiPartSize" type="number" min="20" step="1" value="1000"></label>
+    </div>
+    <div class="ai-checks">
       <label class="check"><input type="checkbox" id="aiOnlyTodo"> <span data-i18n="ai.onlyTodo"></span></label>
       <label class="check pptx-only"><input type="checkbox" id="aiHidden"> <span data-i18n="ai.hidden"></span></label>
       <label class="check pptx-only" data-i18n-title="ai.notesTitle"><input type="checkbox" id="aiNotes"> <span data-i18n="ai.notes"></span></label>
@@ -1221,6 +1226,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
     <p class="muted small" id="aiStats"></p>
     <div class="ai-parts-head"><b data-i18n="ai.parts">Copy prompt + text</b> <span class="muted small" data-i18n="ai.partsHint"></span></div>
     <div class="ai-parts" id="aiParts"></div>
+    <div class="ai-left-actions"><button type="button" class="btn" id="aiCopyPrompt" data-i18n="ai.copyPrompt">Copy prompt only</button></div>
     </div>
     <div class="ai-right">
       <h3 class="ai-right-title" data-i18n="ai.answer">AI answer</h3>
@@ -1258,9 +1264,8 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
     </div>
     <input type="file" id="offlineZip" class="visually-hidden" accept=".zip,application/zip" multiple tabindex="-1">
     <input type="file" id="offlineFolder" class="visually-hidden" webkitdirectory multiple tabindex="-1">
-    <p class="muted small help-version help-part">Kameleon v1.78 · <span data-i18n="app.tagline"></span></p>
+    <p class="muted small help-version help-part">Kameleon v1.79 · <span data-i18n="app.tagline"></span></p>
     <div class="modal-actions">
-      <button type="button" class="btn ai-part" id="aiCopyPrompt" data-i18n="ai.copyPrompt">Copy prompt only</button>
       <button type="button" value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
     </div>
   </form>
@@ -14618,7 +14623,7 @@ function initPicture() {
 // from its own browser cache before the network, so language files are written into that cache.
 // ======================================================================
 
-const APP_VERSION = "1.78";
+const APP_VERSION = "1.79";
 // (a change of library version makes a stored set outdated: it is then ignored)
 const OFFLINE_VERSION = `${MUPDF_URL} ${OCR_LIB}`;
 const CORE_SIMD = "tesseract-core-simd-lstm.wasm.js", CORE_PLAIN = "tesseract-core-lstm.wasm.js";

@@ -209,7 +209,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
         <span data-i18n="tb.copy">Copy</span>
       </button>
-      <button class="btn" id="btnAi" data-i18n-title="tb.aiTitle">
+      <button class="btn primary" id="btnAi" data-i18n-title="tb.aiTitle">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>
         <span data-i18n="tb.ai">AI</span>
       </button>
@@ -400,6 +400,8 @@
       <label><span data-i18n="lang.target">Target language</span> <input id="aiTarget" data-i18n-placeholder="ai.targetPh"></label>
       <label><span data-i18n="ai.pages">Pages</span> <span class="range"><input id="aiFrom" type="number" min="1" value="1"> – <input id="aiTo" type="number" min="1"></span></label>
       <label><span data-i18n="ai.partSize">Segments per part</span> <input id="aiPartSize" type="number" min="20" step="1" value="1000"></label>
+    </div>
+    <div class="ai-checks">
       <label class="check"><input type="checkbox" id="aiOnlyTodo"> <span data-i18n="ai.onlyTodo"></span></label>
       <label class="check pptx-only"><input type="checkbox" id="aiHidden"> <span data-i18n="ai.hidden"></span></label>
       <label class="check pptx-only" data-i18n-title="ai.notesTitle"><input type="checkbox" id="aiNotes"> <span data-i18n="ai.notes"></span></label>
@@ -416,6 +418,7 @@
     <p class="muted small" id="aiStats"></p>
     <div class="ai-parts-head"><b data-i18n="ai.parts">Copy prompt + text</b> <span class="muted small" data-i18n="ai.partsHint"></span></div>
     <div class="ai-parts" id="aiParts"></div>
+    <div class="ai-left-actions"><button type="button" class="btn" id="aiCopyPrompt" data-i18n="ai.copyPrompt">Copy prompt only</button></div>
     </div>
     <div class="ai-right">
       <h3 class="ai-right-title" data-i18n="ai.answer">AI answer</h3>
@@ -455,7 +458,6 @@
     <input type="file" id="offlineFolder" class="visually-hidden" webkitdirectory multiple tabindex="-1">
     <p class="muted small help-version help-part">Kameleon v{{VERSION}} · <span data-i18n="app.tagline"></span></p>
     <div class="modal-actions">
-      <button type="button" class="btn ai-part" id="aiCopyPrompt" data-i18n="ai.copyPrompt">Copy prompt only</button>
       <button type="button" value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
     </div>
   </form>

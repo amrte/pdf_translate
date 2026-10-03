@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.79
+
+- Translate with AI: the "Copy prompt only" button has moved into the left column, under the part buttons; only "Close" remains at the bottom right. The tick boxes ("Only segments without a translation", the term list and the PowerPoint options) sit in a row of their own under the fields instead of being squeezed beside them. The "AI" button in the toolbar is shown in the theme colour.
+
 ## 1.78
 
 - Translate with AI: the window has two columns now. The prompt, its settings and the part buttons sit on the left; on the right the AI's answer is pasted or dropped as a file and imported straight away, with the same "replace translations already entered" option as the Import window. The window stays open, so a big document can be sent and imported part by part; a part whose segments are all translated is shown in green. The Close button sits at the right end of the window.
