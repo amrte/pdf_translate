@@ -4,6 +4,11 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.91
+
+- Words: a "Word groups" view lists the pairs and triples of words that repeat in the document (such as "in Betrieb nehmen"), with their counts and passages; they are selected and sent to the AI like single words.
+- Words: the list can be sorted by frequency, alphabetically or in the order of first occurrence, and narrowed to the selected entries.
+
 ## 1.90
 
 - Flashcards: the example sentence on the front is shown as a gap by default (the word blanked out), or whole, or not at all – chosen above the card and remembered. The back always shows it whole.

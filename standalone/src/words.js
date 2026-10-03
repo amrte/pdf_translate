@@ -4,7 +4,8 @@
  * example sentences, and pastes the answer back: the words become keywords and vocabulary, and
  * flashcards. The list is computed once per document and kept while it is open.
  */
-const wd = { docId: null, rows: [], lang: "", sel: new Set(), query: "", hideKnown: true };
+const wd = { docId: null, rows: [], phrases: [], lang: "", sel: new Set(), query: "", hideKnown: true, view: "words", sort: "count", selOnly: false };
+const PHRASE_MIN = 2; // a word group counts from this many occurrences
 const WORD_RE = /\p{L}[\p{L}\p{M}'’­-]*/gu;
 const CJK_RE = /[぀-ヿ一-鿿가-힯]/;
 const WORDS_SHOWN = 400; // (rows beyond that are reachable through the search)
@@ -47,39 +48,68 @@ function wordsSnippet(text, pos, len) {
   return `${a > 0 ? "…" : ""}${text.slice(a, b).trim()}${b < text.length ? "…" : ""}`;
 }
 
+/**
+ * Words and word groups of the document. Every segment is cut into tokens; a token that is
+ * not a function word is counted as a word. Two or three tokens that follow each other with
+ * nothing but spaces between them form a word group when the first and the last are not
+ * function words and the group occurs at least twice; a pair that only ever occurs inside a
+ * group of three is left out.
+ */
 function wordsCompute() {
   const segs = (state.doc.segments || []).filter((s) => !s.skip && !s.hidden && !s.notes);
   const lang = detectLanguage(segs.slice(0, 300).map(wordsText).join(" ")) || "";
   const stop = new Set(`${STOPWORDS[lang] || ""} ${WORD_STOP[lang] || ""}`.toLowerCase().split(/\s+/).filter(Boolean));
-  const counts = new Map(); // lower-cased word -> { forms, n, seg, pos }
+  const counts = new Map(), groups = new Map(); // lower-cased key -> { forms, n, seg, pos, len, first }
+  let seq = 0;
+  const hit = (map, key, form, s, pos, len, text) => {
+    let e = map.get(key);
+    if (!e) map.set(key, e = { forms: new Map(), n: 0, seg: s, pos, len, first: seq++ });
+    else if (wordsText(e.seg).length < 40 && text.length >= 40) { e.seg = s; e.pos = pos; e.len = len; } // a passage rather than a heading
+    e.n++;
+    e.forms.set(form, (e.forms.get(form) || 0) + 1);
+  };
   for (const s of segs) {
     const text = wordsText(s);
+    const toks = [];
     for (const m of text.matchAll(WORD_RE)) {
       const form = m[0].replace(/^[-'’­]+|[-'’­]+$/g, "");
-      if (!form || (form.length < 3 && !CJK_RE.test(form))) continue;
-      const key = form.toLowerCase();
-      if (stop.has(key)) continue;
-      let e = counts.get(key);
-      if (!e) counts.set(key, e = { forms: new Map(), n: 0, seg: s, pos: m.index, len: form.length });
-      else if (wordsText(e.seg).length < 40 && text.length >= 40) { e.seg = s; e.pos = m.index; e.len = form.length; } // a passage rather than a heading
-      e.n++;
-      e.forms.set(form, (e.forms.get(form) || 0) + 1);
+      if (!form) continue;
+      const key = form.toLowerCase(), small = form.length < 3 && !CJK_RE.test(form);
+      toks.push({ form, key, start: m.index, end: m.index + m[0].length, stop: stop.has(key) || small });
+      if (small || stop.has(key)) continue;
+      hit(counts, key, form, s, m.index, form.length, text);
+    }
+    const adjacent = (a, b) => /^\s+$/.test(text.slice(a.end, b.start));
+    for (let i = 0; i < toks.length; i++) {
+      const a = toks[i], b = toks[i + 1], c = toks[i + 2];
+      if (!b || a.stop || !adjacent(a, b)) continue;
+      if (!b.stop) hit(groups, `${a.key} ${b.key}`, `${a.form} ${b.form}`, s, a.start, b.end - a.start, text);
+      if (c && !c.stop && adjacent(b, c)) hit(groups, `${a.key} ${b.key} ${c.key}`, `${a.form} ${b.form} ${c.form}`, s, a.start, c.end - a.start, text);
     }
   }
-  wd.rows = [...counts.entries()].map(([key, e]) => {
-    const word = [...e.forms.entries()].sort((a, b) => b[1] - a[1])[0][0]; // the most frequent spelling
-    return { key, word, n: e.n, snippet: wordsSnippet(wordsText(e.seg), e.pos, e.len) };
-  }).sort((a, b) => b.n - a.n || a.key.localeCompare(b.key));
+  const toRow = ([key, e]) => ({ key, word: [...e.forms.entries()].sort((a, b) => b[1] - a[1])[0][0], n: e.n, first: e.first, snippet: wordsSnippet(wordsText(e.seg), e.pos, e.len) });
+  wd.rows = [...counts.entries()].map(toRow);
+  const triples = [...groups.entries()].filter(([k, e]) => k.split(" ").length === 3 && e.n >= PHRASE_MIN);
+  const inTriple = new Map(); // pair -> occurrences inside counted triples
+  for (const [k, e] of triples) { const w = k.split(" "); for (const pr of [`${w[0]} ${w[1]}`, `${w[1]} ${w[2]}`]) inTriple.set(pr, (inTriple.get(pr) || 0) + e.n); }
+  wd.phrases = [...groups.entries()].filter(([k, e]) => e.n >= PHRASE_MIN && (k.split(" ").length === 3 || e.n > (inTriple.get(k) || 0))).map(toRow);
   wd.lang = lang;
   wd.docId = state.doc.id;
   wd.sel.clear();
 }
 
+/** The rows of the current view (words or word groups), narrowed and sorted as chosen. */
 function wordsVisible() {
   const q = wd.query.trim().toLowerCase(), known = wordsKnown();
-  for (const r of wd.rows) r.known = known.has(r.key);
-  return wd.rows.filter((r) => (!wd.hideKnown || !r.known) && (!q || r.key.includes(q)));
+  const all = wd.view === "phrases" ? wd.phrases : wd.rows;
+  for (const r of all) r.known = known.has(r.key);
+  const rows = all.filter((r) => (!wd.hideKnown || !r.known) && (!wd.selOnly || wd.sel.has(r.key)) && (!q || r.key.includes(q)));
+  if (wd.sort === "alpha") rows.sort((a, b) => a.key.localeCompare(b.key, undefined, { sensitivity: "base" }));
+  else if (wd.sort === "first") rows.sort((a, b) => a.first - b.first);
+  else rows.sort((a, b) => b.n - a.n || a.key.localeCompare(b.key));
+  return rows;
 }
+const wordsAll = () => [...wd.rows, ...wd.phrases];
 
 function wordsRender() {
   if (!state.doc) return;
@@ -95,7 +125,10 @@ function wordsRender() {
       <span class="words-snip">${escapeHtml(r.snippet)}</span>
     </label>`).join("") + (rows.length > shown.length ? `<p class="muted small">${escapeHtml(t("words.more", { n: rows.length - shown.length }))}</p>` : "")
     : `<p class="muted small">${escapeHtml(t("words.empty"))}</p>`;
-  $("#wordsCount").textContent = t("words.count", { n: rows.length, total: wd.rows.length, sel: wd.sel.size });
+  $("#wordsCount").textContent = t(wd.view === "phrases" ? "words.countPhrases" : "words.count", { n: rows.length, total: (wd.view === "phrases" ? wd.phrases : wd.rows).length, sel: wd.sel.size });
+  $("#wordsViewWords").classList.toggle("active", wd.view === "words");
+  $("#wordsViewPhrases").classList.toggle("active", wd.view === "phrases");
+  $("#wordsViewPhrases").textContent = t("words.viewPhrases", { n: wd.phrases.length });
   $("#wordsPrompt").disabled = !wd.sel.size;
   $("#wordsPrompt").textContent = t("words.prompt", { n: wd.sel.size });
   $("#wordsCards").disabled = !(state.keywords || []).some((r) => r.term.trim() && r.translation.trim());
@@ -106,7 +139,7 @@ function wordsPromptText() {
   const P = AI_PROMPT[LANG] || AI_PROMPT.en;
   const target = $("#aiTarget").value.trim() || P.target;
   const context = $("#aiContext").value.trim();
-  const rows = wd.rows.filter((r) => wd.sel.has(r.key));
+  const rows = wordsAll().filter((r) => wd.sel.has(r.key));
   const lines = [P.words(target, rows.length)];
   if (context) lines.push("", P.context(context.replace(/\.$/, "")));
   lines.push("", P.wordsList, ...rows.map((r) => `${r.word} — „${r.snippet}“`));
@@ -133,11 +166,15 @@ function initWords() {
     if (!cb) return;
     if (cb.checked) wd.sel.add(cb.dataset.key); else wd.sel.delete(cb.dataset.key);
     cb.closest(".words-row").classList.toggle("sel", cb.checked);
-    $("#wordsCount").textContent = t("words.count", { n: wordsVisible().length, total: wd.rows.length, sel: wd.sel.size });
+    $("#wordsCount").textContent = t(wd.view === "phrases" ? "words.countPhrases" : "words.count", { n: wordsVisible().length, total: (wd.view === "phrases" ? wd.phrases : wd.rows).length, sel: wd.sel.size });
     $("#wordsPrompt").disabled = !wd.sel.size;
     $("#wordsPrompt").textContent = t("words.prompt", { n: wd.sel.size });
   });
   $("#wordsSearch").addEventListener("input", (e) => { wd.query = e.target.value; wordsRender(); });
+  $("#wordsViewWords").addEventListener("click", () => { wd.view = "words"; wordsRender(); });
+  $("#wordsViewPhrases").addEventListener("click", () => { wd.view = "phrases"; wordsRender(); });
+  $("#wordsSort").addEventListener("change", (e) => { wd.sort = e.target.value; wordsRender(); });
+  $("#wordsSelOnly").addEventListener("change", (e) => { wd.selOnly = e.target.checked; wordsRender(); });
   $("#wordsHideKnown").addEventListener("change", (e) => { wd.hideKnown = e.target.checked; wordsRender(); });
   $("#wordsSelectTop").addEventListener("click", () => { // the most frequent words still shown and not yet in the vocabulary
     const n = Math.max(1, Number($("#wordsTopN").value) || 30);

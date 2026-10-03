@@ -576,8 +576,15 @@
     <div class="kw-words-wrap kw-body kw-words-only">
       <div class="words-left">
         <div class="words-bar">
+          <div class="seg-toggle words-view" role="group"><button type="button" class="active" id="wordsViewWords" data-i18n="words.viewWords"></button><button type="button" id="wordsViewPhrases"></button></div>
           <input type="search" id="wordsSearch" data-i18n-placeholder="words.search" autocomplete="off">
+          <select id="wordsSort" data-i18n-aria="words.sort">
+            <option value="count" data-i18n="words.sortCount"></option>
+            <option value="alpha" data-i18n="words.sortAlpha"></option>
+            <option value="first" data-i18n="words.sortFirst"></option>
+          </select>
           <label class="check"><input type="checkbox" id="wordsHideKnown" checked> <span data-i18n="words.hideKnown"></span></label>
+          <label class="check"><input type="checkbox" id="wordsSelOnly"> <span data-i18n="words.selOnly"></span></label>
           <span class="muted small" id="wordsCount"></span>
           <span class="spacer"></span>
           <input type="number" id="wordsTopN" class="kw-n" min="1" max="500" value="30" data-i18n-aria="words.topN">

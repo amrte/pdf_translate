@@ -765,7 +765,9 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
 .kw-words-wrap { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 16px; align-items: stretch; min-height: 0; }
 .words-left { display: flex; flex-direction: column; gap: 10px; min-height: 0; min-width: 0; }
 .words-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.words-bar #wordsSearch { width: 200px; height: 32px; }
+.words-bar #wordsSearch { width: 170px; height: 32px; }
+.words-bar #wordsSort { height: 32px; padding: 0 8px; font: inherit; }
+.words-view button { padding: 3px 10px; font-size: 13px; }
 .words-bar #wordsTopN { width: 70px; height: 32px; }
 .words-bar .btn { height: 32px; }
 .words-list { flex: 1; gap: 6px; }

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="Kameleon 1.90">
+  <meta name="generator" content="Kameleon 1.91">
   <meta name="description" content="Kameleon – Wechselt die Sprache, behält die Form. Changes language, keeps its shape.">
   <title>Kameleon</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2216%22 fill=%22%23287130%22/%3E%3Cg transform=%22translate(2.5 1) scale(0.9)%22 fill=%22%23ffffff%22 stroke=%22%23ffffff%22%3E%3Cpath d=%22M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6%22 fill=%22none%22 stroke-width=%223.8%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M21 43l-1 10M30 44v9M38 43l1 10%22 stroke-width=%223.6%22 stroke-linecap=%22round%22/%3E%3Cellipse cx=%2221%22 cy=%2225%22 rx=%227%22 ry=%227.5%22 stroke=%22none%22/%3E%3Cellipse cx=%2233%22 cy=%2223.5%22 rx=%227.5%22 ry=%228%22 stroke=%22none%22/%3E%3Cpath d=%22M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z%22 stroke=%22none%22/%3E%3Cpath d=%22M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z%22 stroke=%22none%22/%3E%3Cpath d=%22M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z%22 stroke=%22none%22/%3E%3Cpath d=%22M16 37l4-3 4 3 4-3 4 3 4-3 4 3%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%222.1%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3Cpath d=%22M43.5 33.9L57 32.6%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%221.5%22 stroke-linecap=%22round%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%224.4%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%222.7%22 stroke=%22none%22/%3E%3Ccircle cx=%2246.2%22 cy=%2226.7%22 r=%221.3%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Cpath d=%22M4 55.5c15-3 39-3 54 0%22 fill=%22none%22 stroke-width=%222.4%22 stroke-linecap=%22round%22/%3E%3C/g%3E%3C/svg%3E">
@@ -775,7 +775,9 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
 .kw-words-wrap { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 16px; align-items: stretch; min-height: 0; }
 .words-left { display: flex; flex-direction: column; gap: 10px; min-height: 0; min-width: 0; }
 .words-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.words-bar #wordsSearch { width: 200px; height: 32px; }
+.words-bar #wordsSearch { width: 170px; height: 32px; }
+.words-bar #wordsSort { height: 32px; padding: 0 8px; font: inherit; }
+.words-view button { padding: 3px 10px; font-size: 13px; }
 .words-bar #wordsTopN { width: 70px; height: 32px; }
 .words-bar .btn { height: 32px; }
 .words-list { flex: 1; gap: 6px; }
@@ -890,7 +892,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
   <div class="brand">
     <span class="logo"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#287130"/><g transform="translate(2.5 1) scale(0.9)" fill="#ffffff" stroke="#ffffff"><path d="M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6" fill="none" stroke-width="3.8" stroke-linecap="round"/><path d="M21 43l-1 10M30 44v9M38 43l1 10" stroke-width="3.6" stroke-linecap="round"/><ellipse cx="21" cy="25" rx="7" ry="7.5" stroke="none"/><ellipse cx="33" cy="23.5" rx="7.5" ry="8" stroke="none"/><path d="M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z" stroke="none"/><path d="M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z" stroke="none"/><path d="M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z" stroke="none"/><path d="M16 37l4-3 4 3 4-3 4 3 4-3 4 3" fill="none" stroke="#287130" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M43.5 33.9L57 32.6" fill="none" stroke="#287130" stroke-width="1.5" stroke-linecap="round"/><circle cx="45.5" cy="26.5" r="4.4" fill="#287130" stroke="none"/><circle cx="45.5" cy="26.5" r="2.7" stroke="none"/><circle cx="46.2" cy="26.7" r="1.3" fill="#287130" stroke="none"/><path d="M4 55.5c15-3 39-3 54 0" fill="none" stroke-width="2.4" stroke-linecap="round"/></g></svg></span>
     <span class="brand-name">Kameleon</span>
-    <span class="version" id="appVersion">v1.90</span>
+    <span class="version" id="appVersion">v1.91</span>
   </div>
   <div class="topbar-actions">
     <span class="doc-name" id="docName"></span>
@@ -1393,7 +1395,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
     </div>
     <input type="file" id="offlineZip" class="visually-hidden" accept=".zip,application/zip" multiple tabindex="-1">
     <input type="file" id="offlineFolder" class="visually-hidden" webkitdirectory multiple tabindex="-1">
-    <p class="muted small help-version help-part">Kameleon v1.90 · <span data-i18n="app.tagline"></span></p>
+    <p class="muted small help-version help-part">Kameleon v1.91 · <span data-i18n="app.tagline"></span></p>
     <div class="modal-actions">
       <button type="button" value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
     </div>
@@ -1450,8 +1452,15 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
     <div class="kw-words-wrap kw-body kw-words-only">
       <div class="words-left">
         <div class="words-bar">
+          <div class="seg-toggle words-view" role="group"><button type="button" class="active" id="wordsViewWords" data-i18n="words.viewWords"></button><button type="button" id="wordsViewPhrases"></button></div>
           <input type="search" id="wordsSearch" data-i18n-placeholder="words.search" autocomplete="off">
+          <select id="wordsSort" data-i18n-aria="words.sort">
+            <option value="count" data-i18n="words.sortCount"></option>
+            <option value="alpha" data-i18n="words.sortAlpha"></option>
+            <option value="first" data-i18n="words.sortFirst"></option>
+          </select>
           <label class="check"><input type="checkbox" id="wordsHideKnown" checked> <span data-i18n="words.hideKnown"></span></label>
+          <label class="check"><input type="checkbox" id="wordsSelOnly"> <span data-i18n="words.selOnly"></span></label>
           <span class="muted small" id="wordsCount"></span>
           <span class="spacer"></span>
           <input type="number" id="wordsTopN" class="kw-n" min="1" max="500" value="30" data-i18n-aria="words.topN">
@@ -1741,7 +1750,7 @@ const I18N = {
     "help.learnTitle": "Lernen",
     "help.learnText": "Der Knopf „Lernen“ oben sammelt die Fachbegriffe des Dokuments und baut daraus einen Wortschatz je Sprachpaar – mit Lernkarten, PDF und Anki-Export. Ohne geöffnetes Dokument öffnet er den Wortschatz.",
     "help.learnList": "<b>Liste:</b> Die Begriffe kommen mit der KI-Antwort (Häkchen „Begriffsliste“ im KI-Fenster) oder werden von Hand eingetragen; rechts die PDF-Seite, wie sie gespeichert wird. Jeder Import ergänzt zugleich den Wortschatz des erkannten Sprachpaars.",
-    "help.learnWords": "<b>Wörter:</b> Alle Wörter des Dokuments nach Häufigkeit, ohne Funktionswörter. Wörter anklicken oder die häufigsten auswählen, den Prompt kopieren und die KI-Antwort rechts einfügen – die Wörter kommen mit Übersetzung und Beispielsatz in Liste, Wortschatz und Lernkarten.",
+    "help.learnWords": "<b>Wörter:</b> Alle Wörter des Dokuments nach Häufigkeit, ohne Funktionswörter, und die wiederkehrenden Wortgruppen; sortierbar nach Häufigkeit, Alphabet oder Reihenfolge im Text. Wörter anklicken oder die häufigsten auswählen, den Prompt kopieren und die KI-Antwort rechts einfügen – die Wörter kommen mit Übersetzung und Beispielsatz in Liste, Wortschatz und Lernkarten.",
     "help.learnCards": "<b>Lernkarten:</b> „Heute fällig“ zeigt zuerst neue Wörter (so viele pro Tag wie eingestellt), dann die gewussten, deren Wiederholung ansteht (nach 1, 3, 7, 14, 30, dann alle 90 Tagen). Vier Bewertungen: Nochmal (zurück auf Anfang), Schwer (Abstand bleibt), Gewusst (eine Stufe weiter), Leicht (zwei Stufen). Der Beispielsatz vorn kann als Lücke, ganz oder gar nicht gezeigt werden; „Umgekehrt“ fragt von der Übersetzung nach dem Begriff. Tasten: <kbd>Leertaste</kbd> umdrehen, <kbd>←</kbd>/<kbd>→</kbd> blättern, <kbd>A</kbd>/<kbd>H</kbd>/<kbd>K</kbd>/<kbd>E</kbd> oder <kbd>1</kbd>–<kbd>4</kbd> bewerten, <kbd>F</kbd> Favorit, <kbd>R</kbd> Richtung.",
     "help.learnVocab": "<b>Wortschatz:</b> Die Begriffe aller Dokumente je Sprachpaar, mit Suche, Favoriten (das Kameleon) und Korrektur des Sprachpaars. Export als PDF oder Anki-Paket (.apkg), Import aus .txt/.tsv/.csv und aus Anki-Paketen.",
     "help.learnDecks": "<b>Fertige Lernkarten:</b> Tausende freie Anki-Stapel für viele Sprachen gibt es unter <a href=\"https://ankiweb.net/shared/decks\" target=\"_blank\" rel=\"noopener noreferrer\">ankiweb.net/shared/decks</a> – die .apkg-Datei herunterladen und unter „Wortschatz → Importieren…“ laden.",
@@ -1964,10 +1973,18 @@ const I18N = {
     "kw.exampleTr": "Beispielsatz übersetzt",
     "kw.modeList": "Liste",
     "kw.modeWords": "Wörter",
-    "words.text": "Alle Wörter des Dokuments nach Häufigkeit, ohne die häufigsten Funktionswörter. Wörter anklicken oder die häufigsten auswählen, den Prompt kopieren und die Antwort der KI rechts einfügen: die Wörter kommen mit Übersetzung und Beispielsatz in die Begriffsliste, in den Wortschatz und auf die Lernkarten.",
+    "words.text": "Alle Wörter des Dokuments nach Häufigkeit, ohne die häufigsten Funktionswörter – und daneben die Wortgruppen aus zwei oder drei Wörtern, die sich wiederholen. Wörter anklicken oder die häufigsten auswählen, den Prompt kopieren und die Antwort der KI rechts einfügen: die Wörter kommen mit Übersetzung und Beispielsatz in die Begriffsliste, in den Wortschatz und auf die Lernkarten.",
     "words.search": "Wort suchen…",
     "words.hideKnown": "Bekannte ausblenden",
     "words.count": "{n} von {total} Wörtern · {sel} ausgewählt",
+    "words.countPhrases": "{n} von {total} Wortgruppen · {sel} ausgewählt",
+    "words.viewWords": "Wörter",
+    "words.viewPhrases": "Wortgruppen ({n})",
+    "words.sort": "Sortierung",
+    "words.sortCount": "Nach Häufigkeit",
+    "words.sortAlpha": "A–Z",
+    "words.sortFirst": "Reihenfolge im Text",
+    "words.selOnly": "Nur ausgewählte",
     "words.countTitle": "Vorkommen im Dokument",
     "words.topN": "Anzahl",
     "words.selectTop": "Häufigste auswählen",
@@ -2380,7 +2397,7 @@ const I18N = {
     "help.learnTitle": "Learn",
     "help.learnText": "The \"Learn\" button at the top collects the document's terms and builds a vocabulary per language pair from them – with flashcards, PDF and Anki export. Without an open document it opens the vocabulary.",
     "help.learnList": "<b>List:</b> The terms arrive with the AI answer (tick \"Term list\" in the AI window) or are entered by hand; on the right the PDF page as it will be saved. Every import also adds to the vocabulary of the detected language pair.",
-    "help.learnWords": "<b>Words:</b> Every word of the document by frequency, without function words. Tick words or select the most frequent ones, copy the prompt and paste the AI's answer on the right – the words arrive with translation and example sentence in the list, the vocabulary and the flashcards.",
+    "help.learnWords": "<b>Words:</b> Every word of the document by frequency, without function words, and the recurring word groups; sorted by frequency, alphabet or order in the text. Tick words or select the most frequent ones, copy the prompt and paste the AI's answer on the right – the words arrive with translation and example sentence in the list, the vocabulary and the flashcards.",
     "help.learnCards": "<b>Flashcards:</b> \"Due today\" shows new words first (as many per day as set), then the known ones whose review is due (after 1, 3, 7, 14, 30, then every 90 days). Four grades: Again (back to the start), Hard (interval stays), Known (one step up), Easy (two steps). The example sentence on the front can be shown as a gap, whole or not at all; \"Reversed\" asks from the translation for the term. Keys: <kbd>Space</kbd> turn, <kbd>←</kbd>/<kbd>→</kbd> browse, <kbd>A</kbd>/<kbd>H</kbd>/<kbd>K</kbd>/<kbd>E</kbd> or <kbd>1</kbd>–<kbd>4</kbd> grade, <kbd>F</kbd> favourite, <kbd>R</kbd> direction.",
     "help.learnVocab": "<b>Vocabulary:</b> The terms of all documents per language pair, with search, favourites (the chameleon) and correction of the pair. Export as PDF or Anki package (.apkg), import from .txt/.tsv/.csv and from Anki packages.",
     "help.learnDecks": "<b>Ready-made flashcards:</b> thousands of free Anki decks for many languages are at <a href=\"https://ankiweb.net/shared/decks\" target=\"_blank\" rel=\"noopener noreferrer\">ankiweb.net/shared/decks</a> – download the .apkg file and load it under \"Vocabulary → Import…\".",
@@ -2603,10 +2620,18 @@ const I18N = {
     "kw.exampleTr": "Example sentence translated",
     "kw.modeList": "List",
     "kw.modeWords": "Words",
-    "words.text": "Every word of the document by frequency, without the most common function words. Tick words or select the most frequent ones, copy the prompt and paste the AI's answer on the right: the words arrive with translation and example sentence in the keyword list, the vocabulary and the flashcards.",
+    "words.text": "Every word of the document by frequency, without the most common function words – and beside them the groups of two or three words that repeat. Tick words or select the most frequent ones, copy the prompt and paste the AI's answer on the right: the words arrive with translation and example sentence in the keyword list, the vocabulary and the flashcards.",
     "words.search": "Find a word…",
     "words.hideKnown": "Hide known",
     "words.count": "{n} of {total} words · {sel} selected",
+    "words.countPhrases": "{n} of {total} word groups · {sel} selected",
+    "words.viewWords": "Words",
+    "words.viewPhrases": "Word groups ({n})",
+    "words.sort": "Sort order",
+    "words.sortCount": "By frequency",
+    "words.sortAlpha": "A–Z",
+    "words.sortFirst": "Order in the text",
+    "words.selOnly": "Selected only",
     "words.countTitle": "Occurrences in the document",
     "words.topN": "Count",
     "words.selectTop": "Select most frequent",
@@ -14991,7 +15016,7 @@ function initPicture() {
 // from its own browser cache before the network, so language files are written into that cache.
 // ======================================================================
 
-const APP_VERSION = "1.90";
+const APP_VERSION = "1.91";
 // (a change of library version makes a stored set outdated: it is then ignored)
 const OFFLINE_VERSION = `${MUPDF_URL} ${OCR_LIB}`;
 const CORE_SIMD = "tesseract-core-simd-lstm.wasm.js", CORE_PLAIN = "tesseract-core-lstm.wasm.js";
@@ -15914,7 +15939,8 @@ function initFlashcards() {
  * example sentences, and pastes the answer back: the words become keywords and vocabulary, and
  * flashcards. The list is computed once per document and kept while it is open.
  */
-const wd = { docId: null, rows: [], lang: "", sel: new Set(), query: "", hideKnown: true };
+const wd = { docId: null, rows: [], phrases: [], lang: "", sel: new Set(), query: "", hideKnown: true, view: "words", sort: "count", selOnly: false };
+const PHRASE_MIN = 2; // a word group counts from this many occurrences
 const WORD_RE = /\p{L}[\p{L}\p{M}'’­-]*/gu;
 const CJK_RE = /[぀-ヿ一-鿿가-힯]/;
 const WORDS_SHOWN = 400; // (rows beyond that are reachable through the search)
@@ -15957,39 +15983,68 @@ function wordsSnippet(text, pos, len) {
   return `${a > 0 ? "…" : ""}${text.slice(a, b).trim()}${b < text.length ? "…" : ""}`;
 }
 
+/**
+ * Words and word groups of the document. Every segment is cut into tokens; a token that is
+ * not a function word is counted as a word. Two or three tokens that follow each other with
+ * nothing but spaces between them form a word group when the first and the last are not
+ * function words and the group occurs at least twice; a pair that only ever occurs inside a
+ * group of three is left out.
+ */
 function wordsCompute() {
   const segs = (state.doc.segments || []).filter((s) => !s.skip && !s.hidden && !s.notes);
   const lang = detectLanguage(segs.slice(0, 300).map(wordsText).join(" ")) || "";
   const stop = new Set(`${STOPWORDS[lang] || ""} ${WORD_STOP[lang] || ""}`.toLowerCase().split(/\s+/).filter(Boolean));
-  const counts = new Map(); // lower-cased word -> { forms, n, seg, pos }
+  const counts = new Map(), groups = new Map(); // lower-cased key -> { forms, n, seg, pos, len, first }
+  let seq = 0;
+  const hit = (map, key, form, s, pos, len, text) => {
+    let e = map.get(key);
+    if (!e) map.set(key, e = { forms: new Map(), n: 0, seg: s, pos, len, first: seq++ });
+    else if (wordsText(e.seg).length < 40 && text.length >= 40) { e.seg = s; e.pos = pos; e.len = len; } // a passage rather than a heading
+    e.n++;
+    e.forms.set(form, (e.forms.get(form) || 0) + 1);
+  };
   for (const s of segs) {
     const text = wordsText(s);
+    const toks = [];
     for (const m of text.matchAll(WORD_RE)) {
       const form = m[0].replace(/^[-'’­]+|[-'’­]+$/g, "");
-      if (!form || (form.length < 3 && !CJK_RE.test(form))) continue;
-      const key = form.toLowerCase();
-      if (stop.has(key)) continue;
-      let e = counts.get(key);
-      if (!e) counts.set(key, e = { forms: new Map(), n: 0, seg: s, pos: m.index, len: form.length });
-      else if (wordsText(e.seg).length < 40 && text.length >= 40) { e.seg = s; e.pos = m.index; e.len = form.length; } // a passage rather than a heading
-      e.n++;
-      e.forms.set(form, (e.forms.get(form) || 0) + 1);
+      if (!form) continue;
+      const key = form.toLowerCase(), small = form.length < 3 && !CJK_RE.test(form);
+      toks.push({ form, key, start: m.index, end: m.index + m[0].length, stop: stop.has(key) || small });
+      if (small || stop.has(key)) continue;
+      hit(counts, key, form, s, m.index, form.length, text);
+    }
+    const adjacent = (a, b) => /^\s+$/.test(text.slice(a.end, b.start));
+    for (let i = 0; i < toks.length; i++) {
+      const a = toks[i], b = toks[i + 1], c = toks[i + 2];
+      if (!b || a.stop || !adjacent(a, b)) continue;
+      if (!b.stop) hit(groups, `${a.key} ${b.key}`, `${a.form} ${b.form}`, s, a.start, b.end - a.start, text);
+      if (c && !c.stop && adjacent(b, c)) hit(groups, `${a.key} ${b.key} ${c.key}`, `${a.form} ${b.form} ${c.form}`, s, a.start, c.end - a.start, text);
     }
   }
-  wd.rows = [...counts.entries()].map(([key, e]) => {
-    const word = [...e.forms.entries()].sort((a, b) => b[1] - a[1])[0][0]; // the most frequent spelling
-    return { key, word, n: e.n, snippet: wordsSnippet(wordsText(e.seg), e.pos, e.len) };
-  }).sort((a, b) => b.n - a.n || a.key.localeCompare(b.key));
+  const toRow = ([key, e]) => ({ key, word: [...e.forms.entries()].sort((a, b) => b[1] - a[1])[0][0], n: e.n, first: e.first, snippet: wordsSnippet(wordsText(e.seg), e.pos, e.len) });
+  wd.rows = [...counts.entries()].map(toRow);
+  const triples = [...groups.entries()].filter(([k, e]) => k.split(" ").length === 3 && e.n >= PHRASE_MIN);
+  const inTriple = new Map(); // pair -> occurrences inside counted triples
+  for (const [k, e] of triples) { const w = k.split(" "); for (const pr of [`${w[0]} ${w[1]}`, `${w[1]} ${w[2]}`]) inTriple.set(pr, (inTriple.get(pr) || 0) + e.n); }
+  wd.phrases = [...groups.entries()].filter(([k, e]) => e.n >= PHRASE_MIN && (k.split(" ").length === 3 || e.n > (inTriple.get(k) || 0))).map(toRow);
   wd.lang = lang;
   wd.docId = state.doc.id;
   wd.sel.clear();
 }
 
+/** The rows of the current view (words or word groups), narrowed and sorted as chosen. */
 function wordsVisible() {
   const q = wd.query.trim().toLowerCase(), known = wordsKnown();
-  for (const r of wd.rows) r.known = known.has(r.key);
-  return wd.rows.filter((r) => (!wd.hideKnown || !r.known) && (!q || r.key.includes(q)));
+  const all = wd.view === "phrases" ? wd.phrases : wd.rows;
+  for (const r of all) r.known = known.has(r.key);
+  const rows = all.filter((r) => (!wd.hideKnown || !r.known) && (!wd.selOnly || wd.sel.has(r.key)) && (!q || r.key.includes(q)));
+  if (wd.sort === "alpha") rows.sort((a, b) => a.key.localeCompare(b.key, undefined, { sensitivity: "base" }));
+  else if (wd.sort === "first") rows.sort((a, b) => a.first - b.first);
+  else rows.sort((a, b) => b.n - a.n || a.key.localeCompare(b.key));
+  return rows;
 }
+const wordsAll = () => [...wd.rows, ...wd.phrases];
 
 function wordsRender() {
   if (!state.doc) return;
@@ -16005,7 +16060,10 @@ function wordsRender() {
       <span class="words-snip">${escapeHtml(r.snippet)}</span>
     </label>`).join("") + (rows.length > shown.length ? `<p class="muted small">${escapeHtml(t("words.more", { n: rows.length - shown.length }))}</p>` : "")
     : `<p class="muted small">${escapeHtml(t("words.empty"))}</p>`;
-  $("#wordsCount").textContent = t("words.count", { n: rows.length, total: wd.rows.length, sel: wd.sel.size });
+  $("#wordsCount").textContent = t(wd.view === "phrases" ? "words.countPhrases" : "words.count", { n: rows.length, total: (wd.view === "phrases" ? wd.phrases : wd.rows).length, sel: wd.sel.size });
+  $("#wordsViewWords").classList.toggle("active", wd.view === "words");
+  $("#wordsViewPhrases").classList.toggle("active", wd.view === "phrases");
+  $("#wordsViewPhrases").textContent = t("words.viewPhrases", { n: wd.phrases.length });
   $("#wordsPrompt").disabled = !wd.sel.size;
   $("#wordsPrompt").textContent = t("words.prompt", { n: wd.sel.size });
   $("#wordsCards").disabled = !(state.keywords || []).some((r) => r.term.trim() && r.translation.trim());
@@ -16016,7 +16074,7 @@ function wordsPromptText() {
   const P = AI_PROMPT[LANG] || AI_PROMPT.en;
   const target = $("#aiTarget").value.trim() || P.target;
   const context = $("#aiContext").value.trim();
-  const rows = wd.rows.filter((r) => wd.sel.has(r.key));
+  const rows = wordsAll().filter((r) => wd.sel.has(r.key));
   const lines = [P.words(target, rows.length)];
   if (context) lines.push("", P.context(context.replace(/\.$/, "")));
   lines.push("", P.wordsList, ...rows.map((r) => `${r.word} — „${r.snippet}“`));
@@ -16043,11 +16101,15 @@ function initWords() {
     if (!cb) return;
     if (cb.checked) wd.sel.add(cb.dataset.key); else wd.sel.delete(cb.dataset.key);
     cb.closest(".words-row").classList.toggle("sel", cb.checked);
-    $("#wordsCount").textContent = t("words.count", { n: wordsVisible().length, total: wd.rows.length, sel: wd.sel.size });
+    $("#wordsCount").textContent = t(wd.view === "phrases" ? "words.countPhrases" : "words.count", { n: wordsVisible().length, total: (wd.view === "phrases" ? wd.phrases : wd.rows).length, sel: wd.sel.size });
     $("#wordsPrompt").disabled = !wd.sel.size;
     $("#wordsPrompt").textContent = t("words.prompt", { n: wd.sel.size });
   });
   $("#wordsSearch").addEventListener("input", (e) => { wd.query = e.target.value; wordsRender(); });
+  $("#wordsViewWords").addEventListener("click", () => { wd.view = "words"; wordsRender(); });
+  $("#wordsViewPhrases").addEventListener("click", () => { wd.view = "phrases"; wordsRender(); });
+  $("#wordsSort").addEventListener("change", (e) => { wd.sort = e.target.value; wordsRender(); });
+  $("#wordsSelOnly").addEventListener("change", (e) => { wd.selOnly = e.target.checked; wordsRender(); });
   $("#wordsHideKnown").addEventListener("change", (e) => { wd.hideKnown = e.target.checked; wordsRender(); });
   $("#wordsSelectTop").addEventListener("click", () => { // the most frequent words still shown and not yet in the vocabulary
     const n = Math.max(1, Number($("#wordsTopN").value) || 30);
