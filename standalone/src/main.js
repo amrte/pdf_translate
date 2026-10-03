@@ -6,6 +6,7 @@ document.addEventListener("languagechange", onLanguageChange);
 initMarkup();
 initTools();
 initPicture();
+initReading();
 initOffline();
 initPagesManager();
 initKeywords();

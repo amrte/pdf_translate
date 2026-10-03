@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.65
+
+- Reading mode (new button next to "Segments" in the page toolbar): the segment boxes stay out of sight, and a click on any text shows its translation in a bubble right over the passage – or, on the translated view, the original. A second click, a click elsewhere or Esc closes the bubble; a text without translation says so. Works for PDFs, pictures, e-books and Office previews, and the mode is remembered.
+
 ## 1.64
 
 - The app icon (favicon and the logo in the top bar) shows the chameleon with its mouth closed, without the tongue. The large animated chameleon on the start screen is unchanged.

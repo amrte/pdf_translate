@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="Kameleon 1.64">
+  <meta name="generator" content="Kameleon 1.65">
   <meta name="description" content="Kameleon – Wechselt die Sprache, behält die Form. Changes language, keeps its shape.">
   <title>Kameleon</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2216%22 fill=%22%23287130%22/%3E%3Cg transform=%22translate(2.5 1) scale(0.9)%22 fill=%22%23ffffff%22 stroke=%22%23ffffff%22%3E%3Cpath d=%22M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6%22 fill=%22none%22 stroke-width=%223.8%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M21 43l-1 10M30 44v9M38 43l1 10%22 stroke-width=%223.6%22 stroke-linecap=%22round%22/%3E%3Cellipse cx=%2221%22 cy=%2225%22 rx=%227%22 ry=%227.5%22 stroke=%22none%22/%3E%3Cellipse cx=%2233%22 cy=%2223.5%22 rx=%227.5%22 ry=%228%22 stroke=%22none%22/%3E%3Cpath d=%22M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z%22 stroke=%22none%22/%3E%3Cpath d=%22M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z%22 stroke=%22none%22/%3E%3Cpath d=%22M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z%22 stroke=%22none%22/%3E%3Cpath d=%22M16 37l4-3 4 3 4-3 4 3 4-3 4 3%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%222.1%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3Cpath d=%22M43.5 33.9L57 32.6%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%221.5%22 stroke-linecap=%22round%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%224.4%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%222.7%22 stroke=%22none%22/%3E%3Ccircle cx=%2246.2%22 cy=%2226.7%22 r=%221.3%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Cpath d=%22M4 55.5c15-3 39-3 54 0%22 fill=%22none%22 stroke-width=%222.4%22 stroke-linecap=%22round%22/%3E%3C/g%3E%3C/svg%3E">
@@ -160,6 +160,25 @@ svg [fill="#287130"] { fill: var(--accent); } svg [stroke="#287130"] { stroke: v
 .page .box:hover { background: color-mix(in srgb, var(--accent) 16%, transparent); }
 .page .box.active { border: 2px solid #f0a020; background: rgba(240, 160, 32, .18); z-index: 4; } /* above the markups, so its handles can be grabbed */
 .pages.no-boxes .box:not(.active) { display: none; }
+/* Reading mode: boxes stay invisible but clickable; the bubble shows the translation. */
+body.reading .pages .box { display: block !important; border-color: transparent !important; background: transparent !important; cursor: pointer; }
+body.reading .pages .box:hover { background: color-mix(in srgb, var(--accent) 10%, transparent) !important; }
+body.reading .pages .box.read { background: color-mix(in srgb, var(--accent) 16%, transparent) !important; }
+body.reading .pages .box .rh { display: none; }
+.bubble {
+  position: absolute; z-index: 7; box-sizing: border-box; background: var(--surface); color: var(--text); border: 1px solid var(--border);
+  border-radius: 10px; padding: 8px 12px; box-shadow: 0 8px 28px rgba(0, 0, 0, .2); font-size: 14px; line-height: 1.45; text-align: left;
+  --arrow-x: 50%;
+}
+.bubble-text { white-space: pre-wrap; word-break: break-word; max-height: 40vh; overflow: auto; }
+.bubble::after {
+  content: ""; position: absolute; left: var(--arrow-x); bottom: -7px; width: 12px; height: 12px; background: var(--surface);
+  border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); transform: translateX(-50%) rotate(45deg);
+}
+.bubble.below::after { bottom: auto; top: -7px; transform: translateX(-50%) rotate(225deg); }
+.bubble.none { color: var(--muted); font-style: italic; }
+.bubble.orig { border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); }
+#btnReading.on { color: var(--accent); background: var(--accent-soft); }
 /* On the translation, boxes stay invisible until pointed at or selected (to move a field there). */
 .pages.translated .box:not(.active):not(:hover) { border-color: transparent !important; background: transparent !important; }
 .pages.translated .box.active { background: transparent; }
@@ -732,7 +751,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
   <div class="brand">
     <span class="logo"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#287130"/><g transform="translate(2.5 1) scale(0.9)" fill="#ffffff" stroke="#ffffff"><path d="M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6" fill="none" stroke-width="3.8" stroke-linecap="round"/><path d="M21 43l-1 10M30 44v9M38 43l1 10" stroke-width="3.6" stroke-linecap="round"/><ellipse cx="21" cy="25" rx="7" ry="7.5" stroke="none"/><ellipse cx="33" cy="23.5" rx="7.5" ry="8" stroke="none"/><path d="M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z" stroke="none"/><path d="M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z" stroke="none"/><path d="M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z" stroke="none"/><path d="M16 37l4-3 4 3 4-3 4 3 4-3 4 3" fill="none" stroke="#287130" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M43.5 33.9L57 32.6" fill="none" stroke="#287130" stroke-width="1.5" stroke-linecap="round"/><circle cx="45.5" cy="26.5" r="4.4" fill="#287130" stroke="none"/><circle cx="45.5" cy="26.5" r="2.7" stroke="none"/><circle cx="46.2" cy="26.7" r="1.3" fill="#287130" stroke="none"/><path d="M4 55.5c15-3 39-3 54 0" fill="none" stroke-width="2.4" stroke-linecap="round"/></g></svg></span>
     <span class="brand-name">Kameleon</span>
-    <span class="version" id="appVersion">v1.64</span>
+    <span class="version" id="appVersion">v1.65</span>
   </div>
   <div class="topbar-actions">
     <span class="doc-name" id="docName"></span>
@@ -845,6 +864,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
         <button id="viewCompare" disabled data-i18n="view.compare" data-i18n-title="view.compareTitle">Compare</button>
       </div>
       <label class="check boxes-check" data-i18n-title="view.boxes"><input type="checkbox" id="showBoxes" checked> <span data-i18n="view.boxes">Show segments</span></label>
+      <button class="icon-btn" id="btnReading" data-i18n-title="view.reading" aria-pressed="false"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.5C10.5 5.2 8.6 4.5 6.5 4.5H3v14h3.5c2.1 0 4 .7 5.5 2 1.5-1.3 3.4-2 5.5-2H21v-14h-3.5c-2.1 0-4 .7-5.5 2z"/><path d="M12 6.5v14"/></svg></button>
       <div class="spacer"></div>
       <div class="page-nav">
         <button class="icon-btn" id="pagePrev" data-i18n-title="nav.prev">‹</button>
@@ -1147,7 +1167,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
     </div>
     <input type="file" id="offlineZip" class="visually-hidden" accept=".zip,application/zip" multiple tabindex="-1">
     <input type="file" id="offlineFolder" class="visually-hidden" webkitdirectory multiple tabindex="-1">
-    <p class="muted small help-version help-part">Kameleon v1.64 · <span data-i18n="app.tagline"></span></p>
+    <p class="muted small help-version help-part">Kameleon v1.65 · <span data-i18n="app.tagline"></span></p>
     <div class="modal-actions">
       <button type="button" value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
       <button type="button" class="btn ai-part" id="aiCopyPrompt" data-i18n="ai.copyPrompt">Copy prompt only</button>
@@ -1282,6 +1302,8 @@ const I18N = {
     "layout.splitter": "Ziehen: Breite von Seitenansicht und Segmenten ändern · Doppelklick: zurücksetzen",
     "view.compareTitle": "Original und Übersetzung nebeneinander, synchron scrollend",
     "view.boxes": "Segmente",
+    "view.reading": "Lesemodus: Klick auf einen Text zeigt seine Übersetzung in einer Sprechblase; die Segmentrahmen bleiben unsichtbar",
+    "read.none": "Noch keine Übersetzung",
     "zoom.out": "Verkleinern",
     "zoom.in": "Vergrößern (oder Strg + Mausrad)",
     "zoom.fit": "An Seitenbreite anpassen",
@@ -1762,6 +1784,8 @@ const I18N = {
     "layout.splitter": "Drag: change the width of the page view and the segments · double-click: reset",
     "view.compareTitle": "Original and translation side by side, scrolling together",
     "view.boxes": "Segments",
+    "view.reading": "Reading mode: click a text to see its translation in a bubble; the segment boxes stay out of sight",
+    "read.none": "No translation yet",
     "zoom.out": "Zoom out",
     "zoom.in": "Zoom in (or Ctrl + mouse wheel)",
     "zoom.fit": "Fit page width",
@@ -12717,7 +12741,7 @@ function pagePoint(pageEl, e) {
 }
 
 function onBoxDown(e) {
-  if (e.button !== 0 || !state.doc || !fieldsEditable() || mk.tool !== "select") return;
+  if (e.button !== 0 || !state.doc || !fieldsEditable() || mk.tool !== "select" || document.body.classList.contains("reading")) return;
   const box = e.target.closest(".box");
   if (!box) return;
   const pageEl = box.closest(".page"), id = Number(box.dataset.id), s = segById(id);
@@ -13927,7 +13951,7 @@ function initPicture() {
 // from its own browser cache before the network, so language files are written into that cache.
 // ======================================================================
 
-const APP_VERSION = "1.64";
+const APP_VERSION = "1.65";
 // (a change of library version makes a stored set outdated: it is then ignored)
 const OFFLINE_VERSION = `${MUPDF_URL} ${OCR_LIB}`;
 const CORE_SIMD = "tesseract-core-simd-lstm.wasm.js", CORE_PLAIN = "tesseract-core-lstm.wasm.js";
@@ -14731,6 +14755,86 @@ function initTheme() {
   applyAccent(i);
 }
 
+/* ------------------------------------------------------------- reading mode */
+// Reading mode: the segment boxes stay out of sight, and a click on a text shows its translation
+// in a bubble over the segment (on the translated view: the original text). Works wherever the
+// pages carry boxes – PDFs, pictures, e-books, Office previews.
+
+const LS_READING = "pdftr:reading";
+const rd = { on: false, id: null, el: null };
+
+function setReading(on) {
+  rd.on = on;
+  document.body.classList.toggle("reading", on);
+  const btn = $("#btnReading");
+  btn.classList.toggle("on", on);
+  btn.setAttribute("aria-pressed", String(on));
+  try { localStorage.setItem(LS_READING, on ? "1" : "0"); } catch (_) { /* storage blocked */ }
+  if (!on) hideBubble();
+}
+
+/** What the bubble says for a segment: its translation, or on the translated view its original. */
+function bubbleContent(s) {
+  if (state.variant === "translated") return { text: s.text, kind: "orig" };
+  const tr = (state.translations[s.id] || "").trim();
+  return tr ? { text: tr, kind: "tr" } : { text: t("read.none"), kind: "none" };
+}
+
+function hideBubble() {
+  if (rd.el) rd.el.remove();
+  document.querySelectorAll(".box.read").forEach((b) => b.classList.remove("read"));
+  rd.el = null; rd.id = null;
+}
+
+/** The bubble over (or, near the top of the page, under) a segment's box. */
+function showBubble(box) {
+  const id = Number(box.dataset.id), s = segById(id);
+  if (!s) return;
+  if (rd.id === id && rd.el && rd.el.isConnected) { hideBubble(); return; } // the same text again: closes it
+  hideBubble();
+  const body = box.closest(".page-body") || box.parentElement;
+  const { text, kind } = bubbleContent(s);
+  const el = document.createElement("div");
+  el.className = `bubble ${kind}`;
+  el.setAttribute("role", "status");
+  const inner = document.createElement("div");
+  inner.className = "bubble-text";
+  inner.textContent = text;
+  el.appendChild(inner);
+  body.appendChild(el);
+  const W = body.offsetWidth, H = body.offsetHeight;
+  const bx = box.offsetLeft, by = box.offsetTop, bw = box.offsetWidth, bh = box.offsetHeight;
+  const width = Math.min(W - 16, Math.max(Math.min(240, W - 16), bw * 1.15));
+  el.style.width = `${Math.round(width)}px`;
+  const left = Math.max(8, Math.min(W - width - 8, bx + bw / 2 - width / 2));
+  el.style.left = `${Math.round(left)}px`;
+  const h = el.offsetHeight;
+  let top = by - h - 10, below = false;
+  if (top < 4) { top = by + bh + 10; below = true; }
+  if (top + h > H - 4) top = Math.max(4, H - h - 4);
+  el.style.top = `${Math.round(top)}px`;
+  el.classList.toggle("below", below);
+  el.style.setProperty("--arrow-x", `${Math.round(Math.max(14, Math.min(width - 14, bx + bw / 2 - left)))}px`);
+  rd.id = id; rd.el = el;
+  box.classList.add("read");
+}
+
+function initReading() {
+  $("#btnReading").addEventListener("click", () => setReading(!rd.on));
+  let saved = false;
+  try { saved = localStorage.getItem(LS_READING) === "1"; } catch (_) { /* storage blocked */ }
+  if (saved) setReading(true);
+  // Before the viewer's own click handling (which selects the segment): in reading mode a click
+  // on a text opens its bubble and nothing else; a click elsewhere closes it.
+  $("#pages").addEventListener("click", (e) => {
+    if (!rd.on) return;
+    const box = e.target.closest(".box");
+    if (box) { e.stopPropagation(); e.preventDefault(); showBubble(box); }
+    else if (!e.target.closest(".bubble")) hideBubble();
+  }, true);
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && rd.el) hideBubble(); });
+}
+
 // Start-up (runs after ui.js, markup.js and tools.js have defined everything).
 initTheme(); // the colour of this start, before anything is drawn
 initThemeMode();
@@ -14739,6 +14843,7 @@ document.addEventListener("languagechange", onLanguageChange);
 initMarkup();
 initTools();
 initPicture();
+initReading();
 initOffline();
 initPagesManager();
 initKeywords();

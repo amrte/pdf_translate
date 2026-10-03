@@ -183,7 +183,7 @@ function pagePoint(pageEl, e) {
 }
 
 function onBoxDown(e) {
-  if (e.button !== 0 || !state.doc || !fieldsEditable() || mk.tool !== "select") return;
+  if (e.button !== 0 || !state.doc || !fieldsEditable() || mk.tool !== "select" || document.body.classList.contains("reading")) return;
   const box = e.target.closest(".box");
   if (!box) return;
   const pageEl = box.closest(".page"), id = Number(box.dataset.id), s = segById(id);

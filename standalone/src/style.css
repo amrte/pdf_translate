@@ -150,6 +150,25 @@ svg [fill="#287130"] { fill: var(--accent); } svg [stroke="#287130"] { stroke: v
 .page .box:hover { background: color-mix(in srgb, var(--accent) 16%, transparent); }
 .page .box.active { border: 2px solid #f0a020; background: rgba(240, 160, 32, .18); z-index: 4; } /* above the markups, so its handles can be grabbed */
 .pages.no-boxes .box:not(.active) { display: none; }
+/* Reading mode: boxes stay invisible but clickable; the bubble shows the translation. */
+body.reading .pages .box { display: block !important; border-color: transparent !important; background: transparent !important; cursor: pointer; }
+body.reading .pages .box:hover { background: color-mix(in srgb, var(--accent) 10%, transparent) !important; }
+body.reading .pages .box.read { background: color-mix(in srgb, var(--accent) 16%, transparent) !important; }
+body.reading .pages .box .rh { display: none; }
+.bubble {
+  position: absolute; z-index: 7; box-sizing: border-box; background: var(--surface); color: var(--text); border: 1px solid var(--border);
+  border-radius: 10px; padding: 8px 12px; box-shadow: 0 8px 28px rgba(0, 0, 0, .2); font-size: 14px; line-height: 1.45; text-align: left;
+  --arrow-x: 50%;
+}
+.bubble-text { white-space: pre-wrap; word-break: break-word; max-height: 40vh; overflow: auto; }
+.bubble::after {
+  content: ""; position: absolute; left: var(--arrow-x); bottom: -7px; width: 12px; height: 12px; background: var(--surface);
+  border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); transform: translateX(-50%) rotate(45deg);
+}
+.bubble.below::after { bottom: auto; top: -7px; transform: translateX(-50%) rotate(225deg); }
+.bubble.none { color: var(--muted); font-style: italic; }
+.bubble.orig { border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); }
+#btnReading.on { color: var(--accent); background: var(--accent-soft); }
 /* On the translation, boxes stay invisible until pointed at or selected (to move a field there). */
 .pages.translated .box:not(.active):not(:hover) { border-color: transparent !important; background: transparent !important; }
 .pages.translated .box.active { background: transparent; }
