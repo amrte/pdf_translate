@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.62
+
+- Start screen: the tagline under the drop area is no longer shown; the line stays empty so the layout does not move.
+
 ## 1.61
 
 - PDF: the kind of a segment can be switched by hand. Every card has a "Formula" button that makes the segment a formula (kept as it is, left out of the translation and of the AI prompt), and a formula or numbers-only segment has a "Text" button that makes it translatable again. The choice is remembered with the document, survives OCR and marks the card and the box on the page like a detected formula.
