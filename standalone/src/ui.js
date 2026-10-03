@@ -39,10 +39,11 @@ const state = {
 
 /** The open document is an e-book (EPUB/FB2) rather than a PDF. */
 const isBook = () => Boolean(state.doc && state.doc.kind && state.doc.kind !== "pdf");
-const FORMAT_LABEL = { pdf: "PDF", epub: "EPUB", fb2: "FB2", docx: "DOCX", pptx: "PPTX", xlsx: "XLSX" };
+const FORMAT_LABEL = { pdf: "PDF", epub: "EPUB", fb2: "FB2", docx: "DOCX", pptx: "PPTX", xlsx: "XLSX", srt: "SRT", vtt: "VTT", md: "Markdown", txt: "TXT" };
 const isOffice = () => Boolean(state.doc && ["docx", "pptx", "xlsx"].includes(state.doc.kind));
 const MIME = {
   pdf: "application/pdf", epub: "application/epub+zip", fb2: "application/x-fictionbook+xml",
+  srt: "application/x-subrip", vtt: "text/vtt", md: "text/markdown", txt: "text/plain",
   docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
   xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -225,7 +226,7 @@ function userError(err) {
   return hit ? t(hit[1]) : msg;
 }
 
-const stem = () => (state.doc.name || "document.pdf").replace(/\.(pdf|epub|fb2|fbz|fb2\.zip|zip|docx|pptx|xlsx|doc|xls|ppt|png|jpe?g|gif|bmp|tiff?|webp|avif|heic)$/i, "") || "document";
+const stem = () => (state.doc.name || "document.pdf").replace(/\.(pdf|epub|fb2|fbz|fb2\.zip|zip|docx|pptx|xlsx|doc|xls|ppt|srt|vtt|md|markdown|txt|text|png|jpe?g|gif|bmp|tiff?|webp|avif|heic)$/i, "") || "document";
 const escapeHtml = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 
 async function sha256(bytes) {
@@ -302,7 +303,7 @@ async function idbGet(key = "last") {
 
 async function openPdf(file) {
   if (!file) return;
-  if (!/\.(pdf|epub|fb2|fbz|zip|docx|pptx|xlsx|doc|xls|ppt|png|jpe?g|gif|bmp|tiff?|webp|avif|heic)$/i.test(file.name) && !/pdf|epub|fictionbook|officedocument|msword|ms-excel|ms-powerpoint|^image\//i.test(file.type)) {
+  if (!/\.(pdf|epub|fb2|fbz|zip|docx|pptx|xlsx|doc|xls|ppt|srt|vtt|md|markdown|txt|text|png|jpe?g|gif|bmp|tiff?|webp|avif|heic)$/i.test(file.name) && !/pdf|epub|fictionbook|officedocument|msword|ms-excel|ms-powerpoint|^text\/|^image\//i.test(file.type)) {
     toast(t("msg.chooseFile"), "error");
     return;
   }

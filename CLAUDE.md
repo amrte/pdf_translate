@@ -17,6 +17,7 @@
   `engine.js` (MuPDF WASM: extraction, layout, rebuild; also runs inside Web Workers),
   `ebook.js` (EPUB/FB2: segments from the XHTML/FictionBook source, rebuild, zip; runs with the engine),
   `office.js` (DOCX/PPTX/XLSX: segments from the Office Open XML parts, rebuild, HTML preview; runs with the engine),
+  `text.js` (SRT/VTT subtitles, Markdown, plain text: cues or paragraphs as segments, written back in place, laid out as a simple page; runs with the engine),
   `slides.js` (PPTX preview: the slides drawn as PDF pages – background, shapes, pictures, tables, text in place; runs with the engine),
   `pages.js` (page manager, engine side: a PDF or PPTX put together anew from reordered, removed, blank and copied pages/slides),
   `legacy.js` (OLE compound file reader; converts .doc/.xls/.ppt to the modern format on open),

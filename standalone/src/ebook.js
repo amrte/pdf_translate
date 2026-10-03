@@ -41,6 +41,8 @@ function detectKind(bytes, name = "") {
   }
   if (/<FictionBook/i.test(head) || /\.fb2$/i.test(name)) return "fb2";
   // UTF-16 FB2
+  const tk = textKindOf(bytes, name, head);
+  if (tk) return tk; // subtitles, Markdown, plain text
   if ((bytes[0] === 0xff && bytes[1] === 0xfe) || (bytes[0] === 0xfe && bytes[1] === 0xff)) return "fb2";
   return /\.epub$/i.test(name) ? "epub" : "pdf";
 }
@@ -479,6 +481,7 @@ function findAll(el, pred, out = []) {
  */
 async function openBook(bytes, kind) {
   if (OFFICE_KINDS.has(kind)) return openOffice(bytes, kind);
+  if (TEXT_KINDS.has(kind)) return openText(bytes, kind);
   const files = [];
   const book = { kind, files, entries: null };
   if (kind === "fb2") {
@@ -548,6 +551,18 @@ async function saveBook(book, bytes, segments, translations, opts = {}) {
     const tr = (translations[seg.id] || "").trim() || (seg.ov && seg.ox && book.deck ? seg.text : ""); // (a restyled slide field keeps its text)
     if (!tr) continue;
     const f = book.files[seg.file];
+    if (TEXT_KINDS.has(book.kind)) { // subtitles, Markdown, plain text
+      if (!edits.has(seg.file)) edits.set(seg.file, []);
+      edits.get(seg.file).push(textEdit(seg, f, tr, opts));
+      replaced++;
+      continue;
+    }
+    if (seg.ox && seg.ox.fmt === "fx") { // a string inside an Excel formula
+      if (!edits.has(seg.file)) edits.set(seg.file, []);
+      edits.get(seg.file).push({ s: seg.s, e: seg.e, text: escapeXmlText(String(translations[seg.id]).replace(/\s*\n\s*/g, " ").replace(/"/g, '""')) }); // (spaces at the ends matter here: "Total: ")
+      replaced++;
+      continue;
+    }
     const raw = f.src.slice(seg.s, seg.e);
     const lead = /^\s*/.exec(raw)[0], trail = /\s*$/.exec(raw)[0];
     if (!edits.has(seg.file)) edits.set(seg.file, []);
@@ -574,10 +589,22 @@ async function saveBook(book, bytes, segments, translations, opts = {}) {
     if (out !== f.src || list.length) changed.set(f.path, out);
   });
   if (book.deck) mirrorDiagramDrawings(book, segments, translations, changed, opts); // SmartArt drawings follow their data
-  const fontsDropped = book.kind === "fb2" ? [] : await dropUncoveredFonts(book, changed, translations);
+  if (book.kind === "xlsx" && segments.some((s) => s.ox && s.ox.fmt === "fx" && (translations[s.id] || "").trim())) {
+    // Excel keeps the old results of formulas in the file: it must calculate again when the file opens.
+    const wb = book.files.find((f) => f.path === book.mainPath);
+    if (wb) {
+      const cur = changed.get(wb.path) ?? wb.src;
+      changed.set(wb.path, /<calcPr\b/.test(cur)
+        ? cur.replace(/<calcPr\b([^>]*?)(\/?)>/, (m, a, sl) => (/fullCalcOnLoad=/.test(a) ? m : `<calcPr${a} fullCalcOnLoad="1"${sl}>`))
+        : cur.replace(/<\/workbook>\s*$/, '<calcPr fullCalcOnLoad="1"/></workbook>'));
+    }
+  }
+  const fontsDropped = book.kind === "fb2" || TEXT_KINDS.has(book.kind) ? [] : await dropUncoveredFonts(book, changed, translations);
   let result;
   if (book.kind === "fb2") {
     result = encodeXml(changed.get("book.fb2") ?? book.files[0].src);
+  } else if (TEXT_KINDS.has(book.kind)) {
+    result = encodeTextFile(changed.get(book.files[0].path) ?? book.files[0].src, book.files[0].meta);
   } else {
     const entries = [];
     for (const e of book.entries) {
@@ -807,6 +834,7 @@ function mapBook(chars, items) {
 
 function openLaidOut(bytes, kind) {
   if (OFFICE_KINDS.has(kind)) throw new Error("Office documents are laid out from their preview.");
+  if (TEXT_KINDS.has(kind)) return openTextLaidOut(bytes, kind);
   const doc = M.Document.openDocument(bytes, BOOK_MIME[kind]);
   doc.layout(...BOOK_LAYOUT);
   return doc;

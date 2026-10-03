@@ -160,7 +160,7 @@ const I18N = {
     "view.exitFullscreen": "Vollbild beenden (Esc)",
     "ai.pasteHere": "[Segmente hier einfügen]",
 
-    "msg.chooseFile": "Bitte wählen Sie eine PDF-, Word-, PowerPoint-, Excel-, EPUB- oder FB2-Datei (auch .doc, .xls, .ppt) oder ein Bild (JPG, PNG, GIF, BMP, TIFF, WebP).",
+    "msg.chooseFile": "Bitte wählen Sie eine PDF-, Word-, PowerPoint-, Excel-, EPUB- oder FB2-Datei (auch .doc, .xls, .ppt), Untertitel (SRT, VTT), eine Markdown- oder Textdatei oder ein Bild (JPG, PNG, GIF, BMP, TIFF, WebP).",
     "msg.imageToPage": "Bild wird als Seite vorbereitet…",
     "msg.imageOpened": "Das Bild wurde als Seite geöffnet. Sein Text wird per Texterkennung gelesen; die Übersetzung wird wieder als {fmt} gespeichert.",
     "err.image": "Dieses Bildformat wird nicht unterstützt.",
@@ -644,7 +644,7 @@ const I18N = {
     "view.exitFullscreen": "Exit full screen (Esc)",
     "ai.pasteHere": "[paste the segments here]",
 
-    "msg.chooseFile": "Please choose a PDF, Word, PowerPoint, Excel, EPUB or FB2 file (.doc, .xls and .ppt too) or a picture (JPG, PNG, GIF, BMP, TIFF, WebP).",
+    "msg.chooseFile": "Please choose a PDF, Word, PowerPoint, Excel, EPUB or FB2 file (.doc, .xls and .ppt too), subtitles (SRT, VTT), a Markdown or text file, or a picture (JPG, PNG, GIF, BMP, TIFF, WebP).",
     "msg.imageToPage": "Preparing the picture as a page…",
     "msg.imageOpened": "The picture was opened as a page. Its text is read with text recognition; the translation is saved as {fmt} again.",
     "err.image": "This picture format is not supported.",

@@ -717,7 +717,9 @@ async function openOffice(bytes, kind) {
     }
   } else {
     const wbPath = mainPath;
-    const wb = await text(wbPath);
+    const wbFile = await addFile(wbPath);
+    const wb = wbFile ? wbFile.src : null;
+    book.mainPath = wbPath;
     const rels = await relsOf(wbPath);
     const sstRel = Object.values(rels).find((r) => /\/sharedStrings$/.test(r.type));
     const sst = sstRel ? await addFile(sstRel.target) : null;
@@ -745,6 +747,21 @@ async function openOffice(bytes, kind) {
           const shown = ri < XLSX_MAX_ROWS && col >= 0 && col < XLSX_MAX_COLS;
           if (!shown && type !== "inlineStr") continue;
           const v = firstNamed(c, "v"), vText = v ? plainOf(f.src, v.kids) : "";
+          // Text inside a formula ("Yes", "Total") is translated too; its cell shows the old result until Excel calculates again.
+          const fx = firstNamed(c, "f");
+          if (fx && fx.kids) {
+            for (const k of fx.kids) {
+              if (!k.text) continue;
+              const fsrc = f.src.slice(k.s, k.e);
+              const lit = /"((?:[^"]|"")+)"/g;
+              let lm;
+              while ((lm = lit.exec(fsrc))) {
+                const inner = decodeEntities(lm[1]).replace(/""/g, '"');
+                if (!/\p{L}{2,}/u.test(inner)) continue;
+                segments.push({ text: escapeMarkers(inner), s: k.s + lm.index + 1, e: k.s + lm.index + 1 + lm[1].length, tag: "formula", file: f.fi, ox: { fmt: "fx" } });
+              }
+            }
+          }
           let chunks = [];
           if (type === "s") chunks = v ? sstChunks[+vText] || [] : [];
           else if (type === "inlineStr") {
@@ -760,6 +777,23 @@ async function openOffice(bytes, kind) {
         preview.push("</tr>");
       }
       preview.push("</table>");
+      // Text boxes and shapes drawn on the sheet, and the titles of its charts.
+      const srels = await relsOf(sh.rel.target);
+      for (const dr of Object.values(srels).filter((r) => /\/drawing$/.test(r.type))) {
+        const d = await addFile(dr.target);
+        if (!d) continue;
+        const chunks = [];
+        for (const anchor of d.root.kids || []) if (anchor.kids) chunks.push(...oxDrawing(d.src, anchor, { file: d.fi, out: segments, tag: "p" }));
+        const drels = await relsOf(dr.target);
+        for (const cr of Object.values(drels).filter((r) => /\/chart$/.test(r.type))) {
+          const ch = await addFile(cr.target);
+          if (!ch) continue;
+          for (const title of findAll(ch.root, (k) => k.name === "title")) {
+            for (const p of findAll(title, (k) => k.name === "p")) chunks.push("<p>", ...oxParagraph(ch.src, p, { file: ch.fi, out: segments, tag: "chart" }), "</p>");
+          }
+        }
+        if (chunks.some((c) => typeof c === "object")) preview.push('<div class="box">', ...chunks, "</div>");
+      }
     }
   }
   // Segments in the order the preview shows them, so they can be found on the laid-out pages.

@@ -4,6 +4,11 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.70
+
+- New file types: SRT and WebVTT subtitles, Markdown and plain text. Each cue or paragraph is a segment, the translation goes back into the file in place (line breaks, timings, formatting tags such as &lt;i&gt; and position codes like {\an8} are kept; Markdown headings, lists, quotes and table cells are translated, code blocks and HTML stay), and the viewer shows the file as a laid-out page. The bilingual version puts the translation under each cue or paragraph. Files in Windows-1252 or UTF-16 are read and written back as UTF-8.
+- Excel: text boxes and shapes drawn on a sheet, chart titles and axis titles, and the texts inside formulas ("Above target", "Total: ") are translated too. A workbook with translated formula texts is marked so that Excel calculates it afresh when it opens.
+
 ## 1.69
 
 - The chameleon takes the colour of the document: while a file is open, the accent colour of the app (buttons, boxes, icon) follows the dominant colour of its first page – pulled into a range that stays readable in the light and the dark theme. A page without a clear colour (plain text, grey scans) keeps the colour of this start, and closing the file brings it back.
