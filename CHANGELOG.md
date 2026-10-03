@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.64
+
+- The app icon (favicon and the logo in the top bar) shows the chameleon with its mouth closed, without the tongue. The large animated chameleon on the start screen is unchanged.
+
 ## 1.63
 
 - Top bar: the full-screen button has a new icon – two diagonal arrows that point outwards, and inwards while the app is full screen.
