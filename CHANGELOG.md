@@ -4,6 +4,11 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.83
+
+- Flashcards: a "Due today" selection, now the default, brings up the new words and the known ones whose review is due. Known words come back after growing intervals (1, 3, 7, 14, 30 and then every 90 days); "Again" puts a word back to the start. When nothing is due, the window says when the next review comes.
+- Flashcards: a "Reversed" switch (key R) asks from the translation for the term; the setting is remembered.
+
 ## 1.82
 
 - Flashcards started from the vocabulary on the start screen (no document open) work again: the window switched straight back to the vocabulary and the cards stayed hidden.

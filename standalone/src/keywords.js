@@ -143,11 +143,25 @@ function initKeywords() {
 // The terms as flashcards: front the term (with its example sentence), back the translation.
 // Click or Space turns a card; "Known" takes it out of the round, "Again" puts it at the end.
 const fc = { queue: [], index: 0, flipped: false, known: 0, total: 0, all: [], scope: "new" };
-const LS_FC_SCOPE = "pdftr:fcscope";
-/** The vocabulary remembers which words were marked known (how often, and when). */
+const LS_FC_SCOPE = "pdftr:fcscope", LS_FC_REVERSE = "pdftr:fcreverse";
+/**
+ * The vocabulary remembers which words were marked known (how often, and when). A word comes
+ * up again after a growing interval: 1, 3, 7, 14, 30 and then every 90 days. "Again" puts it
+ * back to the start.
+ */
+const FC_STEPS = [1, 3, 7, 14, 30, 90];
+const DAY = 864e5;
 const rowKnown = (r) => Number(r.known) > 0;
-function fcScopeRows() { return fc.scope === "new" ? fc.all.filter((r) => !rowKnown(r)) : fc.all; }
+const fcInterval = (r) => FC_STEPS[Math.min(Number(r.known) || 1, FC_STEPS.length) - 1] * DAY;
+const fcDueAt = (r) => (rowKnown(r) ? (Number(r.last) || 0) + fcInterval(r) : 0);
+const fcDue = (r) => !rowKnown(r) || fcDueAt(r) <= Date.now();
+function fcScopeRows() {
+  if (fc.scope === "new") return fc.all.filter((r) => !rowKnown(r));
+  if (fc.scope === "due") return fc.all.filter(fcDue);
+  return fc.all;
+}
 function fcSetScope(scope, remember = true) {
+  if (!["new", "due", "all"].includes(scope)) scope = "due";
   fc.scope = scope;
   if (remember) try { localStorage.setItem(LS_FC_SCOPE, scope); } catch (_) { /* fine */ }
   const rows = fcScopeRows();
@@ -164,28 +178,35 @@ function fcStart() {
     rows = rows.map((r) => ({ ...r, known: known.get(r.term) || 0 }));
   }
   fc.all = rows;
-  let scope = "new";
-  try { scope = localStorage.getItem(LS_FC_SCOPE) || "new"; } catch (_) { /* fine */ }
-  if (scope === "new" && rows.length && !rows.some((r) => !rowKnown(r))) scope = "all"; // nothing new left: the whole set
+  let scope = "due";
+  try { scope = localStorage.getItem(LS_FC_SCOPE) || "due"; fc.reverse = localStorage.getItem(LS_FC_REVERSE) === "1"; } catch (_) { /* fine */ }
   fcSetScope(scope, false);
 }
-/** New words / the whole set, above the card; the number of words in each. */
+/** Due today / new words / the whole set, and the direction of the cards, above the card. */
 function fcScopeHtml() {
-  const fresh = fc.all.filter((r) => !rowKnown(r)).length, known = fc.all.length - fresh;
   if (!fc.all.length) return "";
+  const fresh = fc.all.filter((r) => !rowKnown(r)).length, due = fc.all.filter(fcDue).length, known = fc.all.length - fresh;
+  const seg = (key, n, label) => `<button type="button" class="${fc.scope === key ? "active" : ""}" data-fc="scope-${key}"${n ? "" : " disabled"}>${escapeHtml(t(label, { n }))}</button>`;
   return `<div class="kw-scope">
     <div class="seg-toggle" role="group" title="${escapeHtml(t("kw.scopeTitle"))}">
-      <button type="button" class="${fc.scope === "new" ? "active" : ""}" data-fc="scope-new"${fresh ? "" : " disabled"}>${escapeHtml(t("kw.scopeNew", { n: fresh }))}</button>
-      <button type="button" class="${fc.scope === "all" ? "active" : ""}" data-fc="scope-all">${escapeHtml(t(fcSource ? "kw.scopeAll" : "kw.scopeAllDoc", { n: fc.all.length }))}</button>
+      ${seg("due", due, "kw.scopeDue")}${seg("new", fresh, "kw.scopeNew")}${seg("all", fc.all.length, fcSource ? "kw.scopeAll" : "kw.scopeAllDoc")}
     </div>
+    <button type="button" class="btn ghost kw-reverse${fc.reverse ? " on" : ""}" data-fc="reverse" aria-pressed="${fc.reverse ? "true" : "false"}" title="${escapeHtml(t("kw.reverseTitle"))}">⇄ ${escapeHtml(t("kw.reverse"))}</button>
     ${known ? `<button type="button" class="btn ghost kw-scope-reset" data-fc="reset" title="${escapeHtml(t("kw.resetTitle"))}">${escapeHtml(t("kw.reset", { n: known }))}</button>` : ""}
   </div>`;
+}
+/** "Nothing is due today": when the next word comes up. */
+function fcNextDueText() {
+  const next = Math.min(...fc.all.filter(rowKnown).map(fcDueAt));
+  if (!isFinite(next)) return t("kw.noNew");
+  const days = Math.max(1, Math.ceil((next - Date.now()) / DAY));
+  return t("kw.noDue", { when: days === 1 ? t("kw.tomorrow") : t("kw.inDays", { n: days }) });
 }
 function fcShuffle() { for (let i = fc.queue.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [fc.queue[i], fc.queue[j]] = [fc.queue[j], fc.queue[i]]; } fc.index = 0; fc.flipped = false; fcRender(); }
 function fcRender() {
   const box = $("#kwCards");
   const scope = fcScopeHtml();
-  if (!fc.total) { box.innerHTML = `${scope}<p class="muted small">${escapeHtml(t(fc.all.length ? "kw.noNew" : "kw.noCards"))}</p>`; return; }
+  if (!fc.total) { box.innerHTML = `${scope}<p class="muted small">${escapeHtml(!fc.all.length ? t("kw.noCards") : fc.scope === "due" ? fcNextDueText() : t("kw.noNew"))}</p>`; return; }
   if (!fc.queue.length) {
     box.innerHTML = `${scope}<div class="kw-done"><div class="kw-done-text">${escapeHtml(t("kw.allDone"))}</div><button type="button" class="btn primary" data-fc="restart">${escapeHtml(t("kw.restart"))}</button></div>`;
     box.querySelector(".kw-done [data-fc]").focus({ preventScroll: true });
@@ -193,13 +214,15 @@ function fcRender() {
   }
   const r = fc.rows[fc.queue[fc.index]];
   const pair = r._pair || fc.pair, fav = pair ? isFav(pair, r.term) : false;
+  const sides = [{ word: r.term, sentence: r.example }, { word: r.translation, sentence: r.exampleTr }];
+  const [front, back] = fc.reverse ? sides.reverse() : sides; // reversed: asked from the translation
   const favBtn = `<button type="button" class="kw-fav${fav ? " on" : ""}" data-fc="fav" title="${escapeHtml(t("vocab.favTitle"))}" aria-label="${escapeHtml(t("vocab.fav"))}" aria-pressed="${fav ? "true" : "false"}"${pair ? "" : " disabled"}>${KAM_ICON}</button>`;
   box.innerHTML = `${scope}
     <div class="kw-progress"><span>${escapeHtml(t("kw.progress", { i: fc.index + 1, n: fc.queue.length }))}</span><span class="muted">${escapeHtml(t("kw.knownCount", { n: fc.known, total: fc.total }))}</span></div>
     <div class="kw-card${fc.flipped ? " flipped" : ""}" tabindex="0" role="button" aria-label="${escapeHtml(t("kw.flip"))}" data-fc="flip">
       <div class="kw-card-inner">
-        <div class="kw-face kw-front">${favBtn}<div class="kw-word">${escapeHtml(r.term)}</div>${r.example ? `<div class="kw-sentence">${escapeHtml(r.example)}</div>` : ""}</div>
-        <div class="kw-face kw-back">${favBtn}<div class="kw-word">${escapeHtml(r.translation)}</div>${r.exampleTr ? `<div class="kw-sentence">${escapeHtml(r.exampleTr)}</div>` : ""}</div>
+        <div class="kw-face kw-front">${favBtn}<div class="kw-word">${escapeHtml(front.word)}</div>${front.sentence ? `<div class="kw-sentence">${escapeHtml(front.sentence)}</div>` : ""}</div>
+        <div class="kw-face kw-back">${favBtn}<div class="kw-word">${escapeHtml(back.word)}</div>${back.sentence ? `<div class="kw-sentence">${escapeHtml(back.sentence)}</div>` : ""}</div>
       </div>
     </div>
     <div class="kw-fc-actions">
@@ -218,12 +241,18 @@ function fcRender() {
   (box.querySelector(".kw-card") || box.querySelector("[data-fc]"))?.focus({ preventScroll: true });
 }
 function fcAction(act) {
-  if (act === "scope-new" || act === "scope-all") { fcSetScope(act.slice(6)); return; }
+  if (act.startsWith("scope-")) { fcSetScope(act.slice(6)); return; }
+  if (act === "reverse") {
+    fc.reverse = !fc.reverse;
+    try { localStorage.setItem(LS_FC_REVERSE, fc.reverse ? "1" : "0"); } catch (_) { /* fine */ }
+    fc.flipped = false; fcRender();
+    return;
+  }
   if (act === "reset") { // the learning state of these words is forgotten: all of them are new again
     const known = fc.all.filter(rowKnown);
     if (!known.length || !confirm(t("kw.resetConfirm", { n: known.length }))) return;
     for (const r of known) { if (r._pair || fc.pair) vocabMarkKnown(r._pair || fc.pair, r.term, 0); r.known = 0; }
-    fcSetScope("new");
+    fcSetScope(fc.scope);
     return;
   }
   if (!fc.queue.length && act !== "restart") return;
@@ -243,7 +272,11 @@ function fcAction(act) {
     if (pair) r.known = vocabMarkKnown(pair, r.term); // (remembered: the word is not "new" any more)
     fc.queue.splice(fc.index, 1); fc.known++; if (fc.index >= fc.queue.length) fc.index = 0;
   }
-  else if (act === "again") { const [i] = fc.queue.splice(fc.index, 1); fc.queue.push(i); if (fc.index >= fc.queue.length) fc.index = 0; }
+  else if (act === "again") { // back to the start: the word is new again and comes up at the end of this round
+    const r = fc.rows[fc.queue[fc.index]], pair = r._pair || fc.pair;
+    if (pair && rowKnown(r)) { vocabMarkKnown(pair, r.term, 0); r.known = 0; }
+    const [i] = fc.queue.splice(fc.index, 1); fc.queue.push(i); if (fc.index >= fc.queue.length) fc.index = 0;
+  }
   else if (act === "shuffle") { fcShuffle(); return; }
   else if (act === "restart") { fcStart(); return; }
   fc.flipped = false;
@@ -269,7 +302,7 @@ function initFlashcards() {
   document.addEventListener("keydown", (e) => {
     const dlg = $("#kwDialog");
     if (!dlg.open || dlg.dataset.mode !== "cards" || e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
-    const keys = { " ": "flip", Enter: "flip", ArrowRight: "next", ArrowLeft: "prev", k: "known", K: "known", a: "again", A: "again", f: "fav", F: "fav" };
+    const keys = { " ": "flip", Enter: "flip", ArrowRight: "next", ArrowLeft: "prev", k: "known", K: "known", a: "again", A: "again", f: "fav", F: "fav", r: "reverse", R: "reverse" };
     if (keys[e.key]) { e.preventDefault(); fcAction(keys[e.key]); }
   });
   $("#kwDialog").addEventListener("close", () => { fcSource = null; $("#kwDialog").dataset.mode = "list"; });
