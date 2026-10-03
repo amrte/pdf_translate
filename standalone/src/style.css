@@ -716,7 +716,9 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
 .kw-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; align-items: center; padding: 8px 10px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface-2); }
 .kw-row input { min-width: 0; font-size: 15px; padding: 9px 11px; border: 1px solid var(--border); height: 40px; box-sizing: border-box; }
 .kw-row input.kw-ex { font-size: 13.5px; padding: 7px 10px; height: 34px; }
-.kw-row .mini, .vocab-row-btns .mini { height: 40px; min-width: 40px; padding: 0 10px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--border); border-radius: 8px; font-size: 15px; }
+.kw-row .mini, .vocab-row-btns .mini { height: 40px; min-width: 40px; padding: 0 10px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--border); border-radius: 7px; font-size: 15px; }
+/* every field in the keywords window: grey frame, the buttons' corner radius */
+#kwDialog input, #kwDialog select { border: 1px solid var(--border); border-radius: 7px; background: var(--surface); color: var(--text); }
 .kw-row .vocab-row-btns { align-self: stretch; }
 .kw-preview { overflow: auto; cursor: zoom-in; border-radius: 8px; }
 .kw-preview img { width: 100%; border: 1px solid var(--border); border-radius: 6px; background: #fff; display: block; min-height: 120px; }
@@ -745,7 +747,8 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
 .vocab-wrap { display: grid; grid-template-rows: auto 1fr; gap: 10px; }
 .vocab-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .vocab-bar .spacer { flex: 1; }
-.vocab-bar select, .vocab-bar input { height: 32px; }
+.vocab-bar select, .vocab-bar input, .vocab-bar .btn { height: 32px; box-sizing: border-box; }
+.vocab-bar select { padding: 0 8px; font: inherit; }
 .vocab-bar input[type="search"] { min-width: 220px; }
 .vocab-list { overflow: auto; }
 .start-vocab { display: flex; justify-content: center; margin-top: 14px; }

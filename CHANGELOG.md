@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.77
+
+- Keywords: all fields of the window – the pair list, the search box and the term fields – have grey frames and the same corner radius as the buttons; the controls of the vocabulary bar share one height.
+
 ## 1.76
 
 - Keywords: the fields have grey frames, and the buttons beside them are as tall as the fields.
