@@ -8,6 +8,7 @@ initTools();
 initPicture();
 initReading();
 initSegEdit();
+initVocab();
 initOffline();
 initPagesManager();
 initKeywords();

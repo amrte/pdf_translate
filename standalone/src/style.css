@@ -732,8 +732,16 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
 .kw-row .kw-ex { font-size: 12px; color: var(--muted); }
 .kw-row .kw-ex[data-k="exampleTr"] { grid-column: 2 / 4; }
 .kw-modes { align-self: flex-start; }
-#kwDialog[data-mode="cards"] .kw-list-only { display: none !important; }
+#kwDialog:not([data-mode="list"]) .kw-list-only { display: none !important; }
 #kwDialog:not([data-mode="cards"]) .kw-cards-only { display: none !important; }
+#kwDialog:not([data-mode="vocab"]) .kw-vocab-only { display: none !important; }
+.vocab-wrap { display: grid; grid-template-rows: auto 1fr; gap: 10px; }
+.vocab-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.vocab-bar .spacer { flex: 1; }
+.vocab-bar select, .vocab-bar input { height: 32px; }
+.vocab-bar input[type="search"] { min-width: 220px; }
+.vocab-list { overflow: auto; }
+.start-vocab { display: flex; justify-content: center; margin-top: 14px; }
 .kw-cards { display: grid; gap: 14px; grid-template-rows: auto 1fr auto; align-items: stretch; }
 .kw-cards:has(.kw-done), .kw-cards:has(> p) { grid-template-rows: 1fr; align-items: center; justify-items: center; }
 .kw-fc-nav, .kw-fc-judge { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; }

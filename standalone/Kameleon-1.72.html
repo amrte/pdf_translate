@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="Kameleon 1.71">
+  <meta name="generator" content="Kameleon 1.72">
   <meta name="description" content="Kameleon – Wechselt die Sprache, behält die Form. Changes language, keeps its shape.">
   <title>Kameleon</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2216%22 fill=%22%23287130%22/%3E%3Cg transform=%22translate(2.5 1) scale(0.9)%22 fill=%22%23ffffff%22 stroke=%22%23ffffff%22%3E%3Cpath d=%22M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6%22 fill=%22none%22 stroke-width=%223.8%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M21 43l-1 10M30 44v9M38 43l1 10%22 stroke-width=%223.6%22 stroke-linecap=%22round%22/%3E%3Cellipse cx=%2221%22 cy=%2225%22 rx=%227%22 ry=%227.5%22 stroke=%22none%22/%3E%3Cellipse cx=%2233%22 cy=%2223.5%22 rx=%227.5%22 ry=%228%22 stroke=%22none%22/%3E%3Cpath d=%22M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z%22 stroke=%22none%22/%3E%3Cpath d=%22M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z%22 stroke=%22none%22/%3E%3Cpath d=%22M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z%22 stroke=%22none%22/%3E%3Cpath d=%22M16 37l4-3 4 3 4-3 4 3 4-3 4 3%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%222.1%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3Cpath d=%22M43.5 33.9L57 32.6%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%221.5%22 stroke-linecap=%22round%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%224.4%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%222.7%22 stroke=%22none%22/%3E%3Ccircle cx=%2246.2%22 cy=%2226.7%22 r=%221.3%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Cpath d=%22M4 55.5c15-3 39-3 54 0%22 fill=%22none%22 stroke-width=%222.4%22 stroke-linecap=%22round%22/%3E%3C/g%3E%3C/svg%3E">
@@ -742,8 +742,16 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
 .kw-row .kw-ex { font-size: 12px; color: var(--muted); }
 .kw-row .kw-ex[data-k="exampleTr"] { grid-column: 2 / 4; }
 .kw-modes { align-self: flex-start; }
-#kwDialog[data-mode="cards"] .kw-list-only { display: none !important; }
+#kwDialog:not([data-mode="list"]) .kw-list-only { display: none !important; }
 #kwDialog:not([data-mode="cards"]) .kw-cards-only { display: none !important; }
+#kwDialog:not([data-mode="vocab"]) .kw-vocab-only { display: none !important; }
+.vocab-wrap { display: grid; grid-template-rows: auto 1fr; gap: 10px; }
+.vocab-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.vocab-bar .spacer { flex: 1; }
+.vocab-bar select, .vocab-bar input { height: 32px; }
+.vocab-bar input[type="search"] { min-width: 220px; }
+.vocab-list { overflow: auto; }
+.start-vocab { display: flex; justify-content: center; margin-top: 14px; }
 .kw-cards { display: grid; gap: 14px; grid-template-rows: auto 1fr auto; align-items: stretch; }
 .kw-cards:has(.kw-done), .kw-cards:has(> p) { grid-template-rows: 1fr; align-items: center; justify-items: center; }
 .kw-fc-nav, .kw-fc-judge { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; }
@@ -772,7 +780,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
   <div class="brand">
     <span class="logo"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#287130"/><g transform="translate(2.5 1) scale(0.9)" fill="#ffffff" stroke="#ffffff"><path d="M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6" fill="none" stroke-width="3.8" stroke-linecap="round"/><path d="M21 43l-1 10M30 44v9M38 43l1 10" stroke-width="3.6" stroke-linecap="round"/><ellipse cx="21" cy="25" rx="7" ry="7.5" stroke="none"/><ellipse cx="33" cy="23.5" rx="7.5" ry="8" stroke="none"/><path d="M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z" stroke="none"/><path d="M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z" stroke="none"/><path d="M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z" stroke="none"/><path d="M16 37l4-3 4 3 4-3 4 3 4-3 4 3" fill="none" stroke="#287130" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M43.5 33.9L57 32.6" fill="none" stroke="#287130" stroke-width="1.5" stroke-linecap="round"/><circle cx="45.5" cy="26.5" r="4.4" fill="#287130" stroke="none"/><circle cx="45.5" cy="26.5" r="2.7" stroke="none"/><circle cx="46.2" cy="26.7" r="1.3" fill="#287130" stroke="none"/><path d="M4 55.5c15-3 39-3 54 0" fill="none" stroke-width="2.4" stroke-linecap="round"/></g></svg></span>
     <span class="brand-name">Kameleon</span>
-    <span class="version" id="appVersion">v1.71</span>
+    <span class="version" id="appVersion">v1.72</span>
   </div>
   <div class="topbar-actions">
     <span class="doc-name" id="docName"></span>
@@ -831,6 +839,8 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
     </div>
   </label>
   <div class="recent" id="recent" hidden><span class="recent-label" data-i18n="recent.title">Recently opened:</span><div class="recent-list" id="recentList"></div></div>
+  <div class="start-vocab"><button type="button" class="btn ghost" id="btnVocabStart" data-i18n-title="vocab.startTitle" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5M8 7h7M8 11h7"/></svg><span data-i18n="vocab.start">Vocabulary</span></button></div>
+  <input type="file" id="vocabFile" hidden accept=".txt,.tsv,.csv,text/plain">
   <!-- The workflow (also copied into Help); the buttons look as they do in the app. -->
   <section class="wf" id="wfStart" aria-labelledby="wfTitle">
     <h2 class="wf-title" id="wfTitle"><button type="button" class="wf-fold" id="wfFold" aria-controls="wfFlow" aria-expanded="true" data-i18n-title="wf.foldTitle"><span data-i18n="wf.title">The workflow</span><svg class="wf-chevron" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button></h2>
@@ -1188,7 +1198,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
     </div>
     <input type="file" id="offlineZip" class="visually-hidden" accept=".zip,application/zip" multiple tabindex="-1">
     <input type="file" id="offlineFolder" class="visually-hidden" webkitdirectory multiple tabindex="-1">
-    <p class="muted small help-version help-part">Kameleon v1.71 · <span data-i18n="app.tagline"></span></p>
+    <p class="muted small help-version help-part">Kameleon v1.72 · <span data-i18n="app.tagline"></span></p>
     <div class="modal-actions">
       <button type="button" value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
       <button type="button" class="btn ai-part" id="aiCopyPrompt" data-i18n="ai.copyPrompt">Copy prompt only</button>
@@ -1219,8 +1229,18 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
 <dialog id="kwDialog" class="modal wide" aria-labelledby="kwTitle">
   <form method="dialog">
     <h2 id="kwTitle" data-i18n="kw.title">Keywords</h2>
-    <div class="kw-modes seg-toggle" role="group"><button type="button" class="active" id="kwModeList" data-i18n="kw.modeList">List</button><button type="button" id="kwModeCards" data-i18n="kw.modeCards">Flashcards</button></div>
-    <p class="muted small"><span class="kw-list-only" data-i18n="kw.text"></span><span class="kw-cards-only" data-i18n="kw.cardsText"></span></p>
+    <div class="kw-modes seg-toggle" role="group"><button type="button" class="active" id="kwModeList" data-i18n="kw.modeList">List</button><button type="button" id="kwModeCards" data-i18n="kw.modeCards">Flashcards</button><button type="button" id="kwModeVocab" data-i18n="kw.modeVocab">Vocabulary</button></div>
+    <p class="muted small"><span class="kw-list-only" data-i18n="kw.text"></span><span class="kw-cards-only" data-i18n="kw.cardsText"></span><span class="kw-vocab-only" data-i18n="vocab.text"></span></p>
+    <div class="kw-body kw-vocab-only vocab-wrap">
+      <div class="vocab-bar">
+        <select id="vocabPair" data-i18n-aria="vocab.pair"></select>
+        <input type="search" id="vocabSearch" data-i18n-placeholder="vocab.search" autocomplete="off">
+        <span class="muted small" id="vocabCount"></span>
+        <span class="spacer"></span>
+        <button type="button" class="btn" id="vocabToHere" data-i18n="vocab.toHere" hidden></button>
+      </div>
+      <div class="kw-list vocab-list" id="vocabList"></div>
+    </div>
     <div class="kw-wrap kw-body kw-list-only">
       <div class="kw-list" id="kwList"></div>
       <div class="kw-preview" id="kwPreviewWrap" data-i18n-title="kw.previewZoom"><img id="kwPreview" alt=""></div>
@@ -1229,7 +1249,12 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
     <div class="modal-actions kw-actions">
       <button type="button" class="btn kw-list-only" id="kwAdd" data-i18n="kw.add"></button>
       <button type="button" class="btn kw-list-only" id="kwCopy" data-i18n="kw.copy"></button>
+      <button type="button" class="btn kw-vocab-only" id="vocabCards" data-i18n="vocab.cards"></button>
+      <button type="button" class="btn kw-vocab-only" id="vocabImport" data-i18n="vocab.import"></button>
+      <button type="button" class="btn ghost kw-vocab-only" id="vocabClear" data-i18n="vocab.clear"></button>
       <span class="spacer"></span>
+      <button type="button" class="btn kw-vocab-only" id="vocabAnki" data-i18n="vocab.anki" data-i18n-title="vocab.ankiTitle"></button>
+      <button type="button" class="btn primary kw-vocab-only" id="vocabPdf" data-i18n="vocab.pdf"></button>
       <button value="close" class="btn ghost" data-i18n="kw.close"></button>
       <button type="button" class="btn primary kw-list-only" id="kwDownload" data-i18n="kw.download"></button>
     </div>
@@ -1661,6 +1686,32 @@ const I18N = {
     "kw.modeCards": "Lernkarten",
     "kw.flip": "Karte umdrehen (Leertaste)",
     "kw.flipBtn": "Umdrehen",
+    "kw.modeVocab": "Wortschatz",
+    "kw.importedVocab": "{n} Begriffe übernommen, {added} neu im Wortschatz {pair}.",
+    "vocab.title": "Wortschatz",
+    "vocab.text": "Alle Begriffe, die aus Dokumenten kamen, nach Sprachpaar gesammelt – zum Nachschlagen, Lernen und Exportieren. Änderungen hier werden gespeichert.",
+    "vocab.pair": "Sprachpaar",
+    "vocab.search": "Suchen…",
+    "vocab.count": "{n} Begriffe",
+    "vocab.countOf": "{n} von {total} Begriffen",
+    "vocab.toHere": "Begriffe dieses Dokuments übernehmen",
+    "vocab.cards": "Lernkarten",
+    "vocab.import": "Importieren…",
+    "vocab.clear": "Sprachpaar leeren",
+    "vocab.anki": "Anki (Text)",
+    "vocab.ankiTitle": "Textdatei mit Tabulatoren, die Anki über „Datei → Importieren“ einliest (Vorderseite: Begriff, Rückseite: Übersetzung, je mit Beispielsatz)",
+    "vocab.pdf": "PDF herunterladen",
+    "vocab.subtitle": "{n} Begriffe · {date}",
+    "vocab.noMatch": "Kein Begriff passt zur Suche.",
+    "vocab.empty": "Noch keine Begriffe für dieses Sprachpaar. Sie kommen mit jeder importierten KI-Antwort, die eine Begriffsliste enthält.",
+    "vocab.noPair": "Das Sprachpaar ließ sich nicht bestimmen.",
+    "vocab.added": "{n} neue Begriffe im Wortschatz {pair}.",
+    "vocab.imported": "{n} neue Begriffe ({total} gelesen) im Wortschatz {pair}.",
+    "vocab.badFile": "Die Datei enthält keine Begriffspaare (je Zeile „Begriff ⇥ Übersetzung“ oder „Begriff = Übersetzung“).",
+    "vocab.clearConfirm": "Alle Begriffe des Sprachpaars {pair} löschen?",
+    "vocab.full": "Der Speicher des Browsers ist voll; der Wortschatz konnte nicht gespeichert werden.",
+    "vocab.start": "Wortschatz",
+    "vocab.startTitle": "Die gesammelten Begriffe aller Dokumente: nachschlagen, lernen, exportieren",
     "kw.previewZoom": "Klick: die Seite in Fensterbreite anzeigen – und wieder klein",
     "kw.cardsText": "Anklicken oder Leertaste dreht die Karte um · ←/→ blättern · K gewusst · A nochmal · Gewusste Karten verlassen die Runde.",
     "kw.prev": "Vorherige Karte (←)",
@@ -2159,6 +2210,32 @@ const I18N = {
     "kw.modeCards": "Flashcards",
     "kw.flip": "Turn the card (Space)",
     "kw.flipBtn": "Turn",
+    "kw.modeVocab": "Vocabulary",
+    "kw.importedVocab": "{n} terms taken over, {added} new in the vocabulary {pair}.",
+    "vocab.title": "Vocabulary",
+    "vocab.text": "All terms that came from documents, collected by language pair – to look up, learn and export. Changes made here are saved.",
+    "vocab.pair": "Language pair",
+    "vocab.search": "Search…",
+    "vocab.count": "{n} terms",
+    "vocab.countOf": "{n} of {total} terms",
+    "vocab.toHere": "Add this document's terms",
+    "vocab.cards": "Flashcards",
+    "vocab.import": "Import…",
+    "vocab.clear": "Clear language pair",
+    "vocab.anki": "Anki (text)",
+    "vocab.ankiTitle": "A tab-separated text file that Anki reads through File → Import (front: the term, back: the translation, each with its example sentence)",
+    "vocab.pdf": "Download PDF",
+    "vocab.subtitle": "{n} terms · {date}",
+    "vocab.noMatch": "No term matches the search.",
+    "vocab.empty": "No terms for this language pair yet. They arrive with every imported AI answer that holds a term list.",
+    "vocab.noPair": "The language pair could not be determined.",
+    "vocab.added": "{n} new terms in the vocabulary {pair}.",
+    "vocab.imported": "{n} new terms ({total} read) in the vocabulary {pair}.",
+    "vocab.badFile": "The file holds no term pairs (one per line: “term ⇥ translation” or “term = translation”).",
+    "vocab.clearConfirm": "Delete all terms of the language pair {pair}?",
+    "vocab.full": "The browser's storage is full; the vocabulary could not be saved.",
+    "vocab.start": "Vocabulary",
+    "vocab.startTitle": "The terms collected from all documents: look up, learn, export",
     "kw.previewZoom": "Click: show the page at window width – and small again",
     "kw.cardsText": "Click or Space turns the card · ←/→ browse · K known · A again · Known cards leave the round.",
     "kw.prev": "Previous card (←)",
@@ -2319,8 +2396,8 @@ const AI_PROMPT = {
     context: (c) => `Kontext: Das Dokument ist ${c}. Verwende die Fachsprache dieses Gebiets.`,
     glossary: "Verwende für die folgenden Begriffe diese Übersetzungen:",
     segments: "Segmente:",
-    keywords: (n) => `Nenne zum Schluss die ${n} wichtigsten Fachbegriffe oder Schlüsselwörter des Textes mit ihrer Übersetzung. Beginne diese Liste mit einer eigenen Zeile [[keywords]] und schreibe danach je Zeile „Begriff = Übersetzung“, ohne Nummerierung.`,
-    keywordsEx: (n) => `Nenne zum Schluss die ${n} wichtigsten Fachbegriffe oder Schlüsselwörter des Textes mit ihrer Übersetzung und je einem Beispielsatz aus dem Text. Beginne diese Liste mit einer eigenen Zeile [[keywords]] und schreibe danach je Zeile „Begriff = Übersetzung | Beispielsatz im Original | Beispielsatz übersetzt“, ohne Nummerierung.`,
+    keywords: (n) => `Nenne zum Schluss die ${n} wichtigsten Fachbegriffe oder Schlüsselwörter des Textes mit ihrer Übersetzung. Beginne diese Liste mit einer eigenen Zeile [[keywords]], nenne in der nächsten Zeile die Sprachen als Codes („Sprachen: de → en“) und schreibe danach je Zeile „Begriff = Übersetzung“, ohne Nummerierung.`,
+    keywordsEx: (n) => `Nenne zum Schluss die ${n} wichtigsten Fachbegriffe oder Schlüsselwörter des Textes mit ihrer Übersetzung und je einem Beispielsatz aus dem Text. Beginne diese Liste mit einer eigenen Zeile [[keywords]], nenne in der nächsten Zeile die Sprachen als Codes („Sprachen: de → en“) und schreibe danach je Zeile „Begriff = Übersetzung | Beispielsatz im Original | Beispielsatz übersetzt“, ohne Nummerierung.`,
     officeRules: [
       "Die Segmente stammen aus einem Office-Dokument (Word, PowerPoint oder Excel). Jede Übersetzung ersetzt den Originaltext an derselben Stelle der Datei. Halte dich strikt an diese Regeln:",
       "",
@@ -2363,8 +2440,8 @@ const AI_PROMPT = {
     context: (c) => `Context: the document is ${c}. Use the terminology of that field.`,
     glossary: "Use these translations for the following terms:",
     segments: "Segments:",
-    keywords: (n) => `At the end, list the ${n} most important technical terms or keywords of the text with their translation. Start that list with a line of its own, [[keywords]], then write one term per line as "term = translation", without numbering.`,
-    keywordsEx: (n) => `At the end, list the ${n} most important technical terms or keywords of the text with their translation and one example sentence from the text each. Start that list with a line of its own, [[keywords]], then write one term per line as "term = translation | example sentence in the original | example sentence translated", without numbering.`,
+    keywords: (n) => `At the end, list the ${n} most important technical terms or keywords of the text with their translation. Start that list with a line of its own, [[keywords]], name the languages as codes on the next line ("Languages: de → en"), then write one term per line as "term = translation", without numbering.`,
+    keywordsEx: (n) => `At the end, list the ${n} most important technical terms or keywords of the text with their translation and one example sentence from the text each. Start that list with a line of its own, [[keywords]], name the languages as codes on the next line ("Languages: de → en"), then write one term per line as "term = translation | example sentence in the original | example sentence translated", without numbering.`,
     officeRules: [
       "The segments were extracted from an Office document (Word, PowerPoint or Excel). Each translation replaces the original text at the same place in the file. Follow these rules strictly:",
       "",
@@ -14382,7 +14459,7 @@ function initPicture() {
 // from its own browser cache before the network, so language files are written into that cache.
 // ======================================================================
 
-const APP_VERSION = "1.71";
+const APP_VERSION = "1.72";
 // (a change of library version makes a stored set outdated: it is then ignored)
 const OFFLINE_VERSION = `${MUPDF_URL} ${OCR_LIB}`;
 const CORE_SIMD = "tesseract-core-simd-lstm.wasm.js", CORE_PLAIN = "tesseract-core-lstm.wasm.js";
@@ -14919,15 +14996,24 @@ function kwExtract(text) {
   const end = after.search(/^\s*\[\[\s*\d+\s*\]\]/m); // (a numbered marker ends the list)
   const block = end < 0 ? after : after.slice(0, end);
   const rows = [];
+  let pair = "";
   for (const raw of block.split(/\r?\n/)) {
     const line = raw.replace(/^\s*(?:[-*•]|\d+[.)])\s*/, "").trim();
     if (!line) continue;
+    const lm = /^(?:sprachen|languages?|langs?)?\s*:?\s*([a-z]{2,3})\s*(?:→|->|–|-|>|⇒)\s*([a-z]{2,3})\s*$/i.exec(line); // "Sprachen: de → en"
+    if (lm) { pair = `${lm[1].toLowerCase().slice(0, 2)}-${lm[2].toLowerCase().slice(0, 2)}`; continue; }
     // "term = translation | example sentence | translated example" (the examples are optional)
     const parts = line.split(/\s\|\s/);
     const mm = /^(.+?)\s*(?:=|—|–|->|→|\t)\s*(.+)$/.exec(parts[0]) || /^(.+?):\s+(.+)$/.exec(parts[0]);
     if (mm) rows.push({ term: mm[1].trim(), translation: mm[2].trim(), example: (parts[1] || "").trim(), exampleTr: (parts[2] || "").trim() });
   }
-  if (rows.length) { kwMerge(rows); toast(t("kw.imported", { n: rows.length }), "ok"); }
+  if (rows.length) {
+    kwMerge(rows);
+    if (pair) setCurrentPair(pair);
+    const p = pair || currentPair();
+    const added = p ? vocabAdd(p, rows, state.doc.name) : 0;
+    toast(p ? t("kw.importedVocab", { n: rows.length, added, pair: pairLabel(p) }) : t("kw.imported", { n: rows.length }), "ok");
+  }
   return text.slice(0, m.index) + (end < 0 ? "" : after.slice(end));
 }
 function kwMerge(rows) {
@@ -14956,6 +15042,7 @@ function openKeywordsDialog() {
   kwRenderList();
   kwSchedulePreview(0);
   openModal($("#kwDialog"));
+  kwSetMode("list");
 }
 function kwRenderList() {
   const list = $("#kwList");
@@ -15018,8 +15105,9 @@ function initKeywords() {
 // Click or Space turns a card; "Known" takes it out of the round, "Again" puts it at the end.
 const fc = { queue: [], index: 0, flipped: false, known: 0, total: 0 };
 
+let fcSource = null; // rows other than the document's (the vocabulary), while set
 function fcStart() {
-  const rows = kwRows().filter((r) => r.term.trim() && r.translation.trim());
+  const rows = (fcSource || kwRows()).filter((r) => r.term.trim() && r.translation.trim());
   fc.queue = rows.map((_, i) => i); fc.rows = rows; fc.index = 0; fc.flipped = false; fc.known = 0; fc.total = rows.length;
   fcRender();
 }
@@ -15069,11 +15157,17 @@ function fcAction(act) {
   fcRender();
 }
 function kwSetMode(mode) {
-  const cards = mode === "cards";
+  const cards = mode === "cards", vocab = mode === "vocab";
+  if (!state.doc && !vocab) mode = "vocab"; // without a document only the vocabulary is there
   $("#kwDialog").dataset.mode = mode;
-  $("#kwModeList").classList.toggle("active", !cards);
+  $("#kwModeList").classList.toggle("active", mode === "list");
   $("#kwModeCards").classList.toggle("active", cards);
+  $("#kwModeVocab").classList.toggle("active", vocab);
+  $("#kwModeList").disabled = !state.doc;
+  $("#kwModeCards").disabled = !state.doc && !fcSource;
+  if (!cards) fcSource = null;
   if (cards) { fcStart(); $("#kwCards .kw-card")?.focus(); }
+  if (vocab) { vocabRender(); }
 }
 function initFlashcards() {
   $("#kwModeList").addEventListener("click", () => kwSetMode("list"));
@@ -15085,7 +15179,7 @@ function initFlashcards() {
     const keys = { " ": "flip", Enter: "flip", ArrowRight: "next", ArrowLeft: "prev", k: "known", K: "known", a: "again", A: "again" };
     if (keys[e.key]) { e.preventDefault(); fcAction(keys[e.key]); }
   });
-  $("#kwDialog").addEventListener("close", () => kwSetMode("list"));
+  $("#kwDialog").addEventListener("close", () => { fcSource = null; $("#kwDialog").dataset.mode = "list"; });
 }
 
 /* ------------------------------------------------------------- the app's colour */
@@ -15526,6 +15620,250 @@ function initSegEdit() {
   dlg.addEventListener("close", () => { splitFor = null; });
 }
 
+/* ------------------------------------------------------------- the vocabulary */
+// Terms build up across documents: every keyword list that arrives is added to the vocabulary of
+// its language pair (source → target). The vocabulary is kept in the browser, can be browsed,
+// searched, learnt as flashcards, exported as a PDF or as a text file Anki imports, and imported
+// from such a file.
+
+const LS_VOCAB = "pdftr:vocab";
+const kwPairKey = (id) => `pdftr:kwpair:${id}`;
+
+/** Common language names (German and English) to codes, for the AI dialog's target language. */
+const LANG_CODES = {
+  deutsch: "de", german: "de", englisch: "en", english: "en", französisch: "fr", french: "fr", spanisch: "es", spanish: "es", italienisch: "it", italian: "it",
+  portugiesisch: "pt", portuguese: "pt", niederländisch: "nl", dutch: "nl", polnisch: "pl", polish: "pl", tschechisch: "cs", czech: "cs", slowakisch: "sk", slovak: "sk",
+  ungarisch: "hu", hungarian: "hu", russisch: "ru", russian: "ru", ukrainisch: "uk", ukrainian: "uk", bulgarisch: "bg", bulgarian: "bg", griechisch: "el", greek: "el",
+  türkisch: "tr", turkish: "tr", schwedisch: "sv", swedish: "sv", dänisch: "da", danish: "da", norwegisch: "no", norwegian: "no", finnisch: "fi", finnish: "fi",
+  rumänisch: "ro", romanian: "ro", kroatisch: "hr", croatian: "hr", serbisch: "sr", serbian: "sr", arabisch: "ar", arabic: "ar", hebräisch: "he", hebrew: "he",
+  chinesisch: "zh", chinese: "zh", japanisch: "ja", japanese: "ja", koreanisch: "ko", korean: "ko", hindi: "hi", vietnamesisch: "vi", vietnamese: "vi", thai: "th",
+  indonesisch: "id", indonesian: "id", lateinisch: "la", latin: "la", esperanto: "eo",
+};
+const langCode = (name) => {
+  const n = (name || "").trim().toLowerCase();
+  if (!n) return "";
+  if (/^[a-z]{2,3}(-[a-z]{2,4})?$/.test(n)) return n.slice(0, 2);
+  for (const [k, v] of Object.entries(LANG_CODES)) if (n === k || n.startsWith(k)) return v;
+  return n.replace(/[^a-z]/g, "").slice(0, 8) || "";
+};
+
+/** The language of a text by its most frequent small words (and its script), or "" when unsure. */
+const STOPWORDS = {
+  de: "der die das und ist nicht ein eine mit von zu den dem für auf im sich auch wird werden bei oder als aus nach wie",
+  en: "the and of to in is that for with as on are this be by from or at which it was an not have has",
+  fr: "le la les et des de un une est pour dans que qui pas sur avec par au aux du ce cette sont il elle",
+  es: "el la los las y de que en un una es por para con del se no su al como más pero sus",
+  it: "il la di che e un una per con non sono del della nel alla gli le da si come anche più",
+  pt: "o a os as de que e do da em um uma para com não por se na no mais como mas ao",
+  nl: "de het een en van in is dat op te met voor zijn niet aan ook als er maar bij uit om door",
+  pl: "i w z na do nie się jest to że od przez dla jak są po oraz lub tym",
+  cs: "a v na se je to že s z do pro za od jako o jsou nebo při které",
+  sv: "och att det i en som är av för med på till den har inte ett om kan",
+  tr: "ve bir bu da de için ile olarak daha gibi en çok var olan ya",
+  ru: "и в не на что с по как это от для за из или при его их то",
+  uk: "і в не на що з до як це від для за із або при його їх та у",
+};
+const STOP_SETS = Object.fromEntries(Object.entries(STOPWORDS).map(([k, v]) => [k, new Set(v.split(" "))]));
+function detectLanguage(text) {
+  if (/[぀-ヿ]/.test(text)) return "ja";
+  if (/[가-힯]/.test(text)) return "ko";
+  if (/[一-鿿]/.test(text)) return "zh";
+  if (/[؀-ۿ]/.test(text)) return "ar";
+  if (/[֐-׿]/.test(text)) return "he";
+  if (/[Ͱ-Ͽ]/.test(text)) return "el";
+  const words = (text.toLowerCase().match(/\p{L}+/gu) || []);
+  if (words.length < 3) return "";
+  const score = {};
+  for (const w of words) for (const [k, set] of Object.entries(STOP_SETS)) if (set.has(w)) score[k] = (score[k] || 0) + 1;
+  const best = Object.entries(score).sort((a, b) => b[1] - a[1])[0];
+  if (!best || best[1] < 2) return "";
+  if (/[іїє]/.test(text) && best[0] === "ru") return "uk";
+  return best[0];
+}
+
+function vocabLoad() {
+  try { const v = JSON.parse(localStorage.getItem(LS_VOCAB) || "{}"); return v && typeof v === "object" ? v : {}; } catch (_) { return {}; }
+}
+function vocabSave(v) {
+  try { localStorage.setItem(LS_VOCAB, JSON.stringify(v)); } catch (_) { toast(t("vocab.full"), "error"); }
+}
+const pairLabel = (pair) => pair.replace("-", " → ");
+const vocabPairs = (v = vocabLoad()) => Object.keys(v).filter((k) => Array.isArray(v[k]) && v[k].length).sort();
+
+/** Terms added to a pair's vocabulary: new ones are appended, known ones get the newer translation and examples. */
+function vocabAdd(pair, rows, docName = "") {
+  if (!pair || !/^[a-z]{2,8}-[a-z]{2,8}$/.test(pair)) return 0;
+  const v = vocabLoad();
+  const list = Array.isArray(v[pair]) ? v[pair] : [];
+  const have = new Map(list.map((r) => [r.term.trim().toLowerCase(), r]));
+  let added = 0;
+  for (const r of rows) {
+    const term = (r.term || "").trim(), translation = (r.translation || "").trim();
+    if (!term || !translation) continue;
+    const k = term.toLowerCase();
+    if (have.has(k)) {
+      const cur = have.get(k);
+      cur.translation = translation;
+      if (r.example) cur.example = r.example;
+      if (r.exampleTr) cur.exampleTr = r.exampleTr;
+      cur.seen = (cur.seen || 1) + 1;
+    } else {
+      const row = { term, translation, example: r.example || "", exampleTr: r.exampleTr || "", added: Date.now(), doc: docName, seen: 1 };
+      list.push(row); have.set(k, row); added++;
+    }
+  }
+  v[pair] = list;
+  vocabSave(v);
+  return added;
+}
+
+/** The pair of the open document's keywords: as the AI said, as the user set it, or as detected. */
+function currentPair() {
+  if (!state.doc) return "";
+  let pair = "";
+  try { pair = localStorage.getItem(kwPairKey(state.doc.id)) || ""; } catch (_) { /* fine */ }
+  if (pair) return pair;
+  const rows = (state.keywords || []).filter((r) => r.term && r.translation);
+  const src = detectLanguage(rows.map((r) => `${r.term} ${r.example || ""}`).join(" ")) || detectLanguage((state.doc.segments || []).slice(0, 80).map((s) => s.text).join(" "));
+  const tgt = detectLanguage(rows.map((r) => `${r.translation} ${r.exampleTr || ""}`).join(" ")) || langCode($("#aiTarget").value) || langCode($("#tgtLang").value);
+  return src && tgt ? `${src}-${tgt}` : "";
+}
+function setCurrentPair(pair) {
+  if (!state.doc) return;
+  try { if (pair) localStorage.setItem(kwPairKey(state.doc.id), pair); else localStorage.removeItem(kwPairKey(state.doc.id)); } catch (_) { /* fine */ }
+}
+
+/* ---- export and import */
+const ankiEsc = (s) => (s || "").replace(/\t/g, " ").replace(/\r?\n/g, "<br>");
+/** A text file Anki imports: tab-separated, HTML on, with the deck and the note type named in its header. */
+function ankiText(pair, rows) {
+  const head = [`#separator:tab`, `#html:true`, `#notetype:Basic`, `#deck:Kameleon ${pairLabel(pair)}`, `#tags column:3`];
+  const body = rows.map((r) => [
+    ankiEsc(r.term) + (r.example ? `<br><i>${ankiEsc(r.example)}</i>` : ""),
+    ankiEsc(r.translation) + (r.exampleTr ? `<br><i>${ankiEsc(r.exampleTr)}</i>` : ""),
+    `kameleon ${pair}`,
+  ].join("\t"));
+  return head.concat(body).join("\n") + "\n";
+}
+/** Rows from a text file: tab, semicolon or " = " separated; Anki header lines and HTML are stripped. */
+function parseVocabText(text) {
+  const rows = [];
+  const clean = (s) => (s || "").replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, "").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&").trim();
+  for (const raw of text.split(/\r?\n/)) {
+    if (!raw.trim() || /^#/.test(raw)) continue;
+    let parts = raw.includes("\t") ? raw.split("\t") : raw.includes(";") ? raw.split(";") : raw.split(/\s(?:=|→|->)\s/);
+    if (parts.length < 2) continue;
+    parts = parts.map(clean);
+    // "term\nexample" in one field (as the Anki export writes it) is taken apart again
+    const [term, example = ""] = parts[0].split("\n"), [translation, exampleTr = ""] = parts[1].split("\n");
+    if (!term || !translation) continue;
+    rows.push({ term, translation, example: parts.length > 3 ? parts[2] : example, exampleTr: parts.length > 3 ? parts[3] : exampleTr });
+  }
+  return rows;
+}
+
+/* ---- the vocabulary view in the keywords dialog */
+const vb = { pair: "", query: "" };
+function vocabRows(pair = vb.pair) { const v = vocabLoad(); return Array.isArray(v[pair]) ? v[pair] : []; }
+function vocabFiltered() {
+  const q = vb.query.trim().toLowerCase();
+  const rows = vocabRows();
+  return q ? rows.filter((r) => `${r.term} ${r.translation} ${r.example || ""} ${r.exampleTr || ""}`.toLowerCase().includes(q)) : rows;
+}
+function vocabRender() {
+  const pairs = vocabPairs();
+  const cur = currentPair();
+  if (cur && !pairs.includes(cur)) pairs.push(cur);
+  if (!vb.pair || !pairs.includes(vb.pair)) vb.pair = pairs.includes(cur) && cur ? cur : pairs[0] || "";
+  const sel = $("#vocabPair");
+  sel.innerHTML = pairs.map((p) => `<option value="${p}"${p === vb.pair ? " selected" : ""}>${escapeHtml(pairLabel(p))} (${vocabRows(p).length})</option>`).join("") || `<option value="">–</option>`;
+  const rows = vocabFiltered(), all = vocabRows();
+  $("#vocabCount").textContent = rows.length === all.length ? t("vocab.count", { n: all.length }) : t("vocab.countOf", { n: rows.length, total: all.length });
+  const list = $("#vocabList");
+  list.innerHTML = rows.length ? rows.map((r) => `<div class="kw-row vocab-row" data-term="${escapeHtml(r.term)}">
+      <input data-k="term" value="${escapeHtml(r.term)}">
+      <input data-k="translation" value="${escapeHtml(r.translation)}">
+      <button type="button" class="mini" data-act="del" title="${escapeHtml(t("kw.remove"))}" aria-label="${escapeHtml(t("kw.remove"))}">✕</button>
+      <input class="kw-ex" data-k="example" value="${escapeHtml(r.example || "")}" placeholder="${escapeHtml(t("kw.example"))}">
+      <input class="kw-ex" data-k="exampleTr" value="${escapeHtml(r.exampleTr || "")}" placeholder="${escapeHtml(t("kw.exampleTr"))}">
+    </div>`).join("") : `<p class="muted small">${escapeHtml(all.length ? t("vocab.noMatch") : t("vocab.empty"))}</p>`;
+  const some = all.length > 0;
+  for (const id of ["#vocabCards", "#vocabPdf", "#vocabAnki", "#vocabClear"]) $(id).disabled = !some;
+  $("#vocabToHere").hidden = !(state.doc && (state.keywords || []).some((r) => r.term && r.translation));
+}
+function vocabUpdateRow(termKey, k, value) {
+  const v = vocabLoad(), list = v[vb.pair] || [];
+  const row = list.find((r) => r.term === termKey);
+  if (!row) return;
+  row[k] = value;
+  v[vb.pair] = list;
+  vocabSave(v);
+}
+async function vocabPdfBytes() {
+  const rows = vocabRows();
+  const args = {
+    title: `${t("vocab.title")} ${pairLabel(vb.pair)}`, headers: [t("kw.term"), t("kw.translation")], rows,
+    subtitle: t("vocab.subtitle", { n: rows.length, date: new Date().toLocaleDateString(LANG === "de" ? "de-DE" : "en-GB") }),
+  };
+  return new Uint8Array(await pool.workers[0].call("keywordsPdf", args));
+}
+function initVocab() {
+  $("#kwModeVocab").addEventListener("click", () => kwSetMode("vocab"));
+  $("#vocabPair").addEventListener("change", (e) => { vb.pair = e.target.value; vb.query = ""; $("#vocabSearch").value = ""; vocabRender(); });
+  $("#vocabSearch").addEventListener("input", (e) => { vb.query = e.target.value; vocabRender(); });
+  const list = $("#vocabList");
+  list.addEventListener("input", (e) => {
+    const row = e.target.closest(".vocab-row"), k = e.target.dataset.k;
+    if (!row || !k) return;
+    vocabUpdateRow(row.dataset.term, k, e.target.value);
+    if (k === "term") row.dataset.term = e.target.value;
+  });
+  list.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-act=del]"), row = e.target.closest(".vocab-row");
+    if (!b || !row) return;
+    const v = vocabLoad();
+    v[vb.pair] = (v[vb.pair] || []).filter((r) => r.term !== row.dataset.term);
+    vocabSave(v); vocabRender();
+  });
+  $("#vocabToHere").addEventListener("click", () => { // the open document's terms into the vocabulary (the pair as shown)
+    const pair = vb.pair || currentPair();
+    if (!pair) { toast(t("vocab.noPair"), "error"); return; }
+    const n = vocabAdd(pair, kwRows(), state.doc.name);
+    setCurrentPair(pair);
+    toast(t("vocab.added", { n, pair: pairLabel(pair) }), "ok"); vocabRender();
+  });
+  $("#vocabCards").addEventListener("click", () => { fcSource = vocabRows().filter((r) => r.term && r.translation); kwSetMode("cards"); });
+  $("#vocabPdf").addEventListener("click", async () => {
+    try { saveBlob(new Blob([await vocabPdfBytes()], { type: "application/pdf" }), `vocabulary-${vb.pair}.pdf`); } catch (err) { toast(userError(err), "error"); }
+  });
+  $("#vocabAnki").addEventListener("click", () => saveBlob(new Blob([ankiText(vb.pair, vocabRows())], { type: "text/plain;charset=utf-8" }), `kameleon-${vb.pair}-anki.txt`));
+  $("#vocabImport").addEventListener("click", () => $("#vocabFile").click());
+  $("#vocabFile").addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    e.target.value = "";
+    if (!file) return;
+    const rows = parseVocabText(new TextDecoder().decode(new Uint8Array(await file.arrayBuffer())));
+    let pair = vb.pair;
+    if (!pair) {
+      const src = detectLanguage(rows.map((r) => r.term).join(" ")), tgt = detectLanguage(rows.map((r) => r.translation).join(" "));
+      pair = src && tgt ? `${src}-${tgt}` : "";
+    }
+    if (!rows.length || !pair) { toast(t("vocab.badFile"), "error"); return; }
+    const n = vocabAdd(pair, rows, file.name);
+    vb.pair = pair;
+    toast(t("vocab.imported", { n, total: rows.length, pair: pairLabel(pair) }), "ok"); vocabRender();
+  });
+  $("#vocabClear").addEventListener("click", () => {
+    if (!confirm(t("vocab.clearConfirm", { pair: pairLabel(vb.pair) }))) return;
+    const v = vocabLoad(); delete v[vb.pair]; vocabSave(v); vb.pair = ""; vocabRender();
+  });
+  $("#btnVocabStart").addEventListener("click", () => { kwRenderList(); openModal($("#kwDialog")); kwSetMode("vocab"); });
+  const refreshStart = () => { $("#btnVocabStart").hidden = !vocabPairs().length; };
+  refreshStart();
+  window.addEventListener("storage", refreshStart);
+  $("#kwDialog").addEventListener("close", refreshStart);
+}
+
 // Start-up (runs after ui.js, markup.js and tools.js have defined everything).
 initTheme(); // the colour of this start, before anything is drawn
 initThemeMode();
@@ -15536,6 +15874,7 @@ initTools();
 initPicture();
 initReading();
 initSegEdit();
+initVocab();
 initOffline();
 initPagesManager();
 initKeywords();

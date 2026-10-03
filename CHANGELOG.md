@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.72
+
+- Vocabulary: the terms of every imported keyword list are collected per language pair (source → target) and kept in the browser across documents. The keywords window has a third mode "Vocabulary": pick a pair, search, edit or delete terms, add the open document's terms, learn the whole pair as flashcards, download it as a PDF or as a text file for Anki (File → Import; term and translation with their example sentences), and import such a file or any "term = translation" list. The AI prompt now asks for the languages ("Languages: de → en"); without that line they are detected from the texts. A "Vocabulary" button on the start screen opens it without a document.
+
 ## 1.71
 
 - PDF: segments can be split and joined. The scissors on a card open the segment's lines with a cut between each two; the ⤵ button joins a segment with the one that follows on the page. The new segments are built from the page's lines like the others, the numbering is redone and translations follow their segments (a join keeps both translations one after the other). The changes are remembered with the document and can be undone from the message.

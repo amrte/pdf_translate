@@ -31,15 +31,24 @@ function kwExtract(text) {
   const end = after.search(/^\s*\[\[\s*\d+\s*\]\]/m); // (a numbered marker ends the list)
   const block = end < 0 ? after : after.slice(0, end);
   const rows = [];
+  let pair = "";
   for (const raw of block.split(/\r?\n/)) {
     const line = raw.replace(/^\s*(?:[-*•]|\d+[.)])\s*/, "").trim();
     if (!line) continue;
+    const lm = /^(?:sprachen|languages?|langs?)?\s*:?\s*([a-z]{2,3})\s*(?:→|->|–|-|>|⇒)\s*([a-z]{2,3})\s*$/i.exec(line); // "Sprachen: de → en"
+    if (lm) { pair = `${lm[1].toLowerCase().slice(0, 2)}-${lm[2].toLowerCase().slice(0, 2)}`; continue; }
     // "term = translation | example sentence | translated example" (the examples are optional)
     const parts = line.split(/\s\|\s/);
     const mm = /^(.+?)\s*(?:=|—|–|->|→|\t)\s*(.+)$/.exec(parts[0]) || /^(.+?):\s+(.+)$/.exec(parts[0]);
     if (mm) rows.push({ term: mm[1].trim(), translation: mm[2].trim(), example: (parts[1] || "").trim(), exampleTr: (parts[2] || "").trim() });
   }
-  if (rows.length) { kwMerge(rows); toast(t("kw.imported", { n: rows.length }), "ok"); }
+  if (rows.length) {
+    kwMerge(rows);
+    if (pair) setCurrentPair(pair);
+    const p = pair || currentPair();
+    const added = p ? vocabAdd(p, rows, state.doc.name) : 0;
+    toast(p ? t("kw.importedVocab", { n: rows.length, added, pair: pairLabel(p) }) : t("kw.imported", { n: rows.length }), "ok");
+  }
   return text.slice(0, m.index) + (end < 0 ? "" : after.slice(end));
 }
 function kwMerge(rows) {
@@ -68,6 +77,7 @@ function openKeywordsDialog() {
   kwRenderList();
   kwSchedulePreview(0);
   openModal($("#kwDialog"));
+  kwSetMode("list");
 }
 function kwRenderList() {
   const list = $("#kwList");
@@ -130,8 +140,9 @@ function initKeywords() {
 // Click or Space turns a card; "Known" takes it out of the round, "Again" puts it at the end.
 const fc = { queue: [], index: 0, flipped: false, known: 0, total: 0 };
 
+let fcSource = null; // rows other than the document's (the vocabulary), while set
 function fcStart() {
-  const rows = kwRows().filter((r) => r.term.trim() && r.translation.trim());
+  const rows = (fcSource || kwRows()).filter((r) => r.term.trim() && r.translation.trim());
   fc.queue = rows.map((_, i) => i); fc.rows = rows; fc.index = 0; fc.flipped = false; fc.known = 0; fc.total = rows.length;
   fcRender();
 }
@@ -181,11 +192,17 @@ function fcAction(act) {
   fcRender();
 }
 function kwSetMode(mode) {
-  const cards = mode === "cards";
+  const cards = mode === "cards", vocab = mode === "vocab";
+  if (!state.doc && !vocab) mode = "vocab"; // without a document only the vocabulary is there
   $("#kwDialog").dataset.mode = mode;
-  $("#kwModeList").classList.toggle("active", !cards);
+  $("#kwModeList").classList.toggle("active", mode === "list");
   $("#kwModeCards").classList.toggle("active", cards);
+  $("#kwModeVocab").classList.toggle("active", vocab);
+  $("#kwModeList").disabled = !state.doc;
+  $("#kwModeCards").disabled = !state.doc && !fcSource;
+  if (!cards) fcSource = null;
   if (cards) { fcStart(); $("#kwCards .kw-card")?.focus(); }
+  if (vocab) { vocabRender(); }
 }
 function initFlashcards() {
   $("#kwModeList").addEventListener("click", () => kwSetMode("list"));
@@ -197,5 +214,5 @@ function initFlashcards() {
     const keys = { " ": "flip", Enter: "flip", ArrowRight: "next", ArrowLeft: "prev", k: "known", K: "known", a: "again", A: "again" };
     if (keys[e.key]) { e.preventDefault(); fcAction(keys[e.key]); }
   });
-  $("#kwDialog").addEventListener("close", () => kwSetMode("list"));
+  $("#kwDialog").addEventListener("close", () => { fcSource = null; $("#kwDialog").dataset.mode = "list"; });
 }
