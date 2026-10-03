@@ -6,16 +6,38 @@
 const KW_MARK = /^[ \t]*\[\[\s*keywords?\s*\]\][ \t]*$/im;
 const kwKey = (id) => `pdftr:kw:${id}`;
 let kwPreviewTimer = null;
-/** Draws every page of a PDF into a container (stacked); earlier pictures are released. */
-async function kwRenderPages(container, bytes, zoom = 2) {
+/**
+ * Draws every page of a PDF into a container (stacked); earlier pictures are released. The
+ * pages are rendered for the width they are shown at, on the screen's pixel density, so they
+ * stay sharp when the preview is zoomed to the window's width: a container that grows is drawn
+ * again from the same bytes.
+ */
+const KW_PAGE_W = 595.28; // A4, the keyword and vocabulary PDFs
+function kwPreviewZoom(container) {
+  const width = container.clientWidth || 340;
+  return Math.min(6, Math.max(1.5, Math.ceil((width * (window.devicePixelRatio || 1)) / KW_PAGE_W * 4) / 4));
+}
+async function kwRenderPages(container, bytes, zoom = null) {
+  zoom = zoom || kwPreviewZoom(container);
+  const seq = (container._kwSeq = (container._kwSeq || 0) + 1); // (a newer render replaces an older one still drawing)
+  container._kwBytes = bytes;
   const n = await pool.workers[0].call("pdfPageCount", { bytes });
   const imgs = [];
   for (let p = 0; p < n; p++) {
     const png = await pool.workers[0].call("renderBytes", { bytes, page: p, zoom });
+    if (container._kwSeq !== seq) return n;
     imgs.push(URL.createObjectURL(new Blob([png], { type: "image/png" })));
   }
   container.querySelectorAll("img").forEach((im) => { if (im.src.startsWith("blob:")) URL.revokeObjectURL(im.src); });
   container.innerHTML = imgs.map((u, i) => `<img src="${u}" alt="${escapeHtml(t("page.n", { n: i + 1 }))}">`).join("");
+  container._kwZoom = zoom;
+  if (!container._kwObserver && typeof ResizeObserver !== "undefined") {
+    container._kwObserver = new ResizeObserver(() => {
+      if (!container._kwBytes || !container.clientWidth) return;
+      if (kwPreviewZoom(container) > (container._kwZoom || 0) + 0.3) kwRenderPages(container, container._kwBytes); // shown larger: drawn sharper
+    });
+    container._kwObserver.observe(container);
+  }
   return n;
 }
 
