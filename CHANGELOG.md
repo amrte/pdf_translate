@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.66
+
+- Reading mode: the bubble shows the text as a reader sees it – the formatting markers of e-book and Office segments (&lt;1&gt;…&lt;/1&gt;, &lt;2/&gt;) are left out or replaced by what they stand for.
+
 ## 1.65
 
 - Reading mode (new button next to "Segments" in the page toolbar): the segment boxes stay out of sight, and a click on any text shows its translation in a bubble right over the passage – or, on the translated view, the original. A second click, a click elsewhere or Esc closes the bubble; a text without translation says so. Works for PDFs, pictures, e-books and Office previews, and the mode is remembered.

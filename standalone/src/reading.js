@@ -16,11 +16,18 @@ function setReading(on) {
   if (!on) hideBubble();
 }
 
+/** A text as the reader sees it: formatting markers <1>…</1> gone, <2/> replaced by what it stands for. */
+function readable(text, tags) {
+  let out = text.replace(/<(\d+)\/>/g, (m, n) => (tags && tags[n] && tags[n].text) || "").replace(/<\/?\d+>/g, "");
+  if (out.includes("‹")) out = out.replace(/‹(\/?\d+\/?)›/g, "<$1>"); // an escaped marker is text that really reads "<1>"
+  return out.replace(/[ \t]{2,}/g, " ").trim();
+}
+
 /** What the bubble says for a segment: its translation, or on the translated view its original. */
 function bubbleContent(s) {
-  if (state.variant === "translated") return { text: s.text, kind: "orig" };
+  if (state.variant === "translated") return { text: readable(s.text, s.tags), kind: "orig" };
   const tr = (state.translations[s.id] || "").trim();
-  return tr ? { text: tr, kind: "tr" } : { text: t("read.none"), kind: "none" };
+  return tr ? { text: readable(tr, s.tags), kind: "tr" } : { text: t("read.none"), kind: "none" };
 }
 
 function hideBubble() {
