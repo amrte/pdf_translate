@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.96
+
+- PDF: characters from maths fonts that have no Unicode value are now recognised by their drawn shape – Greek letters (φ, ε, θ, Ω, Δ …), the degree sign, primes and operators – instead of being guessed from the Symbol encoding, which gave "θC" for "°C", "M" for "φ" and "H" for "ε". Only the Symbol font itself is still read by its encoding.
+
 ## 1.95
 
 - PDF: characters from symbol and maths fonts that arrived as "�" (Ω, ≤, Δ and the like inside a text line, from fonts without a Unicode table) are read correctly now: the engine asks for the raw glyph codes in a second pass and reads them through the Symbol encoding.

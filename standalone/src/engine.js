@@ -327,7 +327,7 @@ function readBlocks(page, bounds, seps, options) {
         line.spans.push(span);
       }
       if (lig) (span.fixes = span.fixes || []).push({ at: span.text.length, lig });
-      if (c === "\ufffd") unknown.push({ span, at: span.text.length, idx, lig });
+      if (c === "\ufffd") unknown.push({ span, line, at: span.text.length, idx, lig, qb, origin: [origin[0], origin[1]], size, symbolFont: /symbol/i.test(info.name) });
       span.text += c;
       if (blank) { sawSpace = true; return; }
       span.bbox = union(span.bbox, qb);
@@ -342,6 +342,144 @@ function readBlocks(page, bounds, seps, options) {
     for (const sp of l.spans) if (sp.fixes) applyLigatureFixes(sp);
   }
   return blocks;
+}
+
+/* ---- unknown glyphs recognised by their drawn shape
+ * A glyph that MuPDF cannot name is compared, as drawn on the page, with reference glyphs of
+ * the characters such fonts usually hold (Greek letters, the degree sign, primes, operators),
+ * rendered from the built-in Symbol font upright and slanted. The shape (a coarse coverage
+ * grid), its height, its position above the baseline and its proportions decide.
+ */
+const GLYPH_SET = [..."αβγδεζηθικλμνξπρστυφχψωϕϑΓΔΘΛΞΠΣΦΨΩ°′″≤≥≠≈±×÷∞→←↔∑∫∂√∝∅∈∩∪∧∨¬∇⋅"];
+const GRID = 12;
+let glyphTemplates = null;
+
+/** Coverage grid and metrics of the ink in a grey pixmap: {cov, height, bottomAbove, aspect} or null. */
+function inkFeatures(px, w, h, baselineY, em, margin = 0, centre = null) {
+  // Columns with ink; of several ink runs (a neighbour's edge inside the box) the one at the centre counts.
+  const cols = new Uint8Array(w);
+  for (let y = 0; y < h; y++) { const row = y * w; for (let x = margin; x < w - margin; x++) if (px[row + x] < 128) cols[x] = 1; }
+  const runs = [];
+  for (let x = 0; x < w; x++) { if (!cols[x]) continue; let e = x; while (e + 1 < w && (cols[e + 1] || (e + 2 < w && cols[e + 2]))) e++; runs.push([x, e]); x = e; }
+  if (!runs.length) return null;
+  const cx = centre === null ? w / 2 : centre;
+  const run = runs.reduce((a, b) => (Math.abs((b[0] + b[1]) / 2 - cx) < Math.abs((a[0] + a[1]) / 2 - cx) ? b : a));
+  const [left, right] = run;
+  let top = -1, bottom = -1;
+  for (let y = 0; y < h; y++) { const row = y * w; for (let x = left; x <= right; x++) if (px[row + x] < 128) { if (top < 0) top = y; bottom = y; break; } }
+  if (top < 0) return null;
+  const bw = right - left + 1, bh = bottom - top + 1;
+  const cov = new Float32Array(GRID * GRID);
+  for (let gy = 0; gy < GRID; gy++) for (let gx = 0; gx < GRID; gx++) {
+    const x0 = left + Math.floor(gx * bw / GRID), x1 = Math.max(x0 + 1, left + Math.floor((gx + 1) * bw / GRID));
+    const y0 = top + Math.floor(gy * bh / GRID), y1 = Math.max(y0 + 1, top + Math.floor((gy + 1) * bh / GRID));
+    let sum = 0, n = 0;
+    for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) { sum += 255 - px[y * w + x]; n++; }
+    cov[gy * GRID + gx] = sum / n / 255;
+  }
+  return { cov, height: bh / em, bottomAbove: (baselineY - (bottom + 1)) / em, aspect: bw / bh };
+}
+
+function buildGlyphTemplates() {
+  const out = [];
+  let font = null;
+  try {
+    font = new M.Font("Symbol");
+    const Sz = 48, W = 160, H = 128, X = 32, Y = 88;
+    for (const ch of GLYPH_SET) {
+      const cp = ch.codePointAt(0), gid = font.encodeCharacter(cp);
+      if (!(gid > 0)) continue;
+      for (const shear of [0, 0.22]) {
+        let text = null, pix = null, dev = null;
+        try {
+          text = new M.Text();
+          text.showGlyph(font, [Sz, 0, shear * Sz, -Sz, X, Y], gid, cp, 0); // (y flipped: the pixmap's y grows downwards)
+          pix = new M.Pixmap(M.ColorSpace.DeviceGray, [0, 0, W, H], false);
+          pix.clear(255);
+          dev = new M.DrawDevice(M.Matrix.identity, pix);
+          dev.fillText(text, M.Matrix.identity, M.ColorSpace.DeviceGray, [0], 1);
+          dev.close();
+          const f = inkFeatures(pix.getPixels(), W, H, Y, Sz);
+          if (f) out.push({ ch, ...f });
+        } finally { if (dev) free(dev); if (pix) free(pix); if (text) free(text); }
+      }
+    }
+  } catch (err) {
+    console.warn("glyph templates unavailable", err);
+  } finally { if (font) free(font); }
+  return out;
+}
+
+const glyphDistance = (a, b) => {
+  let d = 0;
+  for (let i = 0; i < a.cov.length; i++) d += Math.abs(a.cov[i] - b.cov[i]);
+  return d / a.cov.length + 0.6 * Math.abs(a.height - b.height) + 0.8 * Math.abs(a.bottomAbove - b.bottomAbove) + 0.3 * Math.abs(Math.log(a.aspect / b.aspect));
+};
+
+/**
+ * The ink of one glyph of the page, as features. The glyph is drawn alone: the page's text
+ * objects are filtered down to the glyph at this origin without a Unicode value, and drawn in
+ * black into a small pixmap around its box, so neighbours and colours do not interfere.
+ */
+function glyphInk(page, u) {
+  const scale = 8, em = u.size * scale;
+  const mx = 0.35 * u.size, my = 0.35 * u.size;
+  const x0 = Math.floor((u.qb[0] - mx) * scale), y0 = Math.floor((u.qb[1] - my) * scale), x1 = Math.ceil((u.qb[2] + mx) * scale), y1 = Math.ceil((u.qb[3] + my) * scale);
+  const w = x1 - x0, h = y1 - y0;
+  if (w < 2 || h < 2 || w * h > 4e6) return null;
+  let pix = null, draw = null, dev = null;
+  try {
+    pix = new M.Pixmap(M.ColorSpace.DeviceGray, [x0, y0, x1, y1], false);
+    pix.clear(255);
+    draw = new M.DrawDevice(M.Matrix.identity, pix);
+    const toDevice = M.Matrix.scale(scale, scale);
+    const drawOnly = (text, ctm) => {
+      const picked = new M.Text();
+      let any = false;
+      try {
+        text.walk({
+          showGlyph(font, trm, gid, uni, wmode) {
+            const x = ctm[0] * trm[4] + ctm[2] * trm[5] + ctm[4], y = ctm[1] * trm[4] + ctm[3] * trm[5] + ctm[5];
+            if (uni === 0xfffd && Math.abs(x - u.origin[0]) < 0.6 && Math.abs(y - u.origin[1]) < 0.6) { picked.showGlyph(font, trm, gid, uni, wmode); any = true; }
+          },
+        });
+        if (any) draw.fillText(picked, M.Matrix.concat(ctm, toDevice), M.ColorSpace.DeviceGray, [0], 1);
+      } finally { free(picked); }
+    };
+    dev = new M.Device({
+      fillText(text, ctm) { drawOnly(text, ctm); },
+      strokeText(text, stroke, ctm) { drawOnly(text, ctm); },
+      clipText(text, ctm) { drawOnly(text, ctm); },
+    });
+    page.run(dev, M.Matrix.identity);
+    try { dev.close(); } catch (_) { /* not needed */ }
+    draw.close();
+    return inkFeatures(pix.getPixels(), w, h, u.origin[1] * scale - y0, em, 0, ((u.qb[0] + u.qb[2]) / 2) * scale - x0);
+  } catch (_) {
+    return null;
+  } finally {
+    if (dev) free(dev);
+    if (draw) free(draw);
+    if (pix) free(pix);
+  }
+}
+
+/** The character an unknown glyph most likely is, by its shape; `prior` (from the Symbol encoding) wins a close call. */
+function recogniseGlyph(page, u, prior, maxDistance = 0.5) {
+  if (!glyphTemplates) glyphTemplates = buildGlyphTemplates();
+  if (!glyphTemplates.length) return null;
+  const f = glyphInk(page, u);
+  if (!f) return null;
+  let best = null, second = null, priorD = Infinity;
+  for (const tpl of glyphTemplates) {
+    const d = glyphDistance(f, tpl);
+    if (tpl.ch === prior) priorD = Math.min(priorD, d);
+    if (!best || d < best.d) { if (best && best.ch !== tpl.ch) second = best; best = { ch: tpl.ch, d }; }
+    else if (tpl.ch !== best.ch && (!second || d < second.d)) second = { ch: tpl.ch, d };
+  }
+  if (!best || best.d > maxDistance) return null;
+  if (prior && priorD <= best.d + 0.08) return prior;
+  return best.ch;
 }
 
 /**
@@ -363,10 +501,24 @@ function recoverUnknownChars(page, options, unknown, total) {
     for (const u of unknown) { if (!bySpan.has(u.span)) bySpan.set(u.span, []); bySpan.get(u.span).push(u); }
     for (const [span, list] of bySpan) {
       for (const u of list.sort((a, b) => b.at - a.at)) {
-        if (u.lig || u.code === undefined) continue;
-        const mapped = symbolChar(u.code);
+        if (u.code === undefined) continue;
+        const spans = u.line.spans, k = spans.indexOf(span);
+        const before = spans.slice(0, k).map((sp) => sp.text).join("") + span.text.slice(0, u.at);
+        const after = span.text.slice(u.at + 1) + spans.slice(k + 1).map((sp) => sp.text).join("");
+        // A glyph the ligature guess explains, sitting between letters of a word ("Ac?vity"), is a
+        // ligature unless its shape is unmistakably one of the symbols.
+        const inWord = u.lig && LETTER.test(before.slice(-1)) && LETTER.test(after.charAt(0));
+        const prior = symbolChar(u.code); // what the code means in the Symbol encoding
+        // The Symbol font itself is read by its encoding; any other font by the drawn shape
+        // (its codes mean whatever the font's designer chose), with the encoding as tiebreaker.
+        let mapped = u.symbolFont ? prior : recogniseGlyph(page, u, prior && prior.length === 1 ? prior : null, inWord ? 0.2 : 0.5);
         if (!mapped || mapped.length !== 1 || mapped === "\ufffd") continue;
+        if (mapped === "′" || mapped === "°") { // a small raised ring or stroke: degree before C/F/K or after a number, prime otherwise
+          const prev = before.trimEnd().slice(-1), next = after.trimStart().charAt(0);
+          mapped = /[CFK]/.test(next) || /\d/.test(prev) ? "°" : "′";
+        }
         span.text = span.text.slice(0, u.at) + mapped + span.text.slice(u.at + 1);
+        if (u.lig && span.fixes) span.fixes = span.fixes.filter((f) => f.at !== u.at); // (recognised: no ligature guess for it)
       }
     }
   } catch (_) { /* an older engine without the option: the glyphs stay unknown */ } finally {
