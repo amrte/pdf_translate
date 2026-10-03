@@ -99,20 +99,31 @@ async function readApkg(bytes) {
   const deckNames = Object.values(decks).map((d) => d.name).filter((n) => n && n !== "Default");
   const rows = [];
   const EXAMPLE_RE = /example|beispiel|sentence|satz|пример|приклад|exemple|ejemplo|esempio|usage|context/i;
+  const PRON_RE = /pinyin|pīnyīn|reading|romaji|furigana|translit|transcri|pronunc|aussprache|romani[sz]|jyutping|zhuyin|bopomofo|kana|ipa$/i;
+  const MEDIA_RE = /audio|sound|image|picture|photo|bild|^ton$|mp3|recording/i;
+  const langs = { src: "", tgt: "" }; // what the field names say about the languages ("Hanzi", "English")
   for (const n of db.table("notes")) {
     const flds = String(n[6] || "").split("\x1f");
     const model = models[String(n[2])];
     const names = model ? model.flds.map((f) => f.name) : [];
-    let fi = 0, bi = 1;
-    if (names.length) { // the front is the first field that is no example, the back the next such field
-      fi = Math.max(0, names.findIndex((nm) => !EXAMPLE_RE.test(nm)));
-      bi = names.findIndex((nm, i) => i !== fi && !EXAMPLE_RE.test(nm));
+    let fi = 0, bi = 1, pi = -1;
+    if (names.length) { // the front is the first field that is no example, pronunciation or media; the back the next such field
+      const plain = (nm) => !EXAMPLE_RE.test(nm) && !PRON_RE.test(nm) && !MEDIA_RE.test(nm);
+      fi = Math.max(0, names.findIndex(plain));
+      bi = names.findIndex((nm, i) => i !== fi && plain(nm));
+      if (bi < 0) bi = names.findIndex((nm, i) => i !== fi && !MEDIA_RE.test(nm) && !EXAMPLE_RE.test(nm));
       if (bi < 0) bi = fi === 0 ? 1 : 0;
+      pi = names.findIndex((nm, i) => i !== fi && i !== bi && PRON_RE.test(nm));
+      if (!langs.src) langs.src = fieldLang(names[fi]);
+      if (!langs.tgt) langs.tgt = fieldLang(names[bi]);
     }
-    const term = ankiPlain(flds[fi]), translation = ankiPlain(flds[bi]);
+    let term = ankiPlain(flds[fi]);
+    const translation = ankiPlain(flds[bi]);
     if (!term || !translation) continue;
-    const exIdx = names.findIndex((nm, i) => i !== fi && i !== bi && EXAMPLE_RE.test(nm));
-    const rest = flds.map((f, i) => (i === fi || i === bi ? "" : ankiPlain(f))).filter(Boolean);
+    const pron = pi >= 0 ? ankiPlain(flds[pi]).replace(/\s*\n\s*/g, " ") : "";
+    if (pron && pron !== term) term += ` (${pron})`; // 的 (de)
+    const exIdx = names.findIndex((nm, i) => i !== fi && i !== bi && i !== pi && EXAMPLE_RE.test(nm));
+    const rest = flds.map((f, i) => (i === fi || i === bi || i === pi || (names[i] && MEDIA_RE.test(names[i])) ? "" : ankiPlain(f))).filter(Boolean);
     let example = exIdx >= 0 ? ankiPlain(flds[exIdx]) : rest[0] || "", exampleTr = "";
     const exLines = example.split("\n").filter((l) => l.trim());
     if (exLines.length >= 2 && exLines.length % 2 === 0) { // "sentence / its translation" in one field, line by line
@@ -121,7 +132,15 @@ async function readApkg(bytes) {
     } else example = exLines.join(" ");
     rows.push({ term: term.replace(/\s*\n\s*/g, " "), translation: translation.replace(/\s*\n\s*/g, " "), example, exampleTr });
   }
-  return { rows, deck: deckNames[0] || "", notes: rows.length };
+  return { rows, deck: deckNames[0] || "", notes: rows.length, langs };
+}
+
+/** The language a field name stands for ("English", "Deutsch", "Hanzi", "Kanji" …), or "". */
+function fieldLang(name) {
+  const n = (name || "").toLowerCase().replace(/\(.*?\)/g, "").trim();
+  const extra = { hanzi: "zh", 汉字: "zh", 中文: "zh", mandarin: "zh", kanji: "ja", 日本語: "ja", hangul: "ko", 한국어: "ko", 한글: "ko", русский: "ru", українська: "uk", deutsch: "de", français: "fr", español: "es", italiano: "it", português: "pt" };
+  if (extra[n]) return extra[n];
+  return LANG_CODES[n] || "";
 }
 
 /* ---- writing: a small database with the tables Anki expects */

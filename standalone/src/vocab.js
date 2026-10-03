@@ -147,6 +147,32 @@ function parseVocabText(text) {
   return rows;
 }
 
+/* ---- asking for a language pair: on import, and to move terms */
+let pairAsk = null;
+function askPair({ src = "", tgt = "", text = "" } = {}) {
+  const dlg = $("#pairDialog");
+  $("#pairSrc").value = src; $("#pairTgt").value = tgt; $("#pairText").textContent = text;
+  return new Promise((resolve) => {
+    pairAsk = resolve;
+    openModal(dlg);
+    $("#pairSrc").focus();
+  });
+}
+const codeOf = (s) => (s || "").trim().toLowerCase().replace(/[^a-z-]/g, "").slice(0, 8);
+/** Terms (by their text) of one pair moved to another; returns how many moved. */
+function vocabMove(fromPair, terms, toPair) {
+  if (!toPair || fromPair === toPair) return 0;
+  const v = vocabLoad();
+  const list = Array.isArray(v[fromPair]) ? v[fromPair] : [];
+  const set = new Set(terms);
+  const moving = list.filter((r) => set.has(r.term));
+  v[fromPair] = list.filter((r) => !set.has(r.term));
+  if (!v[fromPair].length) delete v[fromPair];
+  vocabSave(v);
+  vocabAdd(toPair, moving, "");
+  return moving.length;
+}
+
 /* ---- the vocabulary view in the keywords dialog */
 const vb = { pair: "", query: "" };
 function vocabRows(pair = vb.pair) { const v = vocabLoad(); return Array.isArray(v[pair]) ? v[pair] : []; }
@@ -168,12 +194,13 @@ function vocabRender() {
   list.innerHTML = rows.length ? rows.map((r) => `<div class="kw-row vocab-row" data-term="${escapeHtml(r.term)}">
       <input data-k="term" value="${escapeHtml(r.term)}">
       <input data-k="translation" value="${escapeHtml(r.translation)}">
-      <button type="button" class="mini" data-act="del" title="${escapeHtml(t("kw.remove"))}" aria-label="${escapeHtml(t("kw.remove"))}">✕</button>
+      <span class="vocab-row-btns"><button type="button" class="mini" data-act="move" title="${escapeHtml(t("vocab.moveRow"))}" aria-label="${escapeHtml(t("vocab.moveRow"))}">⇄</button><button type="button" class="mini" data-act="del" title="${escapeHtml(t("kw.remove"))}" aria-label="${escapeHtml(t("kw.remove"))}">✕</button></span>
       <input class="kw-ex" data-k="example" value="${escapeHtml(r.example || "")}" placeholder="${escapeHtml(t("kw.example"))}">
       <input class="kw-ex" data-k="exampleTr" value="${escapeHtml(r.exampleTr || "")}" placeholder="${escapeHtml(t("kw.exampleTr"))}">
     </div>`).join("") : `<p class="muted small">${escapeHtml(all.length ? t("vocab.noMatch") : t("vocab.empty"))}</p>`;
   const some = all.length > 0;
-  for (const id of ["#vocabCards", "#vocabPdf", "#vocabAnki", "#vocabApkg", "#vocabClear"]) $(id).disabled = !some;
+  for (const id of ["#vocabCards", "#vocabPdf", "#vocabAnki", "#vocabApkg", "#vocabClear", "#vocabMove"]) $(id).disabled = !some;
+  $("#vocabMove").textContent = rows.length === all.length ? t("vocab.moveAll") : t("vocab.moveShown", { n: rows.length });
   $("#vocabToHere").hidden = !(state.doc && (state.keywords || []).some((r) => r.term && r.translation));
 }
 function vocabUpdateRow(termKey, k, value) {
@@ -205,13 +232,37 @@ function initVocab() {
     vocabUpdateRow(row.dataset.term, k, e.target.value);
     if (k === "term") row.dataset.term = e.target.value;
   });
-  list.addEventListener("click", (e) => {
-    const b = e.target.closest("[data-act=del]"), row = e.target.closest(".vocab-row");
+  list.addEventListener("click", async (e) => {
+    const b = e.target.closest("[data-act]"), row = e.target.closest(".vocab-row");
     if (!b || !row) return;
-    const v = vocabLoad();
-    v[vb.pair] = (v[vb.pair] || []).filter((r) => r.term !== row.dataset.term);
-    vocabSave(v); vocabRender();
+    if (b.dataset.act === "del") {
+      const v = vocabLoad();
+      v[vb.pair] = (v[vb.pair] || []).filter((r) => r.term !== row.dataset.term);
+      vocabSave(v); vocabRender();
+    } else if (b.dataset.act === "move") { // this one term to another pair
+      const [src, tgt] = vb.pair.split("-");
+      const ans = await askPair({ src, tgt, text: t("pair.textMove", { n: 1 }) });
+      if (!ans) return;
+      const n = vocabMove(vb.pair, [row.dataset.term], ans.pair);
+      toast(t("vocab.moved", { n, pair: pairLabel(ans.pair) }), "ok"); vocabRender();
+    }
   });
+  $("#vocabMove").addEventListener("click", async () => { // the shown terms (all, or the search's hits) to another pair
+    const rows = vocabFiltered();
+    if (!rows.length) return;
+    const [src, tgt] = vb.pair.split("-");
+    const ans = await askPair({ src, tgt, text: t("pair.textMove", { n: rows.length }) });
+    if (!ans) return;
+    const n = vocabMove(vb.pair, rows.map((r) => r.term), ans.pair);
+    vb.pair = ans.pair; vb.query = ""; $("#vocabSearch").value = "";
+    toast(t("vocab.moved", { n, pair: pairLabel(ans.pair) }), "ok"); vocabRender();
+  });
+  $("#pairDialog").addEventListener("close", () => {
+    const ok = $("#pairDialog").returnValue === "ok", src = codeOf($("#pairSrc").value), tgt = codeOf($("#pairTgt").value);
+    const resolve = pairAsk; pairAsk = null;
+    if (resolve) resolve(ok && src && tgt ? { src, tgt, pair: `${src}-${tgt}` } : null);
+  });
+  $("#langCodes").innerHTML = [...new Set(Object.values(LANG_CODES))].sort().map((c) => `<option value="${c}">${escapeHtml(Object.keys(LANG_CODES).find((k) => LANG_CODES[k] === c) || c)}</option>`).join("");
   $("#vocabToHere").addEventListener("click", () => { // the open document's terms into the vocabulary (the pair as shown)
     const pair = vb.pair || currentPair();
     if (!pair) { toast(t("vocab.noPair"), "error"); return; }
@@ -233,16 +284,18 @@ function initVocab() {
     e.target.value = "";
     if (!file) return;
     const bytes = new Uint8Array(await file.arrayBuffer());
-    let rows, deckName = file.name, isDeck = false;
+    let rows, deckName = file.name, hint = { src: "", tgt: "" };
     if (/\.apkg$/i.test(file.name) || (bytes[0] === 0x50 && bytes[1] === 0x4b)) {
-      try { const r = await readApkg(bytes); rows = r.rows; deckName = r.deck || file.name; isDeck = true; } catch (err) { toast(userError(err), "error"); return; }
+      try { const r = await readApkg(bytes); rows = r.rows; deckName = r.deck || file.name; hint = r.langs || hint; } catch (err) { toast(userError(err), "error"); return; }
     } else rows = parseVocabText(new TextDecoder().decode(bytes));
-    let pair = isDeck ? "" : vb.pair; // a deck has languages of its own: detected from its cards
-    if (!pair) {
-      const src = detectLanguage(rows.map((r) => r.term).join(" ")), tgt = detectLanguage(rows.map((r) => r.translation).join(" "));
-      pair = src && tgt ? `${src}-${tgt}` : vb.pair;
-    }
-    if (!rows.length || !pair) { toast(t("vocab.badFile"), "error"); return; }
+    if (!rows.length) { toast(t("vocab.badFile"), "error"); return; }
+    // The pair: what the deck's field names say, else what the texts look like; the user confirms or corrects it.
+    const [curSrc, curTgt] = (vb.pair || "-").split("-");
+    const src = hint.src || detectLanguage(rows.map((r) => r.term).join(" ")) || curSrc || "";
+    const tgt = hint.tgt || detectLanguage(rows.map((r) => r.translation).join(" ")) || curTgt || "";
+    const ans = await askPair({ src, tgt, text: t("pair.textImport", { n: rows.length, name: deckName }) });
+    if (!ans) return;
+    const pair = ans.pair;
     const n = vocabAdd(pair, rows, deckName);
     vb.pair = pair;
     toast(t("vocab.imported", { n, total: rows.length, pair: pairLabel(pair) }), "ok"); vocabRender();

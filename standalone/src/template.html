@@ -473,6 +473,7 @@
         <input type="search" id="vocabSearch" data-i18n-placeholder="vocab.search" autocomplete="off">
         <span class="muted small" id="vocabCount"></span>
         <span class="spacer"></span>
+        <button type="button" class="btn" id="vocabMove" data-i18n-title="vocab.moveTitle"></button>
         <button type="button" class="btn" id="vocabToHere" data-i18n="vocab.toHere" hidden></button>
       </div>
       <div class="kw-list vocab-list" id="vocabList"></div>
@@ -494,6 +495,23 @@
       <button type="button" class="btn primary kw-vocab-only" id="vocabPdf" data-i18n="vocab.pdf"></button>
       <button value="close" class="btn ghost" data-i18n="kw.close"></button>
       <button type="button" class="btn primary kw-list-only" id="kwDownload" data-i18n="kw.download"></button>
+    </div>
+  </form>
+</dialog>
+<dialog id="pairDialog" class="modal" aria-labelledby="pairTitle">
+  <form method="dialog">
+    <h2 id="pairTitle" data-i18n="pair.title">Language pair</h2>
+    <p class="muted small" id="pairText"></p>
+    <div class="pair-row">
+      <label><span data-i18n="pair.source">From</span> <input id="pairSrc" list="langCodes" size="6" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+      <span class="pair-arrow">→</span>
+      <label><span data-i18n="pair.target">To</span> <input id="pairTgt" list="langCodes" size="6" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+    </div>
+    <p class="muted small" data-i18n="pair.hint"></p>
+    <datalist id="langCodes"></datalist>
+    <div class="modal-actions">
+      <button value="cancel" class="btn ghost" data-i18n="common.cancel">Cancel</button>
+      <button value="ok" class="btn primary" data-i18n="common.ok">OK</button>
     </div>
   </form>
 </dialog>

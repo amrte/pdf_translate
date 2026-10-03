@@ -742,6 +742,11 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
 .vocab-bar input[type="search"] { min-width: 220px; }
 .vocab-list { overflow: auto; }
 .start-vocab { display: flex; justify-content: center; margin-top: 14px; }
+.pair-row { display: flex; align-items: center; gap: 12px; }
+.pair-row label { display: inline-flex; align-items: center; gap: 6px; }
+.pair-row input { width: 80px; font-size: 16px; text-align: center; }
+.pair-arrow { font-size: 20px; color: var(--muted); }
+.vocab-row-btns { display: inline-flex; gap: 4px; }
 .kw-cards { display: grid; gap: 14px; grid-template-rows: auto 1fr auto; align-items: stretch; }
 .kw-cards:has(.kw-done), .kw-cards:has(> p) { grid-template-rows: 1fr; align-items: center; justify-items: center; }
 .kw-fc-nav, .kw-fc-judge { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; }

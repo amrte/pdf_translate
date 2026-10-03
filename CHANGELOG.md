@@ -4,6 +4,11 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.74
+
+- Vocabulary: the language pair of an import is confirmed in a small dialog before anything is added – prefilled with what the deck's field names say ("Hanzi", "English") or what the texts look like, and editable. Anki fields for pronunciation (Pinyin, reading, romaji …) are no longer taken as the translation but kept with the term, as in "的 (de)"; audio and picture fields are ignored.
+- Vocabulary: terms can be moved to another pair – one at a time with the ⇄ button on its row, or in a batch with "Change language pair…" (all terms of the pair, or just the hits of a search).
+
 ## 1.73
 
 - Vocabulary: Anki packages (.apkg) are read and written. "Import…" takes a deck exported from Anki or downloaded from AnkiWeb – the notes become terms (front, back, example field) of the detected or chosen language pair, HTML and sound tags stripped. "Anki package (.apkg)" writes a package of its own with a deck "Kameleon xx → yy", one card per term with the example sentences on both sides, which Anki opens by double-click. (Packages in Anki's newest compressed format need the export option "Support older Anki versions".)

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="Kameleon 1.73">
+  <meta name="generator" content="Kameleon 1.74">
   <meta name="description" content="Kameleon – Wechselt die Sprache, behält die Form. Changes language, keeps its shape.">
   <title>Kameleon</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2216%22 fill=%22%23287130%22/%3E%3Cg transform=%22translate(2.5 1) scale(0.9)%22 fill=%22%23ffffff%22 stroke=%22%23ffffff%22%3E%3Cpath d=%22M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6%22 fill=%22none%22 stroke-width=%223.8%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M21 43l-1 10M30 44v9M38 43l1 10%22 stroke-width=%223.6%22 stroke-linecap=%22round%22/%3E%3Cellipse cx=%2221%22 cy=%2225%22 rx=%227%22 ry=%227.5%22 stroke=%22none%22/%3E%3Cellipse cx=%2233%22 cy=%2223.5%22 rx=%227.5%22 ry=%228%22 stroke=%22none%22/%3E%3Cpath d=%22M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z%22 stroke=%22none%22/%3E%3Cpath d=%22M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z%22 stroke=%22none%22/%3E%3Cpath d=%22M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z%22 stroke=%22none%22/%3E%3Cpath d=%22M16 37l4-3 4 3 4-3 4 3 4-3 4 3%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%222.1%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3Cpath d=%22M43.5 33.9L57 32.6%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%221.5%22 stroke-linecap=%22round%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%224.4%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%222.7%22 stroke=%22none%22/%3E%3Ccircle cx=%2246.2%22 cy=%2226.7%22 r=%221.3%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Cpath d=%22M4 55.5c15-3 39-3 54 0%22 fill=%22none%22 stroke-width=%222.4%22 stroke-linecap=%22round%22/%3E%3C/g%3E%3C/svg%3E">
@@ -752,6 +752,11 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
 .vocab-bar input[type="search"] { min-width: 220px; }
 .vocab-list { overflow: auto; }
 .start-vocab { display: flex; justify-content: center; margin-top: 14px; }
+.pair-row { display: flex; align-items: center; gap: 12px; }
+.pair-row label { display: inline-flex; align-items: center; gap: 6px; }
+.pair-row input { width: 80px; font-size: 16px; text-align: center; }
+.pair-arrow { font-size: 20px; color: var(--muted); }
+.vocab-row-btns { display: inline-flex; gap: 4px; }
 .kw-cards { display: grid; gap: 14px; grid-template-rows: auto 1fr auto; align-items: stretch; }
 .kw-cards:has(.kw-done), .kw-cards:has(> p) { grid-template-rows: 1fr; align-items: center; justify-items: center; }
 .kw-fc-nav, .kw-fc-judge { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; }
@@ -780,7 +785,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
   <div class="brand">
     <span class="logo"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#287130"/><g transform="translate(2.5 1) scale(0.9)" fill="#ffffff" stroke="#ffffff"><path d="M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6" fill="none" stroke-width="3.8" stroke-linecap="round"/><path d="M21 43l-1 10M30 44v9M38 43l1 10" stroke-width="3.6" stroke-linecap="round"/><ellipse cx="21" cy="25" rx="7" ry="7.5" stroke="none"/><ellipse cx="33" cy="23.5" rx="7.5" ry="8" stroke="none"/><path d="M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z" stroke="none"/><path d="M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z" stroke="none"/><path d="M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z" stroke="none"/><path d="M16 37l4-3 4 3 4-3 4 3 4-3 4 3" fill="none" stroke="#287130" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M43.5 33.9L57 32.6" fill="none" stroke="#287130" stroke-width="1.5" stroke-linecap="round"/><circle cx="45.5" cy="26.5" r="4.4" fill="#287130" stroke="none"/><circle cx="45.5" cy="26.5" r="2.7" stroke="none"/><circle cx="46.2" cy="26.7" r="1.3" fill="#287130" stroke="none"/><path d="M4 55.5c15-3 39-3 54 0" fill="none" stroke-width="2.4" stroke-linecap="round"/></g></svg></span>
     <span class="brand-name">Kameleon</span>
-    <span class="version" id="appVersion">v1.73</span>
+    <span class="version" id="appVersion">v1.74</span>
   </div>
   <div class="topbar-actions">
     <span class="doc-name" id="docName"></span>
@@ -1198,7 +1203,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
     </div>
     <input type="file" id="offlineZip" class="visually-hidden" accept=".zip,application/zip" multiple tabindex="-1">
     <input type="file" id="offlineFolder" class="visually-hidden" webkitdirectory multiple tabindex="-1">
-    <p class="muted small help-version help-part">Kameleon v1.73 · <span data-i18n="app.tagline"></span></p>
+    <p class="muted small help-version help-part">Kameleon v1.74 · <span data-i18n="app.tagline"></span></p>
     <div class="modal-actions">
       <button type="button" value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
       <button type="button" class="btn ai-part" id="aiCopyPrompt" data-i18n="ai.copyPrompt">Copy prompt only</button>
@@ -1237,6 +1242,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
         <input type="search" id="vocabSearch" data-i18n-placeholder="vocab.search" autocomplete="off">
         <span class="muted small" id="vocabCount"></span>
         <span class="spacer"></span>
+        <button type="button" class="btn" id="vocabMove" data-i18n-title="vocab.moveTitle"></button>
         <button type="button" class="btn" id="vocabToHere" data-i18n="vocab.toHere" hidden></button>
       </div>
       <div class="kw-list vocab-list" id="vocabList"></div>
@@ -1258,6 +1264,23 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
       <button type="button" class="btn primary kw-vocab-only" id="vocabPdf" data-i18n="vocab.pdf"></button>
       <button value="close" class="btn ghost" data-i18n="kw.close"></button>
       <button type="button" class="btn primary kw-list-only" id="kwDownload" data-i18n="kw.download"></button>
+    </div>
+  </form>
+</dialog>
+<dialog id="pairDialog" class="modal" aria-labelledby="pairTitle">
+  <form method="dialog">
+    <h2 id="pairTitle" data-i18n="pair.title">Language pair</h2>
+    <p class="muted small" id="pairText"></p>
+    <div class="pair-row">
+      <label><span data-i18n="pair.source">From</span> <input id="pairSrc" list="langCodes" size="6" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+      <span class="pair-arrow">→</span>
+      <label><span data-i18n="pair.target">To</span> <input id="pairTgt" list="langCodes" size="6" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+    </div>
+    <p class="muted small" data-i18n="pair.hint"></p>
+    <datalist id="langCodes"></datalist>
+    <div class="modal-actions">
+      <button value="cancel" class="btn ghost" data-i18n="common.cancel">Cancel</button>
+      <button value="ok" class="btn primary" data-i18n="common.ok">OK</button>
     </div>
   </form>
 </dialog>
@@ -1716,6 +1739,18 @@ const I18N = {
     "vocab.clearConfirm": "Alle Begriffe des Sprachpaars {pair} löschen?",
     "vocab.full": "Der Speicher des Browsers ist voll; der Wortschatz konnte nicht gespeichert werden.",
     "vocab.start": "Wortschatz",
+    "vocab.moveRow": "Diesen Begriff in ein anderes Sprachpaar verschieben",
+    "vocab.moveAll": "Sprachpaar ändern…",
+    "vocab.moveShown": "{n} gezeigte verschieben…",
+    "vocab.moveTitle": "Die gezeigten Begriffe (alle, oder die Treffer der Suche) in ein anderes Sprachpaar verschieben",
+    "vocab.moved": "{n} Begriffe nach {pair} verschoben.",
+    "common.ok": "OK",
+    "pair.title": "Sprachpaar",
+    "pair.textImport": "{n} Begriffe aus „{name}“ werden übernommen. Sprachen (erkannt – bitte prüfen):",
+    "pair.textMove": "{n} Begriffe verschieben nach:",
+    "pair.source": "Von",
+    "pair.target": "Nach",
+    "pair.hint": "Sprachcodes wie de, en, fr, uk, zh (ISO 639-1).",
     "vocab.startTitle": "Die gesammelten Begriffe aller Dokumente: nachschlagen, lernen, exportieren",
     "kw.previewZoom": "Klick: die Seite in Fensterbreite anzeigen – und wieder klein",
     "kw.cardsText": "Anklicken oder Leertaste dreht die Karte um · ←/→ blättern · K gewusst · A nochmal · Gewusste Karten verlassen die Runde.",
@@ -2244,6 +2279,18 @@ const I18N = {
     "vocab.clearConfirm": "Delete all terms of the language pair {pair}?",
     "vocab.full": "The browser's storage is full; the vocabulary could not be saved.",
     "vocab.start": "Vocabulary",
+    "vocab.moveRow": "Move this term to another language pair",
+    "vocab.moveAll": "Change language pair…",
+    "vocab.moveShown": "Move {n} shown…",
+    "vocab.moveTitle": "Move the shown terms (all, or the search's hits) to another language pair",
+    "vocab.moved": "{n} terms moved to {pair}.",
+    "common.ok": "OK",
+    "pair.title": "Language pair",
+    "pair.textImport": "{n} terms from “{name}” are being added. Languages (detected – please check):",
+    "pair.textMove": "Move {n} terms to:",
+    "pair.source": "From",
+    "pair.target": "To",
+    "pair.hint": "Language codes such as de, en, fr, uk, zh (ISO 639-1).",
     "vocab.startTitle": "The terms collected from all documents: look up, learn, export",
     "kw.previewZoom": "Click: show the page at window width – and small again",
     "kw.cardsText": "Click or Space turns the card · ←/→ browse · K known · A again · Known cards leave the round.",
@@ -14468,7 +14515,7 @@ function initPicture() {
 // from its own browser cache before the network, so language files are written into that cache.
 // ======================================================================
 
-const APP_VERSION = "1.73";
+const APP_VERSION = "1.74";
 // (a change of library version makes a stored set outdated: it is then ignored)
 const OFFLINE_VERSION = `${MUPDF_URL} ${OCR_LIB}`;
 const CORE_SIMD = "tesseract-core-simd-lstm.wasm.js", CORE_PLAIN = "tesseract-core-lstm.wasm.js";
@@ -15778,6 +15825,32 @@ function parseVocabText(text) {
   return rows;
 }
 
+/* ---- asking for a language pair: on import, and to move terms */
+let pairAsk = null;
+function askPair({ src = "", tgt = "", text = "" } = {}) {
+  const dlg = $("#pairDialog");
+  $("#pairSrc").value = src; $("#pairTgt").value = tgt; $("#pairText").textContent = text;
+  return new Promise((resolve) => {
+    pairAsk = resolve;
+    openModal(dlg);
+    $("#pairSrc").focus();
+  });
+}
+const codeOf = (s) => (s || "").trim().toLowerCase().replace(/[^a-z-]/g, "").slice(0, 8);
+/** Terms (by their text) of one pair moved to another; returns how many moved. */
+function vocabMove(fromPair, terms, toPair) {
+  if (!toPair || fromPair === toPair) return 0;
+  const v = vocabLoad();
+  const list = Array.isArray(v[fromPair]) ? v[fromPair] : [];
+  const set = new Set(terms);
+  const moving = list.filter((r) => set.has(r.term));
+  v[fromPair] = list.filter((r) => !set.has(r.term));
+  if (!v[fromPair].length) delete v[fromPair];
+  vocabSave(v);
+  vocabAdd(toPair, moving, "");
+  return moving.length;
+}
+
 /* ---- the vocabulary view in the keywords dialog */
 const vb = { pair: "", query: "" };
 function vocabRows(pair = vb.pair) { const v = vocabLoad(); return Array.isArray(v[pair]) ? v[pair] : []; }
@@ -15799,12 +15872,13 @@ function vocabRender() {
   list.innerHTML = rows.length ? rows.map((r) => `<div class="kw-row vocab-row" data-term="${escapeHtml(r.term)}">
       <input data-k="term" value="${escapeHtml(r.term)}">
       <input data-k="translation" value="${escapeHtml(r.translation)}">
-      <button type="button" class="mini" data-act="del" title="${escapeHtml(t("kw.remove"))}" aria-label="${escapeHtml(t("kw.remove"))}">✕</button>
+      <span class="vocab-row-btns"><button type="button" class="mini" data-act="move" title="${escapeHtml(t("vocab.moveRow"))}" aria-label="${escapeHtml(t("vocab.moveRow"))}">⇄</button><button type="button" class="mini" data-act="del" title="${escapeHtml(t("kw.remove"))}" aria-label="${escapeHtml(t("kw.remove"))}">✕</button></span>
       <input class="kw-ex" data-k="example" value="${escapeHtml(r.example || "")}" placeholder="${escapeHtml(t("kw.example"))}">
       <input class="kw-ex" data-k="exampleTr" value="${escapeHtml(r.exampleTr || "")}" placeholder="${escapeHtml(t("kw.exampleTr"))}">
     </div>`).join("") : `<p class="muted small">${escapeHtml(all.length ? t("vocab.noMatch") : t("vocab.empty"))}</p>`;
   const some = all.length > 0;
-  for (const id of ["#vocabCards", "#vocabPdf", "#vocabAnki", "#vocabApkg", "#vocabClear"]) $(id).disabled = !some;
+  for (const id of ["#vocabCards", "#vocabPdf", "#vocabAnki", "#vocabApkg", "#vocabClear", "#vocabMove"]) $(id).disabled = !some;
+  $("#vocabMove").textContent = rows.length === all.length ? t("vocab.moveAll") : t("vocab.moveShown", { n: rows.length });
   $("#vocabToHere").hidden = !(state.doc && (state.keywords || []).some((r) => r.term && r.translation));
 }
 function vocabUpdateRow(termKey, k, value) {
@@ -15836,13 +15910,37 @@ function initVocab() {
     vocabUpdateRow(row.dataset.term, k, e.target.value);
     if (k === "term") row.dataset.term = e.target.value;
   });
-  list.addEventListener("click", (e) => {
-    const b = e.target.closest("[data-act=del]"), row = e.target.closest(".vocab-row");
+  list.addEventListener("click", async (e) => {
+    const b = e.target.closest("[data-act]"), row = e.target.closest(".vocab-row");
     if (!b || !row) return;
-    const v = vocabLoad();
-    v[vb.pair] = (v[vb.pair] || []).filter((r) => r.term !== row.dataset.term);
-    vocabSave(v); vocabRender();
+    if (b.dataset.act === "del") {
+      const v = vocabLoad();
+      v[vb.pair] = (v[vb.pair] || []).filter((r) => r.term !== row.dataset.term);
+      vocabSave(v); vocabRender();
+    } else if (b.dataset.act === "move") { // this one term to another pair
+      const [src, tgt] = vb.pair.split("-");
+      const ans = await askPair({ src, tgt, text: t("pair.textMove", { n: 1 }) });
+      if (!ans) return;
+      const n = vocabMove(vb.pair, [row.dataset.term], ans.pair);
+      toast(t("vocab.moved", { n, pair: pairLabel(ans.pair) }), "ok"); vocabRender();
+    }
   });
+  $("#vocabMove").addEventListener("click", async () => { // the shown terms (all, or the search's hits) to another pair
+    const rows = vocabFiltered();
+    if (!rows.length) return;
+    const [src, tgt] = vb.pair.split("-");
+    const ans = await askPair({ src, tgt, text: t("pair.textMove", { n: rows.length }) });
+    if (!ans) return;
+    const n = vocabMove(vb.pair, rows.map((r) => r.term), ans.pair);
+    vb.pair = ans.pair; vb.query = ""; $("#vocabSearch").value = "";
+    toast(t("vocab.moved", { n, pair: pairLabel(ans.pair) }), "ok"); vocabRender();
+  });
+  $("#pairDialog").addEventListener("close", () => {
+    const ok = $("#pairDialog").returnValue === "ok", src = codeOf($("#pairSrc").value), tgt = codeOf($("#pairTgt").value);
+    const resolve = pairAsk; pairAsk = null;
+    if (resolve) resolve(ok && src && tgt ? { src, tgt, pair: `${src}-${tgt}` } : null);
+  });
+  $("#langCodes").innerHTML = [...new Set(Object.values(LANG_CODES))].sort().map((c) => `<option value="${c}">${escapeHtml(Object.keys(LANG_CODES).find((k) => LANG_CODES[k] === c) || c)}</option>`).join("");
   $("#vocabToHere").addEventListener("click", () => { // the open document's terms into the vocabulary (the pair as shown)
     const pair = vb.pair || currentPair();
     if (!pair) { toast(t("vocab.noPair"), "error"); return; }
@@ -15864,16 +15962,18 @@ function initVocab() {
     e.target.value = "";
     if (!file) return;
     const bytes = new Uint8Array(await file.arrayBuffer());
-    let rows, deckName = file.name, isDeck = false;
+    let rows, deckName = file.name, hint = { src: "", tgt: "" };
     if (/\.apkg$/i.test(file.name) || (bytes[0] === 0x50 && bytes[1] === 0x4b)) {
-      try { const r = await readApkg(bytes); rows = r.rows; deckName = r.deck || file.name; isDeck = true; } catch (err) { toast(userError(err), "error"); return; }
+      try { const r = await readApkg(bytes); rows = r.rows; deckName = r.deck || file.name; hint = r.langs || hint; } catch (err) { toast(userError(err), "error"); return; }
     } else rows = parseVocabText(new TextDecoder().decode(bytes));
-    let pair = isDeck ? "" : vb.pair; // a deck has languages of its own: detected from its cards
-    if (!pair) {
-      const src = detectLanguage(rows.map((r) => r.term).join(" ")), tgt = detectLanguage(rows.map((r) => r.translation).join(" "));
-      pair = src && tgt ? `${src}-${tgt}` : vb.pair;
-    }
-    if (!rows.length || !pair) { toast(t("vocab.badFile"), "error"); return; }
+    if (!rows.length) { toast(t("vocab.badFile"), "error"); return; }
+    // The pair: what the deck's field names say, else what the texts look like; the user confirms or corrects it.
+    const [curSrc, curTgt] = (vb.pair || "-").split("-");
+    const src = hint.src || detectLanguage(rows.map((r) => r.term).join(" ")) || curSrc || "";
+    const tgt = hint.tgt || detectLanguage(rows.map((r) => r.translation).join(" ")) || curTgt || "";
+    const ans = await askPair({ src, tgt, text: t("pair.textImport", { n: rows.length, name: deckName }) });
+    if (!ans) return;
+    const pair = ans.pair;
     const n = vocabAdd(pair, rows, deckName);
     vb.pair = pair;
     toast(t("vocab.imported", { n, total: rows.length, pair: pairLabel(pair) }), "ok"); vocabRender();
@@ -15990,20 +16090,31 @@ async function readApkg(bytes) {
   const deckNames = Object.values(decks).map((d) => d.name).filter((n) => n && n !== "Default");
   const rows = [];
   const EXAMPLE_RE = /example|beispiel|sentence|satz|пример|приклад|exemple|ejemplo|esempio|usage|context/i;
+  const PRON_RE = /pinyin|pīnyīn|reading|romaji|furigana|translit|transcri|pronunc|aussprache|romani[sz]|jyutping|zhuyin|bopomofo|kana|ipa$/i;
+  const MEDIA_RE = /audio|sound|image|picture|photo|bild|^ton$|mp3|recording/i;
+  const langs = { src: "", tgt: "" }; // what the field names say about the languages ("Hanzi", "English")
   for (const n of db.table("notes")) {
     const flds = String(n[6] || "").split("\x1f");
     const model = models[String(n[2])];
     const names = model ? model.flds.map((f) => f.name) : [];
-    let fi = 0, bi = 1;
-    if (names.length) { // the front is the first field that is no example, the back the next such field
-      fi = Math.max(0, names.findIndex((nm) => !EXAMPLE_RE.test(nm)));
-      bi = names.findIndex((nm, i) => i !== fi && !EXAMPLE_RE.test(nm));
+    let fi = 0, bi = 1, pi = -1;
+    if (names.length) { // the front is the first field that is no example, pronunciation or media; the back the next such field
+      const plain = (nm) => !EXAMPLE_RE.test(nm) && !PRON_RE.test(nm) && !MEDIA_RE.test(nm);
+      fi = Math.max(0, names.findIndex(plain));
+      bi = names.findIndex((nm, i) => i !== fi && plain(nm));
+      if (bi < 0) bi = names.findIndex((nm, i) => i !== fi && !MEDIA_RE.test(nm) && !EXAMPLE_RE.test(nm));
       if (bi < 0) bi = fi === 0 ? 1 : 0;
+      pi = names.findIndex((nm, i) => i !== fi && i !== bi && PRON_RE.test(nm));
+      if (!langs.src) langs.src = fieldLang(names[fi]);
+      if (!langs.tgt) langs.tgt = fieldLang(names[bi]);
     }
-    const term = ankiPlain(flds[fi]), translation = ankiPlain(flds[bi]);
+    let term = ankiPlain(flds[fi]);
+    const translation = ankiPlain(flds[bi]);
     if (!term || !translation) continue;
-    const exIdx = names.findIndex((nm, i) => i !== fi && i !== bi && EXAMPLE_RE.test(nm));
-    const rest = flds.map((f, i) => (i === fi || i === bi ? "" : ankiPlain(f))).filter(Boolean);
+    const pron = pi >= 0 ? ankiPlain(flds[pi]).replace(/\s*\n\s*/g, " ") : "";
+    if (pron && pron !== term) term += ` (${pron})`; // 的 (de)
+    const exIdx = names.findIndex((nm, i) => i !== fi && i !== bi && i !== pi && EXAMPLE_RE.test(nm));
+    const rest = flds.map((f, i) => (i === fi || i === bi || i === pi || (names[i] && MEDIA_RE.test(names[i])) ? "" : ankiPlain(f))).filter(Boolean);
     let example = exIdx >= 0 ? ankiPlain(flds[exIdx]) : rest[0] || "", exampleTr = "";
     const exLines = example.split("\n").filter((l) => l.trim());
     if (exLines.length >= 2 && exLines.length % 2 === 0) { // "sentence / its translation" in one field, line by line
@@ -16012,7 +16123,15 @@ async function readApkg(bytes) {
     } else example = exLines.join(" ");
     rows.push({ term: term.replace(/\s*\n\s*/g, " "), translation: translation.replace(/\s*\n\s*/g, " "), example, exampleTr });
   }
-  return { rows, deck: deckNames[0] || "", notes: rows.length };
+  return { rows, deck: deckNames[0] || "", notes: rows.length, langs };
+}
+
+/** The language a field name stands for ("English", "Deutsch", "Hanzi", "Kanji" …), or "". */
+function fieldLang(name) {
+  const n = (name || "").toLowerCase().replace(/\(.*?\)/g, "").trim();
+  const extra = { hanzi: "zh", 汉字: "zh", 中文: "zh", mandarin: "zh", kanji: "ja", 日本語: "ja", hangul: "ko", 한국어: "ko", 한글: "ko", русский: "ru", українська: "uk", deutsch: "de", français: "fr", español: "es", italiano: "it", português: "pt" };
+  if (extra[n]) return extra[n];
+  return LANG_CODES[n] || "";
 }
 
 /* ---- writing: a small database with the tables Anki expects */
