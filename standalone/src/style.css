@@ -889,3 +889,10 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
 .vocab-stat-dot.mature { background: var(--accent); border-color: transparent; }
 .vocab-bar #vocabFilter { max-width: 170px; }
 .kw-actions { flex-wrap: wrap; }
+
+/* ---------- v1.93: built-in decks ---------- */
+.decks-list { display: grid; gap: 8px; max-height: 60vh; overflow: auto; padding: 2px; }
+.decks-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface-2); }
+.decks-row.added { opacity: .8; }
+.decks-name { min-width: 0; display: grid; gap: 3px; }
+.decks-sample { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

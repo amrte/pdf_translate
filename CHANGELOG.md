@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.93
+
+- Built-in Anki decks: `.apkg` files copied into `standalone/decks/` are baked into the app when it is built. They appear under Vocabulary → "Built-in decks (n)" with their cards, pair and a sample; "Add" puts them into the vocabulary of a language pair, confirmed in the pair dialog. A file named like `Name.de-en.apkg` presets the pair. `python standalone/decks.py` lists what the build would embed.
+
 ## 1.92
 
 - Vocabulary: a statistics bar shows how many words of the pair are new, learning or mature, what is due today, and the streak of study days.

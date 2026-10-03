@@ -391,6 +391,42 @@ async function vocabPdfBytes() {
   };
   return new Uint8Array(await pool.workers[0].call("keywordsPdf", args));
 }
+/* ---- built-in decks: Anki decks baked into the app at build time (standalone/decks/) */
+function builtinDecks() {
+  try { const d = JSON.parse($("#builtinDecks").textContent || "[]"); return Array.isArray(d) ? d : []; } catch (_) { return []; }
+}
+/** Rows of a built-in deck already in a pair's vocabulary: the deck shows as "added" when most of them are there. */
+function deckAdded(deck) {
+  const v = vocabLoad();
+  const terms = new Set(deck.rows.map((r) => r.term));
+  let best = 0;
+  for (const rows of Object.values(v)) if (Array.isArray(rows)) best = Math.max(best, rows.filter((r) => terms.has(r.term)).length);
+  return best >= Math.max(1, Math.floor(deck.rows.length * 0.8));
+}
+function decksRender() {
+  const decks = builtinDecks();
+  $("#decksList").innerHTML = decks.map((d, i) => {
+    const pair = d.src && d.tgt ? `${d.src}-${d.tgt}` : "";
+    const added = deckAdded(d);
+    return `<div class="decks-row${added ? " added" : ""}" data-i="${i}">
+      <div class="decks-name"><b>${escapeHtml(d.name)}</b><div class="muted small">${escapeHtml(t("decks.cards", { n: d.rows.length }))}${pair ? ` · ${escapeHtml(pairLabel(pair))}` : ""}${added ? ` · ${escapeHtml(t("decks.added"))}` : ""}</div>
+        <div class="muted small decks-sample">${escapeHtml(d.rows.slice(0, 3).map((r) => `${r.term} = ${r.translation}`).join(" · "))}</div></div>
+      <button type="button" class="btn${added ? "" : " primary"}" data-act="add">${escapeHtml(t(added ? "decks.addAgain" : "decks.add"))}</button>
+    </div>`;
+  }).join("") || `<p class="muted small">${escapeHtml(t("decks.none"))}</p>`;
+}
+async function deckAdd(i) {
+  const d = builtinDecks()[i];
+  if (!d) return;
+  const src = d.src || detectLanguage(d.rows.map((r) => r.term).join(" ")) || "";
+  const tgt = d.tgt || detectLanguage(d.rows.map((r) => r.translation).join(" ")) || "";
+  const ans = await askPair({ src, tgt, text: t("pair.textImport", { n: d.rows.length, name: d.name }) });
+  if (!ans) return;
+  const n = vocabAdd(ans.pair, d.rows, d.name);
+  vb.pair = ans.pair; vb.query = ""; $("#vocabSearch").value = "";
+  toast(t("vocab.imported", { n, total: d.rows.length, pair: pairLabel(ans.pair) }), "ok");
+  decksRender(); vocabRender();
+}
 window.Kameleon = Object.assign(window.Kameleon || {}, { detectLanguage, langCode });
 
 function initVocab() {
@@ -398,6 +434,12 @@ function initVocab() {
   $("#vocabPair").addEventListener("change", (e) => { vb.pair = e.target.value; vb.query = ""; $("#vocabSearch").value = ""; vocabRender(); });
   $("#vocabSearch").addEventListener("input", (e) => { vb.query = e.target.value; vocabRender(); });
   $("#vocabFilter").addEventListener("change", (e) => { vb.filter = e.target.value; vocabRender(); });
+  const decks = builtinDecks();
+  $("#vocabBuiltin").hidden = !decks.length;
+  $("#vocabBuiltin").textContent = t("decks.button", { n: decks.length });
+  $("#vocabBuiltin").addEventListener("click", () => { decksRender(); openModal($("#decksDialog")); });
+  $("#decksList").addEventListener("click", (e) => { const b = e.target.closest("[data-act=add]"); if (b) deckAdd(Number(b.closest(".decks-row").dataset.i)); });
+  document.addEventListener("languagechange", () => { $("#vocabBuiltin").textContent = t("decks.button", { n: decks.length }); });
   $("#vocabMerge").addEventListener("click", vocabMergeDupes);
   $("#vocabBackup").addEventListener("click", vocabBackup);
   $("#vocabCardsPdf").addEventListener("click", async () => {

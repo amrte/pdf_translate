@@ -3,7 +3,11 @@
     python standalone/build.py
 """
 
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import decks  # noqa: E402  (standalone/decks.py: Anki decks baked into the app)
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
@@ -23,6 +27,9 @@ def main() -> None:
     # The easter egg picture (ten quick clicks on the chameleon in the top bar), embedded as a data URI.
     import base64
     parts["EGG"] = "data:image/jpeg;base64," + base64.b64encode((SRC / "egg.jpg").read_bytes()).decode("ascii")
+    # Anki decks from standalone/decks/*.apkg, embedded as JSON (Vocabulary -> "Built-in decks").
+    built_in = decks.collect()
+    parts["DECKS"] = decks.embed_json(built_in)
     for name in ("I18N", "ENGINE", "UI"):
         if "</script" in parts[name].lower():
             raise SystemExit(f"{name} must not contain '</script'")
@@ -30,7 +37,7 @@ def main() -> None:
     for name, value in parts.items():
         html = html.replace("{{" + name + "}}", value)
     html = html.replace("{{VERSION}}", version)
-    leftover = [p for p in ("{{STYLE}}", "{{I18N}}", "{{ENGINE}}", "{{UI}}", "{{VERSION}}", "{{EGG}}") if p in html]
+    leftover = [p for p in ("{{STYLE}}", "{{I18N}}", "{{ENGINE}}", "{{UI}}", "{{VERSION}}", "{{EGG}}", "{{DECKS}}") if p in html]
     if leftover:
         raise SystemExit(f"unreplaced placeholders: {leftover}")
     # The app file carries its version in its name; older builds are removed.
@@ -40,6 +47,8 @@ def main() -> None:
     out = HERE / f"Kameleon-{version}.html"
     out.write_text(html, "utf-8")
     print(f"Kameleon v{version}: wrote {out.relative_to(ROOT)} ({len(html):,} bytes)")
+    if built_in:
+        print("  built-in decks: " + ", ".join(f"{d['name']} ({len(d['rows'])})" for d in built_in))
 
 
 if __name__ == "__main__":

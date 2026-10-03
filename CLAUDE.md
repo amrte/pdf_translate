@@ -27,6 +27,9 @@
   (brightness, contrast, rotation and crop for an opened picture), `pagesui.js` (the page manager dialog), `keywords.js` (keywords from the AI answer: list, PDF page, flashcards), `words.js` (the document's words by frequency: a selection, a prompt for the AI, the answer imported as keywords), `batch.js` (several files at once: read by a worker of their own, one prompt across the files, the answers sorted back into each file's translations), `vocab.js` (the vocabulary: terms collected per language pair, with export to PDF and Anki and import), `anki.js` (Anki packages: a small SQLite reader and writer – decks imported from .apkg, the vocabulary exported as .apkg), `theme.js` (the accent colour, chosen at random on start), `reading.js` (reading mode: a click on a text shows its translation in a bubble), `segedit.js` (splitting and joining PDF segments; the engine rebuilds them from the page's lines), `offline.js`
   (libraries stored in the browser for offline use), `main.js`
   (start-up). `standalone/Kameleon-<version>.html` is generated – do not edit it by hand.
+- `standalone/decks.py` + `standalone/decks/` – Anki decks baked into the app: `.apkg` files in the
+  folder are converted at build time (Python sqlite3) and embedded as JSON (`{{DECKS}}`); the app
+  lists them under Vocabulary → "Built-in decks". The `.apkg` files are not committed.
 - `app.py`, `pdf_engine.py`, `static/` – the older server version (Flask + PyMuPDF).
 - `tests/` – pytest suite for the server version: `python -m pytest -q`.
 

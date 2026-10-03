@@ -526,6 +526,17 @@
   </form>
 </dialog>
 
+<!-- Anki decks baked in at build time (standalone/decks/*.apkg) -->
+<script type="application/json" id="builtinDecks">{{DECKS}}</script>
+<dialog id="decksDialog" class="modal wide" aria-labelledby="decksTitle">
+  <form method="dialog">
+    <h2 id="decksTitle" data-i18n="decks.title"></h2>
+    <p class="muted small" data-i18n="decks.text"></p>
+    <div class="decks-list" id="decksList"></div>
+    <div class="modal-actions"><button value="close" class="btn ghost" data-i18n="common.close"></button></div>
+  </form>
+</dialog>
+
 <!-- Easter egg: ten quick clicks on the chameleon in the top bar -->
 <dialog id="eggDialog" class="modal egg" aria-label="Kameleon">
   <form method="dialog"><img src="{{EGG}}" alt="" id="eggImg" width="520" height="534"></form>
@@ -615,6 +626,7 @@
       <button type="button" class="btn kw-words-only" id="wordsCards" data-i18n="words.cards"></button>
       <button type="button" class="btn kw-vocab-only" id="vocabCards" data-i18n="vocab.cards"></button>
       <button type="button" class="btn kw-vocab-only" id="vocabImport" data-i18n="vocab.import" data-i18n-title="vocab.importTitle"></button>
+      <button type="button" class="btn kw-vocab-only" id="vocabBuiltin" data-i18n-title="decks.buttonTitle" hidden></button>
       <button type="button" class="btn kw-vocab-only" id="vocabMerge" data-i18n-title="vocab.mergeTitle"></button>
       <button type="button" class="btn ghost kw-vocab-only" id="vocabBackup" data-i18n="vocab.backup" data-i18n-title="vocab.backupTitle"></button>
       <button type="button" class="btn ghost kw-vocab-only" id="vocabClear" data-i18n="vocab.clear"></button>
