@@ -311,8 +311,9 @@ kbd { font: 11.5px ui-monospace, monospace; border: 1px solid var(--border); bor
 .filter-row input, .filter-row select { padding: 3px 8px; font-size: 13px; }
 .segments { padding-top: 8px; }
 .editor-pane .pane-toolbar .btn { padding: 0 8px; }
-.lang-switch { display: inline-flex; border: 1px solid var(--border); border-radius: 7px; overflow: hidden; }
-.lang-switch button { border: 0; background: transparent; color: var(--muted); font: inherit; font-size: 12px; font-weight: 600; padding: 3px 8px; cursor: pointer; }
+.lang-switch { display: inline-flex; align-items: stretch; height: 28px; box-sizing: border-box; border: 1px solid var(--border); border-radius: 7px; overflow: hidden; } /* as tall as the buttons beside it */
+.lang-switch button { border: 0; background: transparent; color: var(--muted); font: inherit; font-size: 12px; font-weight: 600; padding: 0 9px; cursor: pointer; display: inline-flex; align-items: center; }
+.topbar-actions .icon-btn { width: 28px; height: 28px; }
 .lang-switch button.active { background: var(--accent-soft); color: var(--accent); }
 .version { font-size: 11px; color: var(--muted); font-weight: 500; }
 .help-version { margin-top: 4px; }

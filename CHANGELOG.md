@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.68
+
+- Top bar: the DE/EN switch and the full-screen button are as tall as the buttons beside them.
+
 ## 1.67
 
 - Keywords: a larger window with roomier fields; the list and the flashcards share the same size. A click on the PDF preview shows the page at window width, another click brings the list back.
