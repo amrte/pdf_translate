@@ -811,7 +811,13 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
 .kw-fc-nav, .kw-fc-judge { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; }
 .kw-fc-arrow { width: 50px; height: 44px; padding: 0; font-size: 26px; border-radius: 12px; justify-content: center; }
 .kw-fc-flip { min-width: 170px; height: 44px; font-size: 15px; border-radius: 12px; }
-.kw-fc-judge .btn { height: 36px; }
+.kw-fc-judge .btn { height: auto; min-height: 36px; padding: 4px 12px; flex-direction: column; gap: 1px; line-height: 1.2; }
+.kw-fc-judge .btn small { font-size: 10.5px; font-weight: 500; opacity: .75; }
+.kw-fc-judge .btn.ghost { flex-direction: row; min-height: 36px; }
+.kw-opt-inline { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--muted); }
+.kw-opt-inline select, .kw-opt-inline input { height: 28px; font-size: 12.5px; padding: 0 6px; }
+.kw-opt-inline input { width: 64px; }
+.kw-new-badge { font-size: 11px; font-weight: 600; color: var(--accent); background: var(--accent-soft); border-radius: 9px; padding: 0 7px; margin-left: 6px; vertical-align: 1px; }
 .kw-progress { display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; }
 .kw-scope { display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap; }
 .kw-scope .seg-toggle button { padding: 3px 12px; font-size: 13px; }

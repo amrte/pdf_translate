@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="Kameleon 1.89">
+  <meta name="generator" content="Kameleon 1.90">
   <meta name="description" content="Kameleon – Wechselt die Sprache, behält die Form. Changes language, keeps its shape.">
   <title>Kameleon</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2216%22 fill=%22%23287130%22/%3E%3Cg transform=%22translate(2.5 1) scale(0.9)%22 fill=%22%23ffffff%22 stroke=%22%23ffffff%22%3E%3Cpath d=%22M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6%22 fill=%22none%22 stroke-width=%223.8%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M21 43l-1 10M30 44v9M38 43l1 10%22 stroke-width=%223.6%22 stroke-linecap=%22round%22/%3E%3Cellipse cx=%2221%22 cy=%2225%22 rx=%227%22 ry=%227.5%22 stroke=%22none%22/%3E%3Cellipse cx=%2233%22 cy=%2223.5%22 rx=%227.5%22 ry=%228%22 stroke=%22none%22/%3E%3Cpath d=%22M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z%22 stroke=%22none%22/%3E%3Cpath d=%22M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z%22 stroke=%22none%22/%3E%3Cpath d=%22M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z%22 stroke=%22none%22/%3E%3Cpath d=%22M16 37l4-3 4 3 4-3 4 3 4-3 4 3%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%222.1%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3Cpath d=%22M43.5 33.9L57 32.6%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%221.5%22 stroke-linecap=%22round%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%224.4%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%222.7%22 stroke=%22none%22/%3E%3Ccircle cx=%2246.2%22 cy=%2226.7%22 r=%221.3%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Cpath d=%22M4 55.5c15-3 39-3 54 0%22 fill=%22none%22 stroke-width=%222.4%22 stroke-linecap=%22round%22/%3E%3C/g%3E%3C/svg%3E">
@@ -821,7 +821,13 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
 .kw-fc-nav, .kw-fc-judge { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; }
 .kw-fc-arrow { width: 50px; height: 44px; padding: 0; font-size: 26px; border-radius: 12px; justify-content: center; }
 .kw-fc-flip { min-width: 170px; height: 44px; font-size: 15px; border-radius: 12px; }
-.kw-fc-judge .btn { height: 36px; }
+.kw-fc-judge .btn { height: auto; min-height: 36px; padding: 4px 12px; flex-direction: column; gap: 1px; line-height: 1.2; }
+.kw-fc-judge .btn small { font-size: 10.5px; font-weight: 500; opacity: .75; }
+.kw-fc-judge .btn.ghost { flex-direction: row; min-height: 36px; }
+.kw-opt-inline { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--muted); }
+.kw-opt-inline select, .kw-opt-inline input { height: 28px; font-size: 12.5px; padding: 0 6px; }
+.kw-opt-inline input { width: 64px; }
+.kw-new-badge { font-size: 11px; font-weight: 600; color: var(--accent); background: var(--accent-soft); border-radius: 9px; padding: 0 7px; margin-left: 6px; vertical-align: 1px; }
 .kw-progress { display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; }
 .kw-scope { display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap; }
 .kw-scope .seg-toggle button { padding: 3px 12px; font-size: 13px; }
@@ -884,7 +890,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
   <div class="brand">
     <span class="logo"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#287130"/><g transform="translate(2.5 1) scale(0.9)" fill="#ffffff" stroke="#ffffff"><path d="M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6" fill="none" stroke-width="3.8" stroke-linecap="round"/><path d="M21 43l-1 10M30 44v9M38 43l1 10" stroke-width="3.6" stroke-linecap="round"/><ellipse cx="21" cy="25" rx="7" ry="7.5" stroke="none"/><ellipse cx="33" cy="23.5" rx="7.5" ry="8" stroke="none"/><path d="M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z" stroke="none"/><path d="M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z" stroke="none"/><path d="M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z" stroke="none"/><path d="M16 37l4-3 4 3 4-3 4 3 4-3 4 3" fill="none" stroke="#287130" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M43.5 33.9L57 32.6" fill="none" stroke="#287130" stroke-width="1.5" stroke-linecap="round"/><circle cx="45.5" cy="26.5" r="4.4" fill="#287130" stroke="none"/><circle cx="45.5" cy="26.5" r="2.7" stroke="none"/><circle cx="46.2" cy="26.7" r="1.3" fill="#287130" stroke="none"/><path d="M4 55.5c15-3 39-3 54 0" fill="none" stroke-width="2.4" stroke-linecap="round"/></g></svg></span>
     <span class="brand-name">Kameleon</span>
-    <span class="version" id="appVersion">v1.89</span>
+    <span class="version" id="appVersion">v1.90</span>
   </div>
   <div class="topbar-actions">
     <span class="doc-name" id="docName"></span>
@@ -1387,7 +1393,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
     </div>
     <input type="file" id="offlineZip" class="visually-hidden" accept=".zip,application/zip" multiple tabindex="-1">
     <input type="file" id="offlineFolder" class="visually-hidden" webkitdirectory multiple tabindex="-1">
-    <p class="muted small help-version help-part">Kameleon v1.89 · <span data-i18n="app.tagline"></span></p>
+    <p class="muted small help-version help-part">Kameleon v1.90 · <span data-i18n="app.tagline"></span></p>
     <div class="modal-actions">
       <button type="button" value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
     </div>
@@ -1736,7 +1742,7 @@ const I18N = {
     "help.learnText": "Der Knopf „Lernen“ oben sammelt die Fachbegriffe des Dokuments und baut daraus einen Wortschatz je Sprachpaar – mit Lernkarten, PDF und Anki-Export. Ohne geöffnetes Dokument öffnet er den Wortschatz.",
     "help.learnList": "<b>Liste:</b> Die Begriffe kommen mit der KI-Antwort (Häkchen „Begriffsliste“ im KI-Fenster) oder werden von Hand eingetragen; rechts die PDF-Seite, wie sie gespeichert wird. Jeder Import ergänzt zugleich den Wortschatz des erkannten Sprachpaars.",
     "help.learnWords": "<b>Wörter:</b> Alle Wörter des Dokuments nach Häufigkeit, ohne Funktionswörter. Wörter anklicken oder die häufigsten auswählen, den Prompt kopieren und die KI-Antwort rechts einfügen – die Wörter kommen mit Übersetzung und Beispielsatz in Liste, Wortschatz und Lernkarten.",
-    "help.learnCards": "<b>Lernkarten:</b> „Heute fällig“ zeigt neue Wörter und gewusste, deren Wiederholung ansteht (nach 1, 3, 7, 14, 30, dann alle 90 Tagen); „Nochmal“ setzt ein Wort zurück. „Umgekehrt“ fragt von der Übersetzung nach dem Begriff. Tasten: <kbd>Leertaste</kbd> umdrehen, <kbd>←</kbd>/<kbd>→</kbd> blättern, <kbd>K</kbd> gewusst, <kbd>A</kbd> nochmal, <kbd>F</kbd> Favorit, <kbd>R</kbd> Richtung.",
+    "help.learnCards": "<b>Lernkarten:</b> „Heute fällig“ zeigt zuerst neue Wörter (so viele pro Tag wie eingestellt), dann die gewussten, deren Wiederholung ansteht (nach 1, 3, 7, 14, 30, dann alle 90 Tagen). Vier Bewertungen: Nochmal (zurück auf Anfang), Schwer (Abstand bleibt), Gewusst (eine Stufe weiter), Leicht (zwei Stufen). Der Beispielsatz vorn kann als Lücke, ganz oder gar nicht gezeigt werden; „Umgekehrt“ fragt von der Übersetzung nach dem Begriff. Tasten: <kbd>Leertaste</kbd> umdrehen, <kbd>←</kbd>/<kbd>→</kbd> blättern, <kbd>A</kbd>/<kbd>H</kbd>/<kbd>K</kbd>/<kbd>E</kbd> oder <kbd>1</kbd>–<kbd>4</kbd> bewerten, <kbd>F</kbd> Favorit, <kbd>R</kbd> Richtung.",
     "help.learnVocab": "<b>Wortschatz:</b> Die Begriffe aller Dokumente je Sprachpaar, mit Suche, Favoriten (das Kameleon) und Korrektur des Sprachpaars. Export als PDF oder Anki-Paket (.apkg), Import aus .txt/.tsv/.csv und aus Anki-Paketen.",
     "help.learnDecks": "<b>Fertige Lernkarten:</b> Tausende freie Anki-Stapel für viele Sprachen gibt es unter <a href=\"https://ankiweb.net/shared/decks\" target=\"_blank\" rel=\"noopener noreferrer\">ankiweb.net/shared/decks</a> – die .apkg-Datei herunterladen und unter „Wortschatz → Importieren…“ laden.",
     "help.shortcuts": "Tastenkürzel im Übersetzungsfeld: <kbd>Strg</kbd>+<kbd>Enter</kbd> nächstes Segment · <kbd>Alt</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> vorheriges/nächstes · <kbd>Strg</kbd>+<kbd>S</kbd> Segment ins Dokument übernehmen · <kbd>Strg</kbd> + Mausrad zoomen.",
@@ -2030,7 +2036,7 @@ const I18N = {
     "pair.target": "Nach",
     "pair.hint": "Sprachcodes wie de, en, fr, uk, zh (ISO 639-1).",
     "kw.previewZoom": "Klick: die Seite in Fensterbreite anzeigen – und wieder klein",
-    "kw.cardsText": "Anklicken oder Leertaste dreht die Karte um · ←/→ blättern · K gewusst · A nochmal · F Favorit (das Kameleon) · R Richtung · Gewusste Karten verlassen die Runde und kommen nach wachsenden Abständen wieder.",
+    "kw.cardsText": "Anklicken oder Leertaste dreht die Karte um · ←/→ blättern · A nochmal, H schwer, K gewusst, E leicht (oder 1–4) · F Favorit (das Kameleon) · R Richtung · Bewertete Karten verlassen die Runde und kommen nach wachsenden Abständen wieder.",
     "kw.prev": "Vorherige Karte (←)",
     "kw.next": "Nächste Karte (→)",
     "kw.shuffle": "Mischen",
@@ -2042,6 +2048,23 @@ const I18N = {
     "kw.restart": "Von vorn",
     "kw.noCards": "Keine Begriffe für Lernkarten – erst eine Liste importieren oder eintragen.",
     "kw.scopeDue": "Heute fällig ({n})",
+    "kw.hard": "Schwer",
+    "kw.easy": "Leicht",
+    "kw.againTitle": "Nicht gewusst: zurück auf Anfang, kommt in dieser Runde noch einmal (Taste A oder 1)",
+    "kw.hardTitle": "Gerade so gewusst: der Abstand bleibt (Taste H oder 2)",
+    "kw.knownTitle": "Gewusst: eine Stufe weiter (Taste K oder 3)",
+    "kw.easyTitle": "Leicht gewusst: zwei Stufen weiter (Taste E oder 4)",
+    "kw.intervalNow": "gleich",
+    "kw.days": "{n} T",
+    "kw.exampleFront": "Beispiel vorn:",
+    "kw.exampleFrontTitle": "Der Beispielsatz auf der Vorderseite verrät oft die Antwort: hier als Lücke, ganz oder gar nicht zeigen. Die Rückseite zeigt ihn immer ganz.",
+    "kw.example_cloze": "als Lücke",
+    "kw.example_show": "ganz",
+    "kw.example_hide": "verbergen",
+    "kw.newPerDay": "Neue/Tag:",
+    "kw.newPerDayTitle": "So viele neue Wörter kommen unter „Heute fällig“ pro Tag dazu – zuerst die neuen, dann die Wiederholungen.",
+    "kw.newBadge": "neu",
+    "kw.waiting": "{n} neue warten auf morgen",
     "kw.scopeNew": "Neue Wörter ({n})",
     "kw.noDue": "Heute ist nichts fällig. Die nächste Wiederholung: {when}.",
     "kw.tomorrow": "morgen",
@@ -2358,7 +2381,7 @@ const I18N = {
     "help.learnText": "The \"Learn\" button at the top collects the document's terms and builds a vocabulary per language pair from them – with flashcards, PDF and Anki export. Without an open document it opens the vocabulary.",
     "help.learnList": "<b>List:</b> The terms arrive with the AI answer (tick \"Term list\" in the AI window) or are entered by hand; on the right the PDF page as it will be saved. Every import also adds to the vocabulary of the detected language pair.",
     "help.learnWords": "<b>Words:</b> Every word of the document by frequency, without function words. Tick words or select the most frequent ones, copy the prompt and paste the AI's answer on the right – the words arrive with translation and example sentence in the list, the vocabulary and the flashcards.",
-    "help.learnCards": "<b>Flashcards:</b> \"Due today\" shows new words and known ones whose review is due (after 1, 3, 7, 14, 30, then every 90 days); \"Again\" puts a word back to the start. \"Reversed\" asks from the translation for the term. Keys: <kbd>Space</kbd> turn, <kbd>←</kbd>/<kbd>→</kbd> browse, <kbd>K</kbd> known, <kbd>A</kbd> again, <kbd>F</kbd> favourite, <kbd>R</kbd> direction.",
+    "help.learnCards": "<b>Flashcards:</b> \"Due today\" shows new words first (as many per day as set), then the known ones whose review is due (after 1, 3, 7, 14, 30, then every 90 days). Four grades: Again (back to the start), Hard (interval stays), Known (one step up), Easy (two steps). The example sentence on the front can be shown as a gap, whole or not at all; \"Reversed\" asks from the translation for the term. Keys: <kbd>Space</kbd> turn, <kbd>←</kbd>/<kbd>→</kbd> browse, <kbd>A</kbd>/<kbd>H</kbd>/<kbd>K</kbd>/<kbd>E</kbd> or <kbd>1</kbd>–<kbd>4</kbd> grade, <kbd>F</kbd> favourite, <kbd>R</kbd> direction.",
     "help.learnVocab": "<b>Vocabulary:</b> The terms of all documents per language pair, with search, favourites (the chameleon) and correction of the pair. Export as PDF or Anki package (.apkg), import from .txt/.tsv/.csv and from Anki packages.",
     "help.learnDecks": "<b>Ready-made flashcards:</b> thousands of free Anki decks for many languages are at <a href=\"https://ankiweb.net/shared/decks\" target=\"_blank\" rel=\"noopener noreferrer\">ankiweb.net/shared/decks</a> – download the .apkg file and load it under \"Vocabulary → Import…\".",
     "help.shortcuts": "Shortcuts in a translation box: <kbd>Ctrl</kbd>+<kbd>Enter</kbd> next segment · <kbd>Alt</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> previous/next · <kbd>Ctrl</kbd>+<kbd>S</kbd> update this segment in the document · <kbd>Ctrl</kbd> + mouse wheel to zoom.",
@@ -2652,7 +2675,7 @@ const I18N = {
     "pair.target": "To",
     "pair.hint": "Language codes such as de, en, fr, uk, zh (ISO 639-1).",
     "kw.previewZoom": "Click: show the page at window width – and small again",
-    "kw.cardsText": "Click or Space turns the card · ←/→ browse · K known · A again · F favourite (the chameleon) · R direction · Known cards leave the round and come back after growing intervals.",
+    "kw.cardsText": "Click or Space turns the card · ←/→ browse · A again, H hard, K known, E easy (or 1–4) · F favourite (the chameleon) · R direction · Graded cards leave the round and come back after growing intervals.",
     "kw.prev": "Previous card (←)",
     "kw.next": "Next card (→)",
     "kw.shuffle": "Shuffle",
@@ -2664,6 +2687,23 @@ const I18N = {
     "kw.restart": "Start over",
     "kw.noCards": "No terms for flashcards yet – import or enter a list first.",
     "kw.scopeDue": "Due today ({n})",
+    "kw.hard": "Hard",
+    "kw.easy": "Easy",
+    "kw.againTitle": "Not known: back to the start, comes up again in this round (key A or 1)",
+    "kw.hardTitle": "Barely known: the interval stays (key H or 2)",
+    "kw.knownTitle": "Known: one step up (key K or 3)",
+    "kw.easyTitle": "Easily known: two steps up (key E or 4)",
+    "kw.intervalNow": "now",
+    "kw.days": "{n} d",
+    "kw.exampleFront": "Example on front:",
+    "kw.exampleFrontTitle": "The example sentence on the front often gives the answer away: show it as a gap, whole, or not at all. The back always shows it whole.",
+    "kw.example_cloze": "as a gap",
+    "kw.example_show": "whole",
+    "kw.example_hide": "hidden",
+    "kw.newPerDay": "New/day:",
+    "kw.newPerDayTitle": "How many new words \"Due today\" adds per day – the new ones first, then the reviews.",
+    "kw.newBadge": "new",
+    "kw.waiting": "{n} new wait for tomorrow",
     "kw.scopeNew": "New words ({n})",
     "kw.noDue": "Nothing is due today. The next review: {when}.",
     "kw.tomorrow": "tomorrow",
@@ -14951,7 +14991,7 @@ function initPicture() {
 // from its own browser cache before the network, so language files are written into that cache.
 // ======================================================================
 
-const APP_VERSION = "1.89";
+const APP_VERSION = "1.90";
 // (a change of library version makes a stored set outdated: it is then ignored)
 const OFFLINE_VERSION = `${MUPDF_URL} ${OCR_LIB}`;
 const CORE_SIMD = "tesseract-core-simd-lstm.wasm.js", CORE_PLAIN = "tesseract-core-lstm.wasm.js";
@@ -15629,8 +15669,18 @@ function initKeywords() {
 /* ---------------------------------------------------------------- learning cards */
 // The terms as flashcards: front the term (with its example sentence), back the translation.
 // Click or Space turns a card; "Known" takes it out of the round, "Again" puts it at the end.
-const fc = { queue: [], index: 0, flipped: false, known: 0, total: 0, all: [], scope: "new" };
-const LS_FC_SCOPE = "pdftr:fcscope", LS_FC_REVERSE = "pdftr:fcreverse";
+const fc = { queue: [], index: 0, flipped: false, known: 0, total: 0, all: [], scope: "new", example: "cloze", newCap: 20 };
+const LS_FC_SCOPE = "pdftr:fcscope", LS_FC_REVERSE = "pdftr:fcreverse", LS_FC_EXAMPLE = "pdftr:fcexample", LS_FC_NEWCAP = "pdftr:fcnewcap", LS_FC_NEWDAY = "pdftr:fcnewday";
+/** New words shown for the first time today, per pair: the daily cap counts against this. */
+function fcNewToday(add = 0) {
+  const day = new Date().toISOString().slice(0, 10), key = fc.pair || "doc";
+  let rec = {};
+  try { rec = JSON.parse(localStorage.getItem(LS_FC_NEWDAY) || "{}"); } catch (_) { /* fine */ }
+  if (rec.day !== day) rec = { day, pairs: {} };
+  rec.pairs[key] = (rec.pairs[key] || 0) + add;
+  if (add) try { localStorage.setItem(LS_FC_NEWDAY, JSON.stringify(rec)); } catch (_) { /* fine */ }
+  return rec.pairs[key];
+}
 /**
  * The vocabulary remembers which words were marked known (how often, and when). A word comes
  * up again after a growing interval: 1, 3, 7, 14, 30 and then every 90 days. "Again" puts it
@@ -15642,11 +15692,21 @@ const rowKnown = (r) => Number(r.known) > 0;
 const fcInterval = (r) => FC_STEPS[Math.min(Number(r.known) || 1, FC_STEPS.length) - 1] * DAY;
 const fcDueAt = (r) => (rowKnown(r) ? (Number(r.last) || 0) + fcInterval(r) : 0);
 const fcDue = (r) => !rowKnown(r) || fcDueAt(r) <= Date.now();
+/** The round: new words first (at most the day's cap in "due today"), then the reviews, the most overdue first. */
 function fcScopeRows() {
-  if (fc.scope === "new") return fc.all.filter((r) => !rowKnown(r));
-  if (fc.scope === "due") return fc.all.filter(fcDue);
+  const fresh = fc.all.filter((r) => !rowKnown(r));
+  if (fc.scope === "new") return fresh;
+  if (fc.scope === "due") {
+    const cap = Math.max(0, fc.newCap - fcNewToday());
+    const due = fc.all.filter((r) => rowKnown(r) && fcDueAt(r) <= Date.now()).sort((a, b) => fcDueAt(a) - fcDueAt(b));
+    return [...fresh.filter((r) => r._seen).concat(fresh.filter((r) => !r._seen)).slice(0, Math.max(cap, fresh.filter((r) => r._seen).length)), ...due];
+  }
   return fc.all;
 }
+const fcWaiting = () => { // new words held back by the day's cap
+  const fresh = fc.all.filter((r) => !rowKnown(r)).length;
+  return fc.scope === "due" ? Math.max(0, fresh - Math.max(fc.newCap - fcNewToday(), fc.all.filter((r) => !rowKnown(r) && r._seen).length)) : 0;
+};
 function fcSetScope(scope, remember = true) {
   if (!["new", "due", "all"].includes(scope)) scope = "due";
   fc.scope = scope;
@@ -15666,19 +15726,43 @@ function fcStart() {
   }
   fc.all = rows;
   let scope = "due";
-  try { scope = localStorage.getItem(LS_FC_SCOPE) || "due"; fc.reverse = localStorage.getItem(LS_FC_REVERSE) === "1"; } catch (_) { /* fine */ }
+  try {
+    scope = localStorage.getItem(LS_FC_SCOPE) || "due";
+    fc.reverse = localStorage.getItem(LS_FC_REVERSE) === "1";
+    fc.example = localStorage.getItem(LS_FC_EXAMPLE) || "cloze";
+    fc.newCap = Math.max(0, Number(localStorage.getItem(LS_FC_NEWCAP) ?? 20));
+  } catch (_) { /* fine */ }
   fcSetScope(scope, false);
 }
+/** The example sentence on the front: as it is, with the word as a gap, or not at all. */
+function fcFrontSentence(sentence, word) {
+  if (!sentence || fc.example === "hide") return "";
+  if (fc.example === "show") return sentence;
+  const esc = (x) => x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const core = word.replace(/^(der|die|das|the|a|an|le|la|les|un|une|el|los|las|il|lo|gli|o|os|as)\s+/i, "").trim();
+  let out = sentence.replace(new RegExp(`(?<![\\p{L}\\p{M}])${esc(core)}(?![\\p{L}\\p{M}])`, "giu"), "_____");
+  if (out === sentence && core.length >= 5) { // an inflected form: the stem with any ending
+    const stem = core.slice(0, Math.max(4, core.length - 2));
+    out = sentence.replace(new RegExp(`(?<![\\p{L}\\p{M}])${esc(stem)}[\\p{L}\\p{M}]*`, "giu"), "_____");
+  }
+  return out;
+}
+const fcIntervalLabel = (n) => (n <= 0 ? t("kw.intervalNow") : t("kw.days", { n: FC_STEPS[Math.min(n, FC_STEPS.length) - 1] }));
 /** Due today / new words / the whole set, and the direction of the cards, above the card. */
 function fcScopeHtml() {
   if (!fc.all.length) return "";
-  const fresh = fc.all.filter((r) => !rowKnown(r)).length, due = fc.all.filter(fcDue).length, known = fc.all.length - fresh;
+  const fresh = fc.all.filter((r) => !rowKnown(r)).length, known = fc.all.length - fresh;
+  const due = fc.all.filter((r) => rowKnown(r) && fcDueAt(r) <= Date.now()).length + Math.min(fresh, Math.max(fc.newCap - fcNewToday(), fc.all.filter((r) => !rowKnown(r) && r._seen).length));
   const seg = (key, n, label) => `<button type="button" class="${fc.scope === key ? "active" : ""}" data-fc="scope-${key}"${n ? "" : " disabled"}>${escapeHtml(t(label, { n }))}</button>`;
   return `<div class="kw-scope">
     <div class="seg-toggle" role="group" title="${escapeHtml(t("kw.scopeTitle"))}">
       ${seg("due", due, "kw.scopeDue")}${seg("new", fresh, "kw.scopeNew")}${seg("all", fc.all.length, fcSource ? "kw.scopeAll" : "kw.scopeAllDoc")}
     </div>
     <button type="button" class="btn ghost kw-reverse${fc.reverse ? " on" : ""}" data-fc="reverse" aria-pressed="${fc.reverse ? "true" : "false"}" title="${escapeHtml(t("kw.reverseTitle"))}">⇄ ${escapeHtml(t("kw.reverse"))}</button>
+    <label class="kw-opt-inline" title="${escapeHtml(t("kw.exampleFrontTitle"))}"><span>${escapeHtml(t("kw.exampleFront"))}</span>
+      <select data-fc-select="example">${["cloze", "show", "hide"].map((v) => `<option value="${v}"${fc.example === v ? " selected" : ""}>${escapeHtml(t(`kw.example_${v}`))}</option>`).join("")}</select></label>
+    <label class="kw-opt-inline" title="${escapeHtml(t("kw.newPerDayTitle"))}"><span>${escapeHtml(t("kw.newPerDay"))}</span>
+      <input type="number" min="0" max="500" value="${fc.newCap}" data-fc-input="newcap"></label>
     ${known ? `<button type="button" class="btn ghost kw-scope-reset" data-fc="reset" title="${escapeHtml(t("kw.resetTitle"))}">${escapeHtml(t("kw.reset", { n: known }))}</button>` : ""}
   </div>`;
 }
@@ -15703,9 +15787,13 @@ function fcRender() {
   const pair = r._pair || fc.pair, fav = pair ? isFav(pair, r.term) : false;
   const sides = [{ word: r.term, sentence: r.example }, { word: r.translation, sentence: r.exampleTr }];
   const [front, back] = fc.reverse ? sides.reverse() : sides; // reversed: asked from the translation
+  front.sentence = fcFrontSentence(front.sentence, front.word); // (the back keeps its sentence whole)
+  const n = Number(r.known) || 0;
+  const grade = (g, cls, label, next) => `<button type="button" class="btn${cls}" data-fc="${g}" title="${escapeHtml(t(`kw.${g}Title`))}"><span>${label}</span><small>${escapeHtml(fcIntervalLabel(next))}</small></button>`;
+  const waiting = fcWaiting();
   const favBtn = `<button type="button" class="kw-fav${fav ? " on" : ""}" data-fc="fav" title="${escapeHtml(t("vocab.favTitle"))}" aria-label="${escapeHtml(t("vocab.fav"))}" aria-pressed="${fav ? "true" : "false"}"${pair ? "" : " disabled"}>${KAM_ICON}</button>`;
   box.innerHTML = `${scope}
-    <div class="kw-progress"><span>${escapeHtml(t("kw.progress", { i: fc.index + 1, n: fc.queue.length }))}</span><span class="muted">${escapeHtml(t("kw.knownCount", { n: fc.known, total: fc.total }))}</span></div>
+    <div class="kw-progress"><span>${escapeHtml(t("kw.progress", { i: fc.index + 1, n: fc.queue.length }))}${rowKnown(r) ? "" : ` <span class="kw-new-badge">${escapeHtml(t("kw.newBadge"))}</span>`}</span><span class="muted">${escapeHtml(t("kw.knownCount", { n: fc.known, total: fc.total }))}${waiting ? ` · ${escapeHtml(t("kw.waiting", { n: waiting }))}` : ""}</span></div>
     <div class="kw-card${fc.flipped ? " flipped" : ""}" tabindex="0" role="button" aria-label="${escapeHtml(t("kw.flip"))}" data-fc="flip">
       <div class="kw-card-inner">
         <div class="kw-face kw-front">${favBtn}<div class="kw-word">${escapeHtml(front.word)}</div>${front.sentence ? `<div class="kw-sentence">${escapeHtml(front.sentence)}</div>` : ""}</div>
@@ -15719,13 +15807,33 @@ function fcRender() {
         <button type="button" class="btn kw-fc-arrow" data-fc="next" title="${escapeHtml(t("kw.next"))}" aria-label="${escapeHtml(t("kw.next"))}">›</button>
       </div>
       <div class="kw-fc-judge">
-        <button type="button" class="btn" data-fc="again">↻ ${escapeHtml(t("kw.again"))}</button>
-        <button type="button" class="btn primary" data-fc="known">✓ ${escapeHtml(t("kw.known"))}</button>
+        ${grade("again", "", `↻ ${escapeHtml(t("kw.again"))}`, 0)}
+        ${grade("hard", "", escapeHtml(t("kw.hard")), Math.max(1, n))}
+        ${grade("known", " primary", `✓ ${escapeHtml(t("kw.known"))}`, n + 1)}
+        ${grade("easy", "", escapeHtml(t("kw.easy")), n + 2)}
         <button type="button" class="btn ghost" data-fc="shuffle">${escapeHtml(t("kw.shuffle"))}</button>
       </div>
     </div>`;
   // the keyboard keeps working after a card was redrawn
   (box.querySelector(".kw-card") || box.querySelector("[data-fc]"))?.focus({ preventScroll: true });
+}
+/**
+ * The four grades. Again: back to the start, the card comes up again at the end of this round.
+ * Hard: the step stays (a new word gets its first day). Known: one step up. Easy: two steps up.
+ * A new word graded for the first time counts against the day's cap.
+ */
+function fcGrade(grade) {
+  const r = fc.rows[fc.queue[fc.index]], pair = r._pair || fc.pair;
+  if (!rowKnown(r) && !r._seen) { r._seen = true; fcNewToday(1); }
+  const was = Number(r.known) || 0;
+  const n = grade === "again" ? 0 : grade === "hard" ? Math.max(1, was) : grade === "known" ? was + 1 : was + 2;
+  if (pair) vocabMarkKnown(pair, r.term, n); // (remembered, with the time)
+  r.known = n; r.last = Date.now();
+  if (grade === "again") { const [i] = fc.queue.splice(fc.index, 1); fc.queue.push(i); }
+  else { fc.queue.splice(fc.index, 1); fc.known++; }
+  if (fc.index >= fc.queue.length) fc.index = 0;
+  fc.flipped = false;
+  fcRender();
 }
 function fcAction(act) {
   if (act.startsWith("scope-")) { fcSetScope(act.slice(6)); return; }
@@ -15754,16 +15862,7 @@ function fcAction(act) {
   }
   if (act === "next") fc.index = (fc.index + 1) % fc.queue.length;
   else if (act === "prev") fc.index = (fc.index - 1 + fc.queue.length) % fc.queue.length;
-  else if (act === "known") {
-    const r = fc.rows[fc.queue[fc.index]], pair = r._pair || fc.pair;
-    if (pair) r.known = vocabMarkKnown(pair, r.term); // (remembered: the word is not "new" any more)
-    fc.queue.splice(fc.index, 1); fc.known++; if (fc.index >= fc.queue.length) fc.index = 0;
-  }
-  else if (act === "again") { // back to the start: the word is new again and comes up at the end of this round
-    const r = fc.rows[fc.queue[fc.index]], pair = r._pair || fc.pair;
-    if (pair && rowKnown(r)) { vocabMarkKnown(pair, r.term, 0); r.known = 0; }
-    const [i] = fc.queue.splice(fc.index, 1); fc.queue.push(i); if (fc.index >= fc.queue.length) fc.index = 0;
-  }
+  else if (act === "again" || act === "hard" || act === "known" || act === "easy") { fcGrade(act); return; }
   else if (act === "shuffle") { fcShuffle(); return; }
   else if (act === "restart") { fcStart(); return; }
   fc.flipped = false;
@@ -15789,10 +15888,21 @@ function initFlashcards() {
   $("#kwModeCards").addEventListener("click", () => kwSetMode("cards"));
   $("#kwModeWords").addEventListener("click", () => kwSetMode("words"));
   $("#kwCards").addEventListener("click", (e) => { const b = e.target.closest("[data-fc]"); if (b) fcAction(b.dataset.fc); });
+  $("#kwCards").addEventListener("change", (e) => {
+    if (e.target.dataset.fcSelect === "example") {
+      fc.example = e.target.value;
+      try { localStorage.setItem(LS_FC_EXAMPLE, fc.example); } catch (_) { /* fine */ }
+      fc.flipped = false; fcRender();
+    } else if (e.target.dataset.fcInput === "newcap") {
+      fc.newCap = Math.max(0, Math.min(500, Number(e.target.value) || 0));
+      try { localStorage.setItem(LS_FC_NEWCAP, String(fc.newCap)); } catch (_) { /* fine */ }
+      fcSetScope(fc.scope);
+    }
+  });
   document.addEventListener("keydown", (e) => {
     const dlg = $("#kwDialog");
-    if (!dlg.open || dlg.dataset.mode !== "cards" || e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
-    const keys = { " ": "flip", Enter: "flip", ArrowRight: "next", ArrowLeft: "prev", k: "known", K: "known", a: "again", A: "again", f: "fav", F: "fav", r: "reverse", R: "reverse" };
+    if (!dlg.open || dlg.dataset.mode !== "cards" || ["INPUT", "TEXTAREA", "SELECT"].includes(e.target.tagName)) return;
+    const keys = { " ": "flip", Enter: "flip", ArrowRight: "next", ArrowLeft: "prev", k: "known", K: "known", a: "again", A: "again", h: "hard", H: "hard", e: "easy", E: "easy", f: "fav", F: "fav", r: "reverse", R: "reverse", 1: "again", 2: "hard", 3: "known", 4: "easy" };
     if (keys[e.key]) { e.preventDefault(); fcAction(keys[e.key]); }
   });
   $("#kwDialog").addEventListener("close", () => { fcSource = null; $("#kwDialog").dataset.mode = "list"; });

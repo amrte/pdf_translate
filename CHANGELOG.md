@@ -4,6 +4,12 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.90
+
+- Flashcards: the example sentence on the front is shown as a gap by default (the word blanked out), or whole, or not at all – chosen above the card and remembered. The back always shows it whole.
+- Flashcards: four grades instead of two – Again, Hard, Known, Easy (keys A/H/K/E or 1–4), each button showing when the word comes back.
+- Flashcards: "Due today" brings the new words first, as many per day as set ("New/day", default 20), then the reviews with the most overdue first; the rest of the new words wait for the next day.
+
 ## 1.89
 
 - Help: a "Learn" section explains the keyword list, the Words tab, the flashcards with their intervals and keys, and the vocabulary with its exports and imports, and links to the free Anki decks at ankiweb.net/shared/decks.
