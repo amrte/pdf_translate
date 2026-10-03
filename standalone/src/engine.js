@@ -385,15 +385,18 @@ function buildGlyphTemplates() {
   let font = null;
   try {
     font = new M.Font("Symbol");
-    const Sz = 48, W = 160, H = 128, X = 32, Y = 88;
+    const Sz = 40, W = 160, H = 160, X = 32, Y = 96;
     for (const ch of GLYPH_SET) {
       const cp = ch.codePointAt(0), gid = font.encodeCharacter(cp);
       if (!(gid > 0)) continue;
-      for (const shear of [0, 0.22]) {
+      // Brackets and bars also stretched, as the tall delimiters of displayed formulas are.
+      const variants = [[0, 1], [0.22, 1]];
+      if ("()|".includes(ch)) variants.push([0, 1.4], [0, 1.8], [0, 2.3]); // (tall braces are rare and look like parentheses when coarse)
+      for (const [shear, stretch] of variants) {
         let text = null, pix = null, dev = null;
         try {
           text = new M.Text();
-          text.showGlyph(font, [Sz, 0, shear * Sz, -Sz, X, Y], gid, cp, 0); // (y flipped: the pixmap's y grows downwards)
+          text.showGlyph(font, [Sz, 0, shear * Sz, -Sz * stretch, X, Y + Sz * 0.25 * (stretch - 1)], gid, cp, 0); // (y flipped: the pixmap's y grows downwards)
           pix = new M.Pixmap(M.ColorSpace.DeviceGray, [0, 0, W, H], false);
           pix.clear(255);
           dev = new M.DrawDevice(M.Matrix.identity, pix);

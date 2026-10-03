@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.99
+
+- PDF: the tall parentheses and brackets of displayed formulas are recognised too (stretched reference shapes), so they no longer stay as "�".
+
 ## 1.98
 
 - PDF: glyphs of fonts called "Symbol" (SymbolMT, Symbol, SymbolProportionalBT …) are recognised by their drawn shape as well. Subset fonts in books are often re-encoded, so the Symbol encoding gave the wrong letters (a Greek M for φ) or nothing at all for ≈ and ×; the encoding is now only a tiebreaker and fallback. Verified on a page of "VDE 0100 und die Praxis": cos φ ≈ 1,0, sin φ ≈ 0, ρ, κ, λ, Ω, ΔU and √3 all read correctly.
