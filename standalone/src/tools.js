@@ -18,6 +18,45 @@ function saveOverrides() {
   try { localStorage.setItem(ovKey(state.doc.id), JSON.stringify(state.overrides)); } catch (_) { /* storage blocked */ }
 }
 
+/* ---- the kind of a segment: text (translated) or formula (kept as it is) – the user's choice overrides the detection */
+const kindKey = (id) => `pdftr:kind:${id}`;
+const kindsEditable = () => Boolean(state.doc && !isBook());
+
+function loadKinds() {
+  try { state.kinds = kindsEditable() ? JSON.parse(localStorage.getItem(kindKey(state.doc.id)) || "{}") : {}; } catch (_) { state.kinds = {}; }
+  applyKinds();
+}
+function saveKinds() {
+  try { localStorage.setItem(kindKey(state.doc.id), JSON.stringify(state.kinds)); } catch (_) { /* storage blocked */ }
+}
+/** Sets skip/formula on every segment from the detection, then from the user's choices. */
+function applyKinds() {
+  for (const s of state.doc.segments) {
+    if (s.auto === undefined) s.auto = { skip: Boolean(s.skip), formula: Boolean(s.formula) };
+    const k = state.kinds[s.id];
+    if (k === "formula") { s.skip = true; s.formula = true; }
+    else if (k === "text") { s.skip = false; s.formula = false; }
+    else { s.skip = s.auto.skip; s.formula = s.auto.formula; }
+  }
+}
+/** Text → formula, or formula (and numbers) → text; the detection's own result needs no entry. */
+function toggleKind(id) {
+  const s = segById(id);
+  if (!s || !kindsEditable()) return;
+  const want = s.skip ? "text" : "formula";
+  if ((want === "formula") === s.auto.skip && (want === "formula") === s.auto.formula) delete state.kinds[id]; else state.kinds[id] = want;
+  applyKinds();
+  saveKinds();
+  if (s.skip) { // a formula has no translation
+    if (state.translations[id]) { delete state.translations[id]; persist(); }
+    if (state.overrides[id]) { delete state.overrides[id]; saveOverrides(); }
+  }
+  disposeOutput(); // the translated file is built again with the new kinds
+  document.querySelectorAll(`.box[data-id="${id}"]`).forEach((b) => b.classList.toggle("skip", s.skip));
+  refreshCards();
+  toast(t(s.skip ? "msg.kindFormula" : "msg.kindText", { n: id }));
+}
+
 const ROT_DIR = { 0: [1, 0], 90: [0, -1], 180: [-1, 0], 270: [0, 1] };
 
 /** The box shown for a segment: the user's box when the field was moved or resized. */
@@ -526,7 +565,10 @@ function addOcrResults(results) {
   };
   state.translations = move(state.translations);
   state.overrides = move(state.overrides);
+  state.kinds = move(state.kinds);
   doc.segments = merged;
+  applyKinds();
+  saveKinds();
   doc.ocr = ocr;
   idbPut(ocr, `ocr:${doc.id}`);
   persist();

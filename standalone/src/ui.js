@@ -512,6 +512,7 @@ function openDocument(doc, bytes) {
   document.title = `${doc.name} · Kameleon`;
 
   loadOverrides();
+  loadKinds();
   loadRotations();
   kwLoad();
   fillPageFilter();
@@ -623,6 +624,7 @@ function closeDocument() {
   state.shrunk = new Set();
   state.markups = [];
   state.overrides = {};
+  state.kinds = {};
   state.rotations = {};
   segIndex.clear();
   resetHistory();
@@ -1050,6 +1052,7 @@ function makeCard(id) {
       <button type="button" class="mini" data-act="copy" title="${escapeHtml(t("card.copyTitle"))}">${t("card.copy")}</button>
       <button type="button" class="mini" data-act="same" title="${escapeHtml(t("card.keepTitle"))}">${t("card.keep")}</button>
       ${!fieldsEditable() ? "" : `<button type="button" class="mini${state.overrides[id] ? " on" : ""}" data-act="style" title="${escapeHtml(t("card.styleTitle"))}">Aa</button>`}
+      ${!kindsEditable() ? "" : `<button type="button" class="mini kind${state.kinds[id] ? " on" : ""}" data-act="kind" title="${escapeHtml(t(s.skip ? "card.asTextTitle" : "card.asFormulaTitle"))}">${t(s.skip ? "card.asText" : "card.asFormula")}</button>`}
       <button type="button" class="mini apply" data-act="apply" title="${escapeHtml(t("card.applyTitle"))}">${t("card.apply")}</button>
     </div>
     ${styleOpen.has(id) && !isBook() ? stylePanelHtml(s) : ""}
@@ -1563,6 +1566,8 @@ function init() {
     } else if (act === "style") {
       if (styleOpen.has(id)) styleOpen.delete(id); else styleOpen.add(id);
       refreshStylePanel(id);
+    } else if (act === "kind") {
+      toggleKind(id);
     } else if (e.target.closest(".seg-src")) { // (also on a highlighted search match)
       setActive(id, { scrollViewer: true, focus: true });
     }
