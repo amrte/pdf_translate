@@ -6,7 +6,7 @@ shown in the app's top bar and help dialog.
 
 ## 1.77
 
-- Keywords: all fields of the window – the pair list, the search box and the term fields – have grey frames and the same corner radius as the buttons; the controls of the vocabulary bar share one height.
+- Keywords: all fields of the window – the pair list, the search box and the term fields – have grey frames and the same corner radius as the buttons; the controls of the vocabulary bar share one height. The toolbar button is called "Learn" now, and the "PDF preview" button sits next to "Download PDF".
 
 ## 1.76
 
