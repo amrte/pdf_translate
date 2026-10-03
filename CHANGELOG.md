@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.98
+
+- PDF: glyphs of fonts called "Symbol" (SymbolMT, Symbol, SymbolProportionalBT …) are recognised by their drawn shape as well. Subset fonts in books are often re-encoded, so the Symbol encoding gave the wrong letters (a Greek M for φ) or nothing at all for ≈ and ×; the encoding is now only a tiebreaker and fallback. Verified on a page of "VDE 0100 und die Praxis": cos φ ≈ 1,0, sin φ ≈ 0, ρ, κ, λ, Ω, ΔU and √3 all read correctly.
+
 ## 1.97
 
 - PDF: the recognition of unknown maths-font glyphs is more robust – the two reading passes are matched by glyph position instead of order, the glyph is found by its position when drawn in isolation, and when it cannot be drawn alone its box is used instead. Glyphs that still stay unknown are reported in the browser console ("unknown glyphs"), with font, code and the nearest shape, for bug reports.

@@ -350,7 +350,7 @@ function readBlocks(page, bounds, seps, options) {
  * rendered from the built-in Symbol font upright and slanted. The shape (a coarse coverage
  * grid), its height, its position above the baseline and its proportions decide.
  */
-const GLYPH_SET = [..."αβγδεζηθικλμνξπρστυφχψωϕϑΓΔΘΛΞΠΣΦΨΩ°′″≤≥≠≈±×÷∞→←↔∑∫∂√∝∅∈∩∪∧∨¬∇⋅"];
+const GLYPH_SET = [..."αβγδεζηθικλμνξπρστυφχψωϕϑΓΔΘΛΞΠΣΦΨΩ°′″≤≥≠≈±×÷∞→←↔∑∫∂√∝∅∈∩∪∧∨¬∇⋅+−=()[]{}|/⎛⎜⎝⎞⎟⎠"];
 const GRID = 12;
 let glyphTemplates = null;
 
@@ -526,10 +526,12 @@ function recoverUnknownChars(page, options, unknown, total) {
         // ligature unless its shape is unmistakably one of the symbols.
         const inWord = u.lig && LETTER.test(before.slice(-1)) && LETTER.test(after.charAt(0));
         const prior = symbolChar(u.code); // what the code means in the Symbol encoding
-        // The Symbol font itself is read by its encoding; any other font by the drawn shape
-        // (its codes mean whatever the font's designer chose), with the encoding as tiebreaker.
+        // Every font is read by the drawn shape: subset fonts are re-encoded by many PDF
+        // producers, so even a font called "Symbol" need not follow the Symbol encoding. The
+        // encoding is the tiebreaker, and for a Symbol font the fallback when the shape says nothing.
         const why = {};
-        let mapped = u.symbolFont ? prior : recogniseGlyph(page, u, prior && prior.length === 1 ? prior : null, inWord ? 0.2 : 0.5, why);
+        let mapped = recogniseGlyph(page, u, prior && prior.length === 1 ? prior : null, inWord ? 0.2 : 0.5, why);
+        if (!mapped && u.symbolFont && prior && prior.length === 1 && why.note !== "no ink" && !/[♣♦♥♠ℵℑℜ℘⌠⌡⎮€]/.test(prior)) mapped = prior;
         if (!mapped || mapped.length !== 1 || mapped === "\ufffd") { if (diag.samples.length < 4) diag.samples.push({ font: span.font.name, code: u.code, ...why }); continue; }
         diag.recovered++;
         if (mapped === "′" || mapped === "°") { // a small raised ring or stroke: degree before C/F/K or after a number, prime otherwise
