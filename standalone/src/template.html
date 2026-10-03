@@ -76,7 +76,7 @@
   </label>
   <div class="recent" id="recent" hidden><span class="recent-label" data-i18n="recent.title">Recently opened:</span><div class="recent-list" id="recentList"></div></div>
   <div class="start-vocab"><button type="button" class="btn ghost" id="btnVocabStart" data-i18n-title="vocab.startTitle" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5M8 7h7M8 11h7"/></svg><span data-i18n="vocab.start">Vocabulary</span></button></div>
-  <input type="file" id="vocabFile" hidden accept=".txt,.tsv,.csv,text/plain">
+  <input type="file" id="vocabFile" hidden accept=".txt,.tsv,.csv,.apkg,text/plain">
   <!-- The workflow (also copied into Help); the buttons look as they do in the app. -->
   <section class="wf" id="wfStart" aria-labelledby="wfTitle">
     <h2 class="wf-title" id="wfTitle"><button type="button" class="wf-fold" id="wfFold" aria-controls="wfFlow" aria-expanded="true" data-i18n-title="wf.foldTitle"><span data-i18n="wf.title">The workflow</span><svg class="wf-chevron" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button></h2>
@@ -490,6 +490,7 @@
       <button type="button" class="btn ghost kw-vocab-only" id="vocabClear" data-i18n="vocab.clear"></button>
       <span class="spacer"></span>
       <button type="button" class="btn kw-vocab-only" id="vocabAnki" data-i18n="vocab.anki" data-i18n-title="vocab.ankiTitle"></button>
+      <button type="button" class="btn kw-vocab-only" id="vocabApkg" data-i18n="vocab.apkg" data-i18n-title="vocab.apkgTitle"></button>
       <button type="button" class="btn primary kw-vocab-only" id="vocabPdf" data-i18n="vocab.pdf"></button>
       <button value="close" class="btn ghost" data-i18n="kw.close"></button>
       <button type="button" class="btn primary kw-list-only" id="kwDownload" data-i18n="kw.download"></button>

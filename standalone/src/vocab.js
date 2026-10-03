@@ -53,7 +53,14 @@ function detectLanguage(text) {
   if (words.length < 3) return "";
   const score = {};
   for (const w of words) for (const [k, set] of Object.entries(STOP_SETS)) if (set.has(w)) score[k] = (score[k] || 0) + 1;
-  const best = Object.entries(score).sort((a, b) => b[1] - a[1])[0];
+  // Letters only one language writes count like three small words: ě/ř/ů Czech, ą/ę/ł Polish, ß German, ñ Spanish, ã/õ Portuguese …
+  const UNIQUE = { cs: /[ěřůň]/g, pl: /[ąęłńśźż]/g, tr: /[ğış]/g, sv: /[å]/g, de: /[ß]/g, fr: /[èêœ]/g, es: /[ñ¿¡]/g, pt: /[ãõ]/g, uk: /[іїє]/g, ru: /[ыэъ]/g };
+  for (const [k, re] of Object.entries(UNIQUE)) { const hits = (text.match(re) || []).length; if (hits) score[k] = (score[k] || 0) + Math.min(9, 3 * hits); }
+  const ranked = Object.entries(score).sort((a, b) => b[1] - a[1]);
+  // A language whose own letters never show up in a longer text is not it (Czech without ě/ř/ž, Swedish without å/ä/ö …).
+  const MARKS = { cs: /[ěřůňžšč]/, pl: /[ąęłńśźż]/, tr: /[ğış]/, sv: /[åäö]/, de: /[äöüß]/, fr: /[éèêàçù]/, es: /[ñáéíóú¿¡]/, it: /[àèéìòù]/, pt: /[ãõçáéíóú]/, ru: /[а-я]/i, uk: /[а-я]/i }; // (é alone, as in "café", does not make a text Czech)
+  const plausible = ranked.filter(([k]) => !(text.length > 200 && MARKS[k] && !MARKS[k].test(text)));
+  const best = plausible[0];
   if (!best || best[1] < 2) return "";
   if (/[іїє]/.test(text) && best[0] === "ru") return "uk";
   return best[0];
@@ -166,7 +173,7 @@ function vocabRender() {
       <input class="kw-ex" data-k="exampleTr" value="${escapeHtml(r.exampleTr || "")}" placeholder="${escapeHtml(t("kw.exampleTr"))}">
     </div>`).join("") : `<p class="muted small">${escapeHtml(all.length ? t("vocab.noMatch") : t("vocab.empty"))}</p>`;
   const some = all.length > 0;
-  for (const id of ["#vocabCards", "#vocabPdf", "#vocabAnki", "#vocabClear"]) $(id).disabled = !some;
+  for (const id of ["#vocabCards", "#vocabPdf", "#vocabAnki", "#vocabApkg", "#vocabClear"]) $(id).disabled = !some;
   $("#vocabToHere").hidden = !(state.doc && (state.keywords || []).some((r) => r.term && r.translation));
 }
 function vocabUpdateRow(termKey, k, value) {
@@ -185,6 +192,8 @@ async function vocabPdfBytes() {
   };
   return new Uint8Array(await pool.workers[0].call("keywordsPdf", args));
 }
+window.Kameleon = Object.assign(window.Kameleon || {}, { detectLanguage, langCode });
+
 function initVocab() {
   $("#kwModeVocab").addEventListener("click", () => kwSetMode("vocab"));
   $("#vocabPair").addEventListener("change", (e) => { vb.pair = e.target.value; vb.query = ""; $("#vocabSearch").value = ""; vocabRender(); });
@@ -215,19 +224,26 @@ function initVocab() {
     try { saveBlob(new Blob([await vocabPdfBytes()], { type: "application/pdf" }), `vocabulary-${vb.pair}.pdf`); } catch (err) { toast(userError(err), "error"); }
   });
   $("#vocabAnki").addEventListener("click", () => saveBlob(new Blob([ankiText(vb.pair, vocabRows())], { type: "text/plain;charset=utf-8" }), `kameleon-${vb.pair}-anki.txt`));
+  $("#vocabApkg").addEventListener("click", async () => {
+    try { saveBlob(new Blob([await buildApkg(vb.pair, vocabRows())], { type: "application/octet-stream" }), `kameleon-${vb.pair}.apkg`); } catch (err) { toast(userError(err), "error"); }
+  });
   $("#vocabImport").addEventListener("click", () => $("#vocabFile").click());
   $("#vocabFile").addEventListener("change", async (e) => {
     const file = e.target.files[0];
     e.target.value = "";
     if (!file) return;
-    const rows = parseVocabText(new TextDecoder().decode(new Uint8Array(await file.arrayBuffer())));
-    let pair = vb.pair;
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    let rows, deckName = file.name, isDeck = false;
+    if (/\.apkg$/i.test(file.name) || (bytes[0] === 0x50 && bytes[1] === 0x4b)) {
+      try { const r = await readApkg(bytes); rows = r.rows; deckName = r.deck || file.name; isDeck = true; } catch (err) { toast(userError(err), "error"); return; }
+    } else rows = parseVocabText(new TextDecoder().decode(bytes));
+    let pair = isDeck ? "" : vb.pair; // a deck has languages of its own: detected from its cards
     if (!pair) {
       const src = detectLanguage(rows.map((r) => r.term).join(" ")), tgt = detectLanguage(rows.map((r) => r.translation).join(" "));
-      pair = src && tgt ? `${src}-${tgt}` : "";
+      pair = src && tgt ? `${src}-${tgt}` : vb.pair;
     }
     if (!rows.length || !pair) { toast(t("vocab.badFile"), "error"); return; }
-    const n = vocabAdd(pair, rows, file.name);
+    const n = vocabAdd(pair, rows, deckName);
     vb.pair = pair;
     toast(t("vocab.imported", { n, total: rows.length, pair: pairLabel(pair) }), "ok"); vocabRender();
   });
