@@ -171,6 +171,13 @@ body.reading .pages .box .rh { display: none; }
 .bubble.none { color: var(--muted); font-style: italic; }
 .bubble.orig { border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); }
 #btnReading.on { color: var(--accent); background: var(--accent-soft); }
+/* the split dialog: the segment's lines with a cut between each two */
+#splitDialog { width: min(720px, calc(100% - 32px)); }
+.split-list { display: grid; gap: 2px; max-height: 60vh; overflow: auto; padding: 2px; }
+.split-line { padding: 6px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-2); white-space: pre-wrap; word-break: break-word; font-size: 14px; }
+.split-cut { display: flex; align-items: center; gap: 8px; border: 0; background: transparent; color: var(--accent); cursor: pointer; padding: 2px 6px; font: inherit; font-size: 12.5px; font-weight: 600; }
+.split-cut::before, .split-cut::after { content: ""; flex: 1; border-top: 2px dashed color-mix(in srgb, var(--accent) 50%, transparent); }
+.split-cut:hover { background: var(--accent-soft); border-radius: 6px; }
 /* On the translation, boxes stay invisible until pointed at or selected (to move a field there). */
 .pages.translated .box:not(.active):not(:hover) { border-color: transparent !important; background: transparent !important; }
 .pages.translated .box.active { background: transparent; }

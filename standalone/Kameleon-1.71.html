@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="Kameleon 1.70">
+  <meta name="generator" content="Kameleon 1.71">
   <meta name="description" content="Kameleon – Wechselt die Sprache, behält die Form. Changes language, keeps its shape.">
   <title>Kameleon</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2216%22 fill=%22%23287130%22/%3E%3Cg transform=%22translate(2.5 1) scale(0.9)%22 fill=%22%23ffffff%22 stroke=%22%23ffffff%22%3E%3Cpath d=%22M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6%22 fill=%22none%22 stroke-width=%223.8%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M21 43l-1 10M30 44v9M38 43l1 10%22 stroke-width=%223.6%22 stroke-linecap=%22round%22/%3E%3Cellipse cx=%2221%22 cy=%2225%22 rx=%227%22 ry=%227.5%22 stroke=%22none%22/%3E%3Cellipse cx=%2233%22 cy=%2223.5%22 rx=%227.5%22 ry=%228%22 stroke=%22none%22/%3E%3Cpath d=%22M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z%22 stroke=%22none%22/%3E%3Cpath d=%22M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z%22 stroke=%22none%22/%3E%3Cpath d=%22M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z%22 stroke=%22none%22/%3E%3Cpath d=%22M16 37l4-3 4 3 4-3 4 3 4-3 4 3%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%222.1%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3Cpath d=%22M43.5 33.9L57 32.6%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%221.5%22 stroke-linecap=%22round%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%224.4%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%222.7%22 stroke=%22none%22/%3E%3Ccircle cx=%2246.2%22 cy=%2226.7%22 r=%221.3%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Cpath d=%22M4 55.5c15-3 39-3 54 0%22 fill=%22none%22 stroke-width=%222.4%22 stroke-linecap=%22round%22/%3E%3C/g%3E%3C/svg%3E">
@@ -181,6 +181,13 @@ body.reading .pages .box .rh { display: none; }
 .bubble.none { color: var(--muted); font-style: italic; }
 .bubble.orig { border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); }
 #btnReading.on { color: var(--accent); background: var(--accent-soft); }
+/* the split dialog: the segment's lines with a cut between each two */
+#splitDialog { width: min(720px, calc(100% - 32px)); }
+.split-list { display: grid; gap: 2px; max-height: 60vh; overflow: auto; padding: 2px; }
+.split-line { padding: 6px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-2); white-space: pre-wrap; word-break: break-word; font-size: 14px; }
+.split-cut { display: flex; align-items: center; gap: 8px; border: 0; background: transparent; color: var(--accent); cursor: pointer; padding: 2px 6px; font: inherit; font-size: 12.5px; font-weight: 600; }
+.split-cut::before, .split-cut::after { content: ""; flex: 1; border-top: 2px dashed color-mix(in srgb, var(--accent) 50%, transparent); }
+.split-cut:hover { background: var(--accent-soft); border-radius: 6px; }
 /* On the translation, boxes stay invisible until pointed at or selected (to move a field there). */
 .pages.translated .box:not(.active):not(:hover) { border-color: transparent !important; background: transparent !important; }
 .pages.translated .box.active { background: transparent; }
@@ -765,7 +772,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
   <div class="brand">
     <span class="logo"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#287130"/><g transform="translate(2.5 1) scale(0.9)" fill="#ffffff" stroke="#ffffff"><path d="M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6" fill="none" stroke-width="3.8" stroke-linecap="round"/><path d="M21 43l-1 10M30 44v9M38 43l1 10" stroke-width="3.6" stroke-linecap="round"/><ellipse cx="21" cy="25" rx="7" ry="7.5" stroke="none"/><ellipse cx="33" cy="23.5" rx="7.5" ry="8" stroke="none"/><path d="M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z" stroke="none"/><path d="M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z" stroke="none"/><path d="M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z" stroke="none"/><path d="M16 37l4-3 4 3 4-3 4 3 4-3 4 3" fill="none" stroke="#287130" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M43.5 33.9L57 32.6" fill="none" stroke="#287130" stroke-width="1.5" stroke-linecap="round"/><circle cx="45.5" cy="26.5" r="4.4" fill="#287130" stroke="none"/><circle cx="45.5" cy="26.5" r="2.7" stroke="none"/><circle cx="46.2" cy="26.7" r="1.3" fill="#287130" stroke="none"/><path d="M4 55.5c15-3 39-3 54 0" fill="none" stroke-width="2.4" stroke-linecap="round"/></g></svg></span>
     <span class="brand-name">Kameleon</span>
-    <span class="version" id="appVersion">v1.70</span>
+    <span class="version" id="appVersion">v1.71</span>
   </div>
   <div class="topbar-actions">
     <span class="doc-name" id="docName"></span>
@@ -1181,7 +1188,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
     </div>
     <input type="file" id="offlineZip" class="visually-hidden" accept=".zip,application/zip" multiple tabindex="-1">
     <input type="file" id="offlineFolder" class="visually-hidden" webkitdirectory multiple tabindex="-1">
-    <p class="muted small help-version help-part">Kameleon v1.70 · <span data-i18n="app.tagline"></span></p>
+    <p class="muted small help-version help-part">Kameleon v1.71 · <span data-i18n="app.tagline"></span></p>
     <div class="modal-actions">
       <button type="button" value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
       <button type="button" class="btn ai-part" id="aiCopyPrompt" data-i18n="ai.copyPrompt">Copy prompt only</button>
@@ -1225,6 +1232,16 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
       <span class="spacer"></span>
       <button value="close" class="btn ghost" data-i18n="kw.close"></button>
       <button type="button" class="btn primary kw-list-only" id="kwDownload" data-i18n="kw.download"></button>
+    </div>
+  </form>
+</dialog>
+<dialog id="splitDialog" class="modal" aria-labelledby="splitTitle">
+  <form method="dialog">
+    <h2 id="splitTitle" data-i18n="seg.splitTitle">Split segment</h2>
+    <p class="muted small" data-i18n="seg.splitText"></p>
+    <div class="split-list" id="splitList"></div>
+    <div class="modal-actions">
+      <button value="cancel" class="btn ghost" data-i18n="common.cancel">Cancel</button>
     </div>
   </form>
 </dialog>
@@ -1353,6 +1370,20 @@ const I18N = {
     "card.applyTitle": "Diese Übersetzung sofort in die {fmt}-Datei schreiben (Strg+S)",
     "card.placeholder": "Übersetzung…",
     "card.asFormula": "Formel",
+    "card.splitTitle": "Segment zwischen zwei Zeilen teilen",
+    "card.joinTitle": "Mit dem folgenden Segment verbinden",
+    "seg.splitTitle": "Segment teilen",
+    "seg.splitText": "Wählen Sie die Stelle zwischen zwei Zeilen, an der das Segment geteilt wird. Die Übersetzung des Segments entfällt dabei; die Segmente werden neu nummeriert.",
+    "seg.cutHere": "Hier teilen",
+    "seg.cutTitle": "Das Segment an dieser Stelle teilen",
+    "seg.working": "Segmente werden neu gebildet…",
+    "seg.split": "Segment geteilt: {n} Segmente, neu nummeriert.",
+    "seg.joined": "Segmente verbunden und neu nummeriert.",
+    "seg.undo": "Rückgängig",
+    "seg.notFound": "Die Zeilen des Segments wurden auf der Seite nicht gefunden.",
+    "seg.oneLine": "Dieses Segment hat nur eine Zeile.",
+    "seg.noNext": "Auf dieser Seite folgt kein Segment, mit dem sich dieses verbinden ließe.",
+    "seg.failed": "Das Segment konnte nicht geändert werden: {err}",
     "card.asFormulaTitle": "Als Formel behandeln: bleibt unverändert und wird nicht übersetzt",
     "card.asText": "Text",
     "card.asTextTitle": "Als Text behandeln: kann übersetzt werden",
@@ -1837,6 +1868,20 @@ const I18N = {
     "card.applyTitle": "Write this translation into the {fmt} now (Ctrl+S)",
     "card.placeholder": "Translation…",
     "card.asFormula": "Formula",
+    "card.splitTitle": "Split the segment between two of its lines",
+    "card.joinTitle": "Join with the segment that follows",
+    "seg.splitTitle": "Split segment",
+    "seg.splitText": "Choose the place between two lines where the segment is split. The segment's translation is dropped; the segments are numbered again.",
+    "seg.cutHere": "Split here",
+    "seg.cutTitle": "Split the segment at this place",
+    "seg.working": "Building the segments anew…",
+    "seg.split": "Segment split: {n} segments, numbered again.",
+    "seg.joined": "Segments joined and numbered again.",
+    "seg.undo": "Undo",
+    "seg.notFound": "The segment's lines were not found on the page.",
+    "seg.oneLine": "This segment has only one line.",
+    "seg.noNext": "No segment follows on this page that this one could join.",
+    "seg.failed": "The segment could not be changed: {err}",
     "card.asFormulaTitle": "Treat as a formula: kept as it is, not translated",
     "card.asText": "Text",
     "card.asTextTitle": "Treat as text: can be translated",
@@ -3299,9 +3344,8 @@ async function extractPages(doc, pageList, onProgress) {
   return { pages, segments };
 }
 
-/** Segments of one page from its text blocks (MuPDF's, or lines recognised by OCR). */
-function segmentPage(rawBlocks, p, bounds, seps, protect) {
-  const segments = [];
+/** The lines of a page as the segmenter sees them: blocks of lines, the text margins per rotation, all lines. */
+function pageLineSet(rawBlocks, seps, protect) {
   {
     const rowBlocks = [];
     for (const block of rawBlocks) {
@@ -3337,6 +3381,15 @@ function segmentPage(rawBlocks, p, bounds, seps, protect) {
       if (boxes.length) marginsByRot[rot] = [Math.min(...boxes.map((b) => b[0])), Math.max(...boxes.map((b) => b[2]))];
     }
     const pageLines = blocks.flat();
+    return { blocks, marginsByRot, pageLines };
+  }
+}
+
+/** Segments of one page from its text blocks (MuPDF's, or lines recognised by OCR). */
+function segmentPage(rawBlocks, p, bounds, seps, protect) {
+  const segments = [];
+  {
+    const { blocks, marginsByRot, pageLines } = pageLineSet(rawBlocks, seps, protect);
     let local = 0;
     for (const lines of blocks) {
       // A line joins the paragraph it continues. That is usually the previous line, but in
@@ -3359,6 +3412,33 @@ function segmentPage(rawBlocks, p, bounds, seps, protect) {
     }
   }
   return segments;
+}
+
+/** The lines of a page for the segment editor: [{i, text, bbox, rotation}], and what re-segmenting needs. */
+function pageLinesFor(doc, p) {
+  const page = doc.loadPage(p);
+  try {
+    const bounds = page.getBounds();
+    const { seps } = pageGraphics(page);
+    const { marginsByRot, pageLines } = pageLineSet(pageBlocks(page, bounds, seps), seps, []);
+    const lines = pageLines.map((l, i) => ({ i, text: l.text, bbox: l.bbox.map(round2), rotation: l.rotation }));
+    return { bounds, marginsByRot, pageLines, lines };
+  } finally {
+    free(page);
+  }
+}
+
+/** Segments built from chosen groups of a page's lines (by index): the user's split or join. */
+function resegmentPage(doc, p, groups) {
+  const { bounds, marginsByRot, pageLines } = pageLinesFor(doc, p);
+  const out = [];
+  for (const g of groups) {
+    const lines = g.map((i) => pageLines[i]).filter(Boolean);
+    if (!lines.length) continue;
+    const seg = buildSegment(lines, p, bounds, 0, marginsByRot, pageLines, false);
+    if (seg) out.push(seg);
+  }
+  return out;
 }
 
 /** Extract every page of a PDF (single-threaded; the UI uses a worker pool instead). */
@@ -4973,6 +5053,8 @@ function createHandler() {
       return { result: doc.countPages() };
     }
     if (cmd === "extract") return { result: await extractPages(W.doc, args.pages, progress) };
+    if (cmd === "pageLines") return { result: pageLinesFor(W.doc, args.page).lines };
+    if (cmd === "resegment") return { result: resegmentPage(W.doc, args.page, args.groups) };
     if (cmd === "unlock") return { result: unlockPdf(args.bytes, args.password) };
     if (cmd === "convert") return { result: await convertLegacy(args.bytes, args.kind) }; // .doc/.xls/.ppt → .docx/.xlsx/.pptx
     if (cmd === "imageToPdf") { const r = imageToPdf(args.bytes); return { result: r, transfer: [r.bytes.buffer] }; }
@@ -10894,7 +10976,10 @@ async function loadBytes(bytes, name, remember, knownId = null) {
     if (remember) rememberDocument(name, image ? original : bytes, id); else touchRecent(id); // (a picture is stored as it was)
     const restored = kind === "pdf" ? await restoreOcr(id, segments, pages) : { segments, ocr: null };
     if (stale()) return;
+    if (kind === "pdf" && !image) restored.segments = await replaySegEdits(id, restored.segments); // splits and joins from earlier sessions
+    if (stale()) return;
     openDocument({ id, name, kind, pages, segments: restored.segments, ocr: restored.ocr, image }, bytes);
+    state.segEdits = kind === "pdf" ? loadSegEdits(id) : [];
     if (converted) toast(t("msg.converted", converted));
     if (image && !restored.ocr) { toast(t("msg.imageOpened", { fmt: image.label })); openOcrDialog(); } else suggestOcr();
   } catch (err) {
@@ -11113,6 +11198,7 @@ function closeDocument() {
   state.markups = [];
   state.overrides = {};
   state.kinds = {};
+  state.segEdits = [];
   state.rotations = {};
   segIndex.clear();
   resetHistory();
@@ -11541,6 +11627,7 @@ function makeCard(id) {
       <button type="button" class="mini" data-act="same" title="${escapeHtml(t("card.keepTitle"))}">${t("card.keep")}</button>
       ${!fieldsEditable() ? "" : `<button type="button" class="mini${state.overrides[id] ? " on" : ""}" data-act="style" title="${escapeHtml(t("card.styleTitle"))}">Aa</button>`}
       ${!kindsEditable() ? "" : `<button type="button" class="mini kind${state.kinds[id] ? " on" : ""}" data-act="kind" title="${escapeHtml(t(s.skip ? "card.asTextTitle" : "card.asFormulaTitle"))}">${t(s.skip ? "card.asText" : "card.asFormula")}</button>`}
+      ${!segEditable(s) ? "" : `${s.lines > 1 ? `<button type="button" class="mini" data-act="split" title="${escapeHtml(t("card.splitTitle"))}">✂</button>` : ""}<button type="button" class="mini" data-act="join" title="${escapeHtml(t("card.joinTitle"))}">⤵</button>`}
       <button type="button" class="mini apply" data-act="apply" title="${escapeHtml(t("card.applyTitle"))}">${t("card.apply")}</button>
     </div>
     ${styleOpen.has(id) && !isBook() ? stylePanelHtml(s) : ""}
@@ -12056,6 +12143,10 @@ function init() {
       refreshStylePanel(id);
     } else if (act === "kind") {
       toggleKind(id);
+    } else if (act === "split") {
+      openSplitDialog(id);
+    } else if (act === "join") {
+      joinWithNext(id);
     } else if (e.target.closest(".seg-src")) { // (also on a highlighted search match)
       setActive(id, { scrollViewer: true, focus: true });
     }
@@ -14291,7 +14382,7 @@ function initPicture() {
 // from its own browser cache before the network, so language files are written into that cache.
 // ======================================================================
 
-const APP_VERSION = "1.70";
+const APP_VERSION = "1.71";
 // (a change of library version makes a stored set outdated: it is then ignored)
 const OFFLINE_VERSION = `${MUPDF_URL} ${OCR_LIB}`;
 const CORE_SIMD = "tesseract-core-simd-lstm.wasm.js", CORE_PLAIN = "tesseract-core-lstm.wasm.js";
@@ -15258,6 +15349,183 @@ function initReading() {
   document.addEventListener("keydown", (e) => { if (e.key === "Escape" && rd.el) hideBubble(); });
 }
 
+/* ------------------------------------------------------------- splitting and joining segments */
+// A PDF segment that glues two paragraphs can be split between two of its lines; a paragraph the
+// extraction cut in two can be joined with the segment that follows it. The engine builds the new
+// segments from the page's lines, the numbering is redone, and the operations are remembered with
+// the document and repeated when it opens again.
+
+const segKey = (id) => `pdftr:seg:${id}`;
+const segEditable = (s) => Boolean(state.doc && !isBook() && !state.doc.image && s && !s.ocr);
+const sameBox = (a, b) => a && b && a.every((v, i) => Math.abs(v - b[i]) < 0.6);
+
+function loadSegEdits(id) {
+  try { return JSON.parse(localStorage.getItem(segKey(id)) || "[]"); } catch (_) { return []; }
+}
+function saveSegEdits() {
+  try { localStorage.setItem(segKey(state.doc.id), JSON.stringify(state.segEdits || [])); } catch (_) { /* storage blocked */ }
+}
+
+/** The page's lines that lie inside a segment's box (same rotation), in reading order. */
+function linesInside(lines, s) {
+  const [x0, y0, x1, y1] = s.bbox;
+  return lines.filter((l) => {
+    if (l.rotation !== s.rotation) return false;
+    const cx = (l.bbox[0] + l.bbox[2]) / 2, cy = (l.bbox[1] + l.bbox[3]) / 2;
+    return cx >= x0 - 1 && cx <= x1 + 1 && cy >= y0 - 1 && cy <= y1 + 1;
+  });
+}
+
+/** The next segment after `s` on the same page that can be joined with it. */
+function nextJoinable(segments, s) {
+  const i = segments.indexOf(s);
+  for (let k = i + 1; k < segments.length; k++) {
+    const n = segments[k];
+    if (n.page !== s.page) return null;
+    if (!n.ocr) return n;
+  }
+  return null;
+}
+
+/**
+ * Carry out one operation on a segment list: {page, op: "split", box, at} or {page, op: "join",
+ * boxes: [a, b]}. Returns the new list (ids redone) and the id map, or null if the sources are gone.
+ */
+async function applySegEdit(segments, op) {
+  const onPage = segments.filter((s) => s.page === op.page && !s.ocr);
+  const lines = await pool.workers[0].call("pageLines", { page: op.page });
+  let sources, groups;
+  if (op.op === "split") {
+    const s = onPage.find((x) => sameBox(x.bbox, op.box));
+    if (!s) return null;
+    const mine = linesInside(lines, s);
+    if (mine.length < 2 || op.at < 1 || op.at >= mine.length) return null;
+    sources = [s];
+    groups = [mine.slice(0, op.at).map((l) => l.i), mine.slice(op.at).map((l) => l.i)];
+  } else {
+    const a = onPage.find((x) => sameBox(x.bbox, op.boxes[0])), b = onPage.find((x) => sameBox(x.bbox, op.boxes[1]));
+    if (!a || !b) return null;
+    const idx = [...linesInside(lines, a), ...linesInside(lines, b)].map((l) => l.i).sort((p, q) => p - q);
+    if (!idx.length) return null;
+    sources = [a, b];
+    groups = [idx];
+  }
+  const fresh = await pool.workers[0].call("resegment", { page: op.page, groups });
+  if (!fresh.length) return null;
+  const at = segments.indexOf(sources[0]);
+  const list = segments.filter((s) => !sources.includes(s));
+  list.splice(at, 0, ...fresh);
+  const oldId = new Map(segments.map((s) => [s, s.id]));
+  const remap = new Map();
+  list.forEach((s, i) => { if (oldId.has(s)) remap.set(oldId.get(s), i + 1); s.id = i + 1; });
+  return { list, remap, sources, fresh };
+}
+
+/** The remembered operations, repeated on a freshly extracted document (before anything is keyed by id). */
+async function replaySegEdits(id, segments) {
+  const ops = loadSegEdits(id);
+  if (!ops.length) return segments;
+  let list = segments;
+  const kept = [];
+  for (const op of ops) {
+    try {
+      const r = await applySegEdit(list, op);
+      if (r) { list = r.list; kept.push(op); }
+    } catch (err) { console.warn("segment edit not repeated", err); }
+  }
+  if (kept.length !== ops.length) { try { localStorage.setItem(segKey(id), JSON.stringify(kept)); } catch (_) { /* fine */ } }
+  return list;
+}
+
+/** Carry out an operation on the open document and refresh everything that hangs on the numbering. */
+async function runSegEdit(op) {
+  const doc = state.doc;
+  busy(t("seg.working"));
+  try {
+    const r = await applySegEdit(doc.segments, op);
+    if (!r) { toast(t("seg.notFound"), "error"); return false; }
+    const move = (obj) => {
+      const out = {};
+      for (const [k, v] of Object.entries(obj || {})) if (r.remap.has(Number(k))) out[r.remap.get(Number(k))] = v;
+      return out;
+    };
+    const joined = op.op === "join" ? r.sources.map((s) => (state.translations[s.id] || "").trim()).filter(Boolean).join(" ") : "";
+    state.translations = move(state.translations);
+    state.overrides = move(state.overrides);
+    state.kinds = move(state.kinds);
+    if (joined) state.translations[r.fresh[0].id] = joined; // a join keeps both translations, one after the other
+    doc.segments = r.list;
+    applyKinds(); saveKinds();
+    state.segEdits = [...(state.segEdits || []), op];
+    saveSegEdits();
+    persist(); saveOverrides();
+    disposeOutput();
+    pool.workers[0].call("resetOutput").catch(() => {});
+    state.shrunk = new Set();
+    segIndex.clear();
+    for (const s of doc.segments) segIndex.set(s.id, s);
+    resetHistory();
+    renderPages();
+    vl.reset();
+    applyFilter();
+    setBuilt(false);
+    setVariant("original");
+    updateProgress();
+    const first = r.fresh[0].id;
+    setActive(first, { scrollList: true, scrollViewer: true });
+    toast(t(op.op === "split" ? "seg.split" : "seg.joined", { n: r.fresh.length }), "ok", { label: t("seg.undo"), run: undoLastSegEdit });
+    return true;
+  } catch (err) {
+    console.error(err);
+    toast(t("seg.failed", { err: userError(err) }), "error");
+    return false;
+  } finally {
+    busy("");
+  }
+}
+
+/** The last operation is taken back: the document is read afresh with the remaining ones. */
+async function undoLastSegEdit() {
+  if (!state.doc || !(state.segEdits || []).length) return;
+  const ops = state.segEdits.slice(0, -1);
+  try { localStorage.setItem(segKey(state.doc.id), JSON.stringify(ops)); } catch (_) { /* fine */ }
+  const { srcBytes, doc } = state;
+  await loadBytes(srcBytes, doc.name, false, doc.id);
+}
+
+/* ---- the split dialog: the segment's lines, with a cut between each two */
+let splitFor = null;
+async function openSplitDialog(id) {
+  const s = segById(id);
+  if (!segEditable(s)) return;
+  let lines;
+  try { lines = linesInside(await pool.workers[0].call("pageLines", { page: s.page }), s); } catch (err) { toast(userError(err), "error"); return; }
+  if (lines.length < 2) { toast(t("seg.oneLine"), "error"); return; }
+  splitFor = { id, box: s.bbox.slice(), page: s.page };
+  $("#splitList").innerHTML = lines.map((l, k) => `${k ? `<button type="button" class="split-cut" data-at="${k}" title="${escapeHtml(t("seg.cutTitle"))}"><span>✂ ${escapeHtml(t("seg.cutHere"))}</span></button>` : ""}<div class="split-line">${escapeHtml(l.text)}</div>`).join("");
+  openModal($("#splitDialog"));
+}
+
+async function joinWithNext(id) {
+  const s = segById(id);
+  if (!segEditable(s)) return;
+  const n = nextJoinable(state.doc.segments, s);
+  if (!n) { toast(t("seg.noNext"), "error"); return; }
+  await runSegEdit({ page: s.page, op: "join", boxes: [s.bbox.slice(), n.bbox.slice()] });
+}
+
+function initSegEdit() {
+  const dlg = $("#splitDialog");
+  $("#splitList").addEventListener("click", async (e) => {
+    const b = e.target.closest(".split-cut");
+    if (!b || !splitFor) return;
+    const op = { page: splitFor.page, op: "split", box: splitFor.box, at: Number(b.dataset.at) };
+    dlg.close("cut");
+    await runSegEdit(op);
+  });
+  dlg.addEventListener("close", () => { splitFor = null; });
+}
+
 // Start-up (runs after ui.js, markup.js and tools.js have defined everything).
 initTheme(); // the colour of this start, before anything is drawn
 initThemeMode();
@@ -15267,6 +15535,7 @@ initMarkup();
 initTools();
 initPicture();
 initReading();
+initSegEdit();
 initOffline();
 initPagesManager();
 initKeywords();

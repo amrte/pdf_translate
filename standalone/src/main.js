@@ -7,6 +7,7 @@ initMarkup();
 initTools();
 initPicture();
 initReading();
+initSegEdit();
 initOffline();
 initPagesManager();
 initKeywords();

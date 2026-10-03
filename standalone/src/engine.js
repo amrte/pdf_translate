@@ -915,9 +915,8 @@ async function extractPages(doc, pageList, onProgress) {
   return { pages, segments };
 }
 
-/** Segments of one page from its text blocks (MuPDF's, or lines recognised by OCR). */
-function segmentPage(rawBlocks, p, bounds, seps, protect) {
-  const segments = [];
+/** The lines of a page as the segmenter sees them: blocks of lines, the text margins per rotation, all lines. */
+function pageLineSet(rawBlocks, seps, protect) {
   {
     const rowBlocks = [];
     for (const block of rawBlocks) {
@@ -953,6 +952,15 @@ function segmentPage(rawBlocks, p, bounds, seps, protect) {
       if (boxes.length) marginsByRot[rot] = [Math.min(...boxes.map((b) => b[0])), Math.max(...boxes.map((b) => b[2]))];
     }
     const pageLines = blocks.flat();
+    return { blocks, marginsByRot, pageLines };
+  }
+}
+
+/** Segments of one page from its text blocks (MuPDF's, or lines recognised by OCR). */
+function segmentPage(rawBlocks, p, bounds, seps, protect) {
+  const segments = [];
+  {
+    const { blocks, marginsByRot, pageLines } = pageLineSet(rawBlocks, seps, protect);
     let local = 0;
     for (const lines of blocks) {
       // A line joins the paragraph it continues. That is usually the previous line, but in
@@ -975,6 +983,33 @@ function segmentPage(rawBlocks, p, bounds, seps, protect) {
     }
   }
   return segments;
+}
+
+/** The lines of a page for the segment editor: [{i, text, bbox, rotation}], and what re-segmenting needs. */
+function pageLinesFor(doc, p) {
+  const page = doc.loadPage(p);
+  try {
+    const bounds = page.getBounds();
+    const { seps } = pageGraphics(page);
+    const { marginsByRot, pageLines } = pageLineSet(pageBlocks(page, bounds, seps), seps, []);
+    const lines = pageLines.map((l, i) => ({ i, text: l.text, bbox: l.bbox.map(round2), rotation: l.rotation }));
+    return { bounds, marginsByRot, pageLines, lines };
+  } finally {
+    free(page);
+  }
+}
+
+/** Segments built from chosen groups of a page's lines (by index): the user's split or join. */
+function resegmentPage(doc, p, groups) {
+  const { bounds, marginsByRot, pageLines } = pageLinesFor(doc, p);
+  const out = [];
+  for (const g of groups) {
+    const lines = g.map((i) => pageLines[i]).filter(Boolean);
+    if (!lines.length) continue;
+    const seg = buildSegment(lines, p, bounds, 0, marginsByRot, pageLines, false);
+    if (seg) out.push(seg);
+  }
+  return out;
 }
 
 /** Extract every page of a PDF (single-threaded; the UI uses a worker pool instead). */
@@ -2589,6 +2624,8 @@ function createHandler() {
       return { result: doc.countPages() };
     }
     if (cmd === "extract") return { result: await extractPages(W.doc, args.pages, progress) };
+    if (cmd === "pageLines") return { result: pageLinesFor(W.doc, args.page).lines };
+    if (cmd === "resegment") return { result: resegmentPage(W.doc, args.page, args.groups) };
     if (cmd === "unlock") return { result: unlockPdf(args.bytes, args.password) };
     if (cmd === "convert") return { result: await convertLegacy(args.bytes, args.kind) }; // .doc/.xls/.ppt → .docx/.xlsx/.pptx
     if (cmd === "imageToPdf") { const r = imageToPdf(args.bytes); return { result: r, transfer: [r.bytes.buffer] }; }

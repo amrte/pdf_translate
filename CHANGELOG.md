@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.71
+
+- PDF: segments can be split and joined. The scissors on a card open the segment's lines with a cut between each two; the ⤵ button joins a segment with the one that follows on the page. The new segments are built from the page's lines like the others, the numbering is redone and translations follow their segments (a join keeps both translations one after the other). The changes are remembered with the document and can be undone from the message.
+
 ## 1.70
 
 - New file types: SRT and WebVTT subtitles, Markdown and plain text. Each cue or paragraph is a segment, the translation goes back into the file in place (line breaks, timings, formatting tags such as &lt;i&gt; and position codes like {\an8} are kept; Markdown headings, lists, quotes and table cells are translated, code blocks and HTML stay), and the viewer shows the file as a laid-out page. The bilingual version puts the translation under each cue or paragraph. Files in Windows-1252 or UTF-16 are read and written back as UTF-8.

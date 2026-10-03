@@ -409,7 +409,10 @@ async function loadBytes(bytes, name, remember, knownId = null) {
     if (remember) rememberDocument(name, image ? original : bytes, id); else touchRecent(id); // (a picture is stored as it was)
     const restored = kind === "pdf" ? await restoreOcr(id, segments, pages) : { segments, ocr: null };
     if (stale()) return;
+    if (kind === "pdf" && !image) restored.segments = await replaySegEdits(id, restored.segments); // splits and joins from earlier sessions
+    if (stale()) return;
     openDocument({ id, name, kind, pages, segments: restored.segments, ocr: restored.ocr, image }, bytes);
+    state.segEdits = kind === "pdf" ? loadSegEdits(id) : [];
     if (converted) toast(t("msg.converted", converted));
     if (image && !restored.ocr) { toast(t("msg.imageOpened", { fmt: image.label })); openOcrDialog(); } else suggestOcr();
   } catch (err) {
@@ -628,6 +631,7 @@ function closeDocument() {
   state.markups = [];
   state.overrides = {};
   state.kinds = {};
+  state.segEdits = [];
   state.rotations = {};
   segIndex.clear();
   resetHistory();
@@ -1056,6 +1060,7 @@ function makeCard(id) {
       <button type="button" class="mini" data-act="same" title="${escapeHtml(t("card.keepTitle"))}">${t("card.keep")}</button>
       ${!fieldsEditable() ? "" : `<button type="button" class="mini${state.overrides[id] ? " on" : ""}" data-act="style" title="${escapeHtml(t("card.styleTitle"))}">Aa</button>`}
       ${!kindsEditable() ? "" : `<button type="button" class="mini kind${state.kinds[id] ? " on" : ""}" data-act="kind" title="${escapeHtml(t(s.skip ? "card.asTextTitle" : "card.asFormulaTitle"))}">${t(s.skip ? "card.asText" : "card.asFormula")}</button>`}
+      ${!segEditable(s) ? "" : `${s.lines > 1 ? `<button type="button" class="mini" data-act="split" title="${escapeHtml(t("card.splitTitle"))}">✂</button>` : ""}<button type="button" class="mini" data-act="join" title="${escapeHtml(t("card.joinTitle"))}">⤵</button>`}
       <button type="button" class="mini apply" data-act="apply" title="${escapeHtml(t("card.applyTitle"))}">${t("card.apply")}</button>
     </div>
     ${styleOpen.has(id) && !isBook() ? stylePanelHtml(s) : ""}
@@ -1571,6 +1576,10 @@ function init() {
       refreshStylePanel(id);
     } else if (act === "kind") {
       toggleKind(id);
+    } else if (act === "split") {
+      openSplitDialog(id);
+    } else if (act === "join") {
+      joinWithNext(id);
     } else if (e.target.closest(".seg-src")) { // (also on a highlighted search match)
       setActive(id, { scrollViewer: true, focus: true });
     }
