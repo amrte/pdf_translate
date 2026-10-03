@@ -4,6 +4,12 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.67
+
+- Keywords: a larger window with roomier fields; the list and the flashcards share the same size. A click on the PDF preview shows the page at window width, another click brings the list back.
+- Flashcards: the arrows and the "Turn" button sit together in the middle under the card, with "Again", "Known" and "Shuffle" centred beneath them.
+- Icon buttons in the toolbars (zoom, full screen, reading mode, page manager …) have their icons centred.
+
 ## 1.66
 
 - Reading mode: the bubble shows the text as a reader sees it – the formatting markers of e-book and Office segments (&lt;1&gt;…&lt;/1&gt;, &lt;2/&gt;) are left out or replaced by what they stand for.

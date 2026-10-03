@@ -86,7 +86,7 @@ function kwSchedulePreview(delay = 500) {
     const img = $("#kwPreview");
     try {
       const bytes = await kwPdfBytes();
-      const png = await pool.workers[0].call("renderBytes", { bytes, page: 0, zoom: 1.2 });
+      const png = await pool.workers[0].call("renderBytes", { bytes, page: 0, zoom: 2 }); // sharp enough for the enlarged view
       if (kwPreviewUrl) URL.revokeObjectURL(kwPreviewUrl);
       kwPreviewUrl = URL.createObjectURL(new Blob([png], { type: "image/png" }));
       img.src = kwPreviewUrl;
@@ -110,6 +110,8 @@ function initKeywords() {
     state.keywords.splice(Number(row.dataset.i), 1);
     kwSave(); kwRenderList(); kwSchedulePreview();
   });
+  $("#kwPreviewWrap").addEventListener("click", () => $("#kwDialog").classList.toggle("kw-zoom")); // the page at window width, and back
+  $("#kwDialog").addEventListener("close", () => $("#kwDialog").classList.remove("kw-zoom"));
   $("#kwAdd").addEventListener("click", () => {
     state.keywords.push({ term: "", translation: "", example: "", exampleTr: "" });
     kwSave(); kwRenderList();
@@ -147,18 +149,21 @@ function fcRender() {
     <div class="kw-progress"><span>${escapeHtml(t("kw.progress", { i: fc.index + 1, n: fc.queue.length }))}</span><span class="muted">${escapeHtml(t("kw.knownCount", { n: fc.known, total: fc.total }))}</span></div>
     <div class="kw-card${fc.flipped ? " flipped" : ""}" tabindex="0" role="button" aria-label="${escapeHtml(t("kw.flip"))}" data-fc="flip">
       <div class="kw-card-inner">
-        <div class="kw-face kw-front"><div class="kw-word">${escapeHtml(r.term)}</div>${r.example ? `<div class="kw-sentence">${escapeHtml(r.example)}</div>` : ""}<div class="kw-tap muted small">${escapeHtml(t("kw.tapHint"))}</div></div>
+        <div class="kw-face kw-front"><div class="kw-word">${escapeHtml(r.term)}</div>${r.example ? `<div class="kw-sentence">${escapeHtml(r.example)}</div>` : ""}</div>
         <div class="kw-face kw-back"><div class="kw-word">${escapeHtml(r.translation)}</div>${r.exampleTr ? `<div class="kw-sentence">${escapeHtml(r.exampleTr)}</div>` : ""}</div>
       </div>
     </div>
     <div class="kw-fc-actions">
-      <button type="button" class="btn" data-fc="prev" title="${escapeHtml(t("kw.prev"))}">‹</button>
-      <button type="button" class="btn" data-fc="flip">${escapeHtml(t("kw.flipBtn"))}</button>
-      <button type="button" class="btn" data-fc="next" title="${escapeHtml(t("kw.next"))}">›</button>
-      <span class="spacer"></span>
-      <button type="button" class="btn" data-fc="again">↻ ${escapeHtml(t("kw.again"))}</button>
-      <button type="button" class="btn primary" data-fc="known">✓ ${escapeHtml(t("kw.known"))}</button>
-      <button type="button" class="btn ghost" data-fc="shuffle">${escapeHtml(t("kw.shuffle"))}</button>
+      <div class="kw-fc-nav">
+        <button type="button" class="btn kw-fc-arrow" data-fc="prev" title="${escapeHtml(t("kw.prev"))}" aria-label="${escapeHtml(t("kw.prev"))}">‹</button>
+        <button type="button" class="btn kw-fc-flip" data-fc="flip">${escapeHtml(t("kw.flipBtn"))}</button>
+        <button type="button" class="btn kw-fc-arrow" data-fc="next" title="${escapeHtml(t("kw.next"))}" aria-label="${escapeHtml(t("kw.next"))}">›</button>
+      </div>
+      <div class="kw-fc-judge">
+        <button type="button" class="btn" data-fc="again">↻ ${escapeHtml(t("kw.again"))}</button>
+        <button type="button" class="btn primary" data-fc="known">✓ ${escapeHtml(t("kw.known"))}</button>
+        <button type="button" class="btn ghost" data-fc="shuffle">${escapeHtml(t("kw.shuffle"))}</button>
+      </div>
     </div>`;
   // the keyboard keeps working after a card was redrawn
   (box.querySelector(".kw-card") || box.querySelector("[data-fc]"))?.focus({ preventScroll: true });

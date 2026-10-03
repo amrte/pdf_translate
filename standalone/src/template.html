@@ -464,12 +464,12 @@
   <form method="dialog">
     <h2 id="kwTitle" data-i18n="kw.title">Keywords</h2>
     <div class="kw-modes seg-toggle" role="group"><button type="button" class="active" id="kwModeList" data-i18n="kw.modeList">List</button><button type="button" id="kwModeCards" data-i18n="kw.modeCards">Flashcards</button></div>
-    <p class="muted small kw-list-only" data-i18n="kw.text"></p>
-    <div class="kw-wrap kw-list-only">
+    <p class="muted small"><span class="kw-list-only" data-i18n="kw.text"></span><span class="kw-cards-only" data-i18n="kw.cardsText"></span></p>
+    <div class="kw-wrap kw-body kw-list-only">
       <div class="kw-list" id="kwList"></div>
-      <div class="kw-preview"><img id="kwPreview" alt=""></div>
+      <div class="kw-preview" id="kwPreviewWrap" data-i18n-title="kw.previewZoom"><img id="kwPreview" alt=""></div>
     </div>
-    <div class="kw-cards kw-cards-only" id="kwCards"></div>
+    <div class="kw-cards kw-body kw-cards-only" id="kwCards"></div>
     <div class="modal-actions kw-actions">
       <button type="button" class="btn kw-list-only" id="kwAdd" data-i18n="kw.add"></button>
       <button type="button" class="btn kw-list-only" id="kwCopy" data-i18n="kw.copy"></button>
