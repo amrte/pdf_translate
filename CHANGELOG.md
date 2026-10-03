@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.88
+
+- An easter egg: ten quick clicks on the chameleon in the top bar.
+
 ## 1.87
 
 - Start screen: the separate "Several files at once" button under the drop area is gone; the "Batch" button in the top bar opens the batch there as well.

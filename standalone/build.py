@@ -20,6 +20,9 @@ def main() -> None:
         # One module: interface, markup tools, field/OCR tools, then start-up.
         "UI": "\n".join((SRC / f).read_text("utf-8") for f in ("ui.js", "markup.js", "tools.js", "picture.js", "offline.js", "pagesui.js", "keywords.js", "words.js", "batch.js", "theme.js", "reading.js", "segedit.js", "vocab.js", "anki.js", "main.js")).replace("{{VERSION}}", version),
     }
+    # The easter egg picture (ten quick clicks on the chameleon in the top bar), embedded as a data URI.
+    import base64
+    parts["EGG"] = "data:image/jpeg;base64," + base64.b64encode((SRC / "egg.jpg").read_bytes()).decode("ascii")
     for name in ("I18N", "ENGINE", "UI"):
         if "</script" in parts[name].lower():
             raise SystemExit(f"{name} must not contain '</script'")
@@ -27,7 +30,7 @@ def main() -> None:
     for name, value in parts.items():
         html = html.replace("{{" + name + "}}", value)
     html = html.replace("{{VERSION}}", version)
-    leftover = [p for p in ("{{STYLE}}", "{{I18N}}", "{{ENGINE}}", "{{UI}}", "{{VERSION}}") if p in html]
+    leftover = [p for p in ("{{STYLE}}", "{{I18N}}", "{{ENGINE}}", "{{UI}}", "{{VERSION}}", "{{EGG}}") if p in html]
     if leftover:
         raise SystemExit(f"unreplaced placeholders: {leftover}")
     # The app file carries its version in its name; older builds are removed.

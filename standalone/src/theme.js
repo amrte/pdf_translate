@@ -171,3 +171,21 @@ function initTheme() {
   startAccent = i;
   applyAccent(i);
 }
+
+/* ---------------------------------------------------------------- the easter egg
+ * Ten clicks in a row on the chameleon in the top bar (no more than 1.5 s between two of
+ * them) show the picture; the chameleon wiggles from the fifth click on, as a hint.
+ */
+function initEgg() {
+  const logo = document.querySelector(".logo"), dlg = $("#eggDialog");
+  if (!logo || !dlg) return;
+  let clicks = 0, last = 0;
+  logo.addEventListener("click", () => {
+    const now = Date.now();
+    clicks = now - last < 1500 ? clicks + 1 : 1;
+    last = now;
+    if (clicks >= 5) { logo.classList.remove("egg-wiggle"); void logo.offsetWidth; logo.classList.add("egg-wiggle"); }
+    if (clicks >= 10) { clicks = 0; openModal(dlg); }
+  });
+  $("#eggImg").addEventListener("click", () => dlg.close());
+}

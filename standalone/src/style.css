@@ -853,3 +853,11 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
 .batch-right #batchPaste { flex: 1; min-height: 140px; resize: vertical; }
 #batchImportStatus:empty { display: none; }
 @media (max-width: 900px) { .batch-cols { grid-template-columns: minmax(0, 1fr); } .batch-right { border-left: 0; padding-left: 0; border-top: 1px solid var(--border); padding-top: 14px; } }
+
+/* ---------- v1.88: the easter egg ---------- */
+.modal.egg { width: min(560px, calc(100% - 32px)); background: #fff; }
+.modal.egg form { padding: 16px; }
+.modal.egg img { display: block; width: 100%; height: auto; border-radius: 8px; cursor: pointer; }
+.logo { cursor: pointer; user-select: none; }
+.logo.egg-wiggle { animation: egg-wiggle .35s ease-in-out; }
+@keyframes egg-wiggle { 0% { transform: rotate(0); } 25% { transform: rotate(-12deg); } 75% { transform: rotate(12deg); } 100% { transform: rotate(0); } }
