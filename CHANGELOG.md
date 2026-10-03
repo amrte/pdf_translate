@@ -4,6 +4,12 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.76
+
+- Keywords: the fields have grey frames, and the buttons beside them are as tall as the fields.
+- Keywords: the PDF preview shows every page of the list, stacked, not only the first – in the small view and in the enlarged one.
+- Vocabulary: a "PDF preview" button shows the pages of the vocabulary PDF (for what is shown: the pair, the favourites or the search's hits) in place of the list; the Anki text export is gone, the Anki package (.apkg) stays.
+
 ## 1.75
 
 - Favourites: every flashcard carries a small chameleon in its corner – a click (or F) keeps the word as a favourite, another click takes the mark off. The same chameleon sits on each row of the vocabulary. In the vocabulary a "Favourites" toggle shows only the favourites of the pair, and the pair list has an entry "Favourites (all language pairs)" that gathers them across pairs with a badge naming each pair.

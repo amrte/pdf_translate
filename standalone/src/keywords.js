@@ -5,7 +5,19 @@
 
 const KW_MARK = /^[ \t]*\[\[\s*keywords?\s*\]\][ \t]*$/im;
 const kwKey = (id) => `pdftr:kw:${id}`;
-let kwPreviewTimer = null, kwPreviewUrl = null;
+let kwPreviewTimer = null;
+/** Draws every page of a PDF into a container (stacked); earlier pictures are released. */
+async function kwRenderPages(container, bytes, zoom = 2) {
+  const n = await pool.workers[0].call("pdfPageCount", { bytes });
+  const imgs = [];
+  for (let p = 0; p < n; p++) {
+    const png = await pool.workers[0].call("renderBytes", { bytes, page: p, zoom });
+    imgs.push(URL.createObjectURL(new Blob([png], { type: "image/png" })));
+  }
+  container.querySelectorAll("img").forEach((im) => { if (im.src.startsWith("blob:")) URL.revokeObjectURL(im.src); });
+  container.innerHTML = imgs.map((u, i) => `<img src="${u}" alt="${escapeHtml(t("page.n", { n: i + 1 }))}">`).join("");
+  return n;
+}
 
 function kwLoad() {
   try { state.keywords = JSON.parse(localStorage.getItem(kwKey(state.doc.id)) || "[]"); } catch (_) { state.keywords = []; }
@@ -93,14 +105,7 @@ function kwRenderList() {
 function kwSchedulePreview(delay = 500) {
   clearTimeout(kwPreviewTimer);
   kwPreviewTimer = setTimeout(async () => {
-    const img = $("#kwPreview");
-    try {
-      const bytes = await kwPdfBytes();
-      const png = await pool.workers[0].call("renderBytes", { bytes, page: 0, zoom: 2 }); // sharp enough for the enlarged view
-      if (kwPreviewUrl) URL.revokeObjectURL(kwPreviewUrl);
-      kwPreviewUrl = URL.createObjectURL(new Blob([png], { type: "image/png" }));
-      img.src = kwPreviewUrl;
-    } catch (err) { console.warn("keyword preview failed", err); }
+    try { await kwRenderPages($("#kwPreviewWrap"), await kwPdfBytes()); } catch (err) { console.warn("keyword preview failed", err); }
   }, delay);
 }
 

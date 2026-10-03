@@ -2659,6 +2659,7 @@ function createHandler() {
       return { result: bytes, transfer: [bytes.buffer] };
     }
     if (cmd === "keywordsPdf") { const b = keywordsPdf(args); return { result: b, transfer: [b.buffer] }; }
+    if (cmd === "pdfPageCount") { const doc = M.Document.openDocument(args.bytes, "application/pdf"); try { return { result: doc.countPages() }; } finally { free(doc); } }
     if (cmd === "renderBytes") { // a page of a finished PDF (the translated picture) as PNG
       const doc = M.Document.openDocument(args.bytes, "application/pdf");
       try { const png = renderPNG(doc, args.page || 0, args.zoom); return { result: png.buffer, transfer: [png.buffer] }; } finally { free(doc); }

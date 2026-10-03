@@ -204,7 +204,15 @@ function vocabMove(fromPair, terms, toPair) {
 }
 
 /* ---- the vocabulary view in the keywords dialog */
-const vb = { pair: "", query: "", favOnly: false };
+const vb = { pair: "", query: "", favOnly: false, preview: false };
+let vbPreviewTimer = null;
+function vocabSchedulePreview(delay = 300) {
+  clearTimeout(vbPreviewTimer);
+  if (!vb.preview) return;
+  vbPreviewTimer = setTimeout(async () => {
+    try { await kwRenderPages($("#vocabPreviewWrap"), await vocabPdfBytes()); } catch (err) { console.warn("vocabulary preview failed", err); }
+  }, delay);
+}
 function vocabRows(pair = vb.pair) { if (pair === FAV_ALL) return favRows(); const v = vocabLoad(); return Array.isArray(v[pair]) ? v[pair] : []; }
 /** The rows as shown: the pair's (or all favourites'), narrowed by the favourites toggle and the search. */
 function vocabFiltered() {
@@ -237,7 +245,11 @@ function vocabRender() {
       <input class="kw-ex" data-k="exampleTr" value="${escapeHtml(r.exampleTr || "")}" placeholder="${escapeHtml(t("kw.exampleTr"))}">
     </div>`).join("") : `<p class="muted small">${escapeHtml(all.length ? t("vocab.noMatch") : t("vocab.empty"))}</p>`;
   const some = rows.length > 0;
-  for (const id of ["#vocabCards", "#vocabPdf", "#vocabAnki", "#vocabApkg", "#vocabMove"]) $(id).disabled = !some;
+  for (const id of ["#vocabCards", "#vocabPdf", "#vocabApkg", "#vocabMove", "#vocabPreview"]) $(id).disabled = !some && !vb.preview;
+  $("#vocabPreview").textContent = t(vb.preview ? "vocab.previewOff" : "vocab.preview");
+  $("#vocabPreview").classList.toggle("on", vb.preview);
+  $("#vocabList").parentElement.classList.toggle("preview", vb.preview);
+  vocabSchedulePreview();
   $("#vocabClear").disabled = !all.length || vb.pair === FAV_ALL;
   $("#vocabMove").textContent = rows.length === all.length ? t("vocab.moveAll") : t("vocab.moveShown", { n: rows.length });
   $("#vocabToHere").hidden = !(state.doc && (state.keywords || []).some((r) => r.term && r.translation));
@@ -323,7 +335,8 @@ function initVocab() {
   $("#vocabPdf").addEventListener("click", async () => {
     try { saveBlob(new Blob([await vocabPdfBytes()], { type: "application/pdf" }), `vocabulary-${pairFile(vb.pair)}.pdf`); } catch (err) { toast(userError(err), "error"); }
   });
-  $("#vocabAnki").addEventListener("click", () => saveBlob(new Blob([ankiText(vb.pair, vocabFiltered())], { type: "text/plain;charset=utf-8" }), `kameleon-${pairFile(vb.pair)}-anki.txt`));
+  $("#vocabPreview").addEventListener("click", () => { vb.preview = !vb.preview; if (!vb.preview) $("#vocabPreviewWrap").innerHTML = ""; vocabRender(); });
+  $("#kwDialog").addEventListener("close", () => { vb.preview = false; $("#vocabPreviewWrap").innerHTML = ""; });
   $("#vocabApkg").addEventListener("click", async () => {
     try { saveBlob(new Blob([await buildApkg(vb.pair, vocabFiltered())], { type: "application/octet-stream" }), `kameleon-${pairFile(vb.pair)}.apkg`); } catch (err) { toast(userError(err), "error"); }
   });

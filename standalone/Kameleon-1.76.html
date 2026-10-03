@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="Kameleon 1.75">
+  <meta name="generator" content="Kameleon 1.76">
   <meta name="description" content="Kameleon – Wechselt die Sprache, behält die Form. Changes language, keeps its shape.">
   <title>Kameleon</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2216%22 fill=%22%23287130%22/%3E%3Cg transform=%22translate(2.5 1) scale(0.9)%22 fill=%22%23ffffff%22 stroke=%22%23ffffff%22%3E%3Cpath d=%22M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6%22 fill=%22none%22 stroke-width=%223.8%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M21 43l-1 10M30 44v9M38 43l1 10%22 stroke-width=%223.6%22 stroke-linecap=%22round%22/%3E%3Cellipse cx=%2221%22 cy=%2225%22 rx=%227%22 ry=%227.5%22 stroke=%22none%22/%3E%3Cellipse cx=%2233%22 cy=%2223.5%22 rx=%227.5%22 ry=%228%22 stroke=%22none%22/%3E%3Cpath d=%22M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z%22 stroke=%22none%22/%3E%3Cpath d=%22M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z%22 stroke=%22none%22/%3E%3Cpath d=%22M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z%22 stroke=%22none%22/%3E%3Cpath d=%22M16 37l4-3 4 3 4-3 4 3 4-3 4 3%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%222.1%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3Cpath d=%22M43.5 33.9L57 32.6%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%221.5%22 stroke-linecap=%22round%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%224.4%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%222.7%22 stroke=%22none%22/%3E%3Ccircle cx=%2246.2%22 cy=%2226.7%22 r=%221.3%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Cpath d=%22M4 55.5c15-3 39-3 54 0%22 fill=%22none%22 stroke-width=%222.4%22 stroke-linecap=%22round%22/%3E%3C/g%3E%3C/svg%3E">
@@ -724,10 +724,17 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
 .kw-wrap { display: grid; grid-template-columns: 1fr 340px; gap: 16px; align-items: stretch; }
 .kw-list { display: grid; gap: 8px; align-content: start; overflow: auto; padding: 2px 4px 2px 2px; }
 .kw-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; align-items: center; padding: 8px 10px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface-2); }
-.kw-row input { min-width: 0; font-size: 15px; padding: 9px 11px; }
-.kw-row input.kw-ex { font-size: 13.5px; padding: 7px 10px; }
+.kw-row input { min-width: 0; font-size: 15px; padding: 9px 11px; border: 1px solid var(--border); height: 40px; box-sizing: border-box; }
+.kw-row input.kw-ex { font-size: 13.5px; padding: 7px 10px; height: 34px; }
+.kw-row .mini, .vocab-row-btns .mini { height: 40px; min-width: 40px; padding: 0 10px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--border); border-radius: 8px; font-size: 15px; }
+.kw-row .vocab-row-btns { align-self: stretch; }
 .kw-preview { overflow: auto; cursor: zoom-in; border-radius: 8px; }
 .kw-preview img { width: 100%; border: 1px solid var(--border); border-radius: 6px; background: #fff; display: block; min-height: 120px; }
+.kw-preview img + img { margin-top: 10px; }
+.vocab-wrap .vocab-preview { display: none; }
+.vocab-wrap.preview .vocab-list { display: none; }
+.vocab-wrap.preview .vocab-preview { display: block; overflow: auto; cursor: default; }
+#vocabPreview.on { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
 #kwDialog.kw-zoom .kw-wrap { grid-template-columns: 1fr; }
 #kwDialog.kw-zoom .kw-list { display: none; }
 #kwDialog.kw-zoom .kw-preview { cursor: zoom-out; }
@@ -798,7 +805,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
   <div class="brand">
     <span class="logo"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#287130"/><g transform="translate(2.5 1) scale(0.9)" fill="#ffffff" stroke="#ffffff"><path d="M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6" fill="none" stroke-width="3.8" stroke-linecap="round"/><path d="M21 43l-1 10M30 44v9M38 43l1 10" stroke-width="3.6" stroke-linecap="round"/><ellipse cx="21" cy="25" rx="7" ry="7.5" stroke="none"/><ellipse cx="33" cy="23.5" rx="7.5" ry="8" stroke="none"/><path d="M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z" stroke="none"/><path d="M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z" stroke="none"/><path d="M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z" stroke="none"/><path d="M16 37l4-3 4 3 4-3 4 3 4-3 4 3" fill="none" stroke="#287130" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M43.5 33.9L57 32.6" fill="none" stroke="#287130" stroke-width="1.5" stroke-linecap="round"/><circle cx="45.5" cy="26.5" r="4.4" fill="#287130" stroke="none"/><circle cx="45.5" cy="26.5" r="2.7" stroke="none"/><circle cx="46.2" cy="26.7" r="1.3" fill="#287130" stroke="none"/><path d="M4 55.5c15-3 39-3 54 0" fill="none" stroke-width="2.4" stroke-linecap="round"/></g></svg></span>
     <span class="brand-name">Kameleon</span>
-    <span class="version" id="appVersion">v1.75</span>
+    <span class="version" id="appVersion">v1.76</span>
   </div>
   <div class="topbar-actions">
     <span class="doc-name" id="docName"></span>
@@ -1216,7 +1223,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
     </div>
     <input type="file" id="offlineZip" class="visually-hidden" accept=".zip,application/zip" multiple tabindex="-1">
     <input type="file" id="offlineFolder" class="visually-hidden" webkitdirectory multiple tabindex="-1">
-    <p class="muted small help-version help-part">Kameleon v1.75 · <span data-i18n="app.tagline"></span></p>
+    <p class="muted small help-version help-part">Kameleon v1.76 · <span data-i18n="app.tagline"></span></p>
     <div class="modal-actions">
       <button type="button" value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
       <button type="button" class="btn ai-part" id="aiCopyPrompt" data-i18n="ai.copyPrompt">Copy prompt only</button>
@@ -1260,10 +1267,11 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
         <button type="button" class="btn" id="vocabToHere" data-i18n="vocab.toHere" hidden></button>
       </div>
       <div class="kw-list vocab-list" id="vocabList"></div>
+      <div class="kw-preview vocab-preview" id="vocabPreviewWrap"></div>
     </div>
     <div class="kw-wrap kw-body kw-list-only">
       <div class="kw-list" id="kwList"></div>
-      <div class="kw-preview" id="kwPreviewWrap" data-i18n-title="kw.previewZoom"><img id="kwPreview" alt=""></div>
+      <div class="kw-preview" id="kwPreviewWrap" data-i18n-title="kw.previewZoom"></div>
     </div>
     <div class="kw-cards kw-body kw-cards-only" id="kwCards"></div>
     <div class="modal-actions kw-actions">
@@ -1273,7 +1281,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
       <button type="button" class="btn kw-vocab-only" id="vocabImport" data-i18n="vocab.import"></button>
       <button type="button" class="btn ghost kw-vocab-only" id="vocabClear" data-i18n="vocab.clear"></button>
       <span class="spacer"></span>
-      <button type="button" class="btn kw-vocab-only" id="vocabAnki" data-i18n="vocab.anki" data-i18n-title="vocab.ankiTitle"></button>
+      <button type="button" class="btn kw-vocab-only" id="vocabPreview" data-i18n-title="vocab.previewTitle"></button>
       <button type="button" class="btn kw-vocab-only" id="vocabApkg" data-i18n="vocab.apkg" data-i18n-title="vocab.apkgTitle"></button>
       <button type="button" class="btn primary kw-vocab-only" id="vocabPdf" data-i18n="vocab.pdf"></button>
       <button value="close" class="btn ghost" data-i18n="kw.close"></button>
@@ -1736,8 +1744,9 @@ const I18N = {
     "vocab.cards": "Lernkarten",
     "vocab.import": "Importieren…",
     "vocab.clear": "Sprachpaar leeren",
-    "vocab.anki": "Anki (Text)",
-    "vocab.ankiTitle": "Textdatei mit Tabulatoren, die Anki über „Datei → Importieren“ einliest (Vorderseite: Begriff, Rückseite: Übersetzung, je mit Beispielsatz)",
+    "vocab.preview": "PDF-Vorschau",
+    "vocab.previewOff": "Zurück zur Liste",
+    "vocab.previewTitle": "Die PDF-Seiten so zeigen, wie sie heruntergeladen werden – mit dem, was gerade gezeigt wird",
     "vocab.pdf": "PDF herunterladen",
     "vocab.apkg": "Anki-Paket (.apkg)",
     "vocab.apkgTitle": "Ein fertiges Anki-Paket: Stapel „Kameleon xx → yy“ mit einer Karte je Begriff (Vorderseite Begriff und Beispielsatz, Rückseite Übersetzung und übersetzter Beispielsatz). Doppelklick öffnet es in Anki.",
@@ -2283,8 +2292,9 @@ const I18N = {
     "vocab.cards": "Flashcards",
     "vocab.import": "Import…",
     "vocab.clear": "Clear language pair",
-    "vocab.anki": "Anki (text)",
-    "vocab.ankiTitle": "A tab-separated text file that Anki reads through File → Import (front: the term, back: the translation, each with its example sentence)",
+    "vocab.preview": "PDF preview",
+    "vocab.previewOff": "Back to the list",
+    "vocab.previewTitle": "Show the PDF pages as they will be downloaded – with what is shown right now",
     "vocab.pdf": "Download PDF",
     "vocab.apkg": "Anki package (.apkg)",
     "vocab.apkgTitle": "A ready Anki package: deck “Kameleon xx → yy” with one card per term (front: term and example sentence, back: translation and translated example). Double-click opens it in Anki.",
@@ -5249,6 +5259,7 @@ function createHandler() {
       return { result: bytes, transfer: [bytes.buffer] };
     }
     if (cmd === "keywordsPdf") { const b = keywordsPdf(args); return { result: b, transfer: [b.buffer] }; }
+    if (cmd === "pdfPageCount") { const doc = M.Document.openDocument(args.bytes, "application/pdf"); try { return { result: doc.countPages() }; } finally { free(doc); } }
     if (cmd === "renderBytes") { // a page of a finished PDF (the translated picture) as PNG
       const doc = M.Document.openDocument(args.bytes, "application/pdf");
       try { const png = renderPNG(doc, args.page || 0, args.zoom); return { result: png.buffer, transfer: [png.buffer] }; } finally { free(doc); }
@@ -14543,7 +14554,7 @@ function initPicture() {
 // from its own browser cache before the network, so language files are written into that cache.
 // ======================================================================
 
-const APP_VERSION = "1.75";
+const APP_VERSION = "1.76";
 // (a change of library version makes a stored set outdated: it is then ignored)
 const OFFLINE_VERSION = `${MUPDF_URL} ${OCR_LIB}`;
 const CORE_SIMD = "tesseract-core-simd-lstm.wasm.js", CORE_PLAIN = "tesseract-core-lstm.wasm.js";
@@ -15054,7 +15065,19 @@ function initPagesManager() {
 
 const KW_MARK = /^[ \t]*\[\[\s*keywords?\s*\]\][ \t]*$/im;
 const kwKey = (id) => `pdftr:kw:${id}`;
-let kwPreviewTimer = null, kwPreviewUrl = null;
+let kwPreviewTimer = null;
+/** Draws every page of a PDF into a container (stacked); earlier pictures are released. */
+async function kwRenderPages(container, bytes, zoom = 2) {
+  const n = await pool.workers[0].call("pdfPageCount", { bytes });
+  const imgs = [];
+  for (let p = 0; p < n; p++) {
+    const png = await pool.workers[0].call("renderBytes", { bytes, page: p, zoom });
+    imgs.push(URL.createObjectURL(new Blob([png], { type: "image/png" })));
+  }
+  container.querySelectorAll("img").forEach((im) => { if (im.src.startsWith("blob:")) URL.revokeObjectURL(im.src); });
+  container.innerHTML = imgs.map((u, i) => `<img src="${u}" alt="${escapeHtml(t("page.n", { n: i + 1 }))}">`).join("");
+  return n;
+}
 
 function kwLoad() {
   try { state.keywords = JSON.parse(localStorage.getItem(kwKey(state.doc.id)) || "[]"); } catch (_) { state.keywords = []; }
@@ -15142,14 +15165,7 @@ function kwRenderList() {
 function kwSchedulePreview(delay = 500) {
   clearTimeout(kwPreviewTimer);
   kwPreviewTimer = setTimeout(async () => {
-    const img = $("#kwPreview");
-    try {
-      const bytes = await kwPdfBytes();
-      const png = await pool.workers[0].call("renderBytes", { bytes, page: 0, zoom: 2 }); // sharp enough for the enlarged view
-      if (kwPreviewUrl) URL.revokeObjectURL(kwPreviewUrl);
-      kwPreviewUrl = URL.createObjectURL(new Blob([png], { type: "image/png" }));
-      img.src = kwPreviewUrl;
-    } catch (err) { console.warn("keyword preview failed", err); }
+    try { await kwRenderPages($("#kwPreviewWrap"), await kwPdfBytes()); } catch (err) { console.warn("keyword preview failed", err); }
   }, delay);
 }
 
@@ -15921,7 +15937,15 @@ function vocabMove(fromPair, terms, toPair) {
 }
 
 /* ---- the vocabulary view in the keywords dialog */
-const vb = { pair: "", query: "", favOnly: false };
+const vb = { pair: "", query: "", favOnly: false, preview: false };
+let vbPreviewTimer = null;
+function vocabSchedulePreview(delay = 300) {
+  clearTimeout(vbPreviewTimer);
+  if (!vb.preview) return;
+  vbPreviewTimer = setTimeout(async () => {
+    try { await kwRenderPages($("#vocabPreviewWrap"), await vocabPdfBytes()); } catch (err) { console.warn("vocabulary preview failed", err); }
+  }, delay);
+}
 function vocabRows(pair = vb.pair) { if (pair === FAV_ALL) return favRows(); const v = vocabLoad(); return Array.isArray(v[pair]) ? v[pair] : []; }
 /** The rows as shown: the pair's (or all favourites'), narrowed by the favourites toggle and the search. */
 function vocabFiltered() {
@@ -15954,7 +15978,11 @@ function vocabRender() {
       <input class="kw-ex" data-k="exampleTr" value="${escapeHtml(r.exampleTr || "")}" placeholder="${escapeHtml(t("kw.exampleTr"))}">
     </div>`).join("") : `<p class="muted small">${escapeHtml(all.length ? t("vocab.noMatch") : t("vocab.empty"))}</p>`;
   const some = rows.length > 0;
-  for (const id of ["#vocabCards", "#vocabPdf", "#vocabAnki", "#vocabApkg", "#vocabMove"]) $(id).disabled = !some;
+  for (const id of ["#vocabCards", "#vocabPdf", "#vocabApkg", "#vocabMove", "#vocabPreview"]) $(id).disabled = !some && !vb.preview;
+  $("#vocabPreview").textContent = t(vb.preview ? "vocab.previewOff" : "vocab.preview");
+  $("#vocabPreview").classList.toggle("on", vb.preview);
+  $("#vocabList").parentElement.classList.toggle("preview", vb.preview);
+  vocabSchedulePreview();
   $("#vocabClear").disabled = !all.length || vb.pair === FAV_ALL;
   $("#vocabMove").textContent = rows.length === all.length ? t("vocab.moveAll") : t("vocab.moveShown", { n: rows.length });
   $("#vocabToHere").hidden = !(state.doc && (state.keywords || []).some((r) => r.term && r.translation));
@@ -16040,7 +16068,8 @@ function initVocab() {
   $("#vocabPdf").addEventListener("click", async () => {
     try { saveBlob(new Blob([await vocabPdfBytes()], { type: "application/pdf" }), `vocabulary-${pairFile(vb.pair)}.pdf`); } catch (err) { toast(userError(err), "error"); }
   });
-  $("#vocabAnki").addEventListener("click", () => saveBlob(new Blob([ankiText(vb.pair, vocabFiltered())], { type: "text/plain;charset=utf-8" }), `kameleon-${pairFile(vb.pair)}-anki.txt`));
+  $("#vocabPreview").addEventListener("click", () => { vb.preview = !vb.preview; if (!vb.preview) $("#vocabPreviewWrap").innerHTML = ""; vocabRender(); });
+  $("#kwDialog").addEventListener("close", () => { vb.preview = false; $("#vocabPreviewWrap").innerHTML = ""; });
   $("#vocabApkg").addEventListener("click", async () => {
     try { saveBlob(new Blob([await buildApkg(vb.pair, vocabFiltered())], { type: "application/octet-stream" }), `kameleon-${pairFile(vb.pair)}.apkg`); } catch (err) { toast(userError(err), "error"); }
   });

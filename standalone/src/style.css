@@ -714,10 +714,17 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
 .kw-wrap { display: grid; grid-template-columns: 1fr 340px; gap: 16px; align-items: stretch; }
 .kw-list { display: grid; gap: 8px; align-content: start; overflow: auto; padding: 2px 4px 2px 2px; }
 .kw-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; align-items: center; padding: 8px 10px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface-2); }
-.kw-row input { min-width: 0; font-size: 15px; padding: 9px 11px; }
-.kw-row input.kw-ex { font-size: 13.5px; padding: 7px 10px; }
+.kw-row input { min-width: 0; font-size: 15px; padding: 9px 11px; border: 1px solid var(--border); height: 40px; box-sizing: border-box; }
+.kw-row input.kw-ex { font-size: 13.5px; padding: 7px 10px; height: 34px; }
+.kw-row .mini, .vocab-row-btns .mini { height: 40px; min-width: 40px; padding: 0 10px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--border); border-radius: 8px; font-size: 15px; }
+.kw-row .vocab-row-btns { align-self: stretch; }
 .kw-preview { overflow: auto; cursor: zoom-in; border-radius: 8px; }
 .kw-preview img { width: 100%; border: 1px solid var(--border); border-radius: 6px; background: #fff; display: block; min-height: 120px; }
+.kw-preview img + img { margin-top: 10px; }
+.vocab-wrap .vocab-preview { display: none; }
+.vocab-wrap.preview .vocab-list { display: none; }
+.vocab-wrap.preview .vocab-preview { display: block; overflow: auto; cursor: default; }
+#vocabPreview.on { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
 #kwDialog.kw-zoom .kw-wrap { grid-template-columns: 1fr; }
 #kwDialog.kw-zoom .kw-list { display: none; }
 #kwDialog.kw-zoom .kw-preview { cursor: zoom-out; }
