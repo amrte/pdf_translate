@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.60
+
+- PDF: formulas whose signs come from a mathematical font without readable characters (Mathematical Pi, MT Extra, TeX and MathType fonts – the "=" that shows up as "5" or "?") are recognised as formulas by their font, as are short variable terms such as "dt", "dI" or "rL" and differences like "t₁ − t₀". Function names (ln, arctan …) no longer count against a formula. A number with its unit ("4.2 M") stays text.
+
 ## 1.59
 
 - OCR: Arabic and Japanese are available as languages (the language data is fetched on first use, or stored with the libraries for offline use like the other languages).

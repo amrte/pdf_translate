@@ -842,6 +842,9 @@ const MATH_SIGNS_G = /[=≈≠≤≥±∓×÷·⋅√∑∏∫∂∞∝→⇒⇔
 /** Words that occur in formulas without making them prose. */
 const MATH_FUNCS = new Set(["sin", "cos", "tan", "cot", "sec", "csc", "arcsin", "arccos", "arctan", "sinh", "cosh", "tanh", "log", "ln", "lg", "exp", "lim", "max", "min", "sup", "inf", "det", "arg", "mod", "sgn", "tr", "diag", "grad", "div", "rot"]);
 const MATH_FUNC_RE = /(?<!\p{L})(?:sin|cos|tan|cot|sec|csc|arcsin|arccos|arctan|sinh|cosh|tanh|log|ln|lg|exp|lim|max|min|sup|inf|det|arg|mod|sgn|tr|diag|grad|div|rot)(?!\p{L})/u;
+const MATH_FUNC_RE_G = new RegExp(MATH_FUNC_RE.source, "gu");
+const SHORT_VAR_RE = /^\p{L}\s?\p{L}$/u;
+const SHORT_WORDS = new Set(["ab", "am", "an", "as", "at", "be", "by", "da", "de", "do", "du", "el", "en", "er", "es", "et", "go", "he", "if", "il", "im", "in", "is", "it", "ja", "je", "la", "le", "lo", "me", "my", "no", "ob", "of", "oh", "ok", "on", "or", "os", "se", "si", "so", "te", "to", "tu", "um", "un", "up", "us", "we", "wo", "zu", "и", "в", "на", "не", "то", "но", "он", "мы", "вы", "из", "за", "по", "от", "до", "ты", "я", "о", "у", "с", "к"]);
 const MATH_WORDS = new Set(["sin", "cos", "tan", "cot", "sec", "csc", "arcsin", "arccos", "arctan", "sinh", "cosh", "tanh", "log", "ln", "lg", "exp", "lim", "max", "min", "sup", "inf", "det", "arg", "mod", "div", "rot", "grad", "const", "dim", "ker", "rank", "sgn", "tr", "diag", "where", "with", "für", "mit", "wenn", "if", "and", "und", "or", "oder"]);
 
 /**
@@ -864,13 +867,17 @@ function isFormula(text, spans) {
   if (all && math >= 0.6 * all && !longWords) return true;
   const strong = (text.match(MATH_SIGN_RE_G) || []).length; // =, ≤, √, ∑, Greek …
   const ops = (text.match(MATH_SIGNS_G) || []).length; // those, and + − / between letters or digits
-  const unknown = (text.match(/�/g) || []).length;
+  const unknown = (text.match(/[�\ue000-\uf8ff]/g) || []).length; // glyphs without Unicode, or in a font's private range
   const vars = (text.match(/(?<![\p{L}\p{N}])\p{L}(?![\p{L}])/gu) || []).length; // single letters: variables
   const scripts = sizeMin < Infinity && sizeMax >= 1.25 * sizeMin; // sub- or superscripts
   const letters = (text.match(/\p{L}/gu) || []).length;
   if (strong && !words) return true; // "E = m·v²", "k = 1", "α ≤ π"
+  const funcLetters = (text.match(MATH_FUNC_RE_G) || []).join("").length; // letters of sin, ln, arctan … are no variables
+  if (!words && letters - funcLetters <= 6 && (math || unknown)) return true; // a sign from a math font (Mathematical Pi, MT Extra …) or an unreadable glyph among a few letters: "u =", "L = La + Li ="
+  if (!words && !/\p{N}/u.test(text) && SHORT_VAR_RE.test(text.trim()) && !SHORT_WORDS.has(text.trim().toLowerCase())) return true; // "dt", "dI", "rL": two letters that are no word
+  if (!words && vars >= 2 && ops && letters <= 4) return true; // "t1 − t0", "a + b"
   if (!words && letters && /^[\p{N}\s().,;:^_]*$/u.test(text.replace(/\p{L}+/gu, "")) && MATH_FUNC_RE.test(text) && [...text.matchAll(/\p{L}+/gu)].every((m) => m[0].length === 1 || MATH_FUNCS.has(m[0]))) return true; // "ln r a", "sin x"
-  if (letters === 1 && !/\p{L}\p{N}|\p{N}\p{L}/u.test(text) && text.replace(/[\s\p{N}().,;:=+−-]/gu, "").length === 1) return true; // a lone symbol: Φ, L, x
+  if (letters === 1 && !/\p{N}/u.test(text) && text.replace(/[\s().,;:=+−-]/gu, "").length === 1) return true; // a lone symbol: Φ, L, x (not "4.2 M": a number with its unit)
   if (ops >= 2 && !words && letters >= 1 && letters <= 6) return true; // "a−b/c" (a product code with more letters is text; plain numbers are "numbers")
   if (words > 2) return false; // a sentence, even with an equation in it
   if (unknown >= 2 && words <= 1) return true; // symbol glyphs without Unicode
