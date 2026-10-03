@@ -72,7 +72,36 @@ function vocabLoad() {
 function vocabSave(v) {
   try { localStorage.setItem(LS_VOCAB, JSON.stringify(v)); } catch (_) { toast(t("vocab.full"), "error"); }
 }
-const pairLabel = (pair) => pair.replace("-", " → ");
+const FAV_ALL = "*fav"; // the pseudo pair that shows the favourites of every pair
+const pairLabel = (pair) => (pair === FAV_ALL ? t("vocab.favAll") : pair.replace("-", " → "));
+const pairFile = (pair) => (pair === FAV_ALL ? "favourites" : pair);
+/** The chameleon, small, in the current colour: the sign for a favourite. */
+const KAM_ICON = '<svg class="kam-ic" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><g transform="translate(2.5 1) scale(0.9)" fill="currentColor"><ellipse cx="21" cy="25" rx="7" ry="7.5"/><ellipse cx="33" cy="23.5" rx="7.5" ry="8"/><path d="M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z"/><path d="M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z"/><path d="M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z"/><path d="M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6" fill="none" stroke="currentColor" stroke-width="3.8" stroke-linecap="round"/><path d="M21 43l-1 10M30 44v9M38 43l1 10" stroke="currentColor" stroke-width="3.6" stroke-linecap="round"/></g><circle cx="43.5" cy="24.9" r="2.4" fill="#fff"/></svg>';
+
+/** Is this term a favourite of its pair? */
+function isFav(pair, term) {
+  const v = vocabLoad(), list = Array.isArray(v[pair]) ? v[pair] : [];
+  const r = list.find((x) => x.term === term);
+  return Boolean(r && r.fav);
+}
+/** Mark or unmark a favourite; a term not yet in the vocabulary is added first. Returns the new state. */
+function toggleFav(pair, row) {
+  if (!pair || pair === FAV_ALL) return false;
+  const v = vocabLoad();
+  let list = Array.isArray(v[pair]) ? v[pair] : [];
+  let r = list.find((x) => x.term === row.term);
+  if (!r) { vocabAdd(pair, [row], state.doc ? state.doc.name : ""); list = vocabLoad()[pair] || []; r = list.find((x) => x.term === row.term); if (!r) return false; }
+  r.fav = !r.fav;
+  if (!r.fav) delete r.fav;
+  const v2 = vocabLoad(); v2[pair] = list; vocabSave(v2);
+  return Boolean(r.fav);
+}
+/** The favourites of every pair, each row knowing its pair. */
+function favRows() {
+  const v = vocabLoad(), out = [];
+  for (const pair of Object.keys(v).sort()) for (const r of v[pair] || []) if (r.fav) out.push({ ...r, _pair: pair });
+  return out;
+}
 const vocabPairs = (v = vocabLoad()) => Object.keys(v).filter((k) => Array.isArray(v[k]) && v[k].length).sort();
 
 /** Terms added to a pair's vocabulary: new ones are appended, known ones get the newer translation and examples. */
@@ -120,13 +149,14 @@ function setCurrentPair(pair) {
 
 /* ---- export and import */
 const ankiEsc = (s) => (s || "").replace(/\t/g, " ").replace(/\r?\n/g, "<br>");
+const ankiTag = (pair) => (pair === FAV_ALL ? "favourites" : pair);
 /** A text file Anki imports: tab-separated, HTML on, with the deck and the note type named in its header. */
 function ankiText(pair, rows) {
   const head = [`#separator:tab`, `#html:true`, `#notetype:Basic`, `#deck:Kameleon ${pairLabel(pair)}`, `#tags column:3`];
   const body = rows.map((r) => [
     ankiEsc(r.term) + (r.example ? `<br><i>${ankiEsc(r.example)}</i>` : ""),
     ankiEsc(r.translation) + (r.exampleTr ? `<br><i>${ankiEsc(r.exampleTr)}</i>` : ""),
-    `kameleon ${pair}`,
+    `kameleon ${ankiTag(pair)}`,
   ].join("\t"));
   return head.concat(body).join("\n") + "\n";
 }
@@ -174,47 +204,57 @@ function vocabMove(fromPair, terms, toPair) {
 }
 
 /* ---- the vocabulary view in the keywords dialog */
-const vb = { pair: "", query: "" };
-function vocabRows(pair = vb.pair) { const v = vocabLoad(); return Array.isArray(v[pair]) ? v[pair] : []; }
+const vb = { pair: "", query: "", favOnly: false };
+function vocabRows(pair = vb.pair) { if (pair === FAV_ALL) return favRows(); const v = vocabLoad(); return Array.isArray(v[pair]) ? v[pair] : []; }
+/** The rows as shown: the pair's (or all favourites'), narrowed by the favourites toggle and the search. */
 function vocabFiltered() {
   const q = vb.query.trim().toLowerCase();
-  const rows = vocabRows();
+  let rows = vocabRows();
+  if (vb.favOnly && vb.pair !== FAV_ALL) rows = rows.filter((r) => r.fav);
   return q ? rows.filter((r) => `${r.term} ${r.translation} ${r.example || ""} ${r.exampleTr || ""}`.toLowerCase().includes(q)) : rows;
 }
+const rowPair = (r) => r._pair || vb.pair;
 function vocabRender() {
   const pairs = vocabPairs();
   const cur = currentPair();
   if (cur && !pairs.includes(cur)) pairs.push(cur);
-  if (!vb.pair || !pairs.includes(vb.pair)) vb.pair = pairs.includes(cur) && cur ? cur : pairs[0] || "";
+  const favs = favRows().length;
+  if (vb.pair === FAV_ALL && !favs) vb.pair = "";
+  if (!vb.pair || (vb.pair !== FAV_ALL && !pairs.includes(vb.pair))) vb.pair = pairs.includes(cur) && cur ? cur : pairs[0] || "";
   const sel = $("#vocabPair");
-  sel.innerHTML = pairs.map((p) => `<option value="${p}"${p === vb.pair ? " selected" : ""}>${escapeHtml(pairLabel(p))} (${vocabRows(p).length})</option>`).join("") || `<option value="">–</option>`;
+  sel.innerHTML = (pairs.map((p) => `<option value="${p}"${p === vb.pair ? " selected" : ""}>${escapeHtml(pairLabel(p))} (${vocabRows(p).length})</option>`).join("") || `<option value="">–</option>`)
+    + (favs ? `<option value="${FAV_ALL}"${vb.pair === FAV_ALL ? " selected" : ""}>${escapeHtml(t("vocab.favAll"))} (${favs})</option>` : "");
+  $("#vocabFavs").classList.toggle("on", vb.favOnly && vb.pair !== FAV_ALL);
+  $("#vocabFavs").disabled = vb.pair === FAV_ALL;
   const rows = vocabFiltered(), all = vocabRows();
   $("#vocabCount").textContent = rows.length === all.length ? t("vocab.count", { n: all.length }) : t("vocab.countOf", { n: rows.length, total: all.length });
   const list = $("#vocabList");
-  list.innerHTML = rows.length ? rows.map((r) => `<div class="kw-row vocab-row" data-term="${escapeHtml(r.term)}">
+  list.innerHTML = rows.length ? rows.map((r) => `<div class="kw-row vocab-row${r.fav ? " fav" : ""}" data-term="${escapeHtml(r.term)}" data-pair="${escapeHtml(rowPair(r))}">
       <input data-k="term" value="${escapeHtml(r.term)}">
       <input data-k="translation" value="${escapeHtml(r.translation)}">
-      <span class="vocab-row-btns"><button type="button" class="mini" data-act="move" title="${escapeHtml(t("vocab.moveRow"))}" aria-label="${escapeHtml(t("vocab.moveRow"))}">⇄</button><button type="button" class="mini" data-act="del" title="${escapeHtml(t("kw.remove"))}" aria-label="${escapeHtml(t("kw.remove"))}">✕</button></span>
+      <span class="vocab-row-btns">${r._pair ? `<span class="vocab-pair-badge">${escapeHtml(pairLabel(r._pair))}</span>` : ""}<button type="button" class="mini fav${r.fav ? " on" : ""}" data-act="fav" title="${escapeHtml(t("vocab.favTitle"))}" aria-label="${escapeHtml(t("vocab.fav"))}" aria-pressed="${r.fav ? "true" : "false"}">${KAM_ICON}</button><button type="button" class="mini" data-act="move" title="${escapeHtml(t("vocab.moveRow"))}" aria-label="${escapeHtml(t("vocab.moveRow"))}">⇄</button><button type="button" class="mini" data-act="del" title="${escapeHtml(t("kw.remove"))}" aria-label="${escapeHtml(t("kw.remove"))}">✕</button></span>
       <input class="kw-ex" data-k="example" value="${escapeHtml(r.example || "")}" placeholder="${escapeHtml(t("kw.example"))}">
       <input class="kw-ex" data-k="exampleTr" value="${escapeHtml(r.exampleTr || "")}" placeholder="${escapeHtml(t("kw.exampleTr"))}">
     </div>`).join("") : `<p class="muted small">${escapeHtml(all.length ? t("vocab.noMatch") : t("vocab.empty"))}</p>`;
-  const some = all.length > 0;
-  for (const id of ["#vocabCards", "#vocabPdf", "#vocabAnki", "#vocabApkg", "#vocabClear", "#vocabMove"]) $(id).disabled = !some;
+  const some = rows.length > 0;
+  for (const id of ["#vocabCards", "#vocabPdf", "#vocabAnki", "#vocabApkg", "#vocabMove"]) $(id).disabled = !some;
+  $("#vocabClear").disabled = !all.length || vb.pair === FAV_ALL;
   $("#vocabMove").textContent = rows.length === all.length ? t("vocab.moveAll") : t("vocab.moveShown", { n: rows.length });
   $("#vocabToHere").hidden = !(state.doc && (state.keywords || []).some((r) => r.term && r.translation));
 }
-function vocabUpdateRow(termKey, k, value) {
-  const v = vocabLoad(), list = v[vb.pair] || [];
+function vocabUpdateRow(pair, termKey, k, value) {
+  const v = vocabLoad(), list = v[pair] || [];
   const row = list.find((r) => r.term === termKey);
   if (!row) return;
   row[k] = value;
-  v[vb.pair] = list;
+  v[pair] = list;
   vocabSave(v);
 }
+/** The exports take the rows as shown: the whole pair, the favourites, or a search's hits. */
 async function vocabPdfBytes() {
-  const rows = vocabRows();
+  const rows = vocabFiltered();
   const args = {
-    title: `${t("vocab.title")} ${pairLabel(vb.pair)}`, headers: [t("kw.term"), t("kw.translation")], rows,
+    title: `${t("vocab.title")} ${pairLabel(vb.pair)}${vb.favOnly && vb.pair !== FAV_ALL ? ` – ${t("vocab.favFilter")}` : ""}`, headers: [t("kw.term"), t("kw.translation")], rows,
     subtitle: t("vocab.subtitle", { n: rows.length, date: new Date().toLocaleDateString(LANG === "de" ? "de-DE" : "en-GB") }),
   };
   return new Uint8Array(await pool.workers[0].call("keywordsPdf", args));
@@ -229,31 +269,40 @@ function initVocab() {
   list.addEventListener("input", (e) => {
     const row = e.target.closest(".vocab-row"), k = e.target.dataset.k;
     if (!row || !k) return;
-    vocabUpdateRow(row.dataset.term, k, e.target.value);
+    vocabUpdateRow(row.dataset.pair, row.dataset.term, k, e.target.value);
     if (k === "term") row.dataset.term = e.target.value;
   });
+  $("#vocabFavs").addEventListener("click", () => { vb.favOnly = !vb.favOnly; vocabRender(); });
+  $("#vocabFavs .kam-slot").innerHTML = KAM_ICON;
   list.addEventListener("click", async (e) => {
     const b = e.target.closest("[data-act]"), row = e.target.closest(".vocab-row");
     if (!b || !row) return;
+    const pair = row.dataset.pair;
     if (b.dataset.act === "del") {
       const v = vocabLoad();
-      v[vb.pair] = (v[vb.pair] || []).filter((r) => r.term !== row.dataset.term);
+      v[pair] = (v[pair] || []).filter((r) => r.term !== row.dataset.term);
       vocabSave(v); vocabRender();
+    } else if (b.dataset.act === "fav") {
+      const on = toggleFav(pair, { term: row.dataset.term, translation: row.querySelector('[data-k="translation"]').value });
+      vocabRender(); // (the pair list's favourites entry and counts follow)
     } else if (b.dataset.act === "move") { // this one term to another pair
-      const [src, tgt] = vb.pair.split("-");
+      const [src, tgt] = pair.split("-");
       const ans = await askPair({ src, tgt, text: t("pair.textMove", { n: 1 }) });
       if (!ans) return;
-      const n = vocabMove(vb.pair, [row.dataset.term], ans.pair);
+      const n = vocabMove(pair, [row.dataset.term], ans.pair);
       toast(t("vocab.moved", { n, pair: pairLabel(ans.pair) }), "ok"); vocabRender();
     }
   });
-  $("#vocabMove").addEventListener("click", async () => { // the shown terms (all, or the search's hits) to another pair
+  $("#vocabMove").addEventListener("click", async () => { // the shown terms (all, the favourites, or the search's hits) to another pair
     const rows = vocabFiltered();
     if (!rows.length) return;
-    const [src, tgt] = vb.pair.split("-");
+    const [src, tgt] = (vb.pair === FAV_ALL ? rowPair(rows[0]) : vb.pair).split("-");
     const ans = await askPair({ src, tgt, text: t("pair.textMove", { n: rows.length }) });
     if (!ans) return;
-    const n = vocabMove(vb.pair, rows.map((r) => r.term), ans.pair);
+    let n = 0;
+    const byPair = new Map();
+    for (const r of rows) { const p = rowPair(r); if (!byPair.has(p)) byPair.set(p, []); byPair.get(p).push(r.term); }
+    for (const [p, terms] of byPair) n += vocabMove(p, terms, ans.pair);
     vb.pair = ans.pair; vb.query = ""; $("#vocabSearch").value = "";
     toast(t("vocab.moved", { n, pair: pairLabel(ans.pair) }), "ok"); vocabRender();
   });
@@ -270,13 +319,13 @@ function initVocab() {
     setCurrentPair(pair);
     toast(t("vocab.added", { n, pair: pairLabel(pair) }), "ok"); vocabRender();
   });
-  $("#vocabCards").addEventListener("click", () => { fcSource = vocabRows().filter((r) => r.term && r.translation); kwSetMode("cards"); });
+  $("#vocabCards").addEventListener("click", () => { fcSource = vocabFiltered().filter((r) => r.term && r.translation); fcPair = vb.pair; kwSetMode("cards"); });
   $("#vocabPdf").addEventListener("click", async () => {
-    try { saveBlob(new Blob([await vocabPdfBytes()], { type: "application/pdf" }), `vocabulary-${vb.pair}.pdf`); } catch (err) { toast(userError(err), "error"); }
+    try { saveBlob(new Blob([await vocabPdfBytes()], { type: "application/pdf" }), `vocabulary-${pairFile(vb.pair)}.pdf`); } catch (err) { toast(userError(err), "error"); }
   });
-  $("#vocabAnki").addEventListener("click", () => saveBlob(new Blob([ankiText(vb.pair, vocabRows())], { type: "text/plain;charset=utf-8" }), `kameleon-${vb.pair}-anki.txt`));
+  $("#vocabAnki").addEventListener("click", () => saveBlob(new Blob([ankiText(vb.pair, vocabFiltered())], { type: "text/plain;charset=utf-8" }), `kameleon-${pairFile(vb.pair)}-anki.txt`));
   $("#vocabApkg").addEventListener("click", async () => {
-    try { saveBlob(new Blob([await buildApkg(vb.pair, vocabRows())], { type: "application/octet-stream" }), `kameleon-${vb.pair}.apkg`); } catch (err) { toast(userError(err), "error"); }
+    try { saveBlob(new Blob([await buildApkg(vb.pair, vocabFiltered())], { type: "application/octet-stream" }), `kameleon-${pairFile(vb.pair)}.apkg`); } catch (err) { toast(userError(err), "error"); }
   });
   $("#vocabImport").addEventListener("click", () => $("#vocabFile").click());
   $("#vocabFile").addEventListener("change", async (e) => {

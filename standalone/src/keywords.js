@@ -140,8 +140,9 @@ function initKeywords() {
 // Click or Space turns a card; "Known" takes it out of the round, "Again" puts it at the end.
 const fc = { queue: [], index: 0, flipped: false, known: 0, total: 0 };
 
-let fcSource = null; // rows other than the document's (the vocabulary), while set
+let fcSource = null, fcPair = ""; // rows other than the document's (the vocabulary) and their pair, while set
 function fcStart() {
+  fc.pair = fcSource ? fcPair : currentPair();
   const rows = (fcSource || kwRows()).filter((r) => r.term.trim() && r.translation.trim());
   fc.queue = rows.map((_, i) => i); fc.rows = rows; fc.index = 0; fc.flipped = false; fc.known = 0; fc.total = rows.length;
   fcRender();
@@ -156,12 +157,14 @@ function fcRender() {
     return;
   }
   const r = fc.rows[fc.queue[fc.index]];
+  const pair = r._pair || fc.pair, fav = pair ? isFav(pair, r.term) : false;
+  const favBtn = `<button type="button" class="kw-fav${fav ? " on" : ""}" data-fc="fav" title="${escapeHtml(t("vocab.favTitle"))}" aria-label="${escapeHtml(t("vocab.fav"))}" aria-pressed="${fav ? "true" : "false"}"${pair ? "" : " disabled"}>${KAM_ICON}</button>`;
   box.innerHTML = `
     <div class="kw-progress"><span>${escapeHtml(t("kw.progress", { i: fc.index + 1, n: fc.queue.length }))}</span><span class="muted">${escapeHtml(t("kw.knownCount", { n: fc.known, total: fc.total }))}</span></div>
     <div class="kw-card${fc.flipped ? " flipped" : ""}" tabindex="0" role="button" aria-label="${escapeHtml(t("kw.flip"))}" data-fc="flip">
       <div class="kw-card-inner">
-        <div class="kw-face kw-front"><div class="kw-word">${escapeHtml(r.term)}</div>${r.example ? `<div class="kw-sentence">${escapeHtml(r.example)}</div>` : ""}</div>
-        <div class="kw-face kw-back"><div class="kw-word">${escapeHtml(r.translation)}</div>${r.exampleTr ? `<div class="kw-sentence">${escapeHtml(r.exampleTr)}</div>` : ""}</div>
+        <div class="kw-face kw-front">${favBtn}<div class="kw-word">${escapeHtml(r.term)}</div>${r.example ? `<div class="kw-sentence">${escapeHtml(r.example)}</div>` : ""}</div>
+        <div class="kw-face kw-back">${favBtn}<div class="kw-word">${escapeHtml(r.translation)}</div>${r.exampleTr ? `<div class="kw-sentence">${escapeHtml(r.exampleTr)}</div>` : ""}</div>
       </div>
     </div>
     <div class="kw-fc-actions">
@@ -182,6 +185,14 @@ function fcRender() {
 function fcAction(act) {
   if (!fc.queue.length && act !== "restart") return;
   if (act === "flip") { fc.flipped = !fc.flipped; $("#kwCards .kw-card")?.classList.toggle("flipped", fc.flipped); return; }
+  if (act === "fav") { // the chameleon: this card into the favourites (and out again)
+    const r = fc.rows[fc.queue[fc.index]], pair = r._pair || fc.pair;
+    if (!pair) { toast(t("vocab.noPair"), "error"); return; }
+    const on = toggleFav(pair, r);
+    document.querySelectorAll("#kwCards .kw-fav").forEach((b) => { b.classList.toggle("on", on); b.setAttribute("aria-pressed", String(on)); });
+    toast(t(on ? "vocab.favAdded" : "vocab.favRemoved", { term: r.term, pair: pairLabel(pair) }), on ? "ok" : "");
+    return;
+  }
   if (act === "next") fc.index = (fc.index + 1) % fc.queue.length;
   else if (act === "prev") fc.index = (fc.index - 1 + fc.queue.length) % fc.queue.length;
   else if (act === "known") { fc.queue.splice(fc.index, 1); fc.known++; if (fc.index >= fc.queue.length) fc.index = 0; }
@@ -211,7 +222,7 @@ function initFlashcards() {
   document.addEventListener("keydown", (e) => {
     const dlg = $("#kwDialog");
     if (!dlg.open || dlg.dataset.mode !== "cards" || e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
-    const keys = { " ": "flip", Enter: "flip", ArrowRight: "next", ArrowLeft: "prev", k: "known", K: "known", a: "again", A: "again" };
+    const keys = { " ": "flip", Enter: "flip", ArrowRight: "next", ArrowLeft: "prev", k: "known", K: "known", a: "again", A: "again", f: "fav", F: "fav" };
     if (keys[e.key]) { e.preventDefault(); fcAction(keys[e.key]); }
   });
   $("#kwDialog").addEventListener("close", () => { fcSource = null; $("#kwDialog").dataset.mode = "list"; });

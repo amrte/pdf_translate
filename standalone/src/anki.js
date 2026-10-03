@@ -288,7 +288,7 @@ async function buildApkg(pair, rows) {
     let guid = ""; for (let k = 0; k < 10; k++) guid += GUID[Math.floor(Math.random() * GUID.length)];
     const front = htmlEsc(r.term), csum = parseInt((await sha1hex(r.term)).slice(0, 8), 16);
     const flds = [front, htmlEsc(r.translation), htmlEsc(r.example || ""), htmlEsc(r.exampleTr || "")].join("\x1f");
-    notes.push([nid, [nid, guid, mid, secs, -1, ` kameleon ${pair} `, flds, r.term, csum, 0, ""]]);
+    notes.push([nid, [nid, guid, mid, secs, -1, ` kameleon ${ankiTag(pair)} `, flds, r.term, csum, 0, ""]]);
     cards.push([cid, [cid, nid, did, 0, secs, -1, 0, 0, i + 1, 0, 0, 0, 0, 0, 0, 0, 0, ""]]);
   }
   const db = sqliteBuild([

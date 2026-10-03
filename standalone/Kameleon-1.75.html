@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="Kameleon 1.74">
+  <meta name="generator" content="Kameleon 1.75">
   <meta name="description" content="Kameleon – Wechselt die Sprache, behält die Form. Changes language, keeps its shape.">
   <title>Kameleon</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2216%22 fill=%22%23287130%22/%3E%3Cg transform=%22translate(2.5 1) scale(0.9)%22 fill=%22%23ffffff%22 stroke=%22%23ffffff%22%3E%3Cpath d=%22M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6%22 fill=%22none%22 stroke-width=%223.8%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M21 43l-1 10M30 44v9M38 43l1 10%22 stroke-width=%223.6%22 stroke-linecap=%22round%22/%3E%3Cellipse cx=%2221%22 cy=%2225%22 rx=%227%22 ry=%227.5%22 stroke=%22none%22/%3E%3Cellipse cx=%2233%22 cy=%2223.5%22 rx=%227.5%22 ry=%228%22 stroke=%22none%22/%3E%3Cpath d=%22M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z%22 stroke=%22none%22/%3E%3Cpath d=%22M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z%22 stroke=%22none%22/%3E%3Cpath d=%22M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z%22 stroke=%22none%22/%3E%3Cpath d=%22M16 37l4-3 4 3 4-3 4 3 4-3 4 3%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%222.1%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3Cpath d=%22M43.5 33.9L57 32.6%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%221.5%22 stroke-linecap=%22round%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%224.4%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%222.7%22 stroke=%22none%22/%3E%3Ccircle cx=%2246.2%22 cy=%2226.7%22 r=%221.3%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Cpath d=%22M4 55.5c15-3 39-3 54 0%22 fill=%22none%22 stroke-width=%222.4%22 stroke-linecap=%22round%22/%3E%3C/g%3E%3C/svg%3E">
@@ -756,7 +756,20 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
 .pair-row label { display: inline-flex; align-items: center; gap: 6px; }
 .pair-row input { width: 80px; font-size: 16px; text-align: center; }
 .pair-arrow { font-size: 20px; color: var(--muted); }
-.vocab-row-btns { display: inline-flex; gap: 4px; }
+.vocab-row-btns { display: inline-flex; gap: 4px; align-items: center; }
+.kam-ic { width: 20px; height: 20px; display: block; }
+.mini.fav { padding: 2px 5px; color: var(--muted); }
+.mini.fav .kam-ic { width: 16px; height: 16px; }
+.mini.fav.on, .vocab-fav-btn.on { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+.vocab-fav-btn .kam-ic { width: 16px; height: 16px; }
+.vocab-row.fav { border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); }
+.vocab-pair-badge { font-size: 11px; color: var(--muted); border: 1px solid var(--border); border-radius: 6px; padding: 1px 6px; white-space: nowrap; }
+.kw-fav { position: absolute; top: 12px; right: 14px; width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface); color: var(--muted); display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; transition: transform .15s; }
+.kw-fav:hover { transform: scale(1.1); color: var(--accent); }
+.kw-fav.on { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+.kw-back .kw-fav { background: rgba(255, 255, 255, .92); border-color: transparent; }
+.kw-back .kw-fav.on { color: var(--accent); }
+.kw-fav .kam-ic { width: 22px; height: 22px; }
 .kw-cards { display: grid; gap: 14px; grid-template-rows: auto 1fr auto; align-items: stretch; }
 .kw-cards:has(.kw-done), .kw-cards:has(> p) { grid-template-rows: 1fr; align-items: center; justify-items: center; }
 .kw-fc-nav, .kw-fc-judge { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; }
@@ -785,7 +798,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
   <div class="brand">
     <span class="logo"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#287130"/><g transform="translate(2.5 1) scale(0.9)" fill="#ffffff" stroke="#ffffff"><path d="M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6" fill="none" stroke-width="3.8" stroke-linecap="round"/><path d="M21 43l-1 10M30 44v9M38 43l1 10" stroke-width="3.6" stroke-linecap="round"/><ellipse cx="21" cy="25" rx="7" ry="7.5" stroke="none"/><ellipse cx="33" cy="23.5" rx="7.5" ry="8" stroke="none"/><path d="M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z" stroke="none"/><path d="M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z" stroke="none"/><path d="M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z" stroke="none"/><path d="M16 37l4-3 4 3 4-3 4 3 4-3 4 3" fill="none" stroke="#287130" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M43.5 33.9L57 32.6" fill="none" stroke="#287130" stroke-width="1.5" stroke-linecap="round"/><circle cx="45.5" cy="26.5" r="4.4" fill="#287130" stroke="none"/><circle cx="45.5" cy="26.5" r="2.7" stroke="none"/><circle cx="46.2" cy="26.7" r="1.3" fill="#287130" stroke="none"/><path d="M4 55.5c15-3 39-3 54 0" fill="none" stroke-width="2.4" stroke-linecap="round"/></g></svg></span>
     <span class="brand-name">Kameleon</span>
-    <span class="version" id="appVersion">v1.74</span>
+    <span class="version" id="appVersion">v1.75</span>
   </div>
   <div class="topbar-actions">
     <span class="doc-name" id="docName"></span>
@@ -1203,7 +1216,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
     </div>
     <input type="file" id="offlineZip" class="visually-hidden" accept=".zip,application/zip" multiple tabindex="-1">
     <input type="file" id="offlineFolder" class="visually-hidden" webkitdirectory multiple tabindex="-1">
-    <p class="muted small help-version help-part">Kameleon v1.74 · <span data-i18n="app.tagline"></span></p>
+    <p class="muted small help-version help-part">Kameleon v1.75 · <span data-i18n="app.tagline"></span></p>
     <div class="modal-actions">
       <button type="button" value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
       <button type="button" class="btn ai-part" id="aiCopyPrompt" data-i18n="ai.copyPrompt">Copy prompt only</button>
@@ -1240,6 +1253,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
       <div class="vocab-bar">
         <select id="vocabPair" data-i18n-aria="vocab.pair"></select>
         <input type="search" id="vocabSearch" data-i18n-placeholder="vocab.search" autocomplete="off">
+        <button type="button" class="btn vocab-fav-btn" id="vocabFavs" data-i18n-title="vocab.favFilterTitle" aria-pressed="false"><span class="kam-slot"></span><span data-i18n="vocab.favFilter"></span></button>
         <span class="muted small" id="vocabCount"></span>
         <span class="spacer"></span>
         <button type="button" class="btn" id="vocabMove" data-i18n-title="vocab.moveTitle"></button>
@@ -1713,7 +1727,7 @@ const I18N = {
     "kw.modeVocab": "Wortschatz",
     "kw.importedVocab": "{n} Begriffe übernommen, {added} neu im Wortschatz {pair}.",
     "vocab.title": "Wortschatz",
-    "vocab.text": "Alle Begriffe, die aus Dokumenten kamen, nach Sprachpaar gesammelt – zum Nachschlagen, Lernen und Exportieren. Änderungen hier werden gespeichert.",
+    "vocab.text": "Alle Begriffe, die aus Dokumenten kamen, nach Sprachpaar gesammelt – zum Nachschlagen, Lernen und Exportieren. Änderungen hier werden gespeichert. Lernkarten und Exporte nehmen, was gerade gezeigt wird: das ganze Paar, die Favoriten oder die Treffer der Suche.",
     "vocab.pair": "Sprachpaar",
     "vocab.search": "Suchen…",
     "vocab.count": "{n} Begriffe",
@@ -1739,6 +1753,13 @@ const I18N = {
     "vocab.clearConfirm": "Alle Begriffe des Sprachpaars {pair} löschen?",
     "vocab.full": "Der Speicher des Browsers ist voll; der Wortschatz konnte nicht gespeichert werden.",
     "vocab.start": "Wortschatz",
+    "vocab.fav": "Favorit",
+    "vocab.favTitle": "Kameleon: als Favorit merken – oder die Markierung aufheben (F)",
+    "vocab.favFilter": "Favoriten",
+    "vocab.favFilterTitle": "Nur die Favoriten des Sprachpaars zeigen; die Lernkarten und die Exporte nehmen dann nur diese",
+    "vocab.favAll": "Favoriten (alle Sprachpaare)",
+    "vocab.favAdded": "„{term}“ ist jetzt ein Favorit ({pair}).",
+    "vocab.favRemoved": "„{term}“ ist kein Favorit mehr.",
     "vocab.moveRow": "Diesen Begriff in ein anderes Sprachpaar verschieben",
     "vocab.moveAll": "Sprachpaar ändern…",
     "vocab.moveShown": "{n} gezeigte verschieben…",
@@ -1753,7 +1774,7 @@ const I18N = {
     "pair.hint": "Sprachcodes wie de, en, fr, uk, zh (ISO 639-1).",
     "vocab.startTitle": "Die gesammelten Begriffe aller Dokumente: nachschlagen, lernen, exportieren",
     "kw.previewZoom": "Klick: die Seite in Fensterbreite anzeigen – und wieder klein",
-    "kw.cardsText": "Anklicken oder Leertaste dreht die Karte um · ←/→ blättern · K gewusst · A nochmal · Gewusste Karten verlassen die Runde.",
+    "kw.cardsText": "Anklicken oder Leertaste dreht die Karte um · ←/→ blättern · K gewusst · A nochmal · F Favorit (das Kameleon) · Gewusste Karten verlassen die Runde.",
     "kw.prev": "Vorherige Karte (←)",
     "kw.next": "Nächste Karte (→)",
     "kw.shuffle": "Mischen",
@@ -2253,7 +2274,7 @@ const I18N = {
     "kw.modeVocab": "Vocabulary",
     "kw.importedVocab": "{n} terms taken over, {added} new in the vocabulary {pair}.",
     "vocab.title": "Vocabulary",
-    "vocab.text": "All terms that came from documents, collected by language pair – to look up, learn and export. Changes made here are saved.",
+    "vocab.text": "All terms that came from documents, collected by language pair – to look up, learn and export. Changes made here are saved. Flashcards and exports take what is shown: the whole pair, the favourites or the search's hits.",
     "vocab.pair": "Language pair",
     "vocab.search": "Search…",
     "vocab.count": "{n} terms",
@@ -2279,6 +2300,13 @@ const I18N = {
     "vocab.clearConfirm": "Delete all terms of the language pair {pair}?",
     "vocab.full": "The browser's storage is full; the vocabulary could not be saved.",
     "vocab.start": "Vocabulary",
+    "vocab.fav": "Favourite",
+    "vocab.favTitle": "Kameleon: keep as a favourite – or take the mark off (F)",
+    "vocab.favFilter": "Favourites",
+    "vocab.favFilterTitle": "Show only the favourites of the pair; flashcards and exports then take just these",
+    "vocab.favAll": "Favourites (all language pairs)",
+    "vocab.favAdded": "“{term}” is a favourite now ({pair}).",
+    "vocab.favRemoved": "“{term}” is no favourite any more.",
     "vocab.moveRow": "Move this term to another language pair",
     "vocab.moveAll": "Change language pair…",
     "vocab.moveShown": "Move {n} shown…",
@@ -2293,7 +2321,7 @@ const I18N = {
     "pair.hint": "Language codes such as de, en, fr, uk, zh (ISO 639-1).",
     "vocab.startTitle": "The terms collected from all documents: look up, learn, export",
     "kw.previewZoom": "Click: show the page at window width – and small again",
-    "kw.cardsText": "Click or Space turns the card · ←/→ browse · K known · A again · Known cards leave the round.",
+    "kw.cardsText": "Click or Space turns the card · ←/→ browse · K known · A again · F favourite (the chameleon) · Known cards leave the round.",
     "kw.prev": "Previous card (←)",
     "kw.next": "Next card (→)",
     "kw.shuffle": "Shuffle",
@@ -14515,7 +14543,7 @@ function initPicture() {
 // from its own browser cache before the network, so language files are written into that cache.
 // ======================================================================
 
-const APP_VERSION = "1.74";
+const APP_VERSION = "1.75";
 // (a change of library version makes a stored set outdated: it is then ignored)
 const OFFLINE_VERSION = `${MUPDF_URL} ${OCR_LIB}`;
 const CORE_SIMD = "tesseract-core-simd-lstm.wasm.js", CORE_PLAIN = "tesseract-core-lstm.wasm.js";
@@ -15161,8 +15189,9 @@ function initKeywords() {
 // Click or Space turns a card; "Known" takes it out of the round, "Again" puts it at the end.
 const fc = { queue: [], index: 0, flipped: false, known: 0, total: 0 };
 
-let fcSource = null; // rows other than the document's (the vocabulary), while set
+let fcSource = null, fcPair = ""; // rows other than the document's (the vocabulary) and their pair, while set
 function fcStart() {
+  fc.pair = fcSource ? fcPair : currentPair();
   const rows = (fcSource || kwRows()).filter((r) => r.term.trim() && r.translation.trim());
   fc.queue = rows.map((_, i) => i); fc.rows = rows; fc.index = 0; fc.flipped = false; fc.known = 0; fc.total = rows.length;
   fcRender();
@@ -15177,12 +15206,14 @@ function fcRender() {
     return;
   }
   const r = fc.rows[fc.queue[fc.index]];
+  const pair = r._pair || fc.pair, fav = pair ? isFav(pair, r.term) : false;
+  const favBtn = `<button type="button" class="kw-fav${fav ? " on" : ""}" data-fc="fav" title="${escapeHtml(t("vocab.favTitle"))}" aria-label="${escapeHtml(t("vocab.fav"))}" aria-pressed="${fav ? "true" : "false"}"${pair ? "" : " disabled"}>${KAM_ICON}</button>`;
   box.innerHTML = `
     <div class="kw-progress"><span>${escapeHtml(t("kw.progress", { i: fc.index + 1, n: fc.queue.length }))}</span><span class="muted">${escapeHtml(t("kw.knownCount", { n: fc.known, total: fc.total }))}</span></div>
     <div class="kw-card${fc.flipped ? " flipped" : ""}" tabindex="0" role="button" aria-label="${escapeHtml(t("kw.flip"))}" data-fc="flip">
       <div class="kw-card-inner">
-        <div class="kw-face kw-front"><div class="kw-word">${escapeHtml(r.term)}</div>${r.example ? `<div class="kw-sentence">${escapeHtml(r.example)}</div>` : ""}</div>
-        <div class="kw-face kw-back"><div class="kw-word">${escapeHtml(r.translation)}</div>${r.exampleTr ? `<div class="kw-sentence">${escapeHtml(r.exampleTr)}</div>` : ""}</div>
+        <div class="kw-face kw-front">${favBtn}<div class="kw-word">${escapeHtml(r.term)}</div>${r.example ? `<div class="kw-sentence">${escapeHtml(r.example)}</div>` : ""}</div>
+        <div class="kw-face kw-back">${favBtn}<div class="kw-word">${escapeHtml(r.translation)}</div>${r.exampleTr ? `<div class="kw-sentence">${escapeHtml(r.exampleTr)}</div>` : ""}</div>
       </div>
     </div>
     <div class="kw-fc-actions">
@@ -15203,6 +15234,14 @@ function fcRender() {
 function fcAction(act) {
   if (!fc.queue.length && act !== "restart") return;
   if (act === "flip") { fc.flipped = !fc.flipped; $("#kwCards .kw-card")?.classList.toggle("flipped", fc.flipped); return; }
+  if (act === "fav") { // the chameleon: this card into the favourites (and out again)
+    const r = fc.rows[fc.queue[fc.index]], pair = r._pair || fc.pair;
+    if (!pair) { toast(t("vocab.noPair"), "error"); return; }
+    const on = toggleFav(pair, r);
+    document.querySelectorAll("#kwCards .kw-fav").forEach((b) => { b.classList.toggle("on", on); b.setAttribute("aria-pressed", String(on)); });
+    toast(t(on ? "vocab.favAdded" : "vocab.favRemoved", { term: r.term, pair: pairLabel(pair) }), on ? "ok" : "");
+    return;
+  }
   if (act === "next") fc.index = (fc.index + 1) % fc.queue.length;
   else if (act === "prev") fc.index = (fc.index - 1 + fc.queue.length) % fc.queue.length;
   else if (act === "known") { fc.queue.splice(fc.index, 1); fc.known++; if (fc.index >= fc.queue.length) fc.index = 0; }
@@ -15232,7 +15271,7 @@ function initFlashcards() {
   document.addEventListener("keydown", (e) => {
     const dlg = $("#kwDialog");
     if (!dlg.open || dlg.dataset.mode !== "cards" || e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
-    const keys = { " ": "flip", Enter: "flip", ArrowRight: "next", ArrowLeft: "prev", k: "known", K: "known", a: "again", A: "again" };
+    const keys = { " ": "flip", Enter: "flip", ArrowRight: "next", ArrowLeft: "prev", k: "known", K: "known", a: "again", A: "again", f: "fav", F: "fav" };
     if (keys[e.key]) { e.preventDefault(); fcAction(keys[e.key]); }
   });
   $("#kwDialog").addEventListener("close", () => { fcSource = null; $("#kwDialog").dataset.mode = "list"; });
@@ -15750,7 +15789,36 @@ function vocabLoad() {
 function vocabSave(v) {
   try { localStorage.setItem(LS_VOCAB, JSON.stringify(v)); } catch (_) { toast(t("vocab.full"), "error"); }
 }
-const pairLabel = (pair) => pair.replace("-", " → ");
+const FAV_ALL = "*fav"; // the pseudo pair that shows the favourites of every pair
+const pairLabel = (pair) => (pair === FAV_ALL ? t("vocab.favAll") : pair.replace("-", " → "));
+const pairFile = (pair) => (pair === FAV_ALL ? "favourites" : pair);
+/** The chameleon, small, in the current colour: the sign for a favourite. */
+const KAM_ICON = '<svg class="kam-ic" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><g transform="translate(2.5 1) scale(0.9)" fill="currentColor"><ellipse cx="21" cy="25" rx="7" ry="7.5"/><ellipse cx="33" cy="23.5" rx="7.5" ry="8"/><path d="M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z"/><path d="M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z"/><path d="M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z"/><path d="M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6" fill="none" stroke="currentColor" stroke-width="3.8" stroke-linecap="round"/><path d="M21 43l-1 10M30 44v9M38 43l1 10" stroke="currentColor" stroke-width="3.6" stroke-linecap="round"/></g><circle cx="43.5" cy="24.9" r="2.4" fill="#fff"/></svg>';
+
+/** Is this term a favourite of its pair? */
+function isFav(pair, term) {
+  const v = vocabLoad(), list = Array.isArray(v[pair]) ? v[pair] : [];
+  const r = list.find((x) => x.term === term);
+  return Boolean(r && r.fav);
+}
+/** Mark or unmark a favourite; a term not yet in the vocabulary is added first. Returns the new state. */
+function toggleFav(pair, row) {
+  if (!pair || pair === FAV_ALL) return false;
+  const v = vocabLoad();
+  let list = Array.isArray(v[pair]) ? v[pair] : [];
+  let r = list.find((x) => x.term === row.term);
+  if (!r) { vocabAdd(pair, [row], state.doc ? state.doc.name : ""); list = vocabLoad()[pair] || []; r = list.find((x) => x.term === row.term); if (!r) return false; }
+  r.fav = !r.fav;
+  if (!r.fav) delete r.fav;
+  const v2 = vocabLoad(); v2[pair] = list; vocabSave(v2);
+  return Boolean(r.fav);
+}
+/** The favourites of every pair, each row knowing its pair. */
+function favRows() {
+  const v = vocabLoad(), out = [];
+  for (const pair of Object.keys(v).sort()) for (const r of v[pair] || []) if (r.fav) out.push({ ...r, _pair: pair });
+  return out;
+}
 const vocabPairs = (v = vocabLoad()) => Object.keys(v).filter((k) => Array.isArray(v[k]) && v[k].length).sort();
 
 /** Terms added to a pair's vocabulary: new ones are appended, known ones get the newer translation and examples. */
@@ -15798,13 +15866,14 @@ function setCurrentPair(pair) {
 
 /* ---- export and import */
 const ankiEsc = (s) => (s || "").replace(/\t/g, " ").replace(/\r?\n/g, "<br>");
+const ankiTag = (pair) => (pair === FAV_ALL ? "favourites" : pair);
 /** A text file Anki imports: tab-separated, HTML on, with the deck and the note type named in its header. */
 function ankiText(pair, rows) {
   const head = [`#separator:tab`, `#html:true`, `#notetype:Basic`, `#deck:Kameleon ${pairLabel(pair)}`, `#tags column:3`];
   const body = rows.map((r) => [
     ankiEsc(r.term) + (r.example ? `<br><i>${ankiEsc(r.example)}</i>` : ""),
     ankiEsc(r.translation) + (r.exampleTr ? `<br><i>${ankiEsc(r.exampleTr)}</i>` : ""),
-    `kameleon ${pair}`,
+    `kameleon ${ankiTag(pair)}`,
   ].join("\t"));
   return head.concat(body).join("\n") + "\n";
 }
@@ -15852,47 +15921,57 @@ function vocabMove(fromPair, terms, toPair) {
 }
 
 /* ---- the vocabulary view in the keywords dialog */
-const vb = { pair: "", query: "" };
-function vocabRows(pair = vb.pair) { const v = vocabLoad(); return Array.isArray(v[pair]) ? v[pair] : []; }
+const vb = { pair: "", query: "", favOnly: false };
+function vocabRows(pair = vb.pair) { if (pair === FAV_ALL) return favRows(); const v = vocabLoad(); return Array.isArray(v[pair]) ? v[pair] : []; }
+/** The rows as shown: the pair's (or all favourites'), narrowed by the favourites toggle and the search. */
 function vocabFiltered() {
   const q = vb.query.trim().toLowerCase();
-  const rows = vocabRows();
+  let rows = vocabRows();
+  if (vb.favOnly && vb.pair !== FAV_ALL) rows = rows.filter((r) => r.fav);
   return q ? rows.filter((r) => `${r.term} ${r.translation} ${r.example || ""} ${r.exampleTr || ""}`.toLowerCase().includes(q)) : rows;
 }
+const rowPair = (r) => r._pair || vb.pair;
 function vocabRender() {
   const pairs = vocabPairs();
   const cur = currentPair();
   if (cur && !pairs.includes(cur)) pairs.push(cur);
-  if (!vb.pair || !pairs.includes(vb.pair)) vb.pair = pairs.includes(cur) && cur ? cur : pairs[0] || "";
+  const favs = favRows().length;
+  if (vb.pair === FAV_ALL && !favs) vb.pair = "";
+  if (!vb.pair || (vb.pair !== FAV_ALL && !pairs.includes(vb.pair))) vb.pair = pairs.includes(cur) && cur ? cur : pairs[0] || "";
   const sel = $("#vocabPair");
-  sel.innerHTML = pairs.map((p) => `<option value="${p}"${p === vb.pair ? " selected" : ""}>${escapeHtml(pairLabel(p))} (${vocabRows(p).length})</option>`).join("") || `<option value="">–</option>`;
+  sel.innerHTML = (pairs.map((p) => `<option value="${p}"${p === vb.pair ? " selected" : ""}>${escapeHtml(pairLabel(p))} (${vocabRows(p).length})</option>`).join("") || `<option value="">–</option>`)
+    + (favs ? `<option value="${FAV_ALL}"${vb.pair === FAV_ALL ? " selected" : ""}>${escapeHtml(t("vocab.favAll"))} (${favs})</option>` : "");
+  $("#vocabFavs").classList.toggle("on", vb.favOnly && vb.pair !== FAV_ALL);
+  $("#vocabFavs").disabled = vb.pair === FAV_ALL;
   const rows = vocabFiltered(), all = vocabRows();
   $("#vocabCount").textContent = rows.length === all.length ? t("vocab.count", { n: all.length }) : t("vocab.countOf", { n: rows.length, total: all.length });
   const list = $("#vocabList");
-  list.innerHTML = rows.length ? rows.map((r) => `<div class="kw-row vocab-row" data-term="${escapeHtml(r.term)}">
+  list.innerHTML = rows.length ? rows.map((r) => `<div class="kw-row vocab-row${r.fav ? " fav" : ""}" data-term="${escapeHtml(r.term)}" data-pair="${escapeHtml(rowPair(r))}">
       <input data-k="term" value="${escapeHtml(r.term)}">
       <input data-k="translation" value="${escapeHtml(r.translation)}">
-      <span class="vocab-row-btns"><button type="button" class="mini" data-act="move" title="${escapeHtml(t("vocab.moveRow"))}" aria-label="${escapeHtml(t("vocab.moveRow"))}">⇄</button><button type="button" class="mini" data-act="del" title="${escapeHtml(t("kw.remove"))}" aria-label="${escapeHtml(t("kw.remove"))}">✕</button></span>
+      <span class="vocab-row-btns">${r._pair ? `<span class="vocab-pair-badge">${escapeHtml(pairLabel(r._pair))}</span>` : ""}<button type="button" class="mini fav${r.fav ? " on" : ""}" data-act="fav" title="${escapeHtml(t("vocab.favTitle"))}" aria-label="${escapeHtml(t("vocab.fav"))}" aria-pressed="${r.fav ? "true" : "false"}">${KAM_ICON}</button><button type="button" class="mini" data-act="move" title="${escapeHtml(t("vocab.moveRow"))}" aria-label="${escapeHtml(t("vocab.moveRow"))}">⇄</button><button type="button" class="mini" data-act="del" title="${escapeHtml(t("kw.remove"))}" aria-label="${escapeHtml(t("kw.remove"))}">✕</button></span>
       <input class="kw-ex" data-k="example" value="${escapeHtml(r.example || "")}" placeholder="${escapeHtml(t("kw.example"))}">
       <input class="kw-ex" data-k="exampleTr" value="${escapeHtml(r.exampleTr || "")}" placeholder="${escapeHtml(t("kw.exampleTr"))}">
     </div>`).join("") : `<p class="muted small">${escapeHtml(all.length ? t("vocab.noMatch") : t("vocab.empty"))}</p>`;
-  const some = all.length > 0;
-  for (const id of ["#vocabCards", "#vocabPdf", "#vocabAnki", "#vocabApkg", "#vocabClear", "#vocabMove"]) $(id).disabled = !some;
+  const some = rows.length > 0;
+  for (const id of ["#vocabCards", "#vocabPdf", "#vocabAnki", "#vocabApkg", "#vocabMove"]) $(id).disabled = !some;
+  $("#vocabClear").disabled = !all.length || vb.pair === FAV_ALL;
   $("#vocabMove").textContent = rows.length === all.length ? t("vocab.moveAll") : t("vocab.moveShown", { n: rows.length });
   $("#vocabToHere").hidden = !(state.doc && (state.keywords || []).some((r) => r.term && r.translation));
 }
-function vocabUpdateRow(termKey, k, value) {
-  const v = vocabLoad(), list = v[vb.pair] || [];
+function vocabUpdateRow(pair, termKey, k, value) {
+  const v = vocabLoad(), list = v[pair] || [];
   const row = list.find((r) => r.term === termKey);
   if (!row) return;
   row[k] = value;
-  v[vb.pair] = list;
+  v[pair] = list;
   vocabSave(v);
 }
+/** The exports take the rows as shown: the whole pair, the favourites, or a search's hits. */
 async function vocabPdfBytes() {
-  const rows = vocabRows();
+  const rows = vocabFiltered();
   const args = {
-    title: `${t("vocab.title")} ${pairLabel(vb.pair)}`, headers: [t("kw.term"), t("kw.translation")], rows,
+    title: `${t("vocab.title")} ${pairLabel(vb.pair)}${vb.favOnly && vb.pair !== FAV_ALL ? ` – ${t("vocab.favFilter")}` : ""}`, headers: [t("kw.term"), t("kw.translation")], rows,
     subtitle: t("vocab.subtitle", { n: rows.length, date: new Date().toLocaleDateString(LANG === "de" ? "de-DE" : "en-GB") }),
   };
   return new Uint8Array(await pool.workers[0].call("keywordsPdf", args));
@@ -15907,31 +15986,40 @@ function initVocab() {
   list.addEventListener("input", (e) => {
     const row = e.target.closest(".vocab-row"), k = e.target.dataset.k;
     if (!row || !k) return;
-    vocabUpdateRow(row.dataset.term, k, e.target.value);
+    vocabUpdateRow(row.dataset.pair, row.dataset.term, k, e.target.value);
     if (k === "term") row.dataset.term = e.target.value;
   });
+  $("#vocabFavs").addEventListener("click", () => { vb.favOnly = !vb.favOnly; vocabRender(); });
+  $("#vocabFavs .kam-slot").innerHTML = KAM_ICON;
   list.addEventListener("click", async (e) => {
     const b = e.target.closest("[data-act]"), row = e.target.closest(".vocab-row");
     if (!b || !row) return;
+    const pair = row.dataset.pair;
     if (b.dataset.act === "del") {
       const v = vocabLoad();
-      v[vb.pair] = (v[vb.pair] || []).filter((r) => r.term !== row.dataset.term);
+      v[pair] = (v[pair] || []).filter((r) => r.term !== row.dataset.term);
       vocabSave(v); vocabRender();
+    } else if (b.dataset.act === "fav") {
+      const on = toggleFav(pair, { term: row.dataset.term, translation: row.querySelector('[data-k="translation"]').value });
+      vocabRender(); // (the pair list's favourites entry and counts follow)
     } else if (b.dataset.act === "move") { // this one term to another pair
-      const [src, tgt] = vb.pair.split("-");
+      const [src, tgt] = pair.split("-");
       const ans = await askPair({ src, tgt, text: t("pair.textMove", { n: 1 }) });
       if (!ans) return;
-      const n = vocabMove(vb.pair, [row.dataset.term], ans.pair);
+      const n = vocabMove(pair, [row.dataset.term], ans.pair);
       toast(t("vocab.moved", { n, pair: pairLabel(ans.pair) }), "ok"); vocabRender();
     }
   });
-  $("#vocabMove").addEventListener("click", async () => { // the shown terms (all, or the search's hits) to another pair
+  $("#vocabMove").addEventListener("click", async () => { // the shown terms (all, the favourites, or the search's hits) to another pair
     const rows = vocabFiltered();
     if (!rows.length) return;
-    const [src, tgt] = vb.pair.split("-");
+    const [src, tgt] = (vb.pair === FAV_ALL ? rowPair(rows[0]) : vb.pair).split("-");
     const ans = await askPair({ src, tgt, text: t("pair.textMove", { n: rows.length }) });
     if (!ans) return;
-    const n = vocabMove(vb.pair, rows.map((r) => r.term), ans.pair);
+    let n = 0;
+    const byPair = new Map();
+    for (const r of rows) { const p = rowPair(r); if (!byPair.has(p)) byPair.set(p, []); byPair.get(p).push(r.term); }
+    for (const [p, terms] of byPair) n += vocabMove(p, terms, ans.pair);
     vb.pair = ans.pair; vb.query = ""; $("#vocabSearch").value = "";
     toast(t("vocab.moved", { n, pair: pairLabel(ans.pair) }), "ok"); vocabRender();
   });
@@ -15948,13 +16036,13 @@ function initVocab() {
     setCurrentPair(pair);
     toast(t("vocab.added", { n, pair: pairLabel(pair) }), "ok"); vocabRender();
   });
-  $("#vocabCards").addEventListener("click", () => { fcSource = vocabRows().filter((r) => r.term && r.translation); kwSetMode("cards"); });
+  $("#vocabCards").addEventListener("click", () => { fcSource = vocabFiltered().filter((r) => r.term && r.translation); fcPair = vb.pair; kwSetMode("cards"); });
   $("#vocabPdf").addEventListener("click", async () => {
-    try { saveBlob(new Blob([await vocabPdfBytes()], { type: "application/pdf" }), `vocabulary-${vb.pair}.pdf`); } catch (err) { toast(userError(err), "error"); }
+    try { saveBlob(new Blob([await vocabPdfBytes()], { type: "application/pdf" }), `vocabulary-${pairFile(vb.pair)}.pdf`); } catch (err) { toast(userError(err), "error"); }
   });
-  $("#vocabAnki").addEventListener("click", () => saveBlob(new Blob([ankiText(vb.pair, vocabRows())], { type: "text/plain;charset=utf-8" }), `kameleon-${vb.pair}-anki.txt`));
+  $("#vocabAnki").addEventListener("click", () => saveBlob(new Blob([ankiText(vb.pair, vocabFiltered())], { type: "text/plain;charset=utf-8" }), `kameleon-${pairFile(vb.pair)}-anki.txt`));
   $("#vocabApkg").addEventListener("click", async () => {
-    try { saveBlob(new Blob([await buildApkg(vb.pair, vocabRows())], { type: "application/octet-stream" }), `kameleon-${vb.pair}.apkg`); } catch (err) { toast(userError(err), "error"); }
+    try { saveBlob(new Blob([await buildApkg(vb.pair, vocabFiltered())], { type: "application/octet-stream" }), `kameleon-${pairFile(vb.pair)}.apkg`); } catch (err) { toast(userError(err), "error"); }
   });
   $("#vocabImport").addEventListener("click", () => $("#vocabFile").click());
   $("#vocabFile").addEventListener("change", async (e) => {
@@ -16279,7 +16367,7 @@ async function buildApkg(pair, rows) {
     let guid = ""; for (let k = 0; k < 10; k++) guid += GUID[Math.floor(Math.random() * GUID.length)];
     const front = htmlEsc(r.term), csum = parseInt((await sha1hex(r.term)).slice(0, 8), 16);
     const flds = [front, htmlEsc(r.translation), htmlEsc(r.example || ""), htmlEsc(r.exampleTr || "")].join("\x1f");
-    notes.push([nid, [nid, guid, mid, secs, -1, ` kameleon ${pair} `, flds, r.term, csum, 0, ""]]);
+    notes.push([nid, [nid, guid, mid, secs, -1, ` kameleon ${ankiTag(pair)} `, flds, r.term, csum, 0, ""]]);
     cards.push([cid, [cid, nid, did, 0, secs, -1, 0, 0, i + 1, 0, 0, 0, 0, 0, 0, 0, 0, ""]]);
   }
   const db = sqliteBuild([

@@ -4,6 +4,11 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.75
+
+- Favourites: every flashcard carries a small chameleon in its corner – a click (or F) keeps the word as a favourite, another click takes the mark off. The same chameleon sits on each row of the vocabulary. In the vocabulary a "Favourites" toggle shows only the favourites of the pair, and the pair list has an entry "Favourites (all language pairs)" that gathers them across pairs with a badge naming each pair.
+- Vocabulary: flashcards, the PDF, the Anki text and the Anki package now take exactly what is shown – the whole pair, the favourites or a search's hits – so the favourites can be learnt and exported on their own.
+
 ## 1.74
 
 - Vocabulary: the language pair of an import is confirmed in a small dialog before anything is added – prefilled with what the deck's field names say ("Hanzi", "English") or what the texts look like, and editable. Anki fields for pronunciation (Pinyin, reading, romaji …) are no longer taken as the translation but kept with the term, as in "的 (de)"; audio and picture fields are ignored.

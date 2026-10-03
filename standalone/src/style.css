@@ -746,7 +746,20 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
 .pair-row label { display: inline-flex; align-items: center; gap: 6px; }
 .pair-row input { width: 80px; font-size: 16px; text-align: center; }
 .pair-arrow { font-size: 20px; color: var(--muted); }
-.vocab-row-btns { display: inline-flex; gap: 4px; }
+.vocab-row-btns { display: inline-flex; gap: 4px; align-items: center; }
+.kam-ic { width: 20px; height: 20px; display: block; }
+.mini.fav { padding: 2px 5px; color: var(--muted); }
+.mini.fav .kam-ic { width: 16px; height: 16px; }
+.mini.fav.on, .vocab-fav-btn.on { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+.vocab-fav-btn .kam-ic { width: 16px; height: 16px; }
+.vocab-row.fav { border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); }
+.vocab-pair-badge { font-size: 11px; color: var(--muted); border: 1px solid var(--border); border-radius: 6px; padding: 1px 6px; white-space: nowrap; }
+.kw-fav { position: absolute; top: 12px; right: 14px; width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface); color: var(--muted); display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; transition: transform .15s; }
+.kw-fav:hover { transform: scale(1.1); color: var(--accent); }
+.kw-fav.on { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+.kw-back .kw-fav { background: rgba(255, 255, 255, .92); border-color: transparent; }
+.kw-back .kw-fav.on { color: var(--accent); }
+.kw-fav .kam-ic { width: 22px; height: 22px; }
 .kw-cards { display: grid; gap: 14px; grid-template-rows: auto 1fr auto; align-items: stretch; }
 .kw-cards:has(.kw-done), .kw-cards:has(> p) { grid-template-rows: 1fr; align-items: center; justify-items: center; }
 .kw-fc-nav, .kw-fc-judge { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; }
