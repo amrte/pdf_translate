@@ -767,7 +767,6 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
 .vocab-bar select { padding: 0 8px; font: inherit; }
 .vocab-bar input[type="search"] { min-width: 220px; }
 .vocab-list { overflow: auto; }
-.start-vocab { display: flex; justify-content: center; margin-top: 14px; }
 .pair-row { display: flex; align-items: center; gap: 12px; }
 .pair-row label { display: inline-flex; align-items: center; gap: 6px; }
 .pair-row input { width: 80px; font-size: 16px; text-align: center; }

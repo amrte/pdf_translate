@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.81
+
+- The "Learn" button has moved from the editor toolbar into the top bar, left of "Help". It is there on the start screen too and opens the vocabulary when no document is open; the separate "Vocabulary" button of the start screen is gone.
+
 ## 1.80
 
 - E-books: the cover is shown again for EPUBs whose title page wraps the cover picture in an SVG element (as Calibre and many publishers do). The page used to stay white; the book itself is saved unchanged.

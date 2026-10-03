@@ -366,9 +366,4 @@ function initVocab() {
     if (!confirm(t("vocab.clearConfirm", { pair: pairLabel(vb.pair) }))) return;
     const v = vocabLoad(); delete v[vb.pair]; vocabSave(v); vb.pair = ""; vocabRender();
   });
-  $("#btnVocabStart").addEventListener("click", () => { kwRenderList(); openModal($("#kwDialog")); kwSetMode("vocab"); });
-  const refreshStart = () => { $("#btnVocabStart").hidden = !vocabPairs().length; };
-  refreshStart();
-  window.addEventListener("storage", refreshStart);
-  $("#kwDialog").addEventListener("close", refreshStart);
 }

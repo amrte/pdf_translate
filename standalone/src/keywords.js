@@ -85,11 +85,10 @@ function kwPdfArgs() {
 async function kwPdfBytes() { return new Uint8Array(await pool.workers[0].call("keywordsPdf", kwPdfArgs())); }
 
 function openKeywordsDialog() {
-  if (!state.doc) return;
   kwRenderList();
-  kwSchedulePreview(0);
+  if (state.doc) kwSchedulePreview(0);
   openModal($("#kwDialog"));
-  kwSetMode("list");
+  kwSetMode(state.doc ? "list" : "vocab"); // (without a document the window opens on the vocabulary)
 }
 function kwRenderList() {
   const list = $("#kwList");
