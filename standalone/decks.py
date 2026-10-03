@@ -32,7 +32,7 @@ EXAMPLE_RE = re.compile(r"example|beispiel|sentence|satz|пример|прикл
 PRON_RE = re.compile(r"pinyin|pīnyīn|reading|romaji|furigana|translit|transcri|pronunc|aussprache|romani[sz]|jyutping|zhuyin|bopomofo|kana|ipa$", re.I)
 MEDIA_RE = re.compile(r"audio|sound|image|picture|photo|bild|^ton$|mp3|recording", re.I)
 LANG_NAMES = {
-    "deutsch": "de", "german": "de", "englisch": "en", "english": "en", "französisch": "fr", "french": "fr", "spanisch": "es", "spanish": "es",
+    "deutsch": "de", "german": "de", "schweizerdeutsch": "gsw", "swiss german": "gsw", "englisch": "en", "english": "en", "französisch": "fr", "french": "fr", "spanisch": "es", "spanish": "es",
     "italienisch": "it", "italian": "it", "portugiesisch": "pt", "portuguese": "pt", "niederländisch": "nl", "dutch": "nl", "polnisch": "pl", "polish": "pl",
     "tschechisch": "cs", "czech": "cs", "russisch": "ru", "russian": "ru", "ukrainisch": "uk", "ukrainian": "uk", "chinesisch": "zh", "chinese": "zh",
     "japanisch": "ja", "japanese": "ja", "koreanisch": "ko", "korean": "ko", "türkisch": "tr", "turkish": "tr", "schwedisch": "sv", "swedish": "sv",

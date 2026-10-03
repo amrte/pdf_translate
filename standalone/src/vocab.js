@@ -9,7 +9,7 @@ const kwPairKey = (id) => `pdftr:kwpair:${id}`;
 
 /** Common language names (German and English) to codes, for the AI dialog's target language. */
 const LANG_CODES = {
-  deutsch: "de", german: "de", englisch: "en", english: "en", französisch: "fr", french: "fr", spanisch: "es", spanish: "es", italienisch: "it", italian: "it",
+  deutsch: "de", german: "de", schweizerdeutsch: "gsw", "swiss german": "gsw", englisch: "en", english: "en", französisch: "fr", french: "fr", spanisch: "es", spanish: "es", italienisch: "it", italian: "it",
   portugiesisch: "pt", portuguese: "pt", niederländisch: "nl", dutch: "nl", polnisch: "pl", polish: "pl", tschechisch: "cs", czech: "cs", slowakisch: "sk", slovak: "sk",
   ungarisch: "hu", hungarian: "hu", russisch: "ru", russian: "ru", ukrainisch: "uk", ukrainian: "uk", bulgarisch: "bg", bulgarian: "bg", griechisch: "el", greek: "el",
   türkisch: "tr", turkish: "tr", schwedisch: "sv", swedish: "sv", dänisch: "da", danish: "da", norwegisch: "no", norwegian: "no", finnisch: "fi", finnish: "fi",
