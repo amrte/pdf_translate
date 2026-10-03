@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.95
+
+- PDF: characters from symbol and maths fonts that arrived as "�" (Ω, ≤, Δ and the like inside a text line, from fonts without a Unicode table) are read correctly now: the engine asks for the raw glyph codes in a second pass and reads them through the Symbol encoding.
+
 ## 1.94
 
 - Built-in decks: a Swiss German deck (Züritüütsch → Deutsch, 260 cards) is baked in; "Schweizerdeutsch" / "Swiss German" is known as the language code gsw in the pair dialog.

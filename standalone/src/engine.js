@@ -278,6 +278,8 @@ function readBlocks(page, bounds, seps, options) {
   const st = page.toStructuredText(options);
   const blocks = [];
   let block = null, line = null, span = null, lastInk = null, sawSpace = false;
+  let idx = -1; // every glyph of the page in order, so that a second pass can be aligned with this one
+  const unknown = []; // glyphs without a Unicode value: {span, at, idx, lig}
   st.walk({
     beginTextBlock() { block = { lines: [] }; blocks.push(block); },
     endTextBlock() { block = null; },
@@ -288,6 +290,7 @@ function readBlocks(page, bounds, seps, options) {
       span = null; lastInk = null; sawSpace = false;
     },
     onChar(c, origin, font, size, quad, color) {
+      idx++;
       if (!line) { free(font); return; }
       const qb = [Math.min(quad[0], quad[2], quad[4], quad[6]), Math.min(quad[1], quad[3], quad[5], quad[7]),
         Math.max(quad[0], quad[2], quad[4], quad[6]), Math.max(quad[1], quad[3], quad[5], quad[7])];
@@ -324,6 +327,7 @@ function readBlocks(page, bounds, seps, options) {
         line.spans.push(span);
       }
       if (lig) (span.fixes = span.fixes || []).push({ at: span.text.length, lig });
+      if (c === "\ufffd") unknown.push({ span, at: span.text.length, idx, lig });
       span.text += c;
       if (blank) { sawSpace = true; return; }
       span.bbox = union(span.bbox, qb);
@@ -332,11 +336,42 @@ function readBlocks(page, bounds, seps, options) {
     },
   });
   free(st);
+  if (unknown.length) recoverUnknownChars(page, options, unknown, idx + 1);
   for (const b of blocks) for (const l of b.lines) {
     l.spans = l.spans.filter((sp) => sp.bbox);
     for (const sp of l.spans) if (sp.fixes) applyLigatureFixes(sp);
   }
   return blocks;
+}
+
+/**
+ * Glyphs without a Unicode value (U+FFFD) come from fonts without a ToUnicode table and with
+ * glyph names MuPDF does not know – mostly symbol and maths fonts (Ω, ≤, Δ in a text line). A
+ * second extraction pass asks MuPDF for the raw character codes of such glyphs; read through
+ * the Symbol encoding they give the characters meant. A glyph that the ligature guess already
+ * explains (fi, fl … in a text font) is left to that guess.
+ */
+function recoverUnknownChars(page, options, unknown, total) {
+  let st2 = null;
+  try {
+    st2 = page.toStructuredText(`${options},use-cid-for-unknown-unicode`);
+    const want = new Map(unknown.map((u) => [u.idx, u]));
+    let i = -1, n = 0;
+    st2.walk({ onChar(c, origin, font) { i++; n++; free(font); const u = want.get(i); if (u) u.code = c.codePointAt(0); } });
+    if (n !== total) return; // (the passes differ: nothing can be aligned)
+    const bySpan = new Map();
+    for (const u of unknown) { if (!bySpan.has(u.span)) bySpan.set(u.span, []); bySpan.get(u.span).push(u); }
+    for (const [span, list] of bySpan) {
+      for (const u of list.sort((a, b) => b.at - a.at)) {
+        if (u.lig || u.code === undefined) continue;
+        const mapped = symbolChar(u.code);
+        if (!mapped || mapped.length !== 1 || mapped === "\ufffd") continue;
+        span.text = span.text.slice(0, u.at) + mapped + span.text.slice(u.at + 1);
+      }
+    }
+  } catch (_) { /* an older engine without the option: the glyphs stay unknown */ } finally {
+    if (st2) free(st2);
+  }
 }
 
 /**
