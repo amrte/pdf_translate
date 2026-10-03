@@ -1191,11 +1191,10 @@ function doExport() {
   }
 }
 
-function mergeImported(parsed) {
+function mergeImported(parsed, overwrite = $("#importOverwrite").checked) {
   const ids = Object.keys(parsed).map(Number);
   const matched = ids.filter((id) => segIndex.has(id));
   const unknown = ids.length - matched.length;
-  const overwrite = $("#importOverwrite").checked;
   let applied = 0;
   const before = {}, after = {};
   for (const id of matched) {
@@ -1226,27 +1225,36 @@ function mergeImported(parsed) {
   if (missing && matched.length) msg += t("msg.missing", { n: missing });
   toast(msg, applied ? "ok" : "error");
   if (!matched.length) toast(t("msg.noMarkers"), "error");
+  if ($("#helpDialog").open) { aiImportNote(msg); refreshAiPrompt(); } // the AI window shows the result beside its paste field
+  return applied;
 }
 
-async function importFile(file) {
+async function importFile(file, overwrite) {
   if (!file) return;
   $("#importDialog").close();
   try {
     const bytes = new Uint8Array(await file.arrayBuffer());
-    if (/\.txt$/i.test(file.name)) mergeImported(Engine.parseMarkedText(kwExtract(new TextDecoder().decode(bytes)))); // (a keyword list may be in it)
-    else mergeImported(await Engine.parseImport(file.name, bytes));
+    if (/\.txt$/i.test(file.name)) mergeImported(Engine.parseMarkedText(kwExtract(new TextDecoder().decode(bytes))), overwrite); // (a keyword list may be in it)
+    else mergeImported(await Engine.parseImport(file.name, bytes), overwrite);
   } catch (err) {
     toast(t("msg.readFailed", { file: file.name, err: err.message }), "error");
   } finally {
     $("#importFile").value = "";
+    $("#aiFile").value = "";
   }
 }
 
-function importPasted() {
-  const text = $("#pasteArea").value;
+function importPasted(area = $("#pasteArea"), overwrite) {
+  const text = area.value;
   if (!text.trim()) { toast(t("msg.pasteFirst"), "error"); return; }
-  mergeImported(Engine.parseMarkedText(kwExtract(text)));
-  $("#pasteArea").value = "";
+  mergeImported(Engine.parseMarkedText(kwExtract(text)), overwrite);
+  area.value = "";
+}
+
+/** The AI window: the result of the last import, shown next to the paste field. */
+function aiImportNote(msg) {
+  const el = $("#aiImportStatus");
+  if (el) el.textContent = msg;
 }
 
 /* ---------------------------------------------------------------- build */
@@ -1801,8 +1809,13 @@ function refreshAiPrompt() {
   const long = sizes.findIndex((c) => c > 40000);
   if (long >= 0) msg += t("ai.partLong", { k: long + 1, chars: sizes[long].toLocaleString(LANG) });
   $("#aiStats").textContent = msg;
-  $("#aiParts").innerHTML = parts.map((p, i) =>
-    `<button type="button" class="btn${aiCopied.has(i) ? " copied" : i === 0 || aiCopied.has(i - 1) ? " primary" : ""}" data-part="${i}">${aiCopied.has(i) ? "✓ " : ""}${escapeHtml(t("ai.partBtn", { k: i + 1, total: parts.length, a: p[0].id, b: p[p.length - 1].id, n: p.length }))}</button>`).join("");
+  // A part is "done" once every one of its segments has a translation (its answer was imported).
+  const dones = parts.map((p) => p.every((s) => hasTr(s.id)));
+  $("#aiParts").innerHTML = parts.map((p, i) => {
+    const done = dones[i];
+    const cls = done ? " done" : aiCopied.has(i) ? " copied" : i === 0 || aiCopied.has(i - 1) || dones[i - 1] ? " primary" : "";
+    return `<button type="button" class="btn${cls}" data-part="${i}" title="${done ? escapeHtml(t("ai.partDone")) : ""}">${done || aiCopied.has(i) ? "✓ " : ""}${escapeHtml(t("ai.partBtn", { k: i + 1, total: parts.length, a: p[0].id, b: p[p.length - 1].id, n: p.length }))}</button>`;
+  }).join("");
 }
 
 function copyAiPart(i) {
@@ -1868,6 +1881,16 @@ function initHelp() {
     if (b) copyAiPart(Number(b.dataset.part));
   });
   $("#aiCopyPrompt").addEventListener("click", () => copyText(`${aiPromptText()}\n\n${t("ai.pasteHere")}`, t("msg.promptCopied")));
+  // The right column: the AI's answer is pasted or dropped here, like in the Import window.
+  const aiOverwrite = () => $("#aiOverwrite").checked;
+  setupDropzone($("#aiDrop"), (f) => importFile(f, aiOverwrite()));
+  $("#aiFile").addEventListener("change", (e) => importFile(e.target.files[0], aiOverwrite()));
+  $("#aiImportGo").addEventListener("click", () => {
+    if (!state.doc) { toast(t("msg.openFirst"), "error"); return; }
+    importPasted($("#aiPasteArea"), aiOverwrite());
+  });
+  $("#aiPasteArea").addEventListener("keydown", (e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); $("#aiImportGo").click(); } });
+  $("#helpDialog").addEventListener("close", () => aiImportNote(""));
 
 }
 

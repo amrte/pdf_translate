@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="Kameleon 1.77">
+  <meta name="generator" content="Kameleon 1.78">
   <meta name="description" content="Kameleon – Wechselt die Sprache, behält die Form. Changes language, keeps its shape.">
   <title>Kameleon</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2216%22 fill=%22%23287130%22/%3E%3Cg transform=%22translate(2.5 1) scale(0.9)%22 fill=%22%23ffffff%22 stroke=%22%23ffffff%22%3E%3Cpath d=%22M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6%22 fill=%22none%22 stroke-width=%223.8%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M21 43l-1 10M30 44v9M38 43l1 10%22 stroke-width=%223.6%22 stroke-linecap=%22round%22/%3E%3Cellipse cx=%2221%22 cy=%2225%22 rx=%227%22 ry=%227.5%22 stroke=%22none%22/%3E%3Cellipse cx=%2233%22 cy=%2223.5%22 rx=%227.5%22 ry=%228%22 stroke=%22none%22/%3E%3Cpath d=%22M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z%22 stroke=%22none%22/%3E%3Cpath d=%22M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z%22 stroke=%22none%22/%3E%3Cpath d=%22M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z%22 stroke=%22none%22/%3E%3Cpath d=%22M16 37l4-3 4 3 4-3 4 3 4-3 4 3%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%222.1%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3Cpath d=%22M43.5 33.9L57 32.6%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%221.5%22 stroke-linecap=%22round%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%224.4%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%222.7%22 stroke=%22none%22/%3E%3Ccircle cx=%2246.2%22 cy=%2226.7%22 r=%221.3%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Cpath d=%22M4 55.5c15-3 39-3 54 0%22 fill=%22none%22 stroke-width=%222.4%22 stroke-linecap=%22round%22/%3E%3C/g%3E%3C/svg%3E">
@@ -419,11 +419,24 @@ body.viewer-only #btnFullscreen .fs-on { display: none; }
 body.viewer-only #btnFullscreen .fs-off { display: inline; }
 #btnFullscreen { display: inline-grid; place-items: center; }
 .modal.xwide { width: min(1080px, calc(100% - 32px)); }
+#helpDialog.mode-ai { width: min(1440px, calc(100% - 32px)); } /* two columns: prompt left, AI answer right */
 .modal.xwide #aiPrompt { min-height: 220px; }
+.ai-cols { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 14px 24px; align-items: stretch; }
+.ai-left, .ai-right { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.ai-right { border-left: 1px solid var(--border); padding-left: 24px; }
+.ai-right-title { margin: 0; font-size: 15px; }
+.ai-right #aiPasteArea { flex: 1; min-height: 160px; resize: vertical; }
+.ai-import-row { display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
+#aiImportStatus:empty { display: none; }
+@media (max-width: 900px) {
+  .ai-cols { grid-template-columns: minmax(0, 1fr); }
+  .ai-right { border-left: 0; padding-left: 0; border-top: 1px solid var(--border); padding-top: 14px; }
+}
 .ai-parts-head { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
 .ai-parts { display: flex; flex-wrap: wrap; gap: 6px; }
 .ai-parts .btn { height: auto; min-height: 28px; padding: 4px 10px; white-space: normal; text-align: left; }
 .ai-parts .btn.copied { color: var(--success); border-color: var(--success); background: var(--success-soft); }
+.ai-parts .btn.done { color: var(--muted); border-color: transparent; background: var(--accent-soft); } /* finished: quiet, so the next part stands out */
 .logo { background: none; width: 26px; height: 26px; }
 .logo svg { width: 26px; height: 26px; display: block; }
 
@@ -808,7 +821,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
   <div class="brand">
     <span class="logo"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#287130"/><g transform="translate(2.5 1) scale(0.9)" fill="#ffffff" stroke="#ffffff"><path d="M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6" fill="none" stroke-width="3.8" stroke-linecap="round"/><path d="M21 43l-1 10M30 44v9M38 43l1 10" stroke-width="3.6" stroke-linecap="round"/><ellipse cx="21" cy="25" rx="7" ry="7.5" stroke="none"/><ellipse cx="33" cy="23.5" rx="7.5" ry="8" stroke="none"/><path d="M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z" stroke="none"/><path d="M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z" stroke="none"/><path d="M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z" stroke="none"/><path d="M16 37l4-3 4 3 4-3 4 3 4-3 4 3" fill="none" stroke="#287130" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M43.5 33.9L57 32.6" fill="none" stroke="#287130" stroke-width="1.5" stroke-linecap="round"/><circle cx="45.5" cy="26.5" r="4.4" fill="#287130" stroke="none"/><circle cx="45.5" cy="26.5" r="2.7" stroke="none"/><circle cx="46.2" cy="26.7" r="1.3" fill="#287130" stroke="none"/><path d="M4 55.5c15-3 39-3 54 0" fill="none" stroke-width="2.4" stroke-linecap="round"/></g></svg></span>
     <span class="brand-name">Kameleon</span>
-    <span class="version" id="appVersion">v1.77</span>
+    <span class="version" id="appVersion">v1.78</span>
   </div>
   <div class="topbar-actions">
     <span class="doc-name" id="docName"></span>
@@ -1185,8 +1198,9 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
     <p class="muted small" data-i18n="help.markup"></p>
     </div>
     <div class="ai-part">
-
     <h2 id="aiTitle" data-i18n="ai.title">Translate with AI</h2>
+    <div class="ai-cols">
+    <div class="ai-left">
     <div class="ai-grid">
       <label><span data-i18n="lang.target">Target language</span> <input id="aiTarget" data-i18n-placeholder="ai.targetPh"></label>
       <label><span data-i18n="ai.pages">Pages</span> <span class="range"><input id="aiFrom" type="number" min="1" value="1"> – <input id="aiTo" type="number" min="1"></span></label>
@@ -1208,6 +1222,24 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
     <div class="ai-parts-head"><b data-i18n="ai.parts">Copy prompt + text</b> <span class="muted small" data-i18n="ai.partsHint"></span></div>
     <div class="ai-parts" id="aiParts"></div>
     </div>
+    <div class="ai-right">
+      <h3 class="ai-right-title" data-i18n="ai.answer">AI answer</h3>
+      <p class="muted small" data-i18n="ai.answerHint"></p>
+      <label class="dropzone small" id="aiDrop">
+        <input type="file" id="aiFile" accept=".txt,.docx,.xlf,.xliff,.csv,.tsv,.json" hidden>
+        <div class="dz-title" data-i18n="import.drop">Drop the translated file here or <u>choose a file</u></div>
+        <div class="dz-sub">.txt · .docx · .xlf / .xliff · .csv · .json</div>
+      </label>
+      <div class="or" data-i18n="import.or"></div>
+      <textarea id="aiPasteArea" data-i18n-aria="import.pasteAria" rows="10" data-i18n-placeholder="import.placeholder"></textarea>
+      <label class="check"><input type="checkbox" id="aiOverwrite" checked> <span data-i18n="import.overwrite">Replace translations already entered</span></label>
+      <p class="muted small" id="aiImportStatus"></p>
+      <div class="ai-import-row">
+        <button type="button" class="btn primary" id="aiImportGo" data-i18n="import.go">Import pasted text</button>
+      </div>
+    </div>
+    </div>
+    </div>
     <div class="help-part offline-part">
       <h3 class="offline-title" data-i18n="offline.title">Working offline</h3>
       <p class="muted small" data-i18n="offline.text"></p>
@@ -1226,10 +1258,10 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
     </div>
     <input type="file" id="offlineZip" class="visually-hidden" accept=".zip,application/zip" multiple tabindex="-1">
     <input type="file" id="offlineFolder" class="visually-hidden" webkitdirectory multiple tabindex="-1">
-    <p class="muted small help-version help-part">Kameleon v1.77 · <span data-i18n="app.tagline"></span></p>
+    <p class="muted small help-version help-part">Kameleon v1.78 · <span data-i18n="app.tagline"></span></p>
     <div class="modal-actions">
-      <button type="button" value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
       <button type="button" class="btn ai-part" id="aiCopyPrompt" data-i18n="ai.copyPrompt">Copy prompt only</button>
+      <button type="button" value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
     </div>
   </form>
 </dialog>
@@ -1528,9 +1560,9 @@ const I18N = {
     "ai.copyPrompt": "Nur Prompt kopieren",
     "ai.partSize": "Segmente pro Teil",
     "ai.parts": "Prompt + Text kopieren",
-    "ai.partsHint": "– bei großen Dokumenten Teil für Teil an die KI senden und jede Antwort unter „Import“ einfügen; Importe werden ergänzt.",
+    "ai.partsHint": "– bei großen Dokumenten Teil für Teil an die KI senden und jede Antwort rechts einfügen; Importe werden ergänzt.",
     "ai.partBtn": "Teil {k} von {total}: [[{a}]] – [[{b}]] · {n} Segmente",
-    "ai.partCopied": "Teil {k} von {total} kopiert ({n} Segmente). In den KI-Chat einfügen, dann die Antwort unter „Import“ einfügen.",
+    "ai.partCopied": "Teil {k} von {total} kopiert ({n} Segmente). In den KI-Chat einfügen, dann die Antwort rechts einfügen.",
     "ai.partLong": " Teil {k} hat {chars} Zeichen – wenn die KI abbricht, „Segmente pro Teil“ verringern.",
     "ai.stats2": "{n} Segmente, {chars} Zeichen, {parts} Teil(e).",
     "view.fullscreen": "Vollbild – nur die Seitenansicht (F)",
@@ -1804,6 +1836,9 @@ const I18N = {
     "ai.hidden": "Segmente ausgeblendeter Folien einbeziehen",
     "ai.notes": "Vortragsnotizen einbeziehen",
     "ai.notesTitle": "Die Notizen zu den Folien (im Vorschau-PDF die graue Seite nach jeder Folie) werden nur mitübersetzt, wenn dies angekreuzt ist.",
+    "ai.answer": "Antwort der KI",
+    "ai.partDone": "Alle Segmente dieses Teils sind übersetzt.",
+    "ai.answerHint": "Die Antwort hier einfügen oder als Datei ablegen – Teil für Teil, das Fenster bleibt offen. Strg+Enter importiert.",
     "meta.notes": "Vortragsnotizen",
     "pages.showHidden": "Ausgeblendete Folien anzeigen",
     "pages.hiddenLabel": "ausgeblendet",
@@ -2076,9 +2111,9 @@ const I18N = {
     "ai.copyPrompt": "Copy prompt only",
     "ai.partSize": "Segments per part",
     "ai.parts": "Copy prompt + text",
-    "ai.partsHint": "– for big documents send one part at a time to the AI and paste each answer into Import; imports add up.",
+    "ai.partsHint": "– for big documents send one part at a time to the AI and paste each answer on the right; imports add up.",
     "ai.partBtn": "Part {k} of {total}: [[{a}]] – [[{b}]] · {n} segments",
-    "ai.partCopied": "Part {k} of {total} copied ({n} segments). Paste it into the AI chat, then paste the answer into Import.",
+    "ai.partCopied": "Part {k} of {total} copied ({n} segments). Paste it into the AI chat, then paste the answer on the right.",
     "ai.partLong": " Part {k} has {chars} characters – if the AI stops early, lower “Segments per part”.",
     "ai.stats2": "{n} segments, {chars} characters, {parts} part(s).",
     "view.fullscreen": "Full screen – page view only (F)",
@@ -2352,6 +2387,9 @@ const I18N = {
     "ai.hidden": "Include segments of hidden slides",
     "ai.notes": "Include speaker notes",
     "ai.notesTitle": "The notes attached to the slides (the grey page after each slide in the preview PDF) are only translated when this is ticked.",
+    "ai.answer": "AI answer",
+    "ai.partDone": "Every segment of this part is translated.",
+    "ai.answerHint": "Paste the answer here or drop it as a file – part by part, the window stays open. Ctrl+Enter imports.",
     "meta.notes": "speaker notes",
     "pages.showHidden": "Show hidden slides",
     "pages.hiddenLabel": "hidden",
@@ -11933,11 +11971,10 @@ function doExport() {
   }
 }
 
-function mergeImported(parsed) {
+function mergeImported(parsed, overwrite = $("#importOverwrite").checked) {
   const ids = Object.keys(parsed).map(Number);
   const matched = ids.filter((id) => segIndex.has(id));
   const unknown = ids.length - matched.length;
-  const overwrite = $("#importOverwrite").checked;
   let applied = 0;
   const before = {}, after = {};
   for (const id of matched) {
@@ -11968,27 +12005,36 @@ function mergeImported(parsed) {
   if (missing && matched.length) msg += t("msg.missing", { n: missing });
   toast(msg, applied ? "ok" : "error");
   if (!matched.length) toast(t("msg.noMarkers"), "error");
+  if ($("#helpDialog").open) { aiImportNote(msg); refreshAiPrompt(); } // the AI window shows the result beside its paste field
+  return applied;
 }
 
-async function importFile(file) {
+async function importFile(file, overwrite) {
   if (!file) return;
   $("#importDialog").close();
   try {
     const bytes = new Uint8Array(await file.arrayBuffer());
-    if (/\.txt$/i.test(file.name)) mergeImported(Engine.parseMarkedText(kwExtract(new TextDecoder().decode(bytes)))); // (a keyword list may be in it)
-    else mergeImported(await Engine.parseImport(file.name, bytes));
+    if (/\.txt$/i.test(file.name)) mergeImported(Engine.parseMarkedText(kwExtract(new TextDecoder().decode(bytes))), overwrite); // (a keyword list may be in it)
+    else mergeImported(await Engine.parseImport(file.name, bytes), overwrite);
   } catch (err) {
     toast(t("msg.readFailed", { file: file.name, err: err.message }), "error");
   } finally {
     $("#importFile").value = "";
+    $("#aiFile").value = "";
   }
 }
 
-function importPasted() {
-  const text = $("#pasteArea").value;
+function importPasted(area = $("#pasteArea"), overwrite) {
+  const text = area.value;
   if (!text.trim()) { toast(t("msg.pasteFirst"), "error"); return; }
-  mergeImported(Engine.parseMarkedText(kwExtract(text)));
-  $("#pasteArea").value = "";
+  mergeImported(Engine.parseMarkedText(kwExtract(text)), overwrite);
+  area.value = "";
+}
+
+/** The AI window: the result of the last import, shown next to the paste field. */
+function aiImportNote(msg) {
+  const el = $("#aiImportStatus");
+  if (el) el.textContent = msg;
 }
 
 /* ---------------------------------------------------------------- build */
@@ -12543,8 +12589,13 @@ function refreshAiPrompt() {
   const long = sizes.findIndex((c) => c > 40000);
   if (long >= 0) msg += t("ai.partLong", { k: long + 1, chars: sizes[long].toLocaleString(LANG) });
   $("#aiStats").textContent = msg;
-  $("#aiParts").innerHTML = parts.map((p, i) =>
-    `<button type="button" class="btn${aiCopied.has(i) ? " copied" : i === 0 || aiCopied.has(i - 1) ? " primary" : ""}" data-part="${i}">${aiCopied.has(i) ? "✓ " : ""}${escapeHtml(t("ai.partBtn", { k: i + 1, total: parts.length, a: p[0].id, b: p[p.length - 1].id, n: p.length }))}</button>`).join("");
+  // A part is "done" once every one of its segments has a translation (its answer was imported).
+  const dones = parts.map((p) => p.every((s) => hasTr(s.id)));
+  $("#aiParts").innerHTML = parts.map((p, i) => {
+    const done = dones[i];
+    const cls = done ? " done" : aiCopied.has(i) ? " copied" : i === 0 || aiCopied.has(i - 1) || dones[i - 1] ? " primary" : "";
+    return `<button type="button" class="btn${cls}" data-part="${i}" title="${done ? escapeHtml(t("ai.partDone")) : ""}">${done || aiCopied.has(i) ? "✓ " : ""}${escapeHtml(t("ai.partBtn", { k: i + 1, total: parts.length, a: p[0].id, b: p[p.length - 1].id, n: p.length }))}</button>`;
+  }).join("");
 }
 
 function copyAiPart(i) {
@@ -12610,6 +12661,16 @@ function initHelp() {
     if (b) copyAiPart(Number(b.dataset.part));
   });
   $("#aiCopyPrompt").addEventListener("click", () => copyText(`${aiPromptText()}\n\n${t("ai.pasteHere")}`, t("msg.promptCopied")));
+  // The right column: the AI's answer is pasted or dropped here, like in the Import window.
+  const aiOverwrite = () => $("#aiOverwrite").checked;
+  setupDropzone($("#aiDrop"), (f) => importFile(f, aiOverwrite()));
+  $("#aiFile").addEventListener("change", (e) => importFile(e.target.files[0], aiOverwrite()));
+  $("#aiImportGo").addEventListener("click", () => {
+    if (!state.doc) { toast(t("msg.openFirst"), "error"); return; }
+    importPasted($("#aiPasteArea"), aiOverwrite());
+  });
+  $("#aiPasteArea").addEventListener("keydown", (e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); $("#aiImportGo").click(); } });
+  $("#helpDialog").addEventListener("close", () => aiImportNote(""));
 
 }
 
@@ -14557,7 +14618,7 @@ function initPicture() {
 // from its own browser cache before the network, so language files are written into that cache.
 // ======================================================================
 
-const APP_VERSION = "1.77";
+const APP_VERSION = "1.78";
 // (a change of library version makes a stored set outdated: it is then ignored)
 const OFFLINE_VERSION = `${MUPDF_URL} ${OCR_LIB}`;
 const CORE_SIMD = "tesseract-core-simd-lstm.wasm.js", CORE_PLAIN = "tesseract-core-lstm.wasm.js";

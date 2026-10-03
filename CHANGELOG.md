@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.78
+
+- Translate with AI: the window has two columns now. The prompt, its settings and the part buttons sit on the left; on the right the AI's answer is pasted or dropped as a file and imported straight away, with the same "replace translations already entered" option as the Import window. The window stays open, so a big document can be sent and imported part by part; a part whose segments are all translated is shown in green. The Close button sits at the right end of the window.
+
 ## 1.77
 
 - Keywords: all fields of the window – the pair list, the search box and the term fields – have grey frames and the same corner radius as the buttons; the controls of the vocabulary bar share one height. The toolbar button is called "Learn" now, and the "PDF preview" button sits next to "Download PDF".

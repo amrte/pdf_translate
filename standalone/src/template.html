@@ -393,8 +393,9 @@
     <p class="muted small" data-i18n="help.markup"></p>
     </div>
     <div class="ai-part">
-
     <h2 id="aiTitle" data-i18n="ai.title">Translate with AI</h2>
+    <div class="ai-cols">
+    <div class="ai-left">
     <div class="ai-grid">
       <label><span data-i18n="lang.target">Target language</span> <input id="aiTarget" data-i18n-placeholder="ai.targetPh"></label>
       <label><span data-i18n="ai.pages">Pages</span> <span class="range"><input id="aiFrom" type="number" min="1" value="1"> – <input id="aiTo" type="number" min="1"></span></label>
@@ -416,6 +417,24 @@
     <div class="ai-parts-head"><b data-i18n="ai.parts">Copy prompt + text</b> <span class="muted small" data-i18n="ai.partsHint"></span></div>
     <div class="ai-parts" id="aiParts"></div>
     </div>
+    <div class="ai-right">
+      <h3 class="ai-right-title" data-i18n="ai.answer">AI answer</h3>
+      <p class="muted small" data-i18n="ai.answerHint"></p>
+      <label class="dropzone small" id="aiDrop">
+        <input type="file" id="aiFile" accept=".txt,.docx,.xlf,.xliff,.csv,.tsv,.json" hidden>
+        <div class="dz-title" data-i18n="import.drop">Drop the translated file here or <u>choose a file</u></div>
+        <div class="dz-sub">.txt · .docx · .xlf / .xliff · .csv · .json</div>
+      </label>
+      <div class="or" data-i18n="import.or"></div>
+      <textarea id="aiPasteArea" data-i18n-aria="import.pasteAria" rows="10" data-i18n-placeholder="import.placeholder"></textarea>
+      <label class="check"><input type="checkbox" id="aiOverwrite" checked> <span data-i18n="import.overwrite">Replace translations already entered</span></label>
+      <p class="muted small" id="aiImportStatus"></p>
+      <div class="ai-import-row">
+        <button type="button" class="btn primary" id="aiImportGo" data-i18n="import.go">Import pasted text</button>
+      </div>
+    </div>
+    </div>
+    </div>
     <div class="help-part offline-part">
       <h3 class="offline-title" data-i18n="offline.title">Working offline</h3>
       <p class="muted small" data-i18n="offline.text"></p>
@@ -436,8 +455,8 @@
     <input type="file" id="offlineFolder" class="visually-hidden" webkitdirectory multiple tabindex="-1">
     <p class="muted small help-version help-part">Kameleon v{{VERSION}} · <span data-i18n="app.tagline"></span></p>
     <div class="modal-actions">
-      <button type="button" value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
       <button type="button" class="btn ai-part" id="aiCopyPrompt" data-i18n="ai.copyPrompt">Copy prompt only</button>
+      <button type="button" value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
     </div>
   </form>
 </dialog>
