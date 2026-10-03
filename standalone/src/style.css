@@ -874,3 +874,18 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
 .help-section { border-top: 1px solid var(--border); padding-top: 14px; display: grid; gap: 8px; }
 .help-list { margin: 0; padding-left: 18px; display: grid; gap: 5px; line-height: 1.45; }
 .help-list a { color: var(--accent); font-weight: 600; }
+
+/* ---------- v1.92: vocabulary statistics and filters ---------- */
+.vocab-stats { display: grid; gap: 5px; }
+.vocab-stats:empty { display: none; }
+.vocab-stat-bar { display: flex; height: 8px; border-radius: 5px; overflow: hidden; background: var(--surface-2); border: 1px solid var(--border); }
+.vocab-stat-seg.new { background: var(--surface-2); }
+.vocab-stat-seg.learning { background: color-mix(in srgb, var(--accent) 45%, var(--surface)); }
+.vocab-stat-seg.mature { background: var(--accent); }
+.vocab-stat-legend { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.vocab-stat-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px; border: 1px solid var(--border); vertical-align: -1px; }
+.vocab-stat-dot.new { background: var(--surface-2); }
+.vocab-stat-dot.learning { background: color-mix(in srgb, var(--accent) 45%, var(--surface)); border-color: transparent; }
+.vocab-stat-dot.mature { background: var(--accent); border-color: transparent; }
+.vocab-bar #vocabFilter { max-width: 170px; }
+.kw-actions { flex-wrap: wrap; }

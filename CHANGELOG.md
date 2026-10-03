@@ -4,6 +4,14 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.92
+
+- Vocabulary: a statistics bar shows how many words of the pair are new, learning or mature, what is due today, and the streak of study days.
+- Vocabulary: a filter narrows the list by learning stage (due today, new, learning, mature); flashcards and all exports take the shown rows, so "only due" or "only favourites" exports are one click away.
+- Vocabulary: "Duplicates (n)" merges terms that differ only in case, an article or punctuation, keeping translations, examples, favourite and learning state.
+- Vocabulary: "Card sheet PDF" prints the shown words as flashcards – eight per A4 sheet, fronts and backs on consecutive pages for duplex printing, with cut lines.
+- Vocabulary: "Back up" saves the whole vocabulary with its learning state as one file; "Import…" loads it on another device and merges it with what is there.
+
 ## 1.91
 
 - Words: a "Word groups" view lists the pairs and triples of words that repeat in the document (such as "in Betrieb nehmen"), with their counts and passages; they are selected and sent to the AI like single words.

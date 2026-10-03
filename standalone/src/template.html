@@ -83,7 +83,7 @@
     </div>
   </label>
   <div class="recent" id="recent" hidden><span class="recent-label" data-i18n="recent.title">Recently opened:</span><div class="recent-list" id="recentList"></div></div>
-  <input type="file" id="vocabFile" hidden accept=".txt,.tsv,.csv,.apkg,text/plain">
+  <input type="file" id="vocabFile" hidden accept=".txt,.tsv,.csv,.apkg,.json,text/plain,application/json">
   <!-- The workflow (also copied into Help); the buttons look as they do in the app. -->
   <section class="wf" id="wfStart" aria-labelledby="wfTitle">
     <h2 class="wf-title" id="wfTitle"><button type="button" class="wf-fold" id="wfFold" aria-controls="wfFlow" aria-expanded="true" data-i18n-title="wf.foldTitle"><span data-i18n="wf.title">The workflow</span><svg class="wf-chevron" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button></h2>
@@ -560,12 +560,20 @@
       <div class="vocab-bar">
         <select id="vocabPair" data-i18n-aria="vocab.pair"></select>
         <input type="search" id="vocabSearch" data-i18n-placeholder="vocab.search" autocomplete="off">
+        <select id="vocabFilter" data-i18n-aria="vocab.filter">
+          <option value="all" data-i18n="vocab.filterAll"></option>
+          <option value="due" data-i18n="vocab.filterDue"></option>
+          <option value="new" data-i18n="vocab.filterNew"></option>
+          <option value="learning" data-i18n="vocab.filterLearning"></option>
+          <option value="mature" data-i18n="vocab.filterMature"></option>
+        </select>
         <button type="button" class="btn vocab-fav-btn" id="vocabFavs" data-i18n-title="vocab.favFilterTitle" aria-pressed="false"><span class="kam-slot"></span><span data-i18n="vocab.favFilter"></span></button>
         <span class="muted small" id="vocabCount"></span>
         <span class="spacer"></span>
         <button type="button" class="btn" id="vocabMove" data-i18n-title="vocab.moveTitle"></button>
         <button type="button" class="btn" id="vocabToHere" data-i18n="vocab.toHere" hidden></button>
       </div>
+      <div class="vocab-stats" id="vocabStats"></div>
       <div class="kw-list vocab-list" id="vocabList"></div>
       <div class="kw-preview vocab-preview" id="vocabPreviewWrap"></div>
     </div>
@@ -606,10 +614,13 @@
       <button type="button" class="btn kw-list-only" id="kwCopy" data-i18n="kw.copy"></button>
       <button type="button" class="btn kw-words-only" id="wordsCards" data-i18n="words.cards"></button>
       <button type="button" class="btn kw-vocab-only" id="vocabCards" data-i18n="vocab.cards"></button>
-      <button type="button" class="btn kw-vocab-only" id="vocabImport" data-i18n="vocab.import"></button>
+      <button type="button" class="btn kw-vocab-only" id="vocabImport" data-i18n="vocab.import" data-i18n-title="vocab.importTitle"></button>
+      <button type="button" class="btn kw-vocab-only" id="vocabMerge" data-i18n-title="vocab.mergeTitle"></button>
+      <button type="button" class="btn ghost kw-vocab-only" id="vocabBackup" data-i18n="vocab.backup" data-i18n-title="vocab.backupTitle"></button>
       <button type="button" class="btn ghost kw-vocab-only" id="vocabClear" data-i18n="vocab.clear"></button>
       <span class="spacer"></span>
       <button type="button" class="btn kw-vocab-only" id="vocabApkg" data-i18n="vocab.apkg" data-i18n-title="vocab.apkgTitle"></button>
+      <button type="button" class="btn kw-vocab-only" id="vocabCardsPdf" data-i18n="vocab.cardsPdf" data-i18n-title="vocab.cardsPdfTitle"></button>
       <button type="button" class="btn kw-vocab-only" id="vocabPreview" data-i18n-title="vocab.previewTitle"></button>
       <button type="button" class="btn primary kw-vocab-only" id="vocabPdf" data-i18n="vocab.pdf"></button>
       <button value="close" class="btn ghost" data-i18n="kw.close"></button>

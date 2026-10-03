@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="Kameleon 1.91">
+  <meta name="generator" content="Kameleon 1.92">
   <meta name="description" content="Kameleon – Wechselt die Sprache, behält die Form. Changes language, keeps its shape.">
   <title>Kameleon</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2216%22 fill=%22%23287130%22/%3E%3Cg transform=%22translate(2.5 1) scale(0.9)%22 fill=%22%23ffffff%22 stroke=%22%23ffffff%22%3E%3Cpath d=%22M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6%22 fill=%22none%22 stroke-width=%223.8%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M21 43l-1 10M30 44v9M38 43l1 10%22 stroke-width=%223.6%22 stroke-linecap=%22round%22/%3E%3Cellipse cx=%2221%22 cy=%2225%22 rx=%227%22 ry=%227.5%22 stroke=%22none%22/%3E%3Cellipse cx=%2233%22 cy=%2223.5%22 rx=%227.5%22 ry=%228%22 stroke=%22none%22/%3E%3Cpath d=%22M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z%22 stroke=%22none%22/%3E%3Cpath d=%22M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z%22 stroke=%22none%22/%3E%3Cpath d=%22M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z%22 stroke=%22none%22/%3E%3Cpath d=%22M16 37l4-3 4 3 4-3 4 3 4-3 4 3%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%222.1%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3Cpath d=%22M43.5 33.9L57 32.6%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%221.5%22 stroke-linecap=%22round%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%224.4%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%222.7%22 stroke=%22none%22/%3E%3Ccircle cx=%2246.2%22 cy=%2226.7%22 r=%221.3%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Cpath d=%22M4 55.5c15-3 39-3 54 0%22 fill=%22none%22 stroke-width=%222.4%22 stroke-linecap=%22round%22/%3E%3C/g%3E%3C/svg%3E">
@@ -885,6 +885,21 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
 .help-list { margin: 0; padding-left: 18px; display: grid; gap: 5px; line-height: 1.45; }
 .help-list a { color: var(--accent); font-weight: 600; }
 
+/* ---------- v1.92: vocabulary statistics and filters ---------- */
+.vocab-stats { display: grid; gap: 5px; }
+.vocab-stats:empty { display: none; }
+.vocab-stat-bar { display: flex; height: 8px; border-radius: 5px; overflow: hidden; background: var(--surface-2); border: 1px solid var(--border); }
+.vocab-stat-seg.new { background: var(--surface-2); }
+.vocab-stat-seg.learning { background: color-mix(in srgb, var(--accent) 45%, var(--surface)); }
+.vocab-stat-seg.mature { background: var(--accent); }
+.vocab-stat-legend { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.vocab-stat-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px; border: 1px solid var(--border); vertical-align: -1px; }
+.vocab-stat-dot.new { background: var(--surface-2); }
+.vocab-stat-dot.learning { background: color-mix(in srgb, var(--accent) 45%, var(--surface)); border-color: transparent; }
+.vocab-stat-dot.mature { background: var(--accent); border-color: transparent; }
+.vocab-bar #vocabFilter { max-width: 170px; }
+.kw-actions { flex-wrap: wrap; }
+
   </style>
 </head>
 <body>
@@ -892,7 +907,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
   <div class="brand">
     <span class="logo"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#287130"/><g transform="translate(2.5 1) scale(0.9)" fill="#ffffff" stroke="#ffffff"><path d="M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6" fill="none" stroke-width="3.8" stroke-linecap="round"/><path d="M21 43l-1 10M30 44v9M38 43l1 10" stroke-width="3.6" stroke-linecap="round"/><ellipse cx="21" cy="25" rx="7" ry="7.5" stroke="none"/><ellipse cx="33" cy="23.5" rx="7.5" ry="8" stroke="none"/><path d="M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z" stroke="none"/><path d="M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z" stroke="none"/><path d="M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z" stroke="none"/><path d="M16 37l4-3 4 3 4-3 4 3 4-3 4 3" fill="none" stroke="#287130" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M43.5 33.9L57 32.6" fill="none" stroke="#287130" stroke-width="1.5" stroke-linecap="round"/><circle cx="45.5" cy="26.5" r="4.4" fill="#287130" stroke="none"/><circle cx="45.5" cy="26.5" r="2.7" stroke="none"/><circle cx="46.2" cy="26.7" r="1.3" fill="#287130" stroke="none"/><path d="M4 55.5c15-3 39-3 54 0" fill="none" stroke-width="2.4" stroke-linecap="round"/></g></svg></span>
     <span class="brand-name">Kameleon</span>
-    <span class="version" id="appVersion">v1.91</span>
+    <span class="version" id="appVersion">v1.92</span>
   </div>
   <div class="topbar-actions">
     <span class="doc-name" id="docName"></span>
@@ -959,7 +974,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
     </div>
   </label>
   <div class="recent" id="recent" hidden><span class="recent-label" data-i18n="recent.title">Recently opened:</span><div class="recent-list" id="recentList"></div></div>
-  <input type="file" id="vocabFile" hidden accept=".txt,.tsv,.csv,.apkg,text/plain">
+  <input type="file" id="vocabFile" hidden accept=".txt,.tsv,.csv,.apkg,.json,text/plain,application/json">
   <!-- The workflow (also copied into Help); the buttons look as they do in the app. -->
   <section class="wf" id="wfStart" aria-labelledby="wfTitle">
     <h2 class="wf-title" id="wfTitle"><button type="button" class="wf-fold" id="wfFold" aria-controls="wfFlow" aria-expanded="true" data-i18n-title="wf.foldTitle"><span data-i18n="wf.title">The workflow</span><svg class="wf-chevron" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button></h2>
@@ -1395,7 +1410,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
     </div>
     <input type="file" id="offlineZip" class="visually-hidden" accept=".zip,application/zip" multiple tabindex="-1">
     <input type="file" id="offlineFolder" class="visually-hidden" webkitdirectory multiple tabindex="-1">
-    <p class="muted small help-version help-part">Kameleon v1.91 · <span data-i18n="app.tagline"></span></p>
+    <p class="muted small help-version help-part">Kameleon v1.92 · <span data-i18n="app.tagline"></span></p>
     <div class="modal-actions">
       <button type="button" value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
     </div>
@@ -1436,12 +1451,20 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
       <div class="vocab-bar">
         <select id="vocabPair" data-i18n-aria="vocab.pair"></select>
         <input type="search" id="vocabSearch" data-i18n-placeholder="vocab.search" autocomplete="off">
+        <select id="vocabFilter" data-i18n-aria="vocab.filter">
+          <option value="all" data-i18n="vocab.filterAll"></option>
+          <option value="due" data-i18n="vocab.filterDue"></option>
+          <option value="new" data-i18n="vocab.filterNew"></option>
+          <option value="learning" data-i18n="vocab.filterLearning"></option>
+          <option value="mature" data-i18n="vocab.filterMature"></option>
+        </select>
         <button type="button" class="btn vocab-fav-btn" id="vocabFavs" data-i18n-title="vocab.favFilterTitle" aria-pressed="false"><span class="kam-slot"></span><span data-i18n="vocab.favFilter"></span></button>
         <span class="muted small" id="vocabCount"></span>
         <span class="spacer"></span>
         <button type="button" class="btn" id="vocabMove" data-i18n-title="vocab.moveTitle"></button>
         <button type="button" class="btn" id="vocabToHere" data-i18n="vocab.toHere" hidden></button>
       </div>
+      <div class="vocab-stats" id="vocabStats"></div>
       <div class="kw-list vocab-list" id="vocabList"></div>
       <div class="kw-preview vocab-preview" id="vocabPreviewWrap"></div>
     </div>
@@ -1482,10 +1505,13 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
       <button type="button" class="btn kw-list-only" id="kwCopy" data-i18n="kw.copy"></button>
       <button type="button" class="btn kw-words-only" id="wordsCards" data-i18n="words.cards"></button>
       <button type="button" class="btn kw-vocab-only" id="vocabCards" data-i18n="vocab.cards"></button>
-      <button type="button" class="btn kw-vocab-only" id="vocabImport" data-i18n="vocab.import"></button>
+      <button type="button" class="btn kw-vocab-only" id="vocabImport" data-i18n="vocab.import" data-i18n-title="vocab.importTitle"></button>
+      <button type="button" class="btn kw-vocab-only" id="vocabMerge" data-i18n-title="vocab.mergeTitle"></button>
+      <button type="button" class="btn ghost kw-vocab-only" id="vocabBackup" data-i18n="vocab.backup" data-i18n-title="vocab.backupTitle"></button>
       <button type="button" class="btn ghost kw-vocab-only" id="vocabClear" data-i18n="vocab.clear"></button>
       <span class="spacer"></span>
       <button type="button" class="btn kw-vocab-only" id="vocabApkg" data-i18n="vocab.apkg" data-i18n-title="vocab.apkgTitle"></button>
+      <button type="button" class="btn kw-vocab-only" id="vocabCardsPdf" data-i18n="vocab.cardsPdf" data-i18n-title="vocab.cardsPdfTitle"></button>
       <button type="button" class="btn kw-vocab-only" id="vocabPreview" data-i18n-title="vocab.previewTitle"></button>
       <button type="button" class="btn primary kw-vocab-only" id="vocabPdf" data-i18n="vocab.pdf"></button>
       <button value="close" class="btn ghost" data-i18n="kw.close"></button>
@@ -1752,7 +1778,7 @@ const I18N = {
     "help.learnList": "<b>Liste:</b> Die Begriffe kommen mit der KI-Antwort (Häkchen „Begriffsliste“ im KI-Fenster) oder werden von Hand eingetragen; rechts die PDF-Seite, wie sie gespeichert wird. Jeder Import ergänzt zugleich den Wortschatz des erkannten Sprachpaars.",
     "help.learnWords": "<b>Wörter:</b> Alle Wörter des Dokuments nach Häufigkeit, ohne Funktionswörter, und die wiederkehrenden Wortgruppen; sortierbar nach Häufigkeit, Alphabet oder Reihenfolge im Text. Wörter anklicken oder die häufigsten auswählen, den Prompt kopieren und die KI-Antwort rechts einfügen – die Wörter kommen mit Übersetzung und Beispielsatz in Liste, Wortschatz und Lernkarten.",
     "help.learnCards": "<b>Lernkarten:</b> „Heute fällig“ zeigt zuerst neue Wörter (so viele pro Tag wie eingestellt), dann die gewussten, deren Wiederholung ansteht (nach 1, 3, 7, 14, 30, dann alle 90 Tagen). Vier Bewertungen: Nochmal (zurück auf Anfang), Schwer (Abstand bleibt), Gewusst (eine Stufe weiter), Leicht (zwei Stufen). Der Beispielsatz vorn kann als Lücke, ganz oder gar nicht gezeigt werden; „Umgekehrt“ fragt von der Übersetzung nach dem Begriff. Tasten: <kbd>Leertaste</kbd> umdrehen, <kbd>←</kbd>/<kbd>→</kbd> blättern, <kbd>A</kbd>/<kbd>H</kbd>/<kbd>K</kbd>/<kbd>E</kbd> oder <kbd>1</kbd>–<kbd>4</kbd> bewerten, <kbd>F</kbd> Favorit, <kbd>R</kbd> Richtung.",
-    "help.learnVocab": "<b>Wortschatz:</b> Die Begriffe aller Dokumente je Sprachpaar, mit Suche, Favoriten (das Kameleon) und Korrektur des Sprachpaars. Export als PDF oder Anki-Paket (.apkg), Import aus .txt/.tsv/.csv und aus Anki-Paketen.",
+    "help.learnVocab": "<b>Wortschatz:</b> Die Begriffe aller Dokumente je Sprachpaar, mit Suche, Filter nach Lernstand (neu, im Lernen, gefestigt, heute fällig), Favoriten (das Kameleon), Dubletten-Zusammenführung und Korrektur des Sprachpaars; darüber die Lernstatistik mit der Lernserie. Export als PDF-Liste, Karten-PDF zum Ausdrucken oder Anki-Paket (.apkg) – jeweils das, was gerade gezeigt wird. Import aus .txt/.tsv/.csv und aus Anki-Paketen. „Sichern“ speichert den ganzen Wortschatz mit Lernstand als Datei für ein anderes Gerät; „Importieren…“ führt sie dort zusammen.",
     "help.learnDecks": "<b>Fertige Lernkarten:</b> Tausende freie Anki-Stapel für viele Sprachen gibt es unter <a href=\"https://ankiweb.net/shared/decks\" target=\"_blank\" rel=\"noopener noreferrer\">ankiweb.net/shared/decks</a> – die .apkg-Datei herunterladen und unter „Wortschatz → Importieren…“ laden.",
     "help.shortcuts": "Tastenkürzel im Übersetzungsfeld: <kbd>Strg</kbd>+<kbd>Enter</kbd> nächstes Segment · <kbd>Alt</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> vorheriges/nächstes · <kbd>Strg</kbd>+<kbd>S</kbd> Segment ins Dokument übernehmen · <kbd>Strg</kbd> + Mausrad zoomen.",
     "ai.title": "Mit KI übersetzen (ChatGPT, Claude, Gemini…)",
@@ -2011,6 +2037,31 @@ const I18N = {
     "vocab.pair": "Sprachpaar",
     "vocab.search": "Suchen…",
     "vocab.count": "{n} Begriffe",
+    "vocab.filter": "Filter",
+    "vocab.filterAll": "Alle Begriffe",
+    "vocab.filterDue": "Heute fällig",
+    "vocab.filterNew": "Neu",
+    "vocab.filterLearning": "Im Lernen",
+    "vocab.filterMature": "Gefestigt",
+    "vocab.stage_new": "Neu",
+    "vocab.stage_learning": "Im Lernen",
+    "vocab.stage_mature": "Gefestigt",
+    "vocab.dueToday": "heute fällig: {n}",
+    "vocab.streak": "Lernserie: {n} Tage",
+    "vocab.streak1": "Lernserie: 1 Tag",
+    "vocab.merge": "Dubletten ({n})",
+    "vocab.mergeTitle": "Begriffe, die sich nur in Groß-/Kleinschreibung, Artikel oder Satzzeichen unterscheiden, zu einem zusammenführen – Übersetzungen, Beispiele und Lernstand bleiben erhalten",
+    "vocab.mergeConfirm": "{n} Dublette(n) zusammenführen? Der längere Begriff bleibt; Übersetzungen werden mit „;“ verbunden, Beispiele, Favorit und Lernstand übernommen.",
+    "vocab.noDupes": "Keine Dubletten in diesem Sprachpaar.",
+    "vocab.merged": "{n} Dublette(n) zusammengeführt.",
+    "vocab.backup": "Sichern",
+    "vocab.backupTitle": "Den ganzen Wortschatz mit Lernstand als eine Datei speichern – zum Übertragen auf ein anderes Gerät; dort unter „Importieren…“ laden, Bestehendes wird zusammengeführt",
+    "vocab.backedUp": "{n} Begriffe in {pairs} Sprachpaar(en) gesichert.",
+    "vocab.restored": "Sicherung übernommen: {added} neue Begriffe, {updated} aktualisiert, {pairs} Sprachpaar(e).",
+    "vocab.badBackup": "Das ist keine Kameleon-Wortschatzsicherung.",
+    "vocab.importTitle": "Begriffe aus .txt/.tsv/.csv, ein Anki-Paket (.apkg) oder eine Kameleon-Sicherung (.json) laden",
+    "vocab.cardsPdf": "Karten-PDF",
+    "vocab.cardsPdfTitle": "Lernkarten zum Ausdrucken: 8 Karten je A4-Blatt, Vorderseiten und Rückseiten auf aufeinanderfolgenden Seiten – beidseitig drucken (Wenden an der langen Kante) und an den Linien schneiden",
     "vocab.countOf": "{n} von {total} Begriffen",
     "vocab.toHere": "Begriffe dieses Dokuments übernehmen",
     "vocab.cards": "Lernkarten",
@@ -2399,7 +2450,7 @@ const I18N = {
     "help.learnList": "<b>List:</b> The terms arrive with the AI answer (tick \"Term list\" in the AI window) or are entered by hand; on the right the PDF page as it will be saved. Every import also adds to the vocabulary of the detected language pair.",
     "help.learnWords": "<b>Words:</b> Every word of the document by frequency, without function words, and the recurring word groups; sorted by frequency, alphabet or order in the text. Tick words or select the most frequent ones, copy the prompt and paste the AI's answer on the right – the words arrive with translation and example sentence in the list, the vocabulary and the flashcards.",
     "help.learnCards": "<b>Flashcards:</b> \"Due today\" shows new words first (as many per day as set), then the known ones whose review is due (after 1, 3, 7, 14, 30, then every 90 days). Four grades: Again (back to the start), Hard (interval stays), Known (one step up), Easy (two steps). The example sentence on the front can be shown as a gap, whole or not at all; \"Reversed\" asks from the translation for the term. Keys: <kbd>Space</kbd> turn, <kbd>←</kbd>/<kbd>→</kbd> browse, <kbd>A</kbd>/<kbd>H</kbd>/<kbd>K</kbd>/<kbd>E</kbd> or <kbd>1</kbd>–<kbd>4</kbd> grade, <kbd>F</kbd> favourite, <kbd>R</kbd> direction.",
-    "help.learnVocab": "<b>Vocabulary:</b> The terms of all documents per language pair, with search, favourites (the chameleon) and correction of the pair. Export as PDF or Anki package (.apkg), import from .txt/.tsv/.csv and from Anki packages.",
+    "help.learnVocab": "<b>Vocabulary:</b> The terms of all documents per language pair, with search, a filter by learning stage (new, learning, mature, due today), favourites (the chameleon), merging of duplicates and correction of the pair; above it the learning statistics with the study streak. Export as a PDF list, a printable card sheet or an Anki package (.apkg) – each taking what is shown. Import from .txt/.tsv/.csv and from Anki packages. “Back up” saves the whole vocabulary with its learning state as a file for another device; “Import…” merges it there.",
     "help.learnDecks": "<b>Ready-made flashcards:</b> thousands of free Anki decks for many languages are at <a href=\"https://ankiweb.net/shared/decks\" target=\"_blank\" rel=\"noopener noreferrer\">ankiweb.net/shared/decks</a> – download the .apkg file and load it under \"Vocabulary → Import…\".",
     "help.shortcuts": "Shortcuts in a translation box: <kbd>Ctrl</kbd>+<kbd>Enter</kbd> next segment · <kbd>Alt</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> previous/next · <kbd>Ctrl</kbd>+<kbd>S</kbd> update this segment in the document · <kbd>Ctrl</kbd> + mouse wheel to zoom.",
     "ai.title": "Translate with AI (ChatGPT, Claude, Gemini…)",
@@ -2658,6 +2709,31 @@ const I18N = {
     "vocab.pair": "Language pair",
     "vocab.search": "Search…",
     "vocab.count": "{n} terms",
+    "vocab.filter": "Filter",
+    "vocab.filterAll": "All terms",
+    "vocab.filterDue": "Due today",
+    "vocab.filterNew": "New",
+    "vocab.filterLearning": "Learning",
+    "vocab.filterMature": "Mature",
+    "vocab.stage_new": "New",
+    "vocab.stage_learning": "Learning",
+    "vocab.stage_mature": "Mature",
+    "vocab.dueToday": "due today: {n}",
+    "vocab.streak": "study streak: {n} days",
+    "vocab.streak1": "study streak: 1 day",
+    "vocab.merge": "Duplicates ({n})",
+    "vocab.mergeTitle": "Merge terms that differ only in case, an article or punctuation into one – translations, examples and the learning state are kept",
+    "vocab.mergeConfirm": "Merge {n} duplicate(s)? The longer term stays; translations are joined with “;”, examples, favourite and learning state are kept.",
+    "vocab.noDupes": "No duplicates in this language pair.",
+    "vocab.merged": "{n} duplicate(s) merged.",
+    "vocab.backup": "Back up",
+    "vocab.backupTitle": "Save the whole vocabulary with its learning state as one file – to carry it to another device; load it there under “Import…”, existing terms are merged",
+    "vocab.backedUp": "{n} terms in {pairs} language pair(s) backed up.",
+    "vocab.restored": "Backup merged: {added} new terms, {updated} updated, {pairs} language pair(s).",
+    "vocab.badBackup": "This is not a Kameleon vocabulary backup.",
+    "vocab.importTitle": "Load terms from .txt/.tsv/.csv, an Anki package (.apkg) or a Kameleon backup (.json)",
+    "vocab.cardsPdf": "Card sheet PDF",
+    "vocab.cardsPdfTitle": "Flashcards to print: 8 cards per A4 sheet, fronts and backs on consecutive pages – print on both sides (flip on the long edge) and cut along the lines",
     "vocab.countOf": "{n} of {total} terms",
     "vocab.toHere": "Add this document's terms",
     "vocab.cards": "Flashcards",
@@ -5205,9 +5281,101 @@ function keywordsPdf(args) {
   }
 }
 
+/**
+ * Printable flashcards: A4 sheets with 2 x 4 cards, the fronts (term, example) on one page and
+ * the backs (translation, translated example) on the next, mirrored column-wise so that a
+ * duplex print flipped on the long edge puts each back behind its front. Dashed cut lines.
+ * `args`: {rows: [{term, translation, example, exampleTr}], frontLabel, backLabel}.
+ */
+function cardsPdf(args) {
+  const W = 595.28, H = 841.89, MARGIN = 28, COLS = 2, ROWS = 4, PAD = 16;
+  const cw = (W - 2 * MARGIN) / COLS, ch = (H - 2 * MARGIN) / ROWS;
+  const doc = new M.PDFDocument();
+  const fk = new FontKit(doc, { fontMode: "auto" });
+  try {
+    const pages = [];
+    let ops = [], used = new Set();
+    const layout = (text, size, bold, width) => {
+      const chain = fk.chain({ family: "sans-serif", bold, italic: false }, text || " ");
+      const tok = tokenize(text || " ", fk, chain);
+      return { tok, lines: wrap(tok, width / size) };
+    };
+    const draw = (laid, x, top, size, color, center = 0) => {
+      const L = 1.3 * size;
+      let base = top + 0.85 * size;
+      for (const line of laid.lines) {
+        let lineW = 0;
+        line.tokens.forEach((tk, j) => { if (j && tk.sp) lineW += laid.tok.spaceAdv * size; for (const g of tk.glyphs) lineW += g.adv * size; });
+        let cx = center ? x + (center - lineW) / 2 : x, run = null;
+        const flush = () => { if (run) ops.push(`BT /${run.e.res} 1 Tf ${rg(color)} ${fmt(size)} 0 0 ${fmt(-size)} ${fmt(run.x)} ${fmt(base)} Tm <${run.hex}> Tj ET`); run = null; };
+        line.tokens.forEach((tk, j) => {
+          if (j && tk.sp) { flush(); cx += laid.tok.spaceAdv * size; }
+          for (const g of tk.glyphs) {
+            if (g.own !== undefined) flush();
+            if (!run || run.e !== g.e) { flush(); run = { e: g.e, x: cx - (g.own || 0) * size, hex: "" }; fk.ref(g.e); used.add(g.e); }
+            run.hex += g.gid.toString(16).padStart(4, "0");
+            cx += g.adv * size;
+            if (g.own !== undefined) flush();
+          }
+        });
+        flush();
+        base += L;
+      }
+      return laid.lines.length * L;
+    };
+    const cutLines = () => {
+      ops.push("q 0.75 0.75 0.75 RG 0.5 w [4 4] 0 d");
+      for (let c = 0; c <= COLS; c++) ops.push(`${fmt(MARGIN + c * cw)} ${fmt(MARGIN)} m ${fmt(MARGIN + c * cw)} ${fmt(H - MARGIN)} l S`);
+      for (let r = 0; r <= ROWS; r++) ops.push(`${fmt(MARGIN)} ${fmt(MARGIN + r * ch)} m ${fmt(W - MARGIN)} ${fmt(MARGIN + r * ch)} l S`);
+      ops.push("Q");
+    };
+    const card = (col, row, word, sentence, label) => {
+      const x = MARGIN + col * cw, y = MARGIN + row * ch, inner = cw - 2 * PAD;
+      let size = 16, laid = layout(word, size, true, inner);
+      while (laid.lines.length > 3 && size > 9) { size -= 1.5; laid = layout(word, size, true, inner); }
+      const ex = sentence ? layout(sentence, 9.5, false, inner) : null;
+      const exH = ex ? Math.min(ex.lines.length, 4) * 1.3 * 9.5 : 0;
+      if (ex) ex.lines = ex.lines.slice(0, 4);
+      const total = laid.lines.length * 1.3 * size + (ex ? 8 + exH : 0);
+      let top = y + (ch - total) / 2;
+      draw(laid, x + PAD, top, size, "#111111", inner);
+      if (ex) draw(ex, x + PAD, top + laid.lines.length * 1.3 * size + 8, 9.5, "#666666", inner);
+      if (label) draw(layout(label, 7, false, inner), x + PAD, y + 7, 7, "#aaaaaa");
+    };
+    const rows = args.rows;
+    const per = COLS * ROWS;
+    for (let i = 0; i < rows.length; i += per) {
+      const sheet = rows.slice(i, i + per);
+      // fronts
+      ops = []; used = new Set(); cutLines();
+      sheet.forEach((r, k) => card(k % COLS, Math.floor(k / COLS), r.term, r.example, args.frontLabel));
+      pages.push({ ops, used });
+      // backs, mirrored column-wise
+      ops = []; used = new Set(); cutLines();
+      sheet.forEach((r, k) => card(COLS - 1 - (k % COLS), Math.floor(k / COLS), r.translation, r.exampleTr, args.backLabel));
+      pages.push({ ops, used });
+    }
+    for (const p of pages) {
+      const res = doc.newDictionary();
+      if (p.used.size) { const fonts = doc.newDictionary(); for (const e of p.used) fonts.put(e.res, fk.ref(e)); res.put("Font", fonts); }
+      const pg = doc.addPage([0, 0, W, H], 0, res, `q 1 0 0 -1 0 ${fmt(H)} cm\n${p.ops.join("\n")}\nQ`);
+      doc.insertPage(-1, pg);
+      free(pg);
+    }
+    doc.subsetFonts();
+    const buf = doc.saveToBuffer("compress");
+    const out = buf.asUint8Array().slice();
+    free(buf);
+    return out;
+  } finally {
+    fk.dispose();
+    free(doc);
+  }
+}
+
 const Engine = {
   init: initEngine, extract: extractDocument, extractPages, build: buildTranslated, renderPNG,
-  detectKind, imageKindOf, imageToPdf, keywordsPdf, openBook, saveBook, extractBook, openLaidOut, mapTranslated, openOffice, officePreviewHtml, ocrToBlocks, sampleColors, refineOcr,
+  detectKind, imageKindOf, imageToPdf, keywordsPdf, cardsPdf, openBook, saveBook, extractBook, openLaidOut, mapTranslated, openOffice, officePreviewHtml, ocrToBlocks, sampleColors, refineOcr,
   open: (bytes) => M.Document.openDocument(bytes, "application/pdf"),
   exportTxt, exportCsv, exportJson, exportXliff, exportDocx, parseImport, parseMarkedText,
 };
@@ -5666,6 +5834,7 @@ function createHandler() {
       return { result: bytes, transfer: [bytes.buffer] };
     }
     if (cmd === "keywordsPdf") { const b = keywordsPdf(args); return { result: b, transfer: [b.buffer] }; }
+    if (cmd === "cardsPdf") { const b = cardsPdf(args); return { result: b, transfer: [b.buffer] }; }
     if (cmd === "pdfPageCount") { const doc = M.Document.openDocument(args.bytes, "application/pdf"); try { return { result: doc.countPages() }; } finally { free(doc); } }
     if (cmd === "renderBytes") { // a page of a finished PDF (the translated picture) as PNG
       const doc = M.Document.openDocument(args.bytes, "application/pdf");
@@ -15016,7 +15185,7 @@ function initPicture() {
 // from its own browser cache before the network, so language files are written into that cache.
 // ======================================================================
 
-const APP_VERSION = "1.91";
+const APP_VERSION = "1.92";
 // (a change of library version makes a stored set outdated: it is then ignored)
 const OFFLINE_VERSION = `${MUPDF_URL} ${OCR_LIB}`;
 const CORE_SIMD = "tesseract-core-simd-lstm.wasm.js", CORE_PLAIN = "tesseract-core-lstm.wasm.js";
@@ -15847,8 +16016,31 @@ function fcRender() {
  * Hard: the step stays (a new word gets its first day). Known: one step up. Easy: two steps up.
  * A new word graded for the first time counts against the day's cap.
  */
+const LS_FC_DAYS = "pdftr:fcdays";
+/** The days on which cards were graded (for the streak in the vocabulary's statistics). */
+function fcNoteDay() {
+  const day = new Date().toISOString().slice(0, 10);
+  let days = [];
+  try { days = JSON.parse(localStorage.getItem(LS_FC_DAYS) || "[]"); } catch (_) { /* fine */ }
+  if (!Array.isArray(days)) days = [];
+  if (days[days.length - 1] === day) return;
+  days.push(day);
+  try { localStorage.setItem(LS_FC_DAYS, JSON.stringify(days.slice(-400))); } catch (_) { /* fine */ }
+}
+function fcStreak() {
+  let days = [];
+  try { days = JSON.parse(localStorage.getItem(LS_FC_DAYS) || "[]"); } catch (_) { /* fine */ }
+  const set = new Set(days);
+  const d = new Date();
+  const key = () => d.toISOString().slice(0, 10);
+  if (!set.has(key())) d.setDate(d.getDate() - 1); // today not yet: the streak counts up to yesterday
+  let n = 0;
+  while (set.has(key())) { n++; d.setDate(d.getDate() - 1); }
+  return n;
+}
 function fcGrade(grade) {
   const r = fc.rows[fc.queue[fc.index]], pair = r._pair || fc.pair;
+  fcNoteDay();
   if (!rowKnown(r) && !r._seen) { r._seen = true; fcNewToday(1); }
   const was = Number(r.known) || 0;
   const n = grade === "again" ? 0 : grade === "hard" ? Math.max(1, was) : grade === "known" ? was + 1 : was + 2;
@@ -17103,11 +17295,111 @@ function vocabSchedulePreview(delay = 300) {
 }
 function vocabRows(pair = vb.pair) { if (pair === FAV_ALL) return favRows(); const v = vocabLoad(); return Array.isArray(v[pair]) ? v[pair] : []; }
 /** The rows as shown: the pair's (or all favourites'), narrowed by the favourites toggle and the search. */
+/** The learning stage of a row: new, learning (steps 1-3) or mature (step 4 and up). */
+const vocabStage = (r) => (!rowKnown(r) ? "new" : Number(r.known) < 4 ? "learning" : "mature");
+const VOCAB_FILTERS = { all: () => true, due: (r) => fcDue(r), new: (r) => vocabStage(r) === "new", learning: (r) => vocabStage(r) === "learning", mature: (r) => vocabStage(r) === "mature" };
 function vocabFiltered() {
   const q = vb.query.trim().toLowerCase();
   let rows = vocabRows();
   if (vb.favOnly && vb.pair !== FAV_ALL) rows = rows.filter((r) => r.fav);
+  if (vb.filter && vb.filter !== "all") rows = rows.filter(VOCAB_FILTERS[vb.filter] || (() => true));
   return q ? rows.filter((r) => `${r.term} ${r.translation} ${r.example || ""} ${r.exampleTr || ""}`.toLowerCase().includes(q)) : rows;
+}
+/** The statistics bar: stages of the pair's words, what is due today, and the streak of study days. */
+function vocabStatsHtml(all) {
+  if (!all.length) return "";
+  const n = { new: 0, learning: 0, mature: 0 };
+  for (const r of all) n[vocabStage(r)]++;
+  const due = all.filter((r) => rowKnown(r) && fcDue(r)).length, streak = fcStreak();
+  const seg = (k) => (n[k] ? `<span class="vocab-stat-seg ${k}" style="flex:${n[k]}" title="${escapeHtml(t(`vocab.stage_${k}`))}: ${n[k]}"></span>` : "");
+  return `<div class="vocab-stat-bar">${seg("new")}${seg("learning")}${seg("mature")}</div>
+    <div class="vocab-stat-legend muted small">
+      <span><i class="vocab-stat-dot new"></i>${escapeHtml(t("vocab.stage_new"))} ${n.new}</span>
+      <span><i class="vocab-stat-dot learning"></i>${escapeHtml(t("vocab.stage_learning"))} ${n.learning}</span>
+      <span><i class="vocab-stat-dot mature"></i>${escapeHtml(t("vocab.stage_mature"))} ${n.mature}</span>
+      <span>· ${escapeHtml(t("vocab.dueToday", { n: due }))}</span>
+      <span>· ${escapeHtml(t(streak === 1 ? "vocab.streak1" : "vocab.streak", { n: streak }))}</span>
+    </div>`;
+}
+/** Rows of a pair that mean the same word: the same term apart from case, an article and punctuation. */
+const vocabNormTerm = (term) => (term || "").toLowerCase().replace(/^(der|die|das|den|dem|des|ein|eine|einen|einem|einer|the|a|an|le|la|les|l'|un|une|des|el|los|las|un|una|unos|unas|il|lo|gli|i|le|o|os|as|um|uma|de|het|een)\s+/u, "").replace(/[\s.,;:!?"“”„'‘’()]+/gu, " ").trim();
+function vocabDupeGroups(rows) {
+  const groups = new Map();
+  for (const r of rows) { const k = vocabNormTerm(r.term); if (!k) continue; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(r); }
+  return [...groups.values()].filter((g) => g.length > 1);
+}
+/** Duplicates of the shown pair merged: the longer term stays, translations and examples are kept, the learning state too. */
+function vocabMergeDupes() {
+  if (!vb.pair || vb.pair === FAV_ALL) return;
+  const v = vocabLoad(), list = v[vb.pair] || [];
+  const groups = vocabDupeGroups(list);
+  if (!groups.length) { toast(t("vocab.noDupes")); return; }
+  if (!confirm(t("vocab.mergeConfirm", { n: groups.reduce((a, g) => a + g.length - 1, 0) }))) return;
+  const drop = new Set();
+  for (const g of groups) {
+    g.sort((a, b) => b.term.length - a.term.length || (b.known || 0) - (a.known || 0));
+    const keep = g[0];
+    for (const r of g.slice(1)) {
+      const trs = keep.translation.split(/\s*;\s*/);
+      for (const tr of r.translation.split(/\s*;\s*/)) if (tr && !trs.some((x) => x.toLowerCase() === tr.toLowerCase())) trs.push(tr);
+      keep.translation = trs.filter(Boolean).join("; ");
+      if (!keep.example && r.example) { keep.example = r.example; keep.exampleTr = r.exampleTr || keep.exampleTr; }
+      if (!keep.exampleTr && r.exampleTr) keep.exampleTr = r.exampleTr;
+      keep.fav = keep.fav || r.fav || false;
+      keep.known = Math.max(Number(keep.known) || 0, Number(r.known) || 0);
+      keep.last = Math.max(Number(keep.last) || 0, Number(r.last) || 0) || undefined;
+      keep.seen = (Number(keep.seen) || 1) + (Number(r.seen) || 1);
+      keep.added = Math.min(keep.added || Date.now(), r.added || Date.now());
+      drop.add(r);
+    }
+  }
+  v[vb.pair] = list.filter((r) => !drop.has(r));
+  vocabSave(v);
+  toast(t("vocab.merged", { n: drop.size }), "ok");
+  vocabRender();
+}
+/* ---- backup and restore: the whole vocabulary with its learning state, as one file */
+function vocabBackup() {
+  const data = { app: "Kameleon", kind: "vocabulary", version: 1, exported: new Date().toISOString(), vocab: vocabLoad() };
+  try { data.days = JSON.parse(localStorage.getItem(LS_FC_DAYS) || "[]"); } catch (_) { data.days = []; }
+  const pairs = vocabPairs(data.vocab).length, n = Object.values(data.vocab).reduce((a, l) => a + (Array.isArray(l) ? l.length : 0), 0);
+  saveBlob(new Blob([JSON.stringify(data)], { type: "application/json" }), `kameleon-vocabulary-${new Date().toISOString().slice(0, 10)}.json`);
+  toast(t("vocab.backedUp", { n, pairs }), "ok");
+}
+/** A backup merged in: by pair and term; the higher learning step and the newer time win, favourites and examples are kept. */
+function vocabRestore(data) {
+  const v = vocabLoad();
+  let added = 0, updated = 0, pairs = 0;
+  for (const [pair, rows] of Object.entries(data.vocab || {})) {
+    if (!Array.isArray(rows) || !/^[a-z]{2,3}-[a-z]{2,3}$/.test(pair)) continue;
+    pairs++;
+    const list = Array.isArray(v[pair]) ? v[pair] : (v[pair] = []);
+    const byTerm = new Map(list.map((r) => [r.term, r]));
+    for (const r of rows) {
+      if (!r || !r.term) continue;
+      const cur = byTerm.get(r.term);
+      if (!cur) { list.push({ ...r }); byTerm.set(r.term, r); added++; continue; }
+      let changed = false;
+      if ((Number(r.known) || 0) > (Number(cur.known) || 0) || ((Number(r.known) || 0) === (Number(cur.known) || 0) && (Number(r.last) || 0) > (Number(cur.last) || 0))) { cur.known = r.known; cur.last = r.last; changed = true; }
+      if (r.fav && !cur.fav) { cur.fav = true; changed = true; }
+      for (const k of ["translation", "example", "exampleTr"]) if (!cur[k] && r[k]) { cur[k] = r[k]; changed = true; }
+      if (changed) updated++;
+    }
+  }
+  vocabSave(v);
+  if (Array.isArray(data.days)) {
+    let days = [];
+    try { days = JSON.parse(localStorage.getItem(LS_FC_DAYS) || "[]"); } catch (_) { /* fine */ }
+    const merged = [...new Set([...days, ...data.days.filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d))])].sort();
+    try { localStorage.setItem(LS_FC_DAYS, JSON.stringify(merged.slice(-400))); } catch (_) { /* fine */ }
+  }
+  return { added, updated, pairs };
+}
+/** The shown rows as a printable two-sided card sheet. */
+async function vocabCardsPdfBytes() {
+  const rows = vocabFiltered().filter((r) => r.term && r.translation);
+  const [src, tgt] = (vb.pair === FAV_ALL ? "" : vb.pair).split("-");
+  return new Uint8Array(await pool.workers[0].call("cardsPdf", { rows, frontLabel: src ? src.toUpperCase() : "", backLabel: tgt ? tgt.toUpperCase() : "" }));
 }
 const rowPair = (r) => r._pair || vb.pair;
 function vocabRender() {
@@ -17124,6 +17416,12 @@ function vocabRender() {
   $("#vocabFavs").disabled = vb.pair === FAV_ALL;
   const rows = vocabFiltered(), all = vocabRows();
   $("#vocabCount").textContent = rows.length === all.length ? t("vocab.count", { n: all.length }) : t("vocab.countOf", { n: rows.length, total: all.length });
+  $("#vocabStats").innerHTML = vocabStatsHtml(all);
+  $("#vocabFilter").value = vb.filter || "all";
+  const dupes = vb.pair && vb.pair !== FAV_ALL ? vocabDupeGroups(all).reduce((a, g) => a + g.length - 1, 0) : 0;
+  $("#vocabMerge").textContent = t("vocab.merge", { n: dupes });
+  $("#vocabMerge").disabled = !dupes;
+  $("#vocabBackup").disabled = !vocabPairs().length;
   const list = $("#vocabList");
   list.innerHTML = rows.length ? rows.map((r) => `<div class="kw-row vocab-row${r.fav ? " fav" : ""}" data-term="${escapeHtml(r.term)}" data-pair="${escapeHtml(rowPair(r))}">
       <input data-k="term" value="${escapeHtml(r.term)}">
@@ -17133,7 +17431,7 @@ function vocabRender() {
       <input class="kw-ex" data-k="exampleTr" value="${escapeHtml(r.exampleTr || "")}" placeholder="${escapeHtml(t("kw.exampleTr"))}">
     </div>`).join("") : `<p class="muted small">${escapeHtml(all.length ? t("vocab.noMatch") : t("vocab.empty"))}</p>`;
   const some = rows.length > 0;
-  for (const id of ["#vocabCards", "#vocabPdf", "#vocabApkg", "#vocabMove", "#vocabPreview"]) $(id).disabled = !some && !vb.preview;
+  for (const id of ["#vocabCards", "#vocabPdf", "#vocabApkg", "#vocabMove", "#vocabPreview", "#vocabCardsPdf"]) $(id).disabled = !some && !vb.preview;
   $("#vocabPreview").textContent = t(vb.preview ? "vocab.previewOff" : "vocab.preview");
   $("#vocabPreview").classList.toggle("on", vb.preview);
   $("#vocabList").parentElement.classList.toggle("preview", vb.preview);
@@ -17179,6 +17477,12 @@ function initVocab() {
   $("#kwModeVocab").addEventListener("click", () => kwSetMode("vocab"));
   $("#vocabPair").addEventListener("change", (e) => { vb.pair = e.target.value; vb.query = ""; $("#vocabSearch").value = ""; vocabRender(); });
   $("#vocabSearch").addEventListener("input", (e) => { vb.query = e.target.value; vocabRender(); });
+  $("#vocabFilter").addEventListener("change", (e) => { vb.filter = e.target.value; vocabRender(); });
+  $("#vocabMerge").addEventListener("click", vocabMergeDupes);
+  $("#vocabBackup").addEventListener("click", vocabBackup);
+  $("#vocabCardsPdf").addEventListener("click", async () => {
+    try { saveBlob(new Blob([await vocabCardsPdfBytes()], { type: "application/pdf" }), `flashcards-${pairFile(vb.pair)}.pdf`); } catch (err) { toast(userError(err), "error"); }
+  });
   const list = $("#vocabList");
   list.addEventListener("input", (e) => {
     const row = e.target.closest(".vocab-row"), k = e.target.dataset.k;
@@ -17249,6 +17553,14 @@ function initVocab() {
     if (!file) return;
     const bytes = new Uint8Array(await file.arrayBuffer());
     let rows, deckName = file.name, hint = { src: "", tgt: "" };
+    if (/\.json$/i.test(file.name) || bytes[0] === 0x7b) { // a backup of the whole vocabulary
+      let data = null;
+      try { data = JSON.parse(new TextDecoder().decode(bytes)); } catch (_) { /* not JSON */ }
+      if (!data || data.app !== "Kameleon" || !data.vocab) { toast(t("vocab.badBackup"), "error"); return; }
+      const r = vocabRestore(data);
+      toast(t("vocab.restored", r), "ok"); vocabRender();
+      return;
+    }
     if (/\.apkg$/i.test(file.name) || (bytes[0] === 0x50 && bytes[1] === 0x4b)) {
       try { const r = await readApkg(bytes); rows = r.rows; deckName = r.deck || file.name; hint = r.langs || hint; } catch (err) { toast(userError(err), "error"); return; }
     } else rows = parseVocabText(new TextDecoder().decode(bytes));

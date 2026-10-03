@@ -215,11 +215,111 @@ function vocabSchedulePreview(delay = 300) {
 }
 function vocabRows(pair = vb.pair) { if (pair === FAV_ALL) return favRows(); const v = vocabLoad(); return Array.isArray(v[pair]) ? v[pair] : []; }
 /** The rows as shown: the pair's (or all favourites'), narrowed by the favourites toggle and the search. */
+/** The learning stage of a row: new, learning (steps 1-3) or mature (step 4 and up). */
+const vocabStage = (r) => (!rowKnown(r) ? "new" : Number(r.known) < 4 ? "learning" : "mature");
+const VOCAB_FILTERS = { all: () => true, due: (r) => fcDue(r), new: (r) => vocabStage(r) === "new", learning: (r) => vocabStage(r) === "learning", mature: (r) => vocabStage(r) === "mature" };
 function vocabFiltered() {
   const q = vb.query.trim().toLowerCase();
   let rows = vocabRows();
   if (vb.favOnly && vb.pair !== FAV_ALL) rows = rows.filter((r) => r.fav);
+  if (vb.filter && vb.filter !== "all") rows = rows.filter(VOCAB_FILTERS[vb.filter] || (() => true));
   return q ? rows.filter((r) => `${r.term} ${r.translation} ${r.example || ""} ${r.exampleTr || ""}`.toLowerCase().includes(q)) : rows;
+}
+/** The statistics bar: stages of the pair's words, what is due today, and the streak of study days. */
+function vocabStatsHtml(all) {
+  if (!all.length) return "";
+  const n = { new: 0, learning: 0, mature: 0 };
+  for (const r of all) n[vocabStage(r)]++;
+  const due = all.filter((r) => rowKnown(r) && fcDue(r)).length, streak = fcStreak();
+  const seg = (k) => (n[k] ? `<span class="vocab-stat-seg ${k}" style="flex:${n[k]}" title="${escapeHtml(t(`vocab.stage_${k}`))}: ${n[k]}"></span>` : "");
+  return `<div class="vocab-stat-bar">${seg("new")}${seg("learning")}${seg("mature")}</div>
+    <div class="vocab-stat-legend muted small">
+      <span><i class="vocab-stat-dot new"></i>${escapeHtml(t("vocab.stage_new"))} ${n.new}</span>
+      <span><i class="vocab-stat-dot learning"></i>${escapeHtml(t("vocab.stage_learning"))} ${n.learning}</span>
+      <span><i class="vocab-stat-dot mature"></i>${escapeHtml(t("vocab.stage_mature"))} ${n.mature}</span>
+      <span>· ${escapeHtml(t("vocab.dueToday", { n: due }))}</span>
+      <span>· ${escapeHtml(t(streak === 1 ? "vocab.streak1" : "vocab.streak", { n: streak }))}</span>
+    </div>`;
+}
+/** Rows of a pair that mean the same word: the same term apart from case, an article and punctuation. */
+const vocabNormTerm = (term) => (term || "").toLowerCase().replace(/^(der|die|das|den|dem|des|ein|eine|einen|einem|einer|the|a|an|le|la|les|l'|un|une|des|el|los|las|un|una|unos|unas|il|lo|gli|i|le|o|os|as|um|uma|de|het|een)\s+/u, "").replace(/[\s.,;:!?"“”„'‘’()]+/gu, " ").trim();
+function vocabDupeGroups(rows) {
+  const groups = new Map();
+  for (const r of rows) { const k = vocabNormTerm(r.term); if (!k) continue; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(r); }
+  return [...groups.values()].filter((g) => g.length > 1);
+}
+/** Duplicates of the shown pair merged: the longer term stays, translations and examples are kept, the learning state too. */
+function vocabMergeDupes() {
+  if (!vb.pair || vb.pair === FAV_ALL) return;
+  const v = vocabLoad(), list = v[vb.pair] || [];
+  const groups = vocabDupeGroups(list);
+  if (!groups.length) { toast(t("vocab.noDupes")); return; }
+  if (!confirm(t("vocab.mergeConfirm", { n: groups.reduce((a, g) => a + g.length - 1, 0) }))) return;
+  const drop = new Set();
+  for (const g of groups) {
+    g.sort((a, b) => b.term.length - a.term.length || (b.known || 0) - (a.known || 0));
+    const keep = g[0];
+    for (const r of g.slice(1)) {
+      const trs = keep.translation.split(/\s*;\s*/);
+      for (const tr of r.translation.split(/\s*;\s*/)) if (tr && !trs.some((x) => x.toLowerCase() === tr.toLowerCase())) trs.push(tr);
+      keep.translation = trs.filter(Boolean).join("; ");
+      if (!keep.example && r.example) { keep.example = r.example; keep.exampleTr = r.exampleTr || keep.exampleTr; }
+      if (!keep.exampleTr && r.exampleTr) keep.exampleTr = r.exampleTr;
+      keep.fav = keep.fav || r.fav || false;
+      keep.known = Math.max(Number(keep.known) || 0, Number(r.known) || 0);
+      keep.last = Math.max(Number(keep.last) || 0, Number(r.last) || 0) || undefined;
+      keep.seen = (Number(keep.seen) || 1) + (Number(r.seen) || 1);
+      keep.added = Math.min(keep.added || Date.now(), r.added || Date.now());
+      drop.add(r);
+    }
+  }
+  v[vb.pair] = list.filter((r) => !drop.has(r));
+  vocabSave(v);
+  toast(t("vocab.merged", { n: drop.size }), "ok");
+  vocabRender();
+}
+/* ---- backup and restore: the whole vocabulary with its learning state, as one file */
+function vocabBackup() {
+  const data = { app: "Kameleon", kind: "vocabulary", version: 1, exported: new Date().toISOString(), vocab: vocabLoad() };
+  try { data.days = JSON.parse(localStorage.getItem(LS_FC_DAYS) || "[]"); } catch (_) { data.days = []; }
+  const pairs = vocabPairs(data.vocab).length, n = Object.values(data.vocab).reduce((a, l) => a + (Array.isArray(l) ? l.length : 0), 0);
+  saveBlob(new Blob([JSON.stringify(data)], { type: "application/json" }), `kameleon-vocabulary-${new Date().toISOString().slice(0, 10)}.json`);
+  toast(t("vocab.backedUp", { n, pairs }), "ok");
+}
+/** A backup merged in: by pair and term; the higher learning step and the newer time win, favourites and examples are kept. */
+function vocabRestore(data) {
+  const v = vocabLoad();
+  let added = 0, updated = 0, pairs = 0;
+  for (const [pair, rows] of Object.entries(data.vocab || {})) {
+    if (!Array.isArray(rows) || !/^[a-z]{2,3}-[a-z]{2,3}$/.test(pair)) continue;
+    pairs++;
+    const list = Array.isArray(v[pair]) ? v[pair] : (v[pair] = []);
+    const byTerm = new Map(list.map((r) => [r.term, r]));
+    for (const r of rows) {
+      if (!r || !r.term) continue;
+      const cur = byTerm.get(r.term);
+      if (!cur) { list.push({ ...r }); byTerm.set(r.term, r); added++; continue; }
+      let changed = false;
+      if ((Number(r.known) || 0) > (Number(cur.known) || 0) || ((Number(r.known) || 0) === (Number(cur.known) || 0) && (Number(r.last) || 0) > (Number(cur.last) || 0))) { cur.known = r.known; cur.last = r.last; changed = true; }
+      if (r.fav && !cur.fav) { cur.fav = true; changed = true; }
+      for (const k of ["translation", "example", "exampleTr"]) if (!cur[k] && r[k]) { cur[k] = r[k]; changed = true; }
+      if (changed) updated++;
+    }
+  }
+  vocabSave(v);
+  if (Array.isArray(data.days)) {
+    let days = [];
+    try { days = JSON.parse(localStorage.getItem(LS_FC_DAYS) || "[]"); } catch (_) { /* fine */ }
+    const merged = [...new Set([...days, ...data.days.filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d))])].sort();
+    try { localStorage.setItem(LS_FC_DAYS, JSON.stringify(merged.slice(-400))); } catch (_) { /* fine */ }
+  }
+  return { added, updated, pairs };
+}
+/** The shown rows as a printable two-sided card sheet. */
+async function vocabCardsPdfBytes() {
+  const rows = vocabFiltered().filter((r) => r.term && r.translation);
+  const [src, tgt] = (vb.pair === FAV_ALL ? "" : vb.pair).split("-");
+  return new Uint8Array(await pool.workers[0].call("cardsPdf", { rows, frontLabel: src ? src.toUpperCase() : "", backLabel: tgt ? tgt.toUpperCase() : "" }));
 }
 const rowPair = (r) => r._pair || vb.pair;
 function vocabRender() {
@@ -236,6 +336,12 @@ function vocabRender() {
   $("#vocabFavs").disabled = vb.pair === FAV_ALL;
   const rows = vocabFiltered(), all = vocabRows();
   $("#vocabCount").textContent = rows.length === all.length ? t("vocab.count", { n: all.length }) : t("vocab.countOf", { n: rows.length, total: all.length });
+  $("#vocabStats").innerHTML = vocabStatsHtml(all);
+  $("#vocabFilter").value = vb.filter || "all";
+  const dupes = vb.pair && vb.pair !== FAV_ALL ? vocabDupeGroups(all).reduce((a, g) => a + g.length - 1, 0) : 0;
+  $("#vocabMerge").textContent = t("vocab.merge", { n: dupes });
+  $("#vocabMerge").disabled = !dupes;
+  $("#vocabBackup").disabled = !vocabPairs().length;
   const list = $("#vocabList");
   list.innerHTML = rows.length ? rows.map((r) => `<div class="kw-row vocab-row${r.fav ? " fav" : ""}" data-term="${escapeHtml(r.term)}" data-pair="${escapeHtml(rowPair(r))}">
       <input data-k="term" value="${escapeHtml(r.term)}">
@@ -245,7 +351,7 @@ function vocabRender() {
       <input class="kw-ex" data-k="exampleTr" value="${escapeHtml(r.exampleTr || "")}" placeholder="${escapeHtml(t("kw.exampleTr"))}">
     </div>`).join("") : `<p class="muted small">${escapeHtml(all.length ? t("vocab.noMatch") : t("vocab.empty"))}</p>`;
   const some = rows.length > 0;
-  for (const id of ["#vocabCards", "#vocabPdf", "#vocabApkg", "#vocabMove", "#vocabPreview"]) $(id).disabled = !some && !vb.preview;
+  for (const id of ["#vocabCards", "#vocabPdf", "#vocabApkg", "#vocabMove", "#vocabPreview", "#vocabCardsPdf"]) $(id).disabled = !some && !vb.preview;
   $("#vocabPreview").textContent = t(vb.preview ? "vocab.previewOff" : "vocab.preview");
   $("#vocabPreview").classList.toggle("on", vb.preview);
   $("#vocabList").parentElement.classList.toggle("preview", vb.preview);
@@ -291,6 +397,12 @@ function initVocab() {
   $("#kwModeVocab").addEventListener("click", () => kwSetMode("vocab"));
   $("#vocabPair").addEventListener("change", (e) => { vb.pair = e.target.value; vb.query = ""; $("#vocabSearch").value = ""; vocabRender(); });
   $("#vocabSearch").addEventListener("input", (e) => { vb.query = e.target.value; vocabRender(); });
+  $("#vocabFilter").addEventListener("change", (e) => { vb.filter = e.target.value; vocabRender(); });
+  $("#vocabMerge").addEventListener("click", vocabMergeDupes);
+  $("#vocabBackup").addEventListener("click", vocabBackup);
+  $("#vocabCardsPdf").addEventListener("click", async () => {
+    try { saveBlob(new Blob([await vocabCardsPdfBytes()], { type: "application/pdf" }), `flashcards-${pairFile(vb.pair)}.pdf`); } catch (err) { toast(userError(err), "error"); }
+  });
   const list = $("#vocabList");
   list.addEventListener("input", (e) => {
     const row = e.target.closest(".vocab-row"), k = e.target.dataset.k;
@@ -361,6 +473,14 @@ function initVocab() {
     if (!file) return;
     const bytes = new Uint8Array(await file.arrayBuffer());
     let rows, deckName = file.name, hint = { src: "", tgt: "" };
+    if (/\.json$/i.test(file.name) || bytes[0] === 0x7b) { // a backup of the whole vocabulary
+      let data = null;
+      try { data = JSON.parse(new TextDecoder().decode(bytes)); } catch (_) { /* not JSON */ }
+      if (!data || data.app !== "Kameleon" || !data.vocab) { toast(t("vocab.badBackup"), "error"); return; }
+      const r = vocabRestore(data);
+      toast(t("vocab.restored", r), "ok"); vocabRender();
+      return;
+    }
     if (/\.apkg$/i.test(file.name) || (bytes[0] === 0x50 && bytes[1] === 0x4b)) {
       try { const r = await readApkg(bytes); rows = r.rows; deckName = r.deck || file.name; hint = r.langs || hint; } catch (err) { toast(userError(err), "error"); return; }
     } else rows = parseVocabText(new TextDecoder().decode(bytes));

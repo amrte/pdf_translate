@@ -325,8 +325,31 @@ function fcRender() {
  * Hard: the step stays (a new word gets its first day). Known: one step up. Easy: two steps up.
  * A new word graded for the first time counts against the day's cap.
  */
+const LS_FC_DAYS = "pdftr:fcdays";
+/** The days on which cards were graded (for the streak in the vocabulary's statistics). */
+function fcNoteDay() {
+  const day = new Date().toISOString().slice(0, 10);
+  let days = [];
+  try { days = JSON.parse(localStorage.getItem(LS_FC_DAYS) || "[]"); } catch (_) { /* fine */ }
+  if (!Array.isArray(days)) days = [];
+  if (days[days.length - 1] === day) return;
+  days.push(day);
+  try { localStorage.setItem(LS_FC_DAYS, JSON.stringify(days.slice(-400))); } catch (_) { /* fine */ }
+}
+function fcStreak() {
+  let days = [];
+  try { days = JSON.parse(localStorage.getItem(LS_FC_DAYS) || "[]"); } catch (_) { /* fine */ }
+  const set = new Set(days);
+  const d = new Date();
+  const key = () => d.toISOString().slice(0, 10);
+  if (!set.has(key())) d.setDate(d.getDate() - 1); // today not yet: the streak counts up to yesterday
+  let n = 0;
+  while (set.has(key())) { n++; d.setDate(d.getDate() - 1); }
+  return n;
+}
 function fcGrade(grade) {
   const r = fc.rows[fc.queue[fc.index]], pair = r._pair || fc.pair;
+  fcNoteDay();
   if (!rowKnown(r) && !r._seen) { r._seen = true; fcNewToday(1); }
   const was = Number(r.known) || 0;
   const n = grade === "again" ? 0 : grade === "hard" ? Math.max(1, was) : grade === "known" ? was + 1 : was + 2;

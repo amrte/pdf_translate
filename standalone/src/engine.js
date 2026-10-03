@@ -2198,9 +2198,101 @@ function keywordsPdf(args) {
   }
 }
 
+/**
+ * Printable flashcards: A4 sheets with 2 x 4 cards, the fronts (term, example) on one page and
+ * the backs (translation, translated example) on the next, mirrored column-wise so that a
+ * duplex print flipped on the long edge puts each back behind its front. Dashed cut lines.
+ * `args`: {rows: [{term, translation, example, exampleTr}], frontLabel, backLabel}.
+ */
+function cardsPdf(args) {
+  const W = 595.28, H = 841.89, MARGIN = 28, COLS = 2, ROWS = 4, PAD = 16;
+  const cw = (W - 2 * MARGIN) / COLS, ch = (H - 2 * MARGIN) / ROWS;
+  const doc = new M.PDFDocument();
+  const fk = new FontKit(doc, { fontMode: "auto" });
+  try {
+    const pages = [];
+    let ops = [], used = new Set();
+    const layout = (text, size, bold, width) => {
+      const chain = fk.chain({ family: "sans-serif", bold, italic: false }, text || " ");
+      const tok = tokenize(text || " ", fk, chain);
+      return { tok, lines: wrap(tok, width / size) };
+    };
+    const draw = (laid, x, top, size, color, center = 0) => {
+      const L = 1.3 * size;
+      let base = top + 0.85 * size;
+      for (const line of laid.lines) {
+        let lineW = 0;
+        line.tokens.forEach((tk, j) => { if (j && tk.sp) lineW += laid.tok.spaceAdv * size; for (const g of tk.glyphs) lineW += g.adv * size; });
+        let cx = center ? x + (center - lineW) / 2 : x, run = null;
+        const flush = () => { if (run) ops.push(`BT /${run.e.res} 1 Tf ${rg(color)} ${fmt(size)} 0 0 ${fmt(-size)} ${fmt(run.x)} ${fmt(base)} Tm <${run.hex}> Tj ET`); run = null; };
+        line.tokens.forEach((tk, j) => {
+          if (j && tk.sp) { flush(); cx += laid.tok.spaceAdv * size; }
+          for (const g of tk.glyphs) {
+            if (g.own !== undefined) flush();
+            if (!run || run.e !== g.e) { flush(); run = { e: g.e, x: cx - (g.own || 0) * size, hex: "" }; fk.ref(g.e); used.add(g.e); }
+            run.hex += g.gid.toString(16).padStart(4, "0");
+            cx += g.adv * size;
+            if (g.own !== undefined) flush();
+          }
+        });
+        flush();
+        base += L;
+      }
+      return laid.lines.length * L;
+    };
+    const cutLines = () => {
+      ops.push("q 0.75 0.75 0.75 RG 0.5 w [4 4] 0 d");
+      for (let c = 0; c <= COLS; c++) ops.push(`${fmt(MARGIN + c * cw)} ${fmt(MARGIN)} m ${fmt(MARGIN + c * cw)} ${fmt(H - MARGIN)} l S`);
+      for (let r = 0; r <= ROWS; r++) ops.push(`${fmt(MARGIN)} ${fmt(MARGIN + r * ch)} m ${fmt(W - MARGIN)} ${fmt(MARGIN + r * ch)} l S`);
+      ops.push("Q");
+    };
+    const card = (col, row, word, sentence, label) => {
+      const x = MARGIN + col * cw, y = MARGIN + row * ch, inner = cw - 2 * PAD;
+      let size = 16, laid = layout(word, size, true, inner);
+      while (laid.lines.length > 3 && size > 9) { size -= 1.5; laid = layout(word, size, true, inner); }
+      const ex = sentence ? layout(sentence, 9.5, false, inner) : null;
+      const exH = ex ? Math.min(ex.lines.length, 4) * 1.3 * 9.5 : 0;
+      if (ex) ex.lines = ex.lines.slice(0, 4);
+      const total = laid.lines.length * 1.3 * size + (ex ? 8 + exH : 0);
+      let top = y + (ch - total) / 2;
+      draw(laid, x + PAD, top, size, "#111111", inner);
+      if (ex) draw(ex, x + PAD, top + laid.lines.length * 1.3 * size + 8, 9.5, "#666666", inner);
+      if (label) draw(layout(label, 7, false, inner), x + PAD, y + 7, 7, "#aaaaaa");
+    };
+    const rows = args.rows;
+    const per = COLS * ROWS;
+    for (let i = 0; i < rows.length; i += per) {
+      const sheet = rows.slice(i, i + per);
+      // fronts
+      ops = []; used = new Set(); cutLines();
+      sheet.forEach((r, k) => card(k % COLS, Math.floor(k / COLS), r.term, r.example, args.frontLabel));
+      pages.push({ ops, used });
+      // backs, mirrored column-wise
+      ops = []; used = new Set(); cutLines();
+      sheet.forEach((r, k) => card(COLS - 1 - (k % COLS), Math.floor(k / COLS), r.translation, r.exampleTr, args.backLabel));
+      pages.push({ ops, used });
+    }
+    for (const p of pages) {
+      const res = doc.newDictionary();
+      if (p.used.size) { const fonts = doc.newDictionary(); for (const e of p.used) fonts.put(e.res, fk.ref(e)); res.put("Font", fonts); }
+      const pg = doc.addPage([0, 0, W, H], 0, res, `q 1 0 0 -1 0 ${fmt(H)} cm\n${p.ops.join("\n")}\nQ`);
+      doc.insertPage(-1, pg);
+      free(pg);
+    }
+    doc.subsetFonts();
+    const buf = doc.saveToBuffer("compress");
+    const out = buf.asUint8Array().slice();
+    free(buf);
+    return out;
+  } finally {
+    fk.dispose();
+    free(doc);
+  }
+}
+
 const Engine = {
   init: initEngine, extract: extractDocument, extractPages, build: buildTranslated, renderPNG,
-  detectKind, imageKindOf, imageToPdf, keywordsPdf, openBook, saveBook, extractBook, openLaidOut, mapTranslated, openOffice, officePreviewHtml, ocrToBlocks, sampleColors, refineOcr,
+  detectKind, imageKindOf, imageToPdf, keywordsPdf, cardsPdf, openBook, saveBook, extractBook, openLaidOut, mapTranslated, openOffice, officePreviewHtml, ocrToBlocks, sampleColors, refineOcr,
   open: (bytes) => M.Document.openDocument(bytes, "application/pdf"),
   exportTxt, exportCsv, exportJson, exportXliff, exportDocx, parseImport, parseMarkedText,
 };
@@ -2659,6 +2751,7 @@ function createHandler() {
       return { result: bytes, transfer: [bytes.buffer] };
     }
     if (cmd === "keywordsPdf") { const b = keywordsPdf(args); return { result: b, transfer: [b.buffer] }; }
+    if (cmd === "cardsPdf") { const b = cardsPdf(args); return { result: b, transfer: [b.buffer] }; }
     if (cmd === "pdfPageCount") { const doc = M.Document.openDocument(args.bytes, "application/pdf"); try { return { result: doc.countPages() }; } finally { free(doc); } }
     if (cmd === "renderBytes") { // a page of a finished PDF (the translated picture) as PNG
       const doc = M.Document.openDocument(args.bytes, "application/pdf");
