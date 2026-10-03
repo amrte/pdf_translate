@@ -508,6 +508,7 @@ function openDocument(doc, bytes) {
   document.body.classList.toggle("has-pages", pagesSupported());
   document.body.classList.toggle("is-pptx", doc.kind === "pptx");
   picDocumentChanged();
+  accentFromDocument(); // the chameleon takes the colour of the document
   setDocFormat(doc.image ? doc.image.label : FORMAT_LABEL[doc.kind || "pdf"]);
   document.title = `${doc.name} · Kameleon`;
 
@@ -611,6 +612,7 @@ function onLanguageChange() {
 }
 
 function closeDocument() {
+  restoreStartAccent(); // back to the colour of this start
   flushPersist();
   closeFind();
   setCompare(false);

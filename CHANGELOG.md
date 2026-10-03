@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.69
+
+- The chameleon takes the colour of the document: while a file is open, the accent colour of the app (buttons, boxes, icon) follows the dominant colour of its first page – pulled into a range that stays readable in the light and the dark theme. A page without a clear colour (plain text, grey scans) keeps the colour of this start, and closing the file brings it back.
+
 ## 1.68
 
 - Top bar: the DE/EN switch and the full-screen button are as tall as the buttons beside them.

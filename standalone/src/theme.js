@@ -88,7 +88,77 @@ function initThemeMode() {
   if (btn) btn.addEventListener("click", () => setThemeMode(THEME_MODES[(THEME_MODES.indexOf(themeMode()) + 1) % THEME_MODES.length]));
 }
 
-window.Kameleon = Object.assign(window.Kameleon || {}, { ACCENTS, pickAccent, applyAccent, setThemeMode, themeMode });
+/* ---- the document's colour: while a file is open, the accent follows the dominant colour of its first page */
+let startAccent = -1; // the accent of this start, back when the document closes
+
+const rgbToHsl = (r, g, b) => {
+  r /= 255; g /= 255; b /= 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b), l = (max + min) / 2;
+  if (max === min) return [0, 0, l];
+  const d = max - min, s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+  const h = max === r ? ((g - b) / d + (g < b ? 6 : 0)) / 6 : max === g ? ((b - r) / d + 2) / 6 : ((r - g) / d + 4) / 6;
+  return [h, s, l];
+};
+const hslToHex = (h, s, l) => {
+  const f = (n) => { const k = (n + h * 12) % 12, a = s * Math.min(l, 1 - l); return Math.round(255 * (l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1)))); };
+  return "#" + [f(0), f(8), f(4)].map((v) => v.toString(16).padStart(2, "0")).join("");
+};
+
+/** The dominant saturated colour of a rendered page ({r,g,b}), or null when the page is mostly text, grey or white. */
+function dominantColor(img) {
+  const { data, width, height } = img;
+  const step = Math.max(1, Math.floor(Math.sqrt((width * height) / 40000))); // about 40 000 samples
+  const bins = new Map(); // hue bin → {n, r, g, b}
+  let total = 0;
+  for (let y = 0; y < height; y += step) {
+    for (let x = 0; x < width; x += step) {
+      const i = (y * width + x) * 4;
+      if (data[i + 3] < 128) continue;
+      total++;
+      const [h, s, l] = rgbToHsl(data[i], data[i + 1], data[i + 2]);
+      if (s < 0.3 || l < 0.12 || l > 0.9) continue; // grey, black and white do not count
+      const key = Math.floor(h * 24) % 24;
+      const bin = bins.get(key) || { n: 0, r: 0, g: 0, b: 0 };
+      bin.n++; bin.r += data[i]; bin.g += data[i + 1]; bin.b += data[i + 2];
+      bins.set(key, bin);
+    }
+  }
+  let best = null;
+  for (const bin of bins.values()) if (!best || bin.n > best.n) best = bin;
+  if (!best || !total || best.n < 40 || best.n < 0.005 * total) return null; // at least half a percent of the page in one hue (coloured headings count, a stray logo pixel does not)
+  return { r: Math.round(best.r / best.n), g: Math.round(best.g / best.n), b: Math.round(best.b / best.n) };
+}
+
+/** A colour from the document as the accent: pulled to a range that reads on white (light) and on dark (dark). */
+function applyDocumentColor(c) {
+  const [h, s] = rgbToHsl(c.r, c.g, c.b), [, , l] = rgbToHsl(c.r, c.g, c.b);
+  const light = hslToHex(h, Math.max(0.45, Math.min(0.85, s)), Math.max(0.26, Math.min(0.42, l)));
+  const dark = hslToHex(h, Math.max(0.4, Math.min(0.75, s)), 0.72);
+  const root = document.documentElement;
+  root.style.setProperty("--accent-base", light);
+  root.style.setProperty("--accent-dark-base", dark);
+  root.dataset.accent = "Document";
+  const link = document.querySelector('link[rel="icon"]');
+  if (link && link.dataset.template) link.href = link.dataset.template.split("%23287130").join(encodeURIComponent(light));
+  return light;
+}
+function restoreStartAccent() { if (startAccent >= 0) applyAccent(startAccent); }
+
+/** Reads the first page of the open document and colours the app after it (or goes back to the start's colour). */
+async function accentFromDocument() {
+  const doc = state.doc;
+  if (!doc) return;
+  try {
+    const buf = await pool.leastBusy(null).call("render", { page: 0, zoom: 0.3, variant: "original" });
+    if (state.doc !== doc) return;
+    const img = await imageDataOf(new Blob([buf], { type: "image/png" }));
+    const c = dominantColor(img);
+    if (state.doc !== doc) return;
+    if (c) applyDocumentColor(c); else restoreStartAccent();
+  } catch (err) { console.warn("accent from document", err); restoreStartAccent(); } // (no page to render: the start's colour stays)
+}
+
+window.Kameleon = Object.assign(window.Kameleon || {}, { ACCENTS, pickAccent, applyAccent, setThemeMode, themeMode, dominantColor, applyDocumentColor });
 
 function initTheme() {
   const m = /[?#&]accent=([^&#]+)/.exec(location.href);
@@ -98,5 +168,6 @@ function initTheme() {
     i = /^\d+$/.test(v) ? Number(v) - 1 : ACCENTS.findIndex((a) => a.name.toLowerCase() === v.toLowerCase());
   }
   if (i < 0) i = pickAccent();
+  startAccent = i;
   applyAccent(i);
 }
