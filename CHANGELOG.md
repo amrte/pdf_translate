@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.63
+
+- Top bar: the full-screen button has a new icon – two diagonal arrows that point outwards, and inwards while the app is full screen.
+
 ## 1.62
 
 - Start screen: the tagline under the drop area is no longer shown; the line stays empty so the layout does not move.

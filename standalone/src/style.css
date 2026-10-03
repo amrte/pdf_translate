@@ -414,6 +414,8 @@ body.box-dragging, body.box-dragging .box { cursor: grabbing !important; user-se
 .ocr-langs { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 2px 12px; margin-top: 4px; }
 .error-text { color: var(--danger, #c62828); font-weight: 600; }
 .top-fs.on { color: var(--accent, var(--accent)); }
+.top-fs .fs-on, .top-fs.on .fs-off { display: none; }
+.top-fs.on .fs-on { display: inline; }
 
 /* ---- v1.09: turned pages, bilingual download ---- */
 .page-body { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); transform-origin: 50% 50%; }
