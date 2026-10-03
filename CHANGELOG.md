@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.85
+
+- Batch: several files at once. Drop or choose more than one file, or open the batch from the start screen (and from the top bar while it has files). The files are read in the background and their segments collected; one prompt covers them all, part by part, with the numbers running across the files. The answers pasted into the batch window are sorted back into each file's translations, so a file opened from the batch is translated already and only needs its build and download. "Open next file" steps through the batch; a downloaded file is marked.
+
 ## 1.84
 
 - Learn: a "Words" tab lists every word of the open document by frequency, with the number of occurrences and a passage, without the most common function words of its language; words already in the vocabulary are marked. Tick words or select the most frequent ones, copy a prompt that asks the AI for translations and example sentences, and paste the answer on the right: the words arrive in the keyword list, the vocabulary and the flashcards.

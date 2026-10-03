@@ -301,8 +301,9 @@ async function idbGet(key = "last") {
 
 /* ------------------------------------------------------------- loading */
 
-async function openPdf(file) {
+async function openPdf(file, files = null) {
   if (!file) return;
+  if (files && files.length > 1) { batchAdd(files); return; } // several files: the batch
   if (!/\.(pdf|epub|fb2|fbz|zip|docx|pptx|xlsx|doc|xls|ppt|srt|vtt|md|markdown|txt|text|png|jpe?g|gif|bmp|tiff?|webp|avif|heic)$/i.test(file.name) && !/pdf|epub|fictionbook|officedocument|msword|ms-excel|ms-powerpoint|^text\/|^image\//i.test(file.type)) {
     toast(t("msg.chooseFile"), "error");
     return;
@@ -503,6 +504,7 @@ function openDocument(doc, bytes) {
   $("#uploadView").hidden = true;
   $("#workView").hidden = false;
   $("#btnNew").hidden = false;
+  document.dispatchEvent(new CustomEvent("kameleon:document"));
   $("#btnClose").hidden = false;
   $("#docName").textContent = doc.name;
   $("#docName").title = doc.name;
@@ -616,6 +618,7 @@ function onLanguageChange() {
 }
 
 function closeDocument() {
+  queueMicrotask(() => document.dispatchEvent(new CustomEvent("kameleon:document")));
   restoreStartAccent(); // back to the colour of this start
   flushPersist();
   closeFind();
@@ -1477,7 +1480,7 @@ function setupDropzone(zone, onFile) {
     e.stopPropagation();
     zone.classList.add("bite"); // the chameleon snaps at the dropped file
     setTimeout(() => zone.classList.remove("bite"), 700);
-    onFile(e.dataTransfer.files[0]);
+    onFile(e.dataTransfer.files[0], e.dataTransfer.files);
   });
 }
 
@@ -1505,7 +1508,7 @@ function initWorkflowFold() {
 
 function init() {
   setupDropzone($("#dropzone"), openPdf);
-  $("#fileInput").addEventListener("change", (e) => openPdf(e.target.files[0]));
+  $("#fileInput").addEventListener("change", (e) => openPdf(e.target.files[0], e.target.files));
   // "Open another file" picks the new file at once (cancelling keeps the open one); ✕ closes it.
   $("#btnNew").addEventListener("click", () => $("#fileInput").click());
   $("#btnClose").addEventListener("click", closeDocument);
