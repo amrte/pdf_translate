@@ -832,12 +832,41 @@ function mapBook(chars, items) {
   return result;
 }
 
-function openLaidOut(bytes, kind) {
+async function openLaidOut(bytes, kind) {
   if (OFFICE_KINDS.has(kind)) throw new Error("Office documents are laid out from their preview.");
   if (TEXT_KINDS.has(kind)) return openTextLaidOut(bytes, kind);
+  if (kind === "epub") bytes = await epubForLayout(bytes);
   const doc = M.Document.openDocument(bytes, BOOK_MIME[kind]);
   doc.layout(...BOOK_LAYOUT);
   return doc;
+}
+
+/**
+ * An EPUB prepared for MuPDF's layout. Calibre and many publishers put the cover on the title
+ * page as a picture inside an SVG wrapper: <svg …><image xlink:href="cover.jpeg"/></svg>.
+ * MuPDF's HTML engine draws no inline SVG, so that page stayed white. For the layout only (the
+ * saved book keeps its markup) such a wrapper becomes a plain <img> of the same picture, scaled
+ * to the page. Other entries are copied as they are, still compressed.
+ */
+const SVG_WRAP_RE = /<svg\b[^>]*>[\s\S]*?<\/svg\s*>/gi;
+const SVG_IMAGE_RE = /<image\b[^>]*?\b(?:xlink:)?href\s*=\s*["']([^"']+)["'][^>]*>/i;
+async function epubForLayout(bytes) {
+  let entries;
+  try { entries = zipEntries(bytes); } catch (_) { return bytes; } // (MuPDF reports a broken file)
+  const changed = new Map();
+  for (const e of entries) {
+    if (!/\.x?html?$/i.test(e.name)) continue;
+    const src = decodeXml(await zipRead(e));
+    if (!/<svg[\s>]/i.test(src) || !/<image[\s>]/i.test(src)) continue;
+    const out = src.replace(SVG_WRAP_RE, (svg) => {
+      const m = SVG_IMAGE_RE.exec(svg);
+      if (!m || /<text[\s>]/i.test(svg)) return svg; // (a drawing with text or no picture: left alone)
+      return `<img src="${m[1]}" alt="" style="display:block;margin:0 auto;max-width:100%;max-height:100%"/>`;
+    });
+    if (out !== src) changed.set(e.name, out);
+  }
+  if (!changed.size) return bytes;
+  return zipWrite(entries.map((e) => (changed.has(e.name) ? { ...e, data: encodeXml(changed.get(e.name)), store: e.name === "mimetype" } : e)));
 }
 
 /** Extract an e-book's segments and place them on the laid-out pages. */

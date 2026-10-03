@@ -2614,7 +2614,7 @@ function createHandler() {
           opened.bytes = bytes;
           book = opened.book;
           doc = openOfficePreview(book, opened.segments, {}, kind);
-        } else doc = openLaidOut(bytes.slice(), kind);
+        } else doc = await openLaidOut(bytes.slice(), kind);
       } else {
         doc = M.Document.openDocument(bytes.slice(), "application/pdf");
         if (doc.needsPassword && doc.needsPassword()) { free(doc); throw new Error("Password-protected PDFs are not supported."); }
@@ -2694,7 +2694,7 @@ function createHandler() {
       const result = await saveBook(W.book, W.bytes, args.segments, args.translations, args.opts || {});
       W.outBytes = result.bytes.slice();
       dropEdit();
-      W.edit = OFFICE_KINDS.has(W.kind) ? openOfficePreview(W.book, args.segments, args.translations, W.kind) : openLaidOut(result.bytes.slice(), W.kind);
+      W.edit = OFFICE_KINDS.has(W.kind) ? openOfficePreview(W.book, args.segments, args.translations, W.kind) : await openLaidOut(result.bytes.slice(), W.kind);
       result.view = mapTranslated(W.edit, args.segments, args.translations);
       return { result, transfer: [result.bytes.buffer] };
     }

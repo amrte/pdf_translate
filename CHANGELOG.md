@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.80
+
+- E-books: the cover is shown again for EPUBs whose title page wraps the cover picture in an SVG element (as Calibre and many publishers do). The page used to stay white; the book itself is saved unchanged.
+
 ## 1.79
 
 - Translate with AI: the "Copy prompt only" button has moved into the left column, under the part buttons; only "Close" remains at the bottom right. The tick boxes ("Only segments without a translation", the term list and the PowerPoint options) sit in a row of their own under the fields instead of being squeezed beside them. The "AI" button in the toolbar is shown in the theme colour.
