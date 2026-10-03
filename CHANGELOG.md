@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 1.89
+
+- Help: a "Learn" section explains the keyword list, the Words tab, the flashcards with their intervals and keys, and the vocabulary with its exports and imports, and links to the free Anki decks at ankiweb.net/shared/decks.
+
 ## 1.88
 
 - An easter egg: ten quick clicks on the chameleon in the top bar.

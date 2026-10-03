@@ -861,3 +861,8 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
 .logo { cursor: pointer; user-select: none; }
 .logo.egg-wiggle { animation: egg-wiggle .35s ease-in-out; }
 @keyframes egg-wiggle { 0% { transform: rotate(0); } 25% { transform: rotate(-12deg); } 75% { transform: rotate(12deg); } 100% { transform: rotate(0); } }
+
+/* ---------- v1.89: the Learn section of the help ---------- */
+.help-section { border-top: 1px solid var(--border); padding-top: 14px; display: grid; gap: 8px; }
+.help-list { margin: 0; padding-left: 18px; display: grid; gap: 5px; line-height: 1.45; }
+.help-list a { color: var(--accent); font-weight: 600; }

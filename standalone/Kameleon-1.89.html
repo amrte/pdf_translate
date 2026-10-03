@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="Kameleon 1.88">
+  <meta name="generator" content="Kameleon 1.89">
   <meta name="description" content="Kameleon – Wechselt die Sprache, behält die Form. Changes language, keeps its shape.">
   <title>Kameleon</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2216%22 fill=%22%23287130%22/%3E%3Cg transform=%22translate(2.5 1) scale(0.9)%22 fill=%22%23ffffff%22 stroke=%22%23ffffff%22%3E%3Cpath d=%22M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6%22 fill=%22none%22 stroke-width=%223.8%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M21 43l-1 10M30 44v9M38 43l1 10%22 stroke-width=%223.6%22 stroke-linecap=%22round%22/%3E%3Cellipse cx=%2221%22 cy=%2225%22 rx=%227%22 ry=%227.5%22 stroke=%22none%22/%3E%3Cellipse cx=%2233%22 cy=%2223.5%22 rx=%227.5%22 ry=%228%22 stroke=%22none%22/%3E%3Cpath d=%22M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z%22 stroke=%22none%22/%3E%3Cpath d=%22M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z%22 stroke=%22none%22/%3E%3Cpath d=%22M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z%22 stroke=%22none%22/%3E%3Cpath d=%22M16 37l4-3 4 3 4-3 4 3 4-3 4 3%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%222.1%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3Cpath d=%22M43.5 33.9L57 32.6%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%221.5%22 stroke-linecap=%22round%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%224.4%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%222.7%22 stroke=%22none%22/%3E%3Ccircle cx=%2246.2%22 cy=%2226.7%22 r=%221.3%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Cpath d=%22M4 55.5c15-3 39-3 54 0%22 fill=%22none%22 stroke-width=%222.4%22 stroke-linecap=%22round%22/%3E%3C/g%3E%3C/svg%3E">
@@ -872,6 +872,11 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
 .logo.egg-wiggle { animation: egg-wiggle .35s ease-in-out; }
 @keyframes egg-wiggle { 0% { transform: rotate(0); } 25% { transform: rotate(-12deg); } 75% { transform: rotate(12deg); } 100% { transform: rotate(0); } }
 
+/* ---------- v1.89: the Learn section of the help ---------- */
+.help-section { border-top: 1px solid var(--border); padding-top: 14px; display: grid; gap: 8px; }
+.help-list { margin: 0; padding-left: 18px; display: grid; gap: 5px; line-height: 1.45; }
+.help-list a { color: var(--accent); font-weight: 600; }
+
   </style>
 </head>
 <body>
@@ -879,7 +884,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
   <div class="brand">
     <span class="logo"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#287130"/><g transform="translate(2.5 1) scale(0.9)" fill="#ffffff" stroke="#ffffff"><path d="M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6" fill="none" stroke-width="3.8" stroke-linecap="round"/><path d="M21 43l-1 10M30 44v9M38 43l1 10" stroke-width="3.6" stroke-linecap="round"/><ellipse cx="21" cy="25" rx="7" ry="7.5" stroke="none"/><ellipse cx="33" cy="23.5" rx="7.5" ry="8" stroke="none"/><path d="M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z" stroke="none"/><path d="M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z" stroke="none"/><path d="M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z" stroke="none"/><path d="M16 37l4-3 4 3 4-3 4 3 4-3 4 3" fill="none" stroke="#287130" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M43.5 33.9L57 32.6" fill="none" stroke="#287130" stroke-width="1.5" stroke-linecap="round"/><circle cx="45.5" cy="26.5" r="4.4" fill="#287130" stroke="none"/><circle cx="45.5" cy="26.5" r="2.7" stroke="none"/><circle cx="46.2" cy="26.7" r="1.3" fill="#287130" stroke="none"/><path d="M4 55.5c15-3 39-3 54 0" fill="none" stroke-width="2.4" stroke-linecap="round"/></g></svg></span>
     <span class="brand-name">Kameleon</span>
-    <span class="version" id="appVersion">v1.88</span>
+    <span class="version" id="appVersion">v1.89</span>
   </div>
   <div class="topbar-actions">
     <span class="doc-name" id="docName"></span>
@@ -1304,6 +1309,17 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
     <div class="help-part">
     <h2 id="helpTitle" data-i18n="help.title">Help</h2>
     <div class="wf in-help" id="wfHelp"></div>
+    <section class="help-section" aria-labelledby="helpLearnTitle">
+      <h3 class="offline-title" id="helpLearnTitle" data-i18n="help.learnTitle"></h3>
+      <p class="muted small" data-i18n="help.learnText"></p>
+      <ul class="help-list small">
+        <li data-i18n="help.learnList"></li>
+        <li data-i18n="help.learnWords"></li>
+        <li data-i18n="help.learnCards"></li>
+        <li data-i18n="help.learnVocab"></li>
+        <li data-i18n="help.learnDecks"></li>
+      </ul>
+    </section>
     <p class="muted small" data-i18n="help.shortcuts"></p>
     <p class="muted small" data-i18n="help.markup"></p>
     </div>
@@ -1371,7 +1387,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
     </div>
     <input type="file" id="offlineZip" class="visually-hidden" accept=".zip,application/zip" multiple tabindex="-1">
     <input type="file" id="offlineFolder" class="visually-hidden" webkitdirectory multiple tabindex="-1">
-    <p class="muted small help-version help-part">Kameleon v1.88 · <span data-i18n="app.tagline"></span></p>
+    <p class="muted small help-version help-part">Kameleon v1.89 · <span data-i18n="app.tagline"></span></p>
     <div class="modal-actions">
       <button type="button" value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
     </div>
@@ -1716,6 +1732,13 @@ const I18N = {
     "build.fontsNote": "Die eingebauten Schriften decken Lateinisch, Griechisch, Kyrillisch, Chinesisch, Japanisch und Koreanisch ab. Für andere Schriftsysteme laden Sie eine passende Schrift. Rechts-nach-links- und komplexe Schriften (Arabisch, Hebräisch, indische Schriften, Thai) werden nicht korrekt gesetzt.",
 
     "help.title": "Hilfe",
+    "help.learnTitle": "Lernen",
+    "help.learnText": "Der Knopf „Lernen“ oben sammelt die Fachbegriffe des Dokuments und baut daraus einen Wortschatz je Sprachpaar – mit Lernkarten, PDF und Anki-Export. Ohne geöffnetes Dokument öffnet er den Wortschatz.",
+    "help.learnList": "<b>Liste:</b> Die Begriffe kommen mit der KI-Antwort (Häkchen „Begriffsliste“ im KI-Fenster) oder werden von Hand eingetragen; rechts die PDF-Seite, wie sie gespeichert wird. Jeder Import ergänzt zugleich den Wortschatz des erkannten Sprachpaars.",
+    "help.learnWords": "<b>Wörter:</b> Alle Wörter des Dokuments nach Häufigkeit, ohne Funktionswörter. Wörter anklicken oder die häufigsten auswählen, den Prompt kopieren und die KI-Antwort rechts einfügen – die Wörter kommen mit Übersetzung und Beispielsatz in Liste, Wortschatz und Lernkarten.",
+    "help.learnCards": "<b>Lernkarten:</b> „Heute fällig“ zeigt neue Wörter und gewusste, deren Wiederholung ansteht (nach 1, 3, 7, 14, 30, dann alle 90 Tagen); „Nochmal“ setzt ein Wort zurück. „Umgekehrt“ fragt von der Übersetzung nach dem Begriff. Tasten: <kbd>Leertaste</kbd> umdrehen, <kbd>←</kbd>/<kbd>→</kbd> blättern, <kbd>K</kbd> gewusst, <kbd>A</kbd> nochmal, <kbd>F</kbd> Favorit, <kbd>R</kbd> Richtung.",
+    "help.learnVocab": "<b>Wortschatz:</b> Die Begriffe aller Dokumente je Sprachpaar, mit Suche, Favoriten (das Kameleon) und Korrektur des Sprachpaars. Export als PDF oder Anki-Paket (.apkg), Import aus .txt/.tsv/.csv und aus Anki-Paketen.",
+    "help.learnDecks": "<b>Fertige Lernkarten:</b> Tausende freie Anki-Stapel für viele Sprachen gibt es unter <a href=\"https://ankiweb.net/shared/decks\" target=\"_blank\" rel=\"noopener noreferrer\">ankiweb.net/shared/decks</a> – die .apkg-Datei herunterladen und unter „Wortschatz → Importieren…“ laden.",
     "help.shortcuts": "Tastenkürzel im Übersetzungsfeld: <kbd>Strg</kbd>+<kbd>Enter</kbd> nächstes Segment · <kbd>Alt</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> vorheriges/nächstes · <kbd>Strg</kbd>+<kbd>S</kbd> Segment ins Dokument übernehmen · <kbd>Strg</kbd> + Mausrad zoomen.",
     "ai.title": "Mit KI übersetzen (ChatGPT, Claude, Gemini…)",
     "ai.targetPh": "z. B. Englisch",
@@ -2331,6 +2354,13 @@ const I18N = {
     "build.fontsNote": "Built-in fonts cover Latin, Greek, Cyrillic, Chinese, Japanese and Korean. For other alphabets, upload a font that supports them. Right-to-left and complex scripts (Arabic, Hebrew, Indic, Thai) are not shaped correctly.",
 
     "help.title": "Help",
+    "help.learnTitle": "Learn",
+    "help.learnText": "The \"Learn\" button at the top collects the document's terms and builds a vocabulary per language pair from them – with flashcards, PDF and Anki export. Without an open document it opens the vocabulary.",
+    "help.learnList": "<b>List:</b> The terms arrive with the AI answer (tick \"Term list\" in the AI window) or are entered by hand; on the right the PDF page as it will be saved. Every import also adds to the vocabulary of the detected language pair.",
+    "help.learnWords": "<b>Words:</b> Every word of the document by frequency, without function words. Tick words or select the most frequent ones, copy the prompt and paste the AI's answer on the right – the words arrive with translation and example sentence in the list, the vocabulary and the flashcards.",
+    "help.learnCards": "<b>Flashcards:</b> \"Due today\" shows new words and known ones whose review is due (after 1, 3, 7, 14, 30, then every 90 days); \"Again\" puts a word back to the start. \"Reversed\" asks from the translation for the term. Keys: <kbd>Space</kbd> turn, <kbd>←</kbd>/<kbd>→</kbd> browse, <kbd>K</kbd> known, <kbd>A</kbd> again, <kbd>F</kbd> favourite, <kbd>R</kbd> direction.",
+    "help.learnVocab": "<b>Vocabulary:</b> The terms of all documents per language pair, with search, favourites (the chameleon) and correction of the pair. Export as PDF or Anki package (.apkg), import from .txt/.tsv/.csv and from Anki packages.",
+    "help.learnDecks": "<b>Ready-made flashcards:</b> thousands of free Anki decks for many languages are at <a href=\"https://ankiweb.net/shared/decks\" target=\"_blank\" rel=\"noopener noreferrer\">ankiweb.net/shared/decks</a> – download the .apkg file and load it under \"Vocabulary → Import…\".",
     "help.shortcuts": "Shortcuts in a translation box: <kbd>Ctrl</kbd>+<kbd>Enter</kbd> next segment · <kbd>Alt</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> previous/next · <kbd>Ctrl</kbd>+<kbd>S</kbd> update this segment in the document · <kbd>Ctrl</kbd> + mouse wheel to zoom.",
     "ai.title": "Translate with AI (ChatGPT, Claude, Gemini…)",
     "ai.targetPh": "e.g. English",
@@ -14921,7 +14951,7 @@ function initPicture() {
 // from its own browser cache before the network, so language files are written into that cache.
 // ======================================================================
 
-const APP_VERSION = "1.88";
+const APP_VERSION = "1.89";
 // (a change of library version makes a stored set outdated: it is then ignored)
 const OFFLINE_VERSION = `${MUPDF_URL} ${OCR_LIB}`;
 const CORE_SIMD = "tesseract-core-simd-lstm.wasm.js", CORE_PLAIN = "tesseract-core-lstm.wasm.js";
