@@ -485,8 +485,8 @@
 <dialog id="kwDialog" class="modal wide" aria-labelledby="kwTitle">
   <form method="dialog">
     <h2 id="kwTitle" data-i18n="kw.title">Keywords</h2>
-    <div class="kw-modes seg-toggle" role="group"><button type="button" class="active" id="kwModeList" data-i18n="kw.modeList">List</button><button type="button" id="kwModeCards" data-i18n="kw.modeCards">Flashcards</button><button type="button" id="kwModeVocab" data-i18n="kw.modeVocab">Vocabulary</button></div>
-    <p class="muted small"><span class="kw-list-only" data-i18n="kw.text"></span><span class="kw-cards-only" data-i18n="kw.cardsText"></span><span class="kw-vocab-only" data-i18n="vocab.text"></span></p>
+    <div class="kw-modes seg-toggle" role="group"><button type="button" class="active" id="kwModeList" data-i18n="kw.modeList">List</button><button type="button" id="kwModeWords" data-i18n="kw.modeWords">Words</button><button type="button" id="kwModeCards" data-i18n="kw.modeCards">Flashcards</button><button type="button" id="kwModeVocab" data-i18n="kw.modeVocab">Vocabulary</button></div>
+    <p class="muted small"><span class="kw-list-only" data-i18n="kw.text"></span><span class="kw-words-only" data-i18n="words.text"></span><span class="kw-cards-only" data-i18n="kw.cardsText"></span><span class="kw-vocab-only" data-i18n="vocab.text"></span></p>
     <div class="kw-body kw-vocab-only vocab-wrap">
       <div class="vocab-bar">
         <select id="vocabPair" data-i18n-aria="vocab.pair"></select>
@@ -504,10 +504,31 @@
       <div class="kw-list" id="kwList"></div>
       <div class="kw-preview" id="kwPreviewWrap" data-i18n-title="kw.previewZoom"></div>
     </div>
+    <div class="kw-words-wrap kw-body kw-words-only">
+      <div class="words-left">
+        <div class="words-bar">
+          <input type="search" id="wordsSearch" data-i18n-placeholder="words.search" autocomplete="off">
+          <label class="check"><input type="checkbox" id="wordsHideKnown" checked> <span data-i18n="words.hideKnown"></span></label>
+          <span class="muted small" id="wordsCount"></span>
+          <span class="spacer"></span>
+          <input type="number" id="wordsTopN" class="kw-n" min="1" max="500" value="30" data-i18n-aria="words.topN">
+          <button type="button" class="btn" id="wordsSelectTop" data-i18n="words.selectTop"></button>
+          <button type="button" class="btn ghost" id="wordsSelectNone" data-i18n="words.selectNone"></button>
+        </div>
+        <div class="kw-list words-list" id="wordsList"></div>
+      </div>
+      <div class="words-answer">
+        <h3 class="ai-right-title" data-i18n="words.answer"></h3>
+        <p class="muted small" data-i18n="words.answerHint"></p>
+        <textarea id="wordsAnswer" rows="10" data-i18n-placeholder="words.answerPh" data-i18n-aria="words.answer"></textarea>
+        <div class="ai-import-row"><button type="button" class="btn primary" id="wordsImport" data-i18n="words.import"></button></div>
+      </div>
+    </div>
     <div class="kw-cards kw-body kw-cards-only" id="kwCards"></div>
     <div class="modal-actions kw-actions">
       <button type="button" class="btn kw-list-only" id="kwAdd" data-i18n="kw.add"></button>
       <button type="button" class="btn kw-list-only" id="kwCopy" data-i18n="kw.copy"></button>
+      <button type="button" class="btn kw-words-only" id="wordsCards" data-i18n="words.cards"></button>
       <button type="button" class="btn kw-vocab-only" id="vocabCards" data-i18n="vocab.cards"></button>
       <button type="button" class="btn kw-vocab-only" id="vocabImport" data-i18n="vocab.import"></button>
       <button type="button" class="btn ghost kw-vocab-only" id="vocabClear" data-i18n="vocab.clear"></button>
@@ -517,6 +538,7 @@
       <button type="button" class="btn primary kw-vocab-only" id="vocabPdf" data-i18n="vocab.pdf"></button>
       <button value="close" class="btn ghost" data-i18n="kw.close"></button>
       <button type="button" class="btn primary kw-list-only" id="kwDownload" data-i18n="kw.download"></button>
+      <button type="button" class="btn primary kw-words-only" id="wordsPrompt"></button>
     </div>
   </form>
 </dialog>

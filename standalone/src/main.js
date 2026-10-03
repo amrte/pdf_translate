@@ -12,4 +12,5 @@ initVocab();
 initOffline();
 initPagesManager();
 initKeywords();
+initWords();
 init();

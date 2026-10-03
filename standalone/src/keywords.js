@@ -42,6 +42,12 @@ function kwExtract(text) {
   const after = text.slice(m.index + m[0].length);
   const end = after.search(/^\s*\[\[\s*\d+\s*\]\]/m); // (a numbered marker ends the list)
   const block = end < 0 ? after : after.slice(0, end);
+  const { rows, pair } = kwParseRows(block);
+  if (rows.length) kwTakeRows(rows, pair);
+  return text.slice(0, m.index) + (end < 0 ? "" : after.slice(end));
+}
+/** The rows of a keyword list: "term = translation | example | translated example" lines, and the language pair line. */
+function kwParseRows(block) {
   const rows = [];
   let pair = "";
   for (const raw of block.split(/\r?\n/)) {
@@ -54,14 +60,16 @@ function kwExtract(text) {
     const mm = /^(.+?)\s*(?:=|—|–|->|→|\t)\s*(.+)$/.exec(parts[0]) || /^(.+?):\s+(.+)$/.exec(parts[0]);
     if (mm) rows.push({ term: mm[1].trim(), translation: mm[2].trim(), example: (parts[1] || "").trim(), exampleTr: (parts[2] || "").trim() });
   }
-  if (rows.length) {
-    kwMerge(rows);
-    if (pair) setCurrentPair(pair);
-    const p = pair || currentPair();
-    const added = p ? vocabAdd(p, rows, state.doc.name) : 0;
-    toast(p ? t("kw.importedVocab", { n: rows.length, added, pair: pairLabel(p) }) : t("kw.imported", { n: rows.length }), "ok");
-  }
-  return text.slice(0, m.index) + (end < 0 ? "" : after.slice(end));
+  return { rows, pair };
+}
+/** Imported rows go into the document's list and into the vocabulary of the pair. */
+function kwTakeRows(rows, pair) {
+  kwMerge(rows);
+  if (pair) setCurrentPair(pair);
+  const p = pair || currentPair();
+  const added = p ? vocabAdd(p, rows, state.doc.name) : 0;
+  toast(p ? t("kw.importedVocab", { n: rows.length, added, pair: pairLabel(p) }) : t("kw.imported", { n: rows.length }), "ok");
+  return added;
 }
 function kwMerge(rows) {
   const have = new Map((state.keywords || []).map((r) => [r.term.trim().toLowerCase(), r]));
@@ -284,12 +292,14 @@ function fcAction(act) {
 }
 function kwSetMode(mode) {
   if (!state.doc && mode !== "vocab" && !(mode === "cards" && fcSource)) mode = "vocab"; // without a document: the vocabulary, and cards made from it
-  const cards = mode === "cards", vocab = mode === "vocab";
+  const cards = mode === "cards", vocab = mode === "vocab", words = mode === "words";
   $("#kwDialog").dataset.mode = mode;
   $("#kwModeList").classList.toggle("active", mode === "list");
+  $("#kwModeWords").classList.toggle("active", words);
   $("#kwModeCards").classList.toggle("active", cards);
   $("#kwModeVocab").classList.toggle("active", vocab);
-  $("#kwModeList").disabled = !state.doc;
+  $("#kwModeList").disabled = $("#kwModeWords").disabled = !state.doc;
+  if (words) wordsRender();
   $("#kwModeCards").disabled = !state.doc && !fcSource;
   if (!cards) fcSource = null;
   if (cards) { fcStart(); $("#kwCards .kw-card")?.focus(); }
@@ -298,6 +308,7 @@ function kwSetMode(mode) {
 function initFlashcards() {
   $("#kwModeList").addEventListener("click", () => kwSetMode("list"));
   $("#kwModeCards").addEventListener("click", () => kwSetMode("cards"));
+  $("#kwModeWords").addEventListener("click", () => kwSetMode("words"));
   $("#kwCards").addEventListener("click", (e) => { const b = e.target.closest("[data-fc]"); if (b) fcAction(b.dataset.fc); });
   document.addEventListener("keydown", (e) => {
     const dlg = $("#kwDialog");
