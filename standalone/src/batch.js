@@ -271,7 +271,6 @@ function initBatch() {
   batchRead();
   batchRefreshButton();
   $("#btnBatch").addEventListener("click", openBatchDialog);
-  $("#btnBatchStart").addEventListener("click", openBatchDialog);
   $("#batchAdd").addEventListener("click", () => $("#batchFile").click());
   $("#batchFile").addEventListener("change", (e) => { batchAdd(e.target.files); e.target.value = ""; });
   setupDropzone($("#batchDrop"), (file, files) => batchAdd(files || [file]));
