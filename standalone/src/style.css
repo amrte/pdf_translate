@@ -665,7 +665,7 @@ body.splitting .pages, body.splitting iframe { pointer-events: none; }
 .dropzone.bite .kam-jaw { animation: kam-bite .55s ease-in-out both; }
 .dropzone.bite .kam-tongue { transform: scale(0); }
 @keyframes kam-bite { 0% { transform: rotate(30deg); } 35% { transform: rotate(0); } 55% { transform: rotate(14deg); } 100% { transform: rotate(0); } }
-.upload-view .dz-title { font-size: 18px; font-weight: 650; letter-spacing: .02em; }
+.upload-view .dz-title { font-size: 18px; font-weight: 650; letter-spacing: .02em; position: relative; top: 13px; } /* (midway between the picture and the format tags, which sit below an empty line) */
 .dz-tagline { color: var(--muted); font-size: 13.5px; margin-top: -4px; min-height: 1.3em; }
 .upload-view .dz-formats { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
 .fmt {
