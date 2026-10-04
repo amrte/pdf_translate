@@ -172,7 +172,8 @@ function markupNode(m) {
   } else if (m.type === "text") {
     const pad = notePad(m);
     if (m.opacity != null && m.opacity < 1) g.setAttribute("opacity", m.opacity);
-    g.append(svgEl("rect", { x: x0, y: y0, width: w, height: h, fill: m.bg || "transparent", class: "hit",
+    const rr = noteRadius(m);
+    g.append(svgEl("rect", { x: x0, y: y0, width: w, height: h, fill: m.bg || "transparent", class: "hit", ...(rr ? { rx: rr, ry: rr } : {}),
       ...(m.border ? { stroke: m.border, "stroke-width": m.bw || 1 } : {}) }));
     const text = svgEl("text", { x: m.x0 + pad, y: m.y0 + pad + m.size * 0.88, fill: m.color, "font-size": m.size, "font-family": NOTE_FONTS[m.font || "sans-serif"],
       ...(m.bold ? { "font-weight": "bold" } : {}), ...(m.italic ? { "font-style": "italic" } : {}) });
@@ -363,11 +364,16 @@ function simplify(points, tol) {
 // and frame colours (or none) and opacity. The style of the last note changed is the start for the
 // next one. A selected note gets a small bar above it with these settings.
 const NOTE_FONTS = { "sans-serif": "Helvetica, Arial, sans-serif", serif: "'Times New Roman', Times, serif", monospace: "'Courier New', Courier, monospace" };
-const NOTE_SIZES = [8, 9, 10, 11, 12, 14, 16, 18, 20, 24, 28, 32, 40, 48];
-const NOTE_DEFAULT = { font: "sans-serif", size: 12, bold: false, italic: false, color: "#e53935", bg: "", border: "", bw: 1, opacity: 1 };
+const NOTE_SIZES = [8, 9, 10, 11, 12, 14, 16, 18, 20, 24, 28, 32, 40, 48, 56, 64, 72, 96, 120, 144];
+const NOTE_SIZE_MIN = 4, NOTE_SIZE_MAX = 400;
+const NOTE_DEFAULT = { font: "sans-serif", size: 12, bold: false, italic: false, color: "#e53935", bg: "", border: "", bw: 1, opacity: 1, round: true };
 const NOTE_STYLE_KEYS = Object.keys(NOTE_DEFAULT);
 const LS_NOTE = "pdftr:notestyle";
 const notePad = (m) => (m.pad != null ? m.pad : 2);
+/** Padding of a note's text: grows with the font size, so large text keeps clear of the frame. */
+const notePadFor = (size) => Math.max(3, Math.round(size * 0.2));
+/** Corner radius of a note's box: rounded notes follow their font size (never more than half the box). */
+const noteRadius = (m) => (m.round ? Math.min(m.w / 2, m.h / 2, Math.max(3, m.size * 0.45)) : 0);
 
 function noteStyle() {
   if (!mk.noteStyle) {
@@ -388,7 +394,7 @@ function measureNote(m) {
   measureCtx = measureCtx || document.createElement("canvas").getContext("2d");
   measureCtx.font = `${m.italic ? "italic " : ""}${m.bold ? "bold " : ""}${m.size}px ${NOTE_FONTS[m.font || "sans-serif"]}`;
   const lines = m.text.split("\n"), pad = notePad(m);
-  return { w: Math.max(...lines.map((l) => measureCtx.measureText(l).width)) + 2 * pad + 2, h: lines.length * m.size * 1.2 + 2 * pad };
+  return { w: Math.max(...lines.map((l) => measureCtx.measureText(l).width)) + 2 * pad + 2 + m.size * 0.05, h: lines.length * m.size * 1.2 + 2 * pad };
 }
 
 function openTextEditor(i, pt, existing) {
@@ -408,6 +414,7 @@ function openTextEditor(i, pt, existing) {
     fontSize: `${style.size * scale}px`, color: style.color, fontFamily: NOTE_FONTS[style.font || "sans-serif"],
     fontWeight: style.bold ? "bold" : "normal", fontStyle: style.italic ? "italic" : "normal",
     ...(style.bg ? { background: style.bg } : {}),
+    ...(style.round ? { borderRadius: `${Math.max(3, style.size * 0.45) * scale}px` } : {}),
   });
   pageEl.appendChild(ta);
   const grow = () => { ta.style.height = "auto"; ta.style.height = `${ta.scrollHeight + 2}px`; };
@@ -425,7 +432,8 @@ function openTextEditor(i, pt, existing) {
       if (!text) { deleteMarkup(existing.id); return; }
       changeMarkups(() => { const m = state.markups.find((x) => x.id === existing.id); m.text = text; Object.assign(m, measureNote(m)); });
     } else if (text) {
-      const m = { id: mk.seq++, page: i, type: "text", ...noteStyle(), width: mk.width, x0: pt[0], y0: pt[1], text, pad: 3 };
+      const m = { id: mk.seq++, page: i, type: "text", ...noteStyle(), width: mk.width, x0: pt[0], y0: pt[1], text };
+      m.pad = notePadFor(m.size);
       Object.assign(m, measureNote(m));
       changeMarkups(() => { state.markups.push(m); });
       // The new note is selected, with its settings at hand; the next click selects again.
@@ -455,11 +463,11 @@ function removeNoteBar() { document.querySelectorAll(".note-bar").forEach((b) =>
 function noteBarHtml(m) {
   const opt = (v, label, cur) => `<option value="${v}"${String(cur) === String(v) ? " selected" : ""}>${label}</option>`;
   const fonts = [["sans-serif", t("note.sans")], ["serif", t("note.serif")], ["monospace", t("note.mono")]];
-  const sizes = NOTE_SIZES.includes(m.size) ? NOTE_SIZES : [...NOTE_SIZES, m.size].sort((a, b) => a - b);
   const b = (n, label, title, on) => `<button type="button" data-n="${n}" class="${on ? "on" : ""}" title="${escapeHtml(t(title))}" aria-label="${escapeHtml(t(title))}">${label}</button>`;
   return `
     <select data-n="font" title="${escapeHtml(t("note.font"))}" aria-label="${escapeHtml(t("note.font"))}">${fonts.map(([v, l]) => opt(v, escapeHtml(l), m.font || "sans-serif")).join("")}</select>
-    <select data-n="size" title="${escapeHtml(t("note.size"))}" aria-label="${escapeHtml(t("note.size"))}">${sizes.map((v) => opt(v, v, m.size)).join("")}</select>
+    <input type="number" class="nb-size" data-n="size" list="noteSizes${m.id}" min="${NOTE_SIZE_MIN}" max="${NOTE_SIZE_MAX}" step="1" value="${m.size}" title="${escapeHtml(t("note.size"))}" aria-label="${escapeHtml(t("note.size"))}"><datalist id="noteSizes${m.id}">${NOTE_SIZES.map((v) => `<option value="${v}"></option>`).join("")}</datalist>
+    ${b("smaller", "A−", "note.smaller")}${b("larger", "A+", "note.larger")}
     ${b("bold", "<b>B</b>", "note.bold", m.bold)}${b("italic", "<i>I</i>", "note.italic", m.italic)}
     <span class="nb-sep"></span>
     <label class="nb-color" title="${escapeHtml(t("note.color"))}"><span class="nb-a" style="--c:${m.color}">A</span><input type="color" data-n="color" value="${m.color}"></label>
@@ -467,6 +475,7 @@ function noteBarHtml(m) {
     ${b("bgOff", "∅", "note.bgOff", !m.bg)}
     <label class="nb-color${m.border ? "" : " off"}" title="${escapeHtml(t("note.border"))}"><span class="nb-frame" style="--c:${m.border || "#888888"}"></span><input type="color" data-n="border" value="${m.border || "#1e66f5"}"></label>
     ${b("borderOff", "∅", "note.borderOff", !m.border)}
+    ${b("round", m.round ? "▢" : "□", "note.round", m.round)}
     <label class="nb-op" title="${escapeHtml(t("note.opacity"))}">◐<input type="range" data-n="opacity" min="10" max="100" step="5" value="${Math.round((m.opacity != null ? m.opacity : 1) * 100)}"></label>
     <span class="nb-sep"></span>
     ${b("edit", "✎", "note.edit")}${b("copy", "⧉", "note.copy")}${b("dup", "⊕", "note.duplicate")}${b("del", "🗑", "note.delete")}`;
@@ -505,6 +514,16 @@ function updateNoteBar() {
   bar.style.left = `${Math.max(0, ((m.x0 - p.x0) / p.width) * 100)}%`;
   bar.classList.toggle("below", top * pageEl.clientHeight < 48);
   bar.style.top = bar.classList.contains("below") ? `${bottom * 100}%` : `${top * 100}%`;
+  // Kept within the visible part of the page view: moved left when it would stick out on the
+  // right, its buttons wrapped onto a second row when the view is narrower than the bar.
+  const view = (pageEl.closest("#pages") || pageEl).getBoundingClientRect();
+  bar.style.maxWidth = `${Math.max(160, view.width - 12)}px`;
+  bar.classList.toggle("wrap", bar.scrollWidth > view.width - 12);
+  const r = bar.getBoundingClientRect(), over = r.right - (view.right - 6);
+  if (over > 0) {
+    const left = r.left - pageEl.getBoundingClientRect().left - over;
+    bar.style.left = `${Math.max(view.left + 6 - pageEl.getBoundingClientRect().left, left)}px`;
+  }
 }
 
 let noteBefore = null; // the markups before a run of live changes (a colour being picked, the opacity slider)
@@ -514,6 +533,7 @@ function noteChange(patch, live) {
   if (!noteBefore) noteBefore = clone(state.markups);
   const before = noteBefore;
   Object.assign(m, patch);
+  if (patch.size) m.pad = notePadFor(m.size);
   Object.assign(m, measureNote(m));
   if (!live) noteBefore = null;
   renderMarkups(m.page);
@@ -526,7 +546,7 @@ function noteChange(patch, live) {
 const notePatch = (el) => {
   const n = el.dataset.n, v = el.value;
   if (n === "font") return { font: v };
-  if (n === "size") return { size: Number(v) };
+  if (n === "size") { const z = Math.round(Number(v)); return z ? { size: Math.min(NOTE_SIZE_MAX, Math.max(NOTE_SIZE_MIN, z)) } : null; }
   if (n === "color" || n === "bg" || n === "border") return { [n]: v };
   if (n === "opacity") return { opacity: Number(v) / 100 };
   return null;
@@ -542,6 +562,11 @@ function noteBarChange(e) {
   const patch = notePatch(e.target);
   if (patch) noteChange(patch, false);
 }
+/** The next font size up or down the list (A+ / A−). */
+function noteStep(size, dir) {
+  if (dir > 0) return NOTE_SIZES.find((v) => v > size) || Math.min(NOTE_SIZE_MAX, Math.round(size * 1.25));
+  return [...NOTE_SIZES].reverse().find((v) => v < size) || Math.max(NOTE_SIZE_MIN, size - 1);
+}
 function noteBarClick(e) {
   const b = e.target.closest("button[data-n]");
   if (!b) return;
@@ -550,6 +575,8 @@ function noteBarClick(e) {
   const n = b.dataset.n;
   if (n === "bold") noteChange({ bold: !m.bold });
   else if (n === "italic") noteChange({ italic: !m.italic });
+  else if (n === "smaller" || n === "larger") noteChange({ size: noteStep(m.size, n === "larger" ? 1 : -1) });
+  else if (n === "round") noteChange({ round: !m.round });
   else if (n === "bgOff") noteChange({ bg: "" });
   else if (n === "borderOff") noteChange({ border: "" });
   else if (n === "edit") openTextEditor(m.page, [m.x0, m.y0], m);
@@ -621,7 +648,8 @@ function onPaste(e) {
   if (text && text.trim()) { // plain text: a new note with the current note style
     e.preventDefault();
     const at = pastePoint();
-    const n = { id: 0, page: at.page, type: "text", ...noteStyle(), width: mk.width, x0: at.pt[0], y0: at.pt[1], text: text.replace(/\r\n?/g, "\n").replace(/\s+$/, ""), pad: 3 };
+    const n = { id: 0, page: at.page, type: "text", ...noteStyle(), width: mk.width, x0: at.pt[0], y0: at.pt[1], text: text.replace(/\r\n?/g, "\n").replace(/\s+$/, "") };
+    n.pad = notePadFor(n.size);
     Object.assign(n, measureNote(n));
     pasteMarkups([n], at);
   }

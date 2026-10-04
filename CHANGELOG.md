@@ -4,6 +4,12 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.16
+
+- Text notes have rounded corners (new notes by default; the ▢ button in the note's bar switches them on or off). The rounding grows with the font size and is kept in the saved PDF.
+- Larger text in notes: the size field takes any size from 4 to 400 pt (typed in or picked from the list, which now goes up to 144), and A− / A+ step down and up. The space around the text grows with the size, so large text no longer touches the frame.
+- The bar of a selected note stays within the visible page view: near the right edge it moves left, and in a narrow view its buttons wrap onto a second row instead of being cut off.
+
 ## 2.15
 
 - Text recognition: three new options under "Before recognition", all on by default and remembered:

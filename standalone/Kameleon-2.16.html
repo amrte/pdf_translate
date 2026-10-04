@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="Kameleon 2.15">
+  <meta name="generator" content="Kameleon 2.16">
   <meta name="description" content="Kameleon – Wechselt die Sprache, behält die Form. Changes language, keeps its shape.">
   <title>Kameleon</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2216%22 fill=%22%23287130%22/%3E%3Cg transform=%22translate(2.5 1) scale(0.9)%22 fill=%22%23ffffff%22 stroke=%22%23ffffff%22%3E%3Cpath d=%22M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6%22 fill=%22none%22 stroke-width=%223.8%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M21 43l-1 10M30 44v9M38 43l1 10%22 stroke-width=%223.6%22 stroke-linecap=%22round%22/%3E%3Cellipse cx=%2221%22 cy=%2225%22 rx=%227%22 ry=%227.5%22 stroke=%22none%22/%3E%3Cellipse cx=%2233%22 cy=%2223.5%22 rx=%227.5%22 ry=%228%22 stroke=%22none%22/%3E%3Cpath d=%22M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z%22 stroke=%22none%22/%3E%3Cpath d=%22M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z%22 stroke=%22none%22/%3E%3Cpath d=%22M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z%22 stroke=%22none%22/%3E%3Cpath d=%22M16 37l4-3 4 3 4-3 4 3 4-3 4 3%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%222.1%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3Cpath d=%22M43.5 33.9L57 32.6%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%221.5%22 stroke-linecap=%22round%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%224.4%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%222.7%22 stroke=%22none%22/%3E%3Ccircle cx=%2246.2%22 cy=%2226.7%22 r=%221.3%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Cpath d=%22M4 55.5c15-3 39-3 54 0%22 fill=%22none%22 stroke-width=%222.4%22 stroke-linecap=%22round%22/%3E%3C/g%3E%3C/svg%3E">
@@ -425,7 +425,9 @@ p.help-part { display: block; }
   font-size: 12px; color: var(--text); white-space: nowrap; cursor: default;
 }
 .note-bar.below { transform: translateY(6px); }
+.note-bar.wrap { flex-wrap: wrap; white-space: normal; }
 .note-bar select { height: 26px; font: inherit; font-size: 12px; padding: 0 3px; border: 1px solid var(--border); border-radius: 5px; background: var(--surface); color: var(--text); }
+.note-bar .nb-size { width: 62px; height: 26px; font: inherit; font-size: 12px; padding: 0 3px; border: 1px solid var(--border); border-radius: 5px; background: var(--surface); color: var(--text); }
 .note-bar button { height: 26px; min-width: 26px; padding: 0 5px; border: 1px solid transparent; border-radius: 5px; background: transparent; color: var(--text); font: inherit; font-size: 13px; cursor: pointer; }
 .note-bar button:hover { border-color: var(--border); background: var(--surface-2); }
 .note-bar button.on { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
@@ -1004,7 +1006,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
   <div class="brand">
     <span class="logo"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#287130"/><g transform="translate(2.5 1) scale(0.9)" fill="#ffffff" stroke="#ffffff"><path d="M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6" fill="none" stroke-width="3.8" stroke-linecap="round"/><path d="M21 43l-1 10M30 44v9M38 43l1 10" stroke-width="3.6" stroke-linecap="round"/><ellipse cx="21" cy="25" rx="7" ry="7.5" stroke="none"/><ellipse cx="33" cy="23.5" rx="7.5" ry="8" stroke="none"/><path d="M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z" stroke="none"/><path d="M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z" stroke="none"/><path d="M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z" stroke="none"/><path d="M16 37l4-3 4 3 4-3 4 3 4-3 4 3" fill="none" stroke="#287130" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M43.5 33.9L57 32.6" fill="none" stroke="#287130" stroke-width="1.5" stroke-linecap="round"/><circle cx="45.5" cy="26.5" r="4.4" fill="#287130" stroke="none"/><circle cx="45.5" cy="26.5" r="2.7" stroke="none"/><circle cx="46.2" cy="26.7" r="1.3" fill="#287130" stroke="none"/><path d="M4 55.5c15-3 39-3 54 0" fill="none" stroke-width="2.4" stroke-linecap="round"/></g></svg></span>
     <span class="brand-name">Kameleon</span>
-    <span class="version" id="appVersion">v2.15</span>
+    <span class="version" id="appVersion">v2.16</span>
   </div>
   <div class="topbar-actions">
     <span class="doc-name" id="docName"></span>
@@ -1513,7 +1515,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
     </div>
     <input type="file" id="offlineZip" class="visually-hidden" accept=".zip,application/zip" multiple tabindex="-1">
     <input type="file" id="offlineFolder" class="visually-hidden" webkitdirectory multiple tabindex="-1">
-    <p class="muted small help-version help-part">Kameleon v2.15 · <span data-i18n="app.tagline"></span></p>
+    <p class="muted small help-version help-part">Kameleon v2.16 · <span data-i18n="app.tagline"></span></p>
     <div class="modal-actions">
       <button type="button" value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
     </div>
@@ -1899,6 +1901,9 @@ const I18N = {
     "note.bgOff": "Kein Hintergrund",
     "note.border": "Rahmenfarbe (Stärke: Linienbreite links)",
     "note.borderOff": "Kein Rahmen",
+    "note.round": "Abgerundete Ecken (ein/aus)",
+    "note.smaller": "Schrift kleiner",
+    "note.larger": "Schrift größer",
     "note.opacity": "Deckkraft",
     "note.edit": "Text bearbeiten (oder Doppelklick)",
     "note.copy": "Kopieren (Strg+C) – einfügen mit Strg+V",
@@ -2538,7 +2543,7 @@ const I18N = {
     "hist.import": "Import",
     "hist.clear": "Alle Übersetzungen gelöscht",
     "hist.nothing": "Nichts rückgängig zu machen.",
-    "help.markup": "<b>Vollbild:</b> Schaltfläche rechts in der Ansichtsleiste oder <kbd>F</kbd>, beenden mit <kbd>Esc</kbd>. <b>Markieren:</b> Werkzeuge links neben der Seite – Rechteck <kbd>R</kbd>, Ellipse <kbd>O</kbd>, Textmarker <kbd>H</kbd>, Stift <kbd>P</kbd>, Pfeil <kbd>A</kbd>, Textnotiz <kbd>T</kbd>, Abdecken <kbd>W</kbd>, Radierer <kbd>E</kbd>, Auswählen <kbd>V</kbd>/<kbd>Esc</kbd>. Ausgewählte Markierung verschieben (auch mit den Pfeiltasten), mit <kbd>Entf</kbd> löschen, mit <kbd>Strg</kbd>+<kbd>C</kbd>/<kbd>X</kbd>/<kbd>V</kbd> kopieren, ausschneiden und einfügen, mit <kbd>Strg</kbd>+<kbd>D</kbd> duplizieren; eingefügter Text wird eine Textnotiz. Eine ausgewählte Textnotiz zeigt eine Leiste: Schrift, Größe, fett/kursiv, Schrift-, Hintergrund- und Rahmenfarbe, Deckkraft; Doppelklick bearbeitet ihren Text. <kbd>Strg</kbd>+<kbd>Z</kbd>/<kbd>Y</kbd> macht Markierungen, Importe und Übersetzungsänderungen rückgängig. Seiten blättern: <kbd>Bild ↑</kbd>/<kbd>Bild ↓</kbd>, <kbd>Pos1</kbd>/<kbd>Ende</kbd>. Markierungen werden beim Download als normale PDF-Anmerkungen gespeichert.",
+    "help.markup": "<b>Vollbild:</b> Schaltfläche rechts in der Ansichtsleiste oder <kbd>F</kbd>, beenden mit <kbd>Esc</kbd>. <b>Markieren:</b> Werkzeuge links neben der Seite – Rechteck <kbd>R</kbd>, Ellipse <kbd>O</kbd>, Textmarker <kbd>H</kbd>, Stift <kbd>P</kbd>, Pfeil <kbd>A</kbd>, Textnotiz <kbd>T</kbd>, Abdecken <kbd>W</kbd>, Radierer <kbd>E</kbd>, Auswählen <kbd>V</kbd>/<kbd>Esc</kbd>. Ausgewählte Markierung verschieben (auch mit den Pfeiltasten), mit <kbd>Entf</kbd> löschen, mit <kbd>Strg</kbd>+<kbd>C</kbd>/<kbd>X</kbd>/<kbd>V</kbd> kopieren, ausschneiden und einfügen, mit <kbd>Strg</kbd>+<kbd>D</kbd> duplizieren; eingefügter Text wird eine Textnotiz. Eine ausgewählte Textnotiz zeigt eine Leiste: Schrift, Größe (beliebig eintippen oder A−/A+), fett/kursiv, Schrift-, Hintergrund- und Rahmenfarbe, abgerundete Ecken, Deckkraft; Doppelklick bearbeitet ihren Text. <kbd>Strg</kbd>+<kbd>Z</kbd>/<kbd>Y</kbd> macht Markierungen, Importe und Übersetzungsänderungen rückgängig. Seiten blättern: <kbd>Bild ↑</kbd>/<kbd>Bild ↓</kbd>, <kbd>Pos1</kbd>/<kbd>Ende</kbd>. Markierungen werden beim Download als normale PDF-Anmerkungen gespeichert.",
     "default.targetCode": "de",
     "default.targetName": "Deutsch",
     "clear.title": "Alle Übersetzungen löschen",
@@ -2714,6 +2719,9 @@ const I18N = {
     "note.bgOff": "No background",
     "note.border": "Frame colour (thickness: line width on the left)",
     "note.borderOff": "No frame",
+    "note.round": "Rounded corners (on/off)",
+    "note.smaller": "Smaller text",
+    "note.larger": "Larger text",
     "note.opacity": "Opacity",
     "note.edit": "Edit the text (or double-click)",
     "note.copy": "Copy (Ctrl+C) – paste with Ctrl+V",
@@ -3353,7 +3361,7 @@ const I18N = {
     "hist.import": "import",
     "hist.clear": "all translations removed",
     "hist.nothing": "Nothing to undo.",
-    "help.markup": "<b>Full screen:</b> button at the right of the view toolbar or <kbd>F</kbd>, leave with <kbd>Esc</kbd>. <b>Markup:</b> tools to the left of the page – rectangle <kbd>R</kbd>, ellipse <kbd>O</kbd>, highlighter <kbd>H</kbd>, pen <kbd>P</kbd>, arrow <kbd>A</kbd>, text note <kbd>T</kbd>, whiteout <kbd>W</kbd>, eraser <kbd>E</kbd>, select <kbd>V</kbd>/<kbd>Esc</kbd>. Drag a selected markup to move it (or use the arrow keys), press <kbd>Delete</kbd> to remove it, <kbd>Ctrl</kbd>+<kbd>C</kbd>/<kbd>X</kbd>/<kbd>V</kbd> to copy, cut and paste it, <kbd>Ctrl</kbd>+<kbd>D</kbd> to duplicate it; pasted text becomes a text note. A selected text note shows a bar: font, size, bold/italic, text, background and frame colour, opacity; double-click it to edit its text. <kbd>Ctrl</kbd>+<kbd>Z</kbd>/<kbd>Y</kbd> undoes markups, imports and translation changes. Turn pages with <kbd>Page Up</kbd>/<kbd>Page Down</kbd>, <kbd>Home</kbd>/<kbd>End</kbd>. Markups are saved as standard PDF annotations when you download.",
+    "help.markup": "<b>Full screen:</b> button at the right of the view toolbar or <kbd>F</kbd>, leave with <kbd>Esc</kbd>. <b>Markup:</b> tools to the left of the page – rectangle <kbd>R</kbd>, ellipse <kbd>O</kbd>, highlighter <kbd>H</kbd>, pen <kbd>P</kbd>, arrow <kbd>A</kbd>, text note <kbd>T</kbd>, whiteout <kbd>W</kbd>, eraser <kbd>E</kbd>, select <kbd>V</kbd>/<kbd>Esc</kbd>. Drag a selected markup to move it (or use the arrow keys), press <kbd>Delete</kbd> to remove it, <kbd>Ctrl</kbd>+<kbd>C</kbd>/<kbd>X</kbd>/<kbd>V</kbd> to copy, cut and paste it, <kbd>Ctrl</kbd>+<kbd>D</kbd> to duplicate it; pasted text becomes a text note. A selected text note shows a bar: font, size (type any size, or A−/A+), bold/italic, text, background and frame colour, rounded corners, opacity; double-click it to edit its text. <kbd>Ctrl</kbd>+<kbd>Z</kbd>/<kbd>Y</kbd> undoes markups, imports and translation changes. Turn pages with <kbd>Page Up</kbd>/<kbd>Page Down</kbd>, <kbd>Home</kbd>/<kbd>End</kbd>. Markups are saved as standard PDF annotations when you download.",
     "default.targetCode": "en",
     "default.targetName": "English",
     "clear.title": "Remove all translations",
@@ -6003,10 +6011,21 @@ function textAppearance(doc, fk, m, rgb) {
     res.put("ExtGState", ext);
     ops.push("/GSo gs");
   }
-  if (m.bg) ops.push(`${hexRgb(m.bg).map(fmt).join(" ")} rg 0 0 ${fmt(m.w)} ${fmt(m.h)} re f`);
+  // (rounded corners as in the app: the radius follows the font size)
+  const radius = m.round ? Math.min(m.w / 2, m.h / 2, Math.max(3, m.size * 0.45)) : 0;
+  const box = (x, y, w, h, r) => {
+    if (r <= 0) return `${fmt(x)} ${fmt(y)} ${fmt(w)} ${fmt(h)} re`;
+    r = Math.min(r, w / 2, h / 2);
+    const k = r * 0.5523, x1 = x + w, y1 = y + h;
+    return [`${fmt(x + r)} ${fmt(y)} m`, `${fmt(x1 - r)} ${fmt(y)} l`, `${fmt(x1 - r + k)} ${fmt(y)} ${fmt(x1)} ${fmt(y + r - k)} ${fmt(x1)} ${fmt(y + r)} c`,
+      `${fmt(x1)} ${fmt(y1 - r)} l`, `${fmt(x1)} ${fmt(y1 - r + k)} ${fmt(x1 - r + k)} ${fmt(y1)} ${fmt(x1 - r)} ${fmt(y1)} c`,
+      `${fmt(x + r)} ${fmt(y1)} l`, `${fmt(x + r - k)} ${fmt(y1)} ${fmt(x)} ${fmt(y1 - r + k)} ${fmt(x)} ${fmt(y1 - r)} c`,
+      `${fmt(x)} ${fmt(y + r)} l`, `${fmt(x)} ${fmt(y + r - k)} ${fmt(x + r - k)} ${fmt(y)} ${fmt(x + r)} ${fmt(y)} c h`].join(" ");
+  };
+  if (m.bg) ops.push(`${hexRgb(m.bg).map(fmt).join(" ")} rg ${box(0, 0, m.w, m.h, radius)} f`);
   if (m.border) {
     const bw = m.bw || 1;
-    ops.push(`${hexRgb(m.border).map(fmt).join(" ")} RG ${fmt(bw)} w ${fmt(bw / 2)} ${fmt(bw / 2)} ${fmt(m.w - bw)} ${fmt(m.h - bw)} re S`);
+    ops.push(`${hexRgb(m.border).map(fmt).join(" ")} RG ${fmt(bw)} w ${box(bw / 2, bw / 2, m.w - bw, m.h - bw, radius - bw / 2)} S`);
   }
   ops.push(`BT ${rgb.map(fmt).join(" ")} rg`);
   let cur = null;
@@ -15018,7 +15037,8 @@ function markupNode(m) {
   } else if (m.type === "text") {
     const pad = notePad(m);
     if (m.opacity != null && m.opacity < 1) g.setAttribute("opacity", m.opacity);
-    g.append(svgEl("rect", { x: x0, y: y0, width: w, height: h, fill: m.bg || "transparent", class: "hit",
+    const rr = noteRadius(m);
+    g.append(svgEl("rect", { x: x0, y: y0, width: w, height: h, fill: m.bg || "transparent", class: "hit", ...(rr ? { rx: rr, ry: rr } : {}),
       ...(m.border ? { stroke: m.border, "stroke-width": m.bw || 1 } : {}) }));
     const text = svgEl("text", { x: m.x0 + pad, y: m.y0 + pad + m.size * 0.88, fill: m.color, "font-size": m.size, "font-family": NOTE_FONTS[m.font || "sans-serif"],
       ...(m.bold ? { "font-weight": "bold" } : {}), ...(m.italic ? { "font-style": "italic" } : {}) });
@@ -15209,11 +15229,16 @@ function simplify(points, tol) {
 // and frame colours (or none) and opacity. The style of the last note changed is the start for the
 // next one. A selected note gets a small bar above it with these settings.
 const NOTE_FONTS = { "sans-serif": "Helvetica, Arial, sans-serif", serif: "'Times New Roman', Times, serif", monospace: "'Courier New', Courier, monospace" };
-const NOTE_SIZES = [8, 9, 10, 11, 12, 14, 16, 18, 20, 24, 28, 32, 40, 48];
-const NOTE_DEFAULT = { font: "sans-serif", size: 12, bold: false, italic: false, color: "#e53935", bg: "", border: "", bw: 1, opacity: 1 };
+const NOTE_SIZES = [8, 9, 10, 11, 12, 14, 16, 18, 20, 24, 28, 32, 40, 48, 56, 64, 72, 96, 120, 144];
+const NOTE_SIZE_MIN = 4, NOTE_SIZE_MAX = 400;
+const NOTE_DEFAULT = { font: "sans-serif", size: 12, bold: false, italic: false, color: "#e53935", bg: "", border: "", bw: 1, opacity: 1, round: true };
 const NOTE_STYLE_KEYS = Object.keys(NOTE_DEFAULT);
 const LS_NOTE = "pdftr:notestyle";
 const notePad = (m) => (m.pad != null ? m.pad : 2);
+/** Padding of a note's text: grows with the font size, so large text keeps clear of the frame. */
+const notePadFor = (size) => Math.max(3, Math.round(size * 0.2));
+/** Corner radius of a note's box: rounded notes follow their font size (never more than half the box). */
+const noteRadius = (m) => (m.round ? Math.min(m.w / 2, m.h / 2, Math.max(3, m.size * 0.45)) : 0);
 
 function noteStyle() {
   if (!mk.noteStyle) {
@@ -15234,7 +15259,7 @@ function measureNote(m) {
   measureCtx = measureCtx || document.createElement("canvas").getContext("2d");
   measureCtx.font = `${m.italic ? "italic " : ""}${m.bold ? "bold " : ""}${m.size}px ${NOTE_FONTS[m.font || "sans-serif"]}`;
   const lines = m.text.split("\n"), pad = notePad(m);
-  return { w: Math.max(...lines.map((l) => measureCtx.measureText(l).width)) + 2 * pad + 2, h: lines.length * m.size * 1.2 + 2 * pad };
+  return { w: Math.max(...lines.map((l) => measureCtx.measureText(l).width)) + 2 * pad + 2 + m.size * 0.05, h: lines.length * m.size * 1.2 + 2 * pad };
 }
 
 function openTextEditor(i, pt, existing) {
@@ -15254,6 +15279,7 @@ function openTextEditor(i, pt, existing) {
     fontSize: `${style.size * scale}px`, color: style.color, fontFamily: NOTE_FONTS[style.font || "sans-serif"],
     fontWeight: style.bold ? "bold" : "normal", fontStyle: style.italic ? "italic" : "normal",
     ...(style.bg ? { background: style.bg } : {}),
+    ...(style.round ? { borderRadius: `${Math.max(3, style.size * 0.45) * scale}px` } : {}),
   });
   pageEl.appendChild(ta);
   const grow = () => { ta.style.height = "auto"; ta.style.height = `${ta.scrollHeight + 2}px`; };
@@ -15271,7 +15297,8 @@ function openTextEditor(i, pt, existing) {
       if (!text) { deleteMarkup(existing.id); return; }
       changeMarkups(() => { const m = state.markups.find((x) => x.id === existing.id); m.text = text; Object.assign(m, measureNote(m)); });
     } else if (text) {
-      const m = { id: mk.seq++, page: i, type: "text", ...noteStyle(), width: mk.width, x0: pt[0], y0: pt[1], text, pad: 3 };
+      const m = { id: mk.seq++, page: i, type: "text", ...noteStyle(), width: mk.width, x0: pt[0], y0: pt[1], text };
+      m.pad = notePadFor(m.size);
       Object.assign(m, measureNote(m));
       changeMarkups(() => { state.markups.push(m); });
       // The new note is selected, with its settings at hand; the next click selects again.
@@ -15301,11 +15328,11 @@ function removeNoteBar() { document.querySelectorAll(".note-bar").forEach((b) =>
 function noteBarHtml(m) {
   const opt = (v, label, cur) => `<option value="${v}"${String(cur) === String(v) ? " selected" : ""}>${label}</option>`;
   const fonts = [["sans-serif", t("note.sans")], ["serif", t("note.serif")], ["monospace", t("note.mono")]];
-  const sizes = NOTE_SIZES.includes(m.size) ? NOTE_SIZES : [...NOTE_SIZES, m.size].sort((a, b) => a - b);
   const b = (n, label, title, on) => `<button type="button" data-n="${n}" class="${on ? "on" : ""}" title="${escapeHtml(t(title))}" aria-label="${escapeHtml(t(title))}">${label}</button>`;
   return `
     <select data-n="font" title="${escapeHtml(t("note.font"))}" aria-label="${escapeHtml(t("note.font"))}">${fonts.map(([v, l]) => opt(v, escapeHtml(l), m.font || "sans-serif")).join("")}</select>
-    <select data-n="size" title="${escapeHtml(t("note.size"))}" aria-label="${escapeHtml(t("note.size"))}">${sizes.map((v) => opt(v, v, m.size)).join("")}</select>
+    <input type="number" class="nb-size" data-n="size" list="noteSizes${m.id}" min="${NOTE_SIZE_MIN}" max="${NOTE_SIZE_MAX}" step="1" value="${m.size}" title="${escapeHtml(t("note.size"))}" aria-label="${escapeHtml(t("note.size"))}"><datalist id="noteSizes${m.id}">${NOTE_SIZES.map((v) => `<option value="${v}"></option>`).join("")}</datalist>
+    ${b("smaller", "A−", "note.smaller")}${b("larger", "A+", "note.larger")}
     ${b("bold", "<b>B</b>", "note.bold", m.bold)}${b("italic", "<i>I</i>", "note.italic", m.italic)}
     <span class="nb-sep"></span>
     <label class="nb-color" title="${escapeHtml(t("note.color"))}"><span class="nb-a" style="--c:${m.color}">A</span><input type="color" data-n="color" value="${m.color}"></label>
@@ -15313,6 +15340,7 @@ function noteBarHtml(m) {
     ${b("bgOff", "∅", "note.bgOff", !m.bg)}
     <label class="nb-color${m.border ? "" : " off"}" title="${escapeHtml(t("note.border"))}"><span class="nb-frame" style="--c:${m.border || "#888888"}"></span><input type="color" data-n="border" value="${m.border || "#1e66f5"}"></label>
     ${b("borderOff", "∅", "note.borderOff", !m.border)}
+    ${b("round", m.round ? "▢" : "□", "note.round", m.round)}
     <label class="nb-op" title="${escapeHtml(t("note.opacity"))}">◐<input type="range" data-n="opacity" min="10" max="100" step="5" value="${Math.round((m.opacity != null ? m.opacity : 1) * 100)}"></label>
     <span class="nb-sep"></span>
     ${b("edit", "✎", "note.edit")}${b("copy", "⧉", "note.copy")}${b("dup", "⊕", "note.duplicate")}${b("del", "🗑", "note.delete")}`;
@@ -15351,6 +15379,16 @@ function updateNoteBar() {
   bar.style.left = `${Math.max(0, ((m.x0 - p.x0) / p.width) * 100)}%`;
   bar.classList.toggle("below", top * pageEl.clientHeight < 48);
   bar.style.top = bar.classList.contains("below") ? `${bottom * 100}%` : `${top * 100}%`;
+  // Kept within the visible part of the page view: moved left when it would stick out on the
+  // right, its buttons wrapped onto a second row when the view is narrower than the bar.
+  const view = (pageEl.closest("#pages") || pageEl).getBoundingClientRect();
+  bar.style.maxWidth = `${Math.max(160, view.width - 12)}px`;
+  bar.classList.toggle("wrap", bar.scrollWidth > view.width - 12);
+  const r = bar.getBoundingClientRect(), over = r.right - (view.right - 6);
+  if (over > 0) {
+    const left = r.left - pageEl.getBoundingClientRect().left - over;
+    bar.style.left = `${Math.max(view.left + 6 - pageEl.getBoundingClientRect().left, left)}px`;
+  }
 }
 
 let noteBefore = null; // the markups before a run of live changes (a colour being picked, the opacity slider)
@@ -15360,6 +15398,7 @@ function noteChange(patch, live) {
   if (!noteBefore) noteBefore = clone(state.markups);
   const before = noteBefore;
   Object.assign(m, patch);
+  if (patch.size) m.pad = notePadFor(m.size);
   Object.assign(m, measureNote(m));
   if (!live) noteBefore = null;
   renderMarkups(m.page);
@@ -15372,7 +15411,7 @@ function noteChange(patch, live) {
 const notePatch = (el) => {
   const n = el.dataset.n, v = el.value;
   if (n === "font") return { font: v };
-  if (n === "size") return { size: Number(v) };
+  if (n === "size") { const z = Math.round(Number(v)); return z ? { size: Math.min(NOTE_SIZE_MAX, Math.max(NOTE_SIZE_MIN, z)) } : null; }
   if (n === "color" || n === "bg" || n === "border") return { [n]: v };
   if (n === "opacity") return { opacity: Number(v) / 100 };
   return null;
@@ -15388,6 +15427,11 @@ function noteBarChange(e) {
   const patch = notePatch(e.target);
   if (patch) noteChange(patch, false);
 }
+/** The next font size up or down the list (A+ / A−). */
+function noteStep(size, dir) {
+  if (dir > 0) return NOTE_SIZES.find((v) => v > size) || Math.min(NOTE_SIZE_MAX, Math.round(size * 1.25));
+  return [...NOTE_SIZES].reverse().find((v) => v < size) || Math.max(NOTE_SIZE_MIN, size - 1);
+}
 function noteBarClick(e) {
   const b = e.target.closest("button[data-n]");
   if (!b) return;
@@ -15396,6 +15440,8 @@ function noteBarClick(e) {
   const n = b.dataset.n;
   if (n === "bold") noteChange({ bold: !m.bold });
   else if (n === "italic") noteChange({ italic: !m.italic });
+  else if (n === "smaller" || n === "larger") noteChange({ size: noteStep(m.size, n === "larger" ? 1 : -1) });
+  else if (n === "round") noteChange({ round: !m.round });
   else if (n === "bgOff") noteChange({ bg: "" });
   else if (n === "borderOff") noteChange({ border: "" });
   else if (n === "edit") openTextEditor(m.page, [m.x0, m.y0], m);
@@ -15467,7 +15513,8 @@ function onPaste(e) {
   if (text && text.trim()) { // plain text: a new note with the current note style
     e.preventDefault();
     const at = pastePoint();
-    const n = { id: 0, page: at.page, type: "text", ...noteStyle(), width: mk.width, x0: at.pt[0], y0: at.pt[1], text: text.replace(/\r\n?/g, "\n").replace(/\s+$/, ""), pad: 3 };
+    const n = { id: 0, page: at.page, type: "text", ...noteStyle(), width: mk.width, x0: at.pt[0], y0: at.pt[1], text: text.replace(/\r\n?/g, "\n").replace(/\s+$/, "") };
+    n.pad = notePadFor(n.size);
     Object.assign(n, measureNote(n));
     pasteMarkups([n], at);
   }
@@ -17205,7 +17252,7 @@ function initPicture() {
 // from its own browser cache before the network, so language files are written into that cache.
 // ======================================================================
 
-const APP_VERSION = "2.15";
+const APP_VERSION = "2.16";
 // (a change of library version makes a stored set outdated: it is then ignored)
 const OFFLINE_VERSION = `${MUPDF_URL} ${OCR_LIB}`;
 const CORE_SIMD = "tesseract-core-simd-lstm.wasm.js", CORE_PLAIN = "tesseract-core-lstm.wasm.js";

@@ -2464,10 +2464,21 @@ function textAppearance(doc, fk, m, rgb) {
     res.put("ExtGState", ext);
     ops.push("/GSo gs");
   }
-  if (m.bg) ops.push(`${hexRgb(m.bg).map(fmt).join(" ")} rg 0 0 ${fmt(m.w)} ${fmt(m.h)} re f`);
+  // (rounded corners as in the app: the radius follows the font size)
+  const radius = m.round ? Math.min(m.w / 2, m.h / 2, Math.max(3, m.size * 0.45)) : 0;
+  const box = (x, y, w, h, r) => {
+    if (r <= 0) return `${fmt(x)} ${fmt(y)} ${fmt(w)} ${fmt(h)} re`;
+    r = Math.min(r, w / 2, h / 2);
+    const k = r * 0.5523, x1 = x + w, y1 = y + h;
+    return [`${fmt(x + r)} ${fmt(y)} m`, `${fmt(x1 - r)} ${fmt(y)} l`, `${fmt(x1 - r + k)} ${fmt(y)} ${fmt(x1)} ${fmt(y + r - k)} ${fmt(x1)} ${fmt(y + r)} c`,
+      `${fmt(x1)} ${fmt(y1 - r)} l`, `${fmt(x1)} ${fmt(y1 - r + k)} ${fmt(x1 - r + k)} ${fmt(y1)} ${fmt(x1 - r)} ${fmt(y1)} c`,
+      `${fmt(x + r)} ${fmt(y1)} l`, `${fmt(x + r - k)} ${fmt(y1)} ${fmt(x)} ${fmt(y1 - r + k)} ${fmt(x)} ${fmt(y1 - r)} c`,
+      `${fmt(x)} ${fmt(y + r)} l`, `${fmt(x)} ${fmt(y + r - k)} ${fmt(x + r - k)} ${fmt(y)} ${fmt(x + r)} ${fmt(y)} c h`].join(" ");
+  };
+  if (m.bg) ops.push(`${hexRgb(m.bg).map(fmt).join(" ")} rg ${box(0, 0, m.w, m.h, radius)} f`);
   if (m.border) {
     const bw = m.bw || 1;
-    ops.push(`${hexRgb(m.border).map(fmt).join(" ")} RG ${fmt(bw)} w ${fmt(bw / 2)} ${fmt(bw / 2)} ${fmt(m.w - bw)} ${fmt(m.h - bw)} re S`);
+    ops.push(`${hexRgb(m.border).map(fmt).join(" ")} RG ${fmt(bw)} w ${box(bw / 2, bw / 2, m.w - bw, m.h - bw, radius - bw / 2)} S`);
   }
   ops.push(`BT ${rgb.map(fmt).join(" ")} rg`);
   let cur = null;
