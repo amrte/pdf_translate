@@ -4,6 +4,16 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.36
+
+- Scans with an invisible text layer (PDFs from scanners and "make searchable" tools): the translation used to be drawn over the scanned words, which stay visible in the picture – both texts overlapped. Now the scanned lines are covered with patches of the paper colour (measured on the page) and the translation is set on them in the ink colour, as with the app's own OCR; the invisible original text is removed. Such segments say "OCR layer of a scan".
+- Word, PowerPoint, Excel, e-books and subtitles: a translation that lost a marker such as <1>…</1> (a link, bold or italic text, a field) used to drop that link or formatting without a word. Now the segment shows "⚠ n marker(s) missing" (or "do not fit" for unknown or unclosed markers, which would appear as text), the list has a filter "Lost links / formatting", and after building a message says how many segments are affected, with a button to show them.
+- Bilingual PDF (both layouts) keeps the document's metadata and XMP, language, viewer settings, page labels, attached files and layers (one switch per layer for all pages); page by page, the form stays fillable on the original pages (on the translated pages its fields are drawn).
+- Notes and comments, text form fields, bookmarks and the document title are translated too: they appear as segments at the end of their page (filter "Notes, fields, bookmarks, title") and are written back into their place – the note's text, the field's value, the bookmark's title, the title in the document info and XMP. A bookmark without a translation of its own takes that of the heading or contents line with the same text, numbering kept ("2.1 …"). Bilingual PDFs use the translated bookmarks and title.
+- Text inside a layer (optional content) stays in that layer when translated: switching the layer off hides the translation too.
+- Translating a page again after an edit kept only its links; now its notes, comments and form fields stay as well.
+- Annotations drawn over the text (a reviewer's rectangle) no longer count as table borders: lines are not split at their edges any more.
+
 ## 2.35
 
 - Links stay in the translated PDF: table-of-contents entries, "see page …" references, web addresses and e-mail links keep working. Before, the step that removes the original text also deleted every link it touched – usually nearly all of them. Each link keeps its place, so it now covers the translated text set in the same box. Links also survive when a page is translated anew after an edit, and links and bookmarks pointing to that page keep finding it.

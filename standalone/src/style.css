@@ -1030,3 +1030,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
 .vocab-thumb { height: 40px; width: 40px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border); }
 #pairMediaRow { display: flex; align-items: center; gap: 8px; margin: 10px 0 0; font-size: 13.5px; }
 #pairMediaRow[hidden] { display: none; }
+
+/* ---------- v2.36: lost markers (links, formatting) in a translation ---------- */
+.seg-warn { flex-shrink: 0; color: #c0392b; font-weight: 600; white-space: nowrap; cursor: help; }
+.seg-warn[hidden] { display: none; }

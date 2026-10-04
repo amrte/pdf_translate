@@ -7,7 +7,7 @@
 // The text of a recognised segment can also be corrected by hand.
 
 const segKey = (id) => `pdftr:seg:${id}`;
-const segEditable = (s) => Boolean(state.doc && !isBook() && s && (s.ocr || !state.doc.image));
+const segEditable = (s) => Boolean(state.doc && !isBook() && s && !s.extra && (s.ocr || !state.doc.image));
 /** The stored OCR result of a page, when it has its lines (results from before 2.20 have not). */
 const ocrRecord = (p) => { const r = state.doc && state.doc.ocr && state.doc.ocr[p]; return r && r.raw ? r : null; };
 const sameBox = (a, b) => a && b && a.every((v, i) => Math.abs(v - b[i]) < 0.6);

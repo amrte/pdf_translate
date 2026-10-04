@@ -223,7 +223,8 @@ function pageGraphics(page) {
     strokePath(path, stroke, ctm) { onPath(path, ctm); },
     fillImage(image, ctm) { containers.push(boxOf([[0, 0], [1, 0], [0, 1], [1, 1]].map(([x, y]) => applyM(ctm, x, y)))); },
   });
-  try { page.run(dev, M.Matrix.identity); } catch (e) { console.warn("Could not analyse page graphics", e); }
+  // (the page's own content: annotations drawn over the text – a reviewer's box – are no table borders)
+  try { if (page.runPageContents) page.runPageContents(dev, M.Matrix.identity); else page.run(dev, M.Matrix.identity); } catch (e) { console.warn("Could not analyse page graphics", e); }
   try { dev.close(); } catch (_) { /* not needed */ }
   free(dev);
   return { seps, containers };
@@ -292,11 +293,72 @@ const unknownChars = (blocks) => {
  * drawn are read), unless that loses characters that only the replacement text provides.
  */
 function pageBlocks(page, bounds, seps) {
-  const blocks = readBlocks(page, bounds, seps, "preserve-whitespace");
-  if (!usesActualText(page)) return blocks;
-  const drawn = readBlocks(page, bounds, seps, "preserve-whitespace,ignore-actualtext");
-  return unknownChars(drawn) <= unknownChars(blocks) ? drawn : blocks;
+  const marks = glyphMarks(page);
+  let blocks = readBlocks(page, bounds, seps, "preserve-whitespace", marks);
+  if (usesActualText(page)) {
+    const drawn = readBlocks(page, bounds, seps, "preserve-whitespace,ignore-actualtext", marks);
+    if (unknownChars(drawn) <= unknownChars(blocks)) blocks = drawn;
+  }
+  if (marks && marks.hidden) colourHidden(page, bounds, blocks);
+  return blocks;
 }
+
+/*
+ * Invisible text (text render mode 3) is mostly the OCR layer of a scan: the words that show are
+ * part of the picture. Such text is marked (span.hidden, see glyphMarks): the translation is drawn
+ * on patches of the paper colour over its lines, in the ink colour of the picture, as with OCR in
+ * the app.
+ */
+const glyphKey = (x, y) => `${Math.round(x * 2)},${Math.round(y * 2)}`;
+/**
+ * What a pass over the page's drawing says about its glyphs (keys of their origins): which are
+ * invisible (`hidden`, a Set), and which are drawn inside an optional content layer (`layers`, a
+ * Map to the layer's name) – a translation goes into the same layer. Null when neither occurs.
+ */
+function glyphMarks(page) {
+  const hidden = new Set(), layers = new Map(), stack = [];
+  const keyOf = (trm, ctm) => glyphKey(trm[4] * ctm[0] + trm[5] * ctm[2] + ctm[4], trm[4] * ctm[1] + trm[5] * ctm[3] + ctm[5]);
+  const inLayer = (text, ctm) => { if (stack.length) { const name = stack[stack.length - 1]; text.walk({ showGlyph(font, trm) { layers.set(keyOf(trm, ctm), name); } }); } };
+  let dev = null;
+  try {
+    dev = new M.Device({
+      ignoreText(text, ctm) { text.walk({ showGlyph(font, trm) { hidden.add(keyOf(trm, ctm)); } }); },
+      fillText(text, ctm) { inLayer(text, ctm); },
+      strokeText(text, stroke, ctm) { inLayer(text, ctm); },
+      beginLayer(name) { stack.push(String(name || "")); },
+      endLayer() { stack.pop(); },
+    });
+    if (page.runPageContents) page.runPageContents(dev, M.Matrix.identity); else page.run(dev, M.Matrix.identity);
+    dev.close();
+  } catch (_) { return null; } finally { free(dev); }
+  return hidden.size || layers.size ? { hidden: hidden.size ? hidden : null, layers: layers.size ? layers : null } : null;
+}
+/** The ink and paper colour of each invisible span, measured on the rendered page. */
+function colourHidden(page, bounds, blocks) {
+  const spans = [];
+  for (const b of blocks) for (const l of b.lines) for (const sp of l.spans) if (sp.hidden) spans.push(sp);
+  if (!spans.length) return;
+  const zoom = 2;
+  const pix = page.toPixmap(M.Matrix.scale(zoom, zoom), M.ColorSpace.DeviceRGB, false, true);
+  try {
+    const img = { width: pix.getWidth(), height: pix.getHeight(), data: pix.getPixels(), n: pix.getNumberOfComponents() }; // (RGB, no alpha: 3 per pixel)
+    const x0 = pix.getX(), y0 = pix.getY();
+    const palette = [];
+    const snap = (hex, tol) => { // (near colours made equal: the lines of a paragraph keep one colour)
+      const c = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+      for (const p of palette) if (p.tol === tol && Math.hypot(p.c[0] - c[0], p.c[1] - c[1], p.c[2] - c[2]) < tol) return p.hex;
+      palette.push({ c, hex, tol });
+      return hex;
+    };
+    for (const sp of spans) {
+      const h = sp.bbox[3] - sp.bbox[1];
+      const box = [sp.bbox[0], sp.bbox[1] - 0.1 * h, sp.bbox[2], sp.bbox[3] + 0.1 * h].map((v, i) => v * zoom - (i % 2 ? y0 : x0));
+      const { fg, bg } = sampleColors(img, box);
+      sp.color = snap(fg, 48); sp.bg = snap(bg, 18);
+    }
+  } finally { free(pix); }
+}
+
 
 // Ligature glyphs without a Unicode mapping arrive as U+FFFD ("Ac\ufffdvity" in PDFs printed with
 // Calibri and similar fonts). Inside a word such a glyph is replaced by the letter pair whose
@@ -335,7 +397,7 @@ function applyLigatureFixes(span) {
   delete span.fixes;
 }
 
-function readBlocks(page, bounds, seps, options) {
+function readBlocks(page, bounds, seps, options, marks = null) {
   // Font pointers are only unique while this structured-text page keeps its fonts alive;
   // MuPDF reuses the addresses later, so the pointer cache must not outlive the page.
   fontPtrCache.clear();
@@ -368,7 +430,10 @@ function readBlocks(page, bounds, seps, options) {
       const ck = color.length === 3 ? ((color[0] * 255) << 16) + ((color[1] * 255) << 8) + (color[2] * 255 | 0) : color.join(",");
       let col = colorCache.get(ck);
       if (!col) { col = colorHex(color); colorCache.set(ck, col); }
-      const key = `${info.name}|${Math.round(size * 100)}|${col}`;
+      const gk = marks ? glyphKey(origin[0], origin[1]) : "";
+      const hid = Boolean(marks && marks.hidden && marks.hidden.has(gk)); // (an OCR layer: see glyphMarks)
+      const oc = (marks && marks.layers && marks.layers.get(gk)) || ""; // (an optional content layer)
+      const key = `${info.name}|${Math.round(size * 100)}|${col}${hid ? "|h" : ""}${oc ? `|oc:${oc}` : ""}`;
       // Start a new span on a style change, and where a table border or a wide gap separates
       // this glyph from the previous one (MuPDF fills such gaps with synthetic spaces).
       let split = !span || span.key !== key, gapBefore = 0;
@@ -387,7 +452,7 @@ function readBlocks(page, bounds, seps, options) {
         info.wn++;
       }
       if (split) {
-        span = { key, text: "", bbox: null, origin: [origin[0], origin[1]], size, font: info, color: col, gapBefore };
+        span = { key, text: "", bbox: null, origin: [origin[0], origin[1]], size, font: info, color: col, gapBefore, ...(hid ? { hidden: true } : {}), ...(oc ? { oc } : {}) };
         line.spans.push(span);
       }
       if (lig) (span.fixes = span.fixes || []).push({ at: span.text.length, lig });
@@ -1097,8 +1162,9 @@ function buildSegment(group, pageNo, bounds, id, marginsByRot, pageLines, shaped
   const color = dominant(spans, (s) => s.color);
   // Text recognised by OCR is part of a picture: the translation is drawn on a patch of the
   // paper colour over each original line instead of removing text.
-  const ocr = spans[0].ocr ? {
-    ocr: true, bg: dominant(spans, (s) => s.bg),
+  // The same for the invisible OCR layer of a scan (see hiddenGlyphs), whose text is removed as well.
+  const ocr = spans[0].ocr || spans[0].hidden ? {
+    ...(spans[0].ocr ? { ocr: true } : { scan: true }), bg: dominant(spans, (s) => s.bg),
     // (little padding at the sides, so that table borders next to the text are not painted over)
     cover: lines.map((l) => { const b = l.bbox, h = b[3] - b[1]; return [b[0] - 0.04 * h, b[1] - 0.12 * h, b[2] + 0.04 * h, b[3] + 0.12 * h].map(round2); }),
   } : null;
@@ -1126,7 +1192,8 @@ function buildSegment(group, pageNo, bounds, id, marginsByRot, pageLines, shaped
     bold: info.bold, italic: info.italic, family: familyFor(info),
     align,
     origin: lines[0].origin.map(round2),
-    redact: ocr ? [] : spans.filter((s) => s.text.trim()).map((s) => redactRect(s, rotation).map(round2)),
+    redact: ocr && ocr.ocr ? [] : spans.filter((s) => s.text.trim()).map((s) => redactRect(s, rotation).map(round2)),
+    ...(spans.some((s) => s.oc) ? { oc: dominant(spans, (s) => s.oc || "") } : {}), // (the layer the text is in: the translation goes there too)
     ...(ocr || {}),
   };
 }
@@ -1201,6 +1268,8 @@ async function extractPages(doc, pageList, onProgress) {
       if (page.getObject) collectFontStyles(page.getObject());
       const protect = []; // text we never extract (skewed lines) must survive merged redactions
       segments.push(...segmentPage(pageBlocks(page, bounds, seps), p, bounds, seps, protect));
+      if (page.getAnnotations) segments.push(...pageExtras(page, p));
+      if (p === 0 && doc.isPDF && doc.isPDF()) segments.push(...docExtras(doc));
       pages[p] = { width, height, x0: bounds[0], y0: bounds[1], protect: protect.map((r) => r.map(round2)), graphics };
     } finally {
       free(page);
@@ -1210,6 +1279,59 @@ async function extractPages(doc, pageList, onProgress) {
     if (done % 4 === 0) await tick();
   }
   return { pages, segments };
+}
+
+/*
+ * Texts outside the page content: the contents of notes and other annotations, the values of text
+ * form fields, the bookmarks and the document title. They become segments of their own (`extra`:
+ * "annot", "field", "outline", "title"; `ref` says which) – listed after the page's text – and
+ * are written back into their place when the PDF is built (applyExtras).
+ */
+const EXTRA_ID = 100000;
+// (annotations whose contents are no text to read: a file's or sound's name, form fields, links)
+const NO_TEXT_ANNOTS = new Set(["Link", "Popup", "Widget", "FileAttachment", "Sound", "Movie", "Screen", "RichMedia", "3D", "PrinterMark", "TrapNet", "Watermark"]);
+const extraSeg = (kind, id, page, text, bbox, ref) => ({
+  id, page, text: text.replace(/\r\n?/g, "\n").trim(), extra: kind, ref, bbox: bbox ? bbox.map(round2) : null,
+  size: 10, rotation: 0, lines: 1, color: "#000000", align: "left", font: "", bold: false, italic: false, family: "sans", skip: false,
+});
+function pageExtras(page, p) {
+  const out = [];
+  const add = (kind, text, bbox, ref) => { if (text && /\p{L}/u.test(text)) out.push(extraSeg(kind, EXTRA_ID + out.length, p, text, bbox, ref)); };
+  try {
+    for (const a of page.getAnnotations ? page.getAnnotations() : []) {
+      const type = a.getType();
+      if (!NO_TEXT_ANNOTS.has(type)) add("annot", a.getContents(), a.getBounds(), a.getObject().asIndirect());
+      free(a);
+    }
+    for (const w of page.getWidgets ? page.getWidgets() : []) {
+      if (w.getFieldType() === "text" && !w.isReadOnly()) add("field", w.getValue(), w.getBounds(), w.getObject().asIndirect());
+      free(w);
+    }
+  } catch (err) { console.warn("annotations not read", err); }
+  return out;
+}
+/** The document title and the bookmarks (depth first; `ref` is the position in that order). */
+function docExtras(doc) {
+  const out = [];
+  const add = (kind, text, page, ref) => { if (text && /\p{L}/u.test(text)) out.push(extraSeg(kind, EXTRA_ID + 50000 + out.length, page, text, null, ref)); };
+  try {
+    const title = (doc.getMetaData("info:Title") || "").trim();
+    // (a file name left by the writing program is no title: "Microsoft Word - report.docx")
+    if (!/^Microsoft (?:Word|PowerPoint|Excel) - |\.(?:docx?|pdf|pptx?|xlsx?|odt|rtf|txt|indd|tex|html?)$|^[\w-]+\.\w{2,4}$/i.test(title)) add("title", title, 0, "title");
+  } catch (_) { /* none */ }
+  let tree = null;
+  try { tree = doc.loadOutline(); } catch (_) { /* none */ }
+  let i = 0;
+  const walk = (items, depth) => {
+    for (const item of items || []) {
+      let page = 0;
+      try { if (item.uri) { const n = doc.resolveLink(item.uri); if (n >= 0) page = n; } } catch (_) { /* an outside target */ }
+      add("outline", item.title || "", page, i++);
+      if (depth < 32) walk(item.down, depth + 1);
+    }
+  };
+  walk(tree, 0);
+  return out;
 }
 
 /** The lines of a page as the segmenter sees them: blocks of lines, the text margins per rotation, all lines. */
@@ -2162,7 +2284,7 @@ function ownDict(doc, parent, key, shared) {
   return copy;
 }
 
-function appendContent(doc, page, content, used, xobjects = new Map()) {
+function appendContent(doc, page, content, used, xobjects = new Map(), props = new Map()) {
   const pobj = page.getObject();
   // Resources shared by several pages (inherited, or one indirect dictionary) get copied before
   // this page's fonts and forms are added, so no other page sees them.
@@ -2182,6 +2304,10 @@ function appendContent(doc, page, content, used, xobjects = new Map()) {
   if (xobjects.size) {
     const xo = ownDict(doc, res, "XObject", shared);
     for (const [name, ref] of xobjects) xo.put(name, ref);
+  }
+  if (props.size) { // optional content layers the translations are put in
+    const pr = ownDict(doc, res, "Properties", shared);
+    for (const [name, ref] of props) pr.put(name, ref);
   }
   const inv = M.Matrix.invert(page.getTransform());
   const contents = pobj.get("Contents");
@@ -2302,6 +2428,87 @@ function attachLinks(doc, pobj, links) {
   for (const l of links) annots.push(l);
 }
 
+/**
+ * The translations of extra segments (see pageExtras) written into their place; with `restore`
+ * (a document translated before), an extra without a translation gets its original text back.
+ */
+function applyExtras(doc, segs, translations, restore = false) {
+  const tr = (s) => (translations[s.id] || "").trim() || (restore ? s.text : "");
+  const todo = segs.filter((s) => s.extra && tr(s));
+  if (!todo.length) return 0;
+  let n = 0;
+  const byPage = new Map();
+  for (const s of todo) if (s.extra === "annot" || s.extra === "field") { if (!byPage.has(s.page)) byPage.set(s.page, []); byPage.get(s.page).push(s); }
+  for (const [p, list] of byPage) {
+    if (p >= doc.countPages()) continue;
+    const page = doc.loadPage(p);
+    const annots = page.getAnnotations(), widgets = page.getWidgets();
+    try {
+      const find = (arr, ref) => arr.find((a) => a.getObject().asIndirect() === ref);
+      for (const s of list) {
+        try {
+          if (s.extra === "annot") { const a = find(annots, s.ref); if (a) { a.setContents(tr(s)); a.update(); n++; } } else { const w = find(widgets, s.ref); if (w) { w.setTextValue(tr(s)); w.update(); n++; } }
+        } catch (err) { console.warn("annotation text not set", err); }
+      }
+    } finally {
+      for (const a of annots) free(a);
+      for (const w of widgets) free(w);
+      free(page);
+    }
+  }
+  const title = todo.find((s) => s.extra === "title");
+  if (title) { setDocTitle(doc, tr(title)); n++; }
+  const marks = new Map(todo.filter((s) => s.extra === "outline").map((s) => [s.ref, tr(s)]));
+  if (marks.size) {
+    let it = null, i = 0;
+    try {
+      it = doc.outlineIterator();
+      const visit = (depth) => { // depth first, in the order docExtras read them
+        for (let guard = 0; guard < 100000; guard++) {
+          const item = it.item();
+          if (!item) return;
+          if (marks.has(i)) { it.update({ title: marks.get(i), uri: item.uri, open: item.open }); n++; }
+          i++;
+          const d = it.down();
+          if (d === 0 && depth < 32) visit(depth + 1);
+          if (d !== -1) it.up();
+          if (it.next() !== 0) return;
+        }
+      };
+      visit(0);
+    } catch (err) { console.warn("bookmarks not renamed", err); } finally { free(it); }
+  }
+  return n;
+}
+/** The title in the document info and in the XMP metadata (which some viewers prefer). */
+function setDocTitle(doc, title) {
+  try { doc.setMetaData("info:Title", title); } catch (_) { /* no info */ }
+  try {
+    const meta = doc.getTrailer().get("Root").get("Metadata");
+    if (!meta.isStream()) return;
+    const buf = meta.readStream(), xml = new TextDecoder().decode(buf.asUint8Array());
+    free(buf);
+    const esc = title.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    // (<dc:title><rdf:Alt><rdf:li …>title</rdf:li>…, or the title right inside <dc:title>)
+    let fixed = xml.replace(/(<dc:title>[\s\S]*?<rdf:li\b[^>]*>)[^<]*(<\/rdf:li>)/, (m, a, b) => a + esc + b);
+    if (fixed === xml) fixed = xml.replace(/(<dc:title>)[^<]*(<\/dc:title>)/, (m, a, b) => a + esc + b);
+    if (fixed !== xml) meta.writeStream(new TextEncoder().encode(fixed));
+  } catch (_) { /* XMP left as it is */ }
+}
+
+/** The document's optional content layers by name (the first of a name). */
+function layersByName(doc) {
+  const out = new Map();
+  try {
+    const ocgs = doc.getTrailer().get("Root").get("OCProperties").get("OCGs");
+    if (ocgs.isArray()) for (let i = 0; i < ocgs.length; i++) {
+      const g = ocgs.get(i), name = g.get("Name");
+      if (!name.isNull() && !out.has(name.asString())) out.set(name.asString(), g);
+    }
+  } catch (_) { /* no layers */ }
+  return out;
+}
+
 function translatePage(doc, index, fk, segs, translations, pageInfo, opts, stats) {
   const todo = [], scaled = [], keep = [...((pageInfo && pageInfo.protect) || [])];
   // An untranslated field with its own size, place or style (numbers, kept text) is set again
@@ -2352,16 +2559,27 @@ function translatePage(doc, index, fk, segs, translations, pageInfo, opts, stats
     // Patches of paper colour over scanned (OCR) text come first, under all translations.
     const covers = todo.filter((seg) => seg.cover).map((seg) =>
       `q ${rg(seg.bg || "#ffffff")} ${seg.cover.map(([x0, y0, x1, y1]) => `${fmt(x0)} ${fmt(y0)} ${fmt(x1 - x0)} ${fmt(y1 - y0)} re`).join(" ")} f Q`);
+    const props = new Map(), layerName = new Map(); // (the layers the translations go into, see glyphMarks)
+    const inLayer = (seg, ops) => {
+      if (!seg.oc || !ops) return ops;
+      if (!layerName.has(seg.oc)) {
+        const ref = layersByName(doc).get(seg.oc);
+        layerName.set(seg.oc, ref ? `PToc${props.size}` : null);
+        if (ref) props.set(`PToc${props.size}`, ref);
+      }
+      const name = layerName.get(seg.oc);
+      return name ? `/OC /${name} BDC\n${ops}\nEMC` : ops;
+    };
     const content = covers.concat(copies, todo.map((seg) => {
       const ends = [];
-      const ops = layoutSegment(seg, textOf(seg), fk, bounds, obs, opts, used, stats, seg.fixed ? null : leadInEnd(seg, laid), ends);
+      const ops = inLayer(seg, layoutSegment(seg, textOf(seg), fk, bounds, obs, opts, used, stats, seg.fixed ? null : leadInEnd(seg, laid), ends));
       const right = localBox(seg.bbox, seg.rotation)[2];
       for (const [a, b] of ends) laid.push({ rot: seg.rotation, end: a, base: b, right });
       // Where the translation now reaches: a neighbour laid out later must not grow into it.
       if (obs && ends.length) obs.grown.set(seg.bbox, [Math.min(...ends.map((e) => e[2])), Math.max(...ends.map((e) => e[0])), seg.rotation]);
       return ops;
     })).join("\n");
-    appendContent(doc, page, content, used, xobjects);
+    appendContent(doc, page, content, used, xobjects, props);
     stats.replaced += todo.length + scaled.length;
   } finally {
     attachLinks(doc, page.getObject(), links);
@@ -2499,21 +2717,24 @@ function pageForm(doc, page) {
  */
 function updatePage(out, src, pno, segs, translations, pageInfo, opts, map, fk) {
   map.graftPage(pno, src, pno);
-  // A grafted page comes without its annotations: the links of the page it replaces stay (they
-  // point to out's own pages).
-  const old = out.findPage(pno + 1), links = detachLinks(out, old);
+  // A grafted page comes without its annotations: those of the page it replaces stay – links,
+  // notes, form fields (they belong to out: links point to its pages, fields are in its form).
+  const old = out.findPage(pno + 1), annots = old.get("Annots");
   out.deletePage(pno + 1);
   const fresh = out.findPage(pno);
-  for (const l of links) l.put("P", fresh);
-  attachLinks(out, fresh, links);
-  repointDests(out, old, fresh); // (links and bookmarks to this page)
+  if (annots.isArray() && annots.length) {
+    for (let i = 0; i < annots.length; i++) { const a = annots.get(i); if (a.isDictionary()) a.put("P", fresh); }
+    fresh.put("Annots", annots);
+  }
+  repointDests(out, old, fresh); // (links, bookmarks and form fields that name this page)
   // The copy shares its content streams with the original's later copies: redaction works on
   // the page's own stream.
   const pobj = out.findPage(pno);
   pobj.put("Contents", out.addStream(contentOf(pobj), {}));
   fk.opts = opts; fk.missing = 0; fk.missingChars.clear();
   const stats = { replaced: 0, untranslated: 0, shrunk: [], missing: 0 };
-  translatePage(out, pno, fk, segs, translations, pageInfo, opts, stats);
+  translatePage(out, pno, fk, segs.filter((s) => !s.extra), translations, pageInfo, opts, stats);
+  stats.replaced += applyExtras(out, segs, translations, true); // (this page's notes and fields; bookmarks, title)
   stats.missing = fk.missing;
   stats.missingChars = [...fk.missingChars].join("");
   return stats;
@@ -2541,6 +2762,7 @@ async function buildTranslated(bytes, segments, translations, pages, opts, onPro
     const stats = { replaced: 0, untranslated: 0, shrunk: [], missing: 0 };
     const byPage = new Map();
     for (const s of segments) {
+      if (s.extra) continue; // (notes, form fields, bookmarks, title: see applyExtras)
       if (!byPage.has(s.page)) byPage.set(s.page, []);
       byPage.get(s.page).push(s);
     }
@@ -2551,6 +2773,7 @@ async function buildTranslated(bytes, segments, translations, pages, opts, onPro
       if (onProgress) onProgress(done, byPage.size);
       if (done % 4 === 0) await tick();
     }
+    stats.replaced += applyExtras(doc, segments, translations);
     stats.missing = fk.missing;
     stats.missingChars = [...fk.missingChars].join("");
     doc.subsetFonts();
@@ -3039,7 +3262,7 @@ function sampleColors(img, box) {
   const step = Math.max(1, Math.round(Math.sqrt(((x1 - x0) * (y1 - y0)) / 6000)));
   for (let y = Math.max(0, y0); y < Math.min(img.height, y1); y += step) {
     for (let x = Math.max(0, x0); x < Math.min(img.width, x1); x += step) {
-      const i = (y * img.width + x) * 4, d = img.data;
+      const i = (y * img.width + x) * (img.n || 4), d = img.data;
       px.push([0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2], d[i], d[i + 1], d[i + 2]]);
     }
   }
@@ -3356,6 +3579,87 @@ function copyOutline(src, out, target) {
   try { add(tree, 0); } finally { free(it); }
 }
 
+/** References to the objects in `swap` (number → replacement) on all pages of `doc`, resources and annotations included. */
+function replaceRefs(doc, swap) {
+  if (!swap.size) return;
+  const seen = new Set();
+  const visit = (o, depth) => {
+    if (depth > 40) return;
+    if (o.isIndirect()) { const k = o.asIndirect(); if (seen.has(k)) return; seen.add(k); }
+    if (o.isDictionary()) {
+      const keys = [];
+      o.forEach((v, k) => keys.push(k));
+      for (const k of keys) {
+        if (k === "Parent" || k === "P") continue;
+        const v = o.get(k);
+        if (v.isIndirect() && swap.has(v.asIndirect())) o.put(k, swap.get(v.asIndirect())); else if (v.isDictionary() || v.isArray()) visit(v, depth + 1);
+      }
+    } else if (o.isArray()) {
+      for (let i = 0; i < o.length; i++) {
+        const v = o.get(i);
+        if (v.isIndirect() && swap.has(v.asIndirect())) o.put(i, swap.get(v.asIndirect())); else if (v.isDictionary() || v.isArray()) visit(v, depth + 1);
+      }
+    }
+  };
+  for (let i = 0, n = doc.countPages(); i < n; i++) visit(doc.findPage(i), 0);
+}
+
+/**
+ * What a bilingual PDF takes over from the whole document: the document info and XMP metadata,
+ * language, viewer settings, attached files, the layers (of both sources, so that switching a
+ * layer works on all pages), and – when the pages keep their form fields (`form`) – the form.
+ * `labels`: the page labels for the output's pages (an array of strings), or "copy" for the
+ * original's own (the same page count). Named destinations and the structure tree are not taken
+ * over: they point to the source's pages and content.
+ */
+function copyDocumentData(out, original, translated, fromOriginal, fromTranslated, { labels = null, form = false } = {}) {
+  const src = original.getTrailer().get("Root"), root = out.getTrailer().get("Root");
+  // (the document info and XMP of the translation: its title is translated, see applyExtras)
+  const info = translated.getTrailer().get("Info");
+  if (info.isDictionary()) out.getTrailer().put("Info", fromTranslated.graftObject(info));
+  const xmp = translated.getTrailer().get("Root").get("Metadata");
+  if (!xmp.isNull()) root.put("Metadata", fromTranslated.graftObject(xmp));
+  for (const key of ["Lang", "ViewerPreferences", "PageMode", "PageLayout", "MarkInfo"]) {
+    const v = src.get(key);
+    if (!v.isNull()) root.put(key, fromOriginal.graftObject(v));
+  }
+  if (root.get("MarkInfo").isDictionary()) root.get("MarkInfo").put("Marked", false); // (no structure tree goes along)
+  const names = src.get("Names");
+  if (names.isDictionary() && names.get("EmbeddedFiles").isDictionary()) {
+    const nd = out.newDictionary();
+    nd.put("EmbeddedFiles", fromOriginal.graftObject(names.get("EmbeddedFiles")));
+    root.put("Names", nd);
+  }
+  const ocp = src.get("OCProperties");
+  if (ocp.isDictionary()) {
+    const merged = fromOriginal.graftObject(ocp);
+    const other = translated.getTrailer().get("Root").get("OCProperties");
+    // The translation's pages use their own copies of the layers: they are pointed to the
+    // original's, so that one switch shows or hides a layer on all pages.
+    const mine = merged.get("OCGs"), theirs = other.isDictionary() ? fromTranslated.graftObject(other).get("OCGs") : null;
+    if (mine.isArray() && theirs && theirs.isArray() && mine.length === theirs.length) {
+      const swap = new Map();
+      for (let i = 0; i < mine.length; i++) if (theirs.get(i).isIndirect()) swap.set(theirs.get(i).asIndirect(), mine.get(i));
+      replaceRefs(out, swap);
+    }
+    root.put("OCProperties", merged);
+  }
+  if (form) {
+    const af = src.get("AcroForm");
+    if (af.isDictionary()) root.put("AcroForm", fromOriginal.graftObject(af));
+  }
+  if (labels === "copy") {
+    const pl = src.get("PageLabels");
+    if (!pl.isNull()) root.put("PageLabels", fromOriginal.graftObject(pl));
+  } else if (Array.isArray(labels) && labels.some(Boolean)) {
+    const nums = out.newArray();
+    labels.forEach((l, i) => { const d = out.newDictionary(); if (l) d.put("P", out.newString(l)); nums.push(i); nums.push(d); });
+    const tree = out.newDictionary();
+    tree.put("Nums", nums);
+    root.put("PageLabels", tree);
+  }
+}
+
 /**
  * A bilingual PDF: the odd pages are the original, the even pages its translation (page 1
  * original, page 2 translated page 1, page 3 original page 2, …). Fonts and images shared by
@@ -3367,6 +3671,9 @@ function bilingualPdf(W, markups, rotations) {
   rotatePages(original, rotations);
   const out = new M.PDFDocument();
   try {
+    // The form stays fillable on the original pages; on the translated ones its fields are drawn
+    // (one field must not be on the pages twice under the same name).
+    try { translated.bake(false, true); } catch (_) { /* no form */ }
     const fromOriginal = out.newGraftMap(), fromTranslated = out.newGraftMap();
     const n = original.countPages();
     // Grafting copies a page without its annotations: markups are copied as well, links are
@@ -3395,7 +3702,10 @@ function bilingualPdf(W, markups, rotations) {
       copyLinks(original, i, out, 2 * i, (r) => r, (d) => (d.page < n ? { ...d, page: 2 * d.page } : null));
       if (i < translated.countPages()) copyLinks(translated, i, out, 2 * i + 1, (r) => r, (d) => (d.page < n ? { ...d, page: 2 * d.page + 1 } : null));
     }
-    copyOutline(original, out, (d) => (d.page < n ? { ...d, page: 2 * d.page } : null)); // (bookmarks lead to the original pages)
+    copyOutline(translated, out, (d) => (d.page < n ? { ...d, page: 2 * d.page } : null)); // (translated bookmarks, leading to the original pages)
+    const labels = [];
+    for (let i = 0; i < n; i++) { let l = ""; try { const pg = original.loadPage(i); l = pg.getLabel(); free(pg); } catch (_) { /* none */ } labels.push(l, l); }
+    copyDocumentData(out, original, translated, fromOriginal, fromTranslated, { labels: original.getTrailer().get("Root").get("PageLabels").isNull() ? null : labels, form: true });
     const buf = out.saveToBuffer("garbage,compress");
     const bytes = buf.asUint8Array().slice();
     free(buf);
@@ -3469,11 +3779,12 @@ function sideBySidePdf(W, markups, rotations) {
         copyLinks(side ? translated : original, i, out, i, (r) => [r[0] + dx, r[1] + dy, r[2] + dx, r[3] + dy], target);
       }
     }
-    copyOutline(original, out, (d) => {
+    copyOutline(translated, out, (d) => { // (translated bookmarks, leading to the original half)
       if (d.page >= n) return null;
       const [tx, ty] = places[d.page][0];
       return { ...d, x: Number.isFinite(d.x) ? d.x + tx : d.x, y: Number.isFinite(d.y) ? d.y + ty : d.y };
     });
+    copyDocumentData(out, original, translated, fromOriginal, fromTranslated, { labels: "copy" }); // (annotations and fields are drawn into the halves)
     const buf = out.saveToBuffer("garbage,compress");
     const bytes = buf.asUint8Array().slice();
     free(buf);

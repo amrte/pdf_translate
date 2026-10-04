@@ -20,7 +20,7 @@ function repDetect(segments, pages) {
   if (n < 2) return out;
   const by = new Map();
   for (const s of segments) {
-    if (s.skip || s.formula || !s.bbox) continue;
+    if (s.skip || s.formula || s.extra || !s.bbox) continue;
     const p = pages[s.page];
     if (!p || !p.height) continue;
     const y0 = p.y0 || 0, h = p.height;

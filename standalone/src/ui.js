@@ -1027,13 +1027,14 @@ function segMeta(s) {
   const page = t("meta.page", { n: s.page + 1 });
   if (s.skip) return `${page} · ${t(s.formula ? "meta.formula" : "meta.numbers")}${s.edited ? " · " + t("meta.corrected") : ""}`;
   if (isBook()) return s.hidden ? `${t("meta.notShown")} · ${s.tag}` : `${page} · ${s.notes ? t("meta.notes") : s.tag}`;
+  if (s.extra) return s.extra === "title" ? t("meta.extra_title") : `${page} · ${t("meta.extra_" + s.extra)}`;
   if (s.ocr) {
     const unsure = unsureWords(s).length;
     return `${page} · OCR · ${Math.round(s.size * 10) / 10}pt${s.bold ? " " + t("meta.bold") : ""}${s.edited ? " · " + t("meta.corrected") : ""}${unsure ? " · " + t("meta.unsure", { n: unsure }) : ""}`;
   }
   const style = [s.bold && t("meta.bold"), s.italic && t("meta.italic")].filter(Boolean).join(" ");
   const rot = s.rotation ? ` · ${t("meta.rotated", { deg: s.rotation })}` : "";
-  return `${page} · ${Math.round(s.size * 10) / 10}pt${style ? " " + style : ""} · ${t("meta." + s.align)}${rot}`;
+  return `${page}${s.scan ? " · " + t("meta.layer") : ""} · ${Math.round(s.size * 10) / 10}pt${style ? " " + style : ""} · ${t("meta." + s.align)}${rot}`;
 }
 
 /**
@@ -1175,11 +1176,12 @@ function makeCard(id) {
       <span class="seg-status"></span>
       <span class="seg-id">#${id}</span>
       <span class="seg-meta" data-shrunk="${escapeHtml(t("meta.shrunk"))}">${escapeHtml(segMeta(s))}</span>
+      <span class="seg-warn" hidden></span>
       <button type="button" class="mini" data-act="copy" title="${escapeHtml(t("card.copyTitle"))}">${t("card.copy")}</button>
       <button type="button" class="mini" data-act="same" title="${escapeHtml(t("card.keepTitle"))}">${t("card.keep")}</button>
-      ${!fieldsEditable() ? "" : `<button type="button" class="mini${state.overrides[id] ? " on" : ""}" data-act="style" title="${escapeHtml(t("card.styleTitle"))}">Aa</button>`}
-      ${!kindsEditable() ? "" : `<button type="button" class="mini kind${state.kinds[id] ? " on" : ""}" data-act="kind" title="${escapeHtml(t(s.skip ? "card.asTextTitle" : "card.asFormulaTitle"))}">${t(s.skip ? "card.asText" : "card.asFormula")}</button>`}
-      ${!repSupported() || s.skip || repGroup(id) ? "" : `<button type="button" class="mini" data-act="repMake" title="${escapeHtml(t("rep.makeTitle"))}">⧉</button>`}
+      ${!fieldsEditable() || s.extra ? "" : `<button type="button" class="mini${state.overrides[id] ? " on" : ""}" data-act="style" title="${escapeHtml(t("card.styleTitle"))}">Aa</button>`}
+      ${!kindsEditable() || s.extra ? "" : `<button type="button" class="mini kind${state.kinds[id] ? " on" : ""}" data-act="kind" title="${escapeHtml(t(s.skip ? "card.asTextTitle" : "card.asFormulaTitle"))}">${t(s.skip ? "card.asText" : "card.asFormula")}</button>`}
+      ${!repSupported() || s.skip || s.extra || repGroup(id) ? "" : `<button type="button" class="mini" data-act="repMake" title="${escapeHtml(t("rep.makeTitle"))}">⧉</button>`}
       ${!s.ocr || isBook() ? "" : `<button type="button" class="mini" data-act="editSrc" title="${escapeHtml(t("card.editSrcTitle"))}">✎</button>`}
       ${!segEditable(s) ? "" : `${s.lines > 1 ? `<button type="button" class="mini" data-act="split" title="${escapeHtml(t("card.splitTitle"))}">✂</button>` : ""}<button type="button" class="mini" data-act="join" title="${escapeHtml(t("card.joinTitle"))}">⤵</button>`}
       <button type="button" class="mini apply" data-act="apply" title="${escapeHtml(t("card.applyTitle"))}">${t("card.apply")}</button>
@@ -1191,6 +1193,7 @@ function makeCard(id) {
   if (repGroup(id)) el.classList.add(repLocked(id) ? "rep-locked" : "rep-lead");
   el.querySelector("textarea").value = state.translations[id] || "";
   if (find.open) requestAnimationFrame(() => decorateCard(el, id)); // (once it has its size)
+  markWarn(el, id);
   return el;
 }
 
@@ -1199,10 +1202,50 @@ function autoGrow(ta) {
   ta.style.height = `${Math.min(ta.scrollHeight + 2, 320)}px`;
 }
 
+/**
+ * The markers of a segment (<1>…</1> around a link or formatting, <2/> for a field, note or
+ * picture) that its translation lost, and markers it has that do not fit (unknown numbers, an
+ * opening without its closing): {missing, broken}, or null when all is well. Lost markers lose
+ * their link or formatting in the rebuilt file; broken ones would show as text. Markers the
+ * rebuild puts back on its own (fields, notes) do not count.
+ */
+function markerIssues(s, tr = state.translations[s && s.id]) {
+  if (!s || !s.tags || !tr || !tr.trim()) return null;
+  const read = (text) => {
+    const pairs = new Set(), single = new Set(), all = new Set(), open = new Set(), broken = new Set();
+    for (const m of text.matchAll(/<(\/?)(\d+)(\/?)>/g)) {
+      const n = m[2];
+      all.add(n);
+      if (m[3]) single.add(n);
+      else if (!m[1]) open.add(n);
+      else if (open.has(n)) { open.delete(n); pairs.add(n); } else broken.add(n);
+    }
+    for (const n of open) broken.add(n);
+    return { pairs, single, all, broken };
+  };
+  const src = read(s.text), out = read(tr);
+  const missing = [...src.pairs].filter((n) => !out.pairs.has(n))
+    .concat([...src.single].filter((n) => !out.single.has(n) && !(s.tags[n] && s.tags[n].keep)));
+  const broken = [...new Set([...out.broken, ...[...out.all].filter((n) => !s.tags[n] || !src.all.has(n))])].filter((n) => !missing.includes(n));
+  return missing.length || broken.length ? { missing, broken } : null;
+}
+/** A card's marker warning, kept up to date while typing. */
+function markWarn(el, id) {
+  const w = el && el.querySelector(".seg-warn");
+  if (!w) return;
+  const issue = markerIssues(segById(id));
+  w.hidden = !issue;
+  if (issue) {
+    w.textContent = `⚠ ${t(issue.missing.length ? "warn.markersMissing" : "warn.markersBroken", { n: issue.missing.length || issue.broken.length })}`;
+    w.title = t("warn.markersTitle", { tags: [...issue.missing, ...issue.broken].map((n) => `<${n}>`).join(" ") });
+  }
+}
+
 function markDone(id) {
   const done = hasTr(id);
   vl.rendered.get(id)?.classList.toggle("done", done);
   vl.rendered.get(id)?.classList.toggle("pending", isPending(id));
+  markWarn(vl.rendered.get(id), id);
   document.querySelectorAll(`.box[data-id="${id}"]`).forEach((b) => b.classList.toggle("done", done));
 }
 
@@ -1228,6 +1271,8 @@ function applyFilter() {
     if (status !== "numbers" && repHidden(s.id) && repGroup(s.id).lead !== s.id) continue; // (an open group shows them after its lead)
     if (status === "repeats" && !repGroup(s.id)) continue;
     if (status === "unsure" && !unsureWords(s).length) continue;
+    if (status === "markers" && !markerIssues(s)) continue;
+    if (status === "extra" && !s.extra) continue;
     if ((status === "todo" || status === "done") && (status === "done") !== hasTr(s.id)) continue;
     if (re && !((scope !== "tr" && hit(s.text)) || (scope !== "src" && hit(state.translations[s.id] || "")))) continue;
     ids.push(s.id);
@@ -1235,6 +1280,8 @@ function applyFilter() {
   const listed = status === "numbers" ? ids : repListIds(ids);
   $('#filterStatus option[value="repeats"]').hidden = !rep.groups.length;
   $('#filterStatus option[value="unsure"]').hidden = !state.doc.ocr;
+  $('#filterStatus option[value="markers"]').hidden = !state.doc.segments.some((s) => s.tags);
+  $('#filterStatus option[value="extra"]').hidden = !state.doc.segments.some((s) => s.extra);
   $("#segments").classList.toggle("is-empty", !listed.length);
   $("#segments").dataset.empty = state.doc.segments.length ? t("filter.empty") : t("filter.noText");
   vl.setIds(listed);
@@ -1343,6 +1390,7 @@ function mergeImported(parsed, overwrite = $("#importOverwrite").checked) {
     if (ta.value !== (state.translations[id] || "")) { ta.value = state.translations[id] || ""; autoGrow(ta); }
     el.classList.toggle("done", hasTr(id));
     el.classList.toggle("pending", isPending(id));
+    markWarn(el, id);
   }
   document.querySelectorAll(".box").forEach((b) => b.classList.toggle("done", hasTr(b.dataset.id)));
   vl.dirty = true;
@@ -1482,6 +1530,35 @@ function buildOptions() {
 }
 
 /**
+ * Bookmarks without a translation of their own take that of the heading or contents line with
+ * the same text (without leader dots and page number; "2.1 Title" also matches "Title").
+ */
+function withBookmarkFallbacks(translations) {
+  const marks = state.doc.segments.filter((s) => s.extra === "outline" && !(translations[s.id] || "").trim());
+  if (!marks.length) return translations;
+  const strip = (x) => x.replace(/[\s\u00a0]+/g, " ").replace(/\s*(?:[.·…_]\s*){3,}\S*\s*$/, "").trim();
+  const numOf = (x) => (strip(x).match(/^\d+(?:\.\d+)*\.?\s+/) || [""])[0];
+  const key = (x) => strip(x).toLowerCase(), bare = (x) => key(x).slice(numOf(x).length);
+  const byKey = new Map(), byBare = new Map();
+  for (const s of state.doc.segments) {
+    const tr = (translations[s.id] || "").trim();
+    if (s.extra || s.skip || !tr) continue;
+    const toc = /(?:[.·…_]\s*){3,}/.test(s.text);
+    for (const [map, k] of [[byKey, key(s.text)], [byBare, bare(s.text)]]) {
+      if (k && (!map.has(k) || (map.get(k).toc && !toc))) map.set(k, { tr, toc }); // (a heading before a contents line)
+    }
+  }
+  const out = { ...translations };
+  for (const m of marks) {
+    const hit = byKey.get(key(m.text));
+    if (hit) { out[m.id] = strip(hit.tr); continue; }
+    const loose = bare(m.text) && byBare.get(bare(m.text));
+    if (loose) out[m.id] = numOf(m.text) + strip(loose.tr).slice(numOf(loose.tr).length);
+  }
+  return out;
+}
+
+/**
  * Write one segment's translation into the translated PDF right away. Its page is rebuilt
  * from the original with every translation already applied on that page plus this one.
  */
@@ -1492,9 +1569,12 @@ function applyField(id) {
     const s = segById(id);
     if (hasTr(id)) state.applied[id] = state.translations[id]; else delete state.applied[id];
     if (isBook()) { await applyBook(id); return; }
-    const segs = segsByPage.get(s.page) || [];
+    // (the page's segments, and the bookmarks and title, which belong to no page)
+    const segs = (segsByPage.get(s.page) || []).filter((x) => x.extra !== "outline" && x.extra !== "title")
+      .concat(state.doc.segments.filter((x) => x.extra === "outline" || x.extra === "title"));
+    const applied = withBookmarkFallbacks(state.applied);
     const translations = {};
-    for (const x of segs) if ((state.applied[x.id] || "").trim()) translations[x.id] = state.applied[x.id];
+    for (const x of segs) if ((applied[x.id] || "").trim()) translations[x.id] = applied[x.id];
     try {
       const stats = await pool.workers[0].call("updatePage", {
         page: s.page, segments: segs.map(effSeg), translations, pageInfo: state.doc.pages[s.page], opts: buildOptions(),
@@ -1564,7 +1644,7 @@ async function doBuild() {
     for (const [id, text] of Object.entries(state.translations)) if (segIndex.has(Number(id)) && text.trim()) translations[id] = text;
     const result = await pool.workers[0].call("build", {
       segments: state.doc.segments.map(effSeg),
-      translations,
+      translations: isBook() ? translations : withBookmarkFallbacks(translations),
       pages: state.doc.pages,
       opts: buildOptions(),
     }, [], (i, n) => busy(t("msg.buildingPage", { i, n })));
@@ -1591,6 +1671,8 @@ async function doBuild() {
     if (stats.shrunk.length) msg += t("msg.shrunk", { n: stats.shrunk.length });
     toast(msg, "ok");
     if (stats.fontsDropped) toast(t("msg.fontsDropped", { n: stats.fontsDropped }));
+    const lost = state.doc.segments.filter((s) => markerIssues(s)).length;
+    if (lost) toast(t("msg.markers", { n: lost }), "error", { label: t("msg.markersShow"), run: () => { $("#filterStatus").value = "markers"; applyFilter(); } });
     if (stats.missing) {
       toast(t("msg.fontMissing", { n: stats.missing, chars: stats.missingChars }), "error");
     }

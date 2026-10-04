@@ -163,7 +163,7 @@ const HANDLES = ["nw", "n", "ne", "e", "se", "s", "sw", "w"].map((h) => `<span c
 /** Resize handles on the selected box (PDFs only). */
 function showHandles(id) {
   document.querySelectorAll(".box .rh").forEach((h) => h.remove());
-  if (!fieldsEditable() || id === null || id === undefined) return;
+  if (!fieldsEditable() || id === null || id === undefined || segById(id)?.extra) return;
   document.querySelectorAll(`.box[data-id="${id}"]`).forEach((el) => el.insertAdjacentHTML("beforeend", HANDLES));
 }
 
@@ -187,7 +187,7 @@ function onBoxDown(e) {
   const box = e.target.closest(".box");
   if (!box) return;
   const pageEl = box.closest(".page"), id = Number(box.dataset.id), s = segById(id);
-  if (!s) return;
+  if (!s || s.extra) return; // (a note's or field's box shows where it is; it is not moved)
   boxDrag.cur = { id, box, pageEl, handle: e.target.dataset.h || null, start: pagePoint(pageEl, e), orig: shownBox(s).slice(), moved: false };
   try { box.setPointerCapture(e.pointerId); } catch (_) { /* not a pointer event */ }
   if (boxDrag.cur.handle) { e.preventDefault(); e.stopPropagation(); }
@@ -577,7 +577,7 @@ async function startOcr({ area = null } = {}) {
       const { blocks, seps } = Engine.ocrToBlocks(data, zoom, [page.x0, page.y0], (box) => Engine.sampleColors(img, box));
       let segs = blocks.length ? await pool.workers[0].call("ocrPage", { page: p, lines: blocks, seps, family }) : [];
       // On a page that has a text layer, only text that is not there yet (e.g. in pictures) is added.
-      const text = doc.segments.filter((s) => s.page === p && !s.ocr).map((s) => s.bbox);
+      const text = doc.segments.filter((s) => s.page === p && !s.ocr && !s.extra).map((s) => s.bbox);
       segs = segs.filter((s) => !text.some((b) => overlapShare(s.bbox, b) > 0.3));
       // (the recognised lines are kept with the result: segments can be split and joined later)
       const raw = blocks.length ? blocks[0].lines : [];

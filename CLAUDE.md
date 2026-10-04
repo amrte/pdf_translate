@@ -14,7 +14,7 @@
 
 - `standalone/src/` – sources of the single-file app: `template.html`, `style.css`,
   `i18n.js` (German default + English; every UI text goes through `t()` / `data-i18n`),
-  `engine.js` (MuPDF WASM: extraction, layout, rebuild; also runs inside Web Workers),
+  `engine.js` (MuPDF WASM: extraction, layout, rebuild; also runs inside Web Workers; texts outside the page content – notes, text form fields, bookmarks, the title – are segments with `extra`, written back by `applyExtras`; invisible text (a scan's OCR layer) and text in optional content layers are marked per glyph by `glyphMarks`),
   `ebook.js` (EPUB/FB2: segments from the XHTML/FictionBook source, rebuild, zip; runs with the engine),
   `office.js` (DOCX/PPTX/XLSX: segments from the Office Open XML parts, rebuild, HTML preview; runs with the engine),
   `text.js` (SRT/VTT subtitles, Markdown, plain text: cues or paragraphs as segments, written back in place, laid out as a simple page; runs with the engine),
