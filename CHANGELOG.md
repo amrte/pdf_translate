@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.08
+
+- Arrange pages: a page card is more compact – the page number sits beside two rows of buttons, and notes on the page ("was 3", "↻90°", the file it came from) are shown on its picture.
+
 ## 2.07
 
 - Arrange pages: the tick boxes are gone – a click on a page's picture selects it (Shift+click: the pages in between too), and a selected page is marked by its coloured frame.

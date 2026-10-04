@@ -68,9 +68,8 @@ function renderPagesGrid() {
     const sel = pm.sel.has(it);
     const turn = pmSlides() ? "" : btn("rotate", "pages.rotate", "↻");
     return `<div class="pg-card${pm.swapFrom === i ? " swap" : ""}${pmHiddenItem(it) ? " hidden-slide" : ""}${sel ? " selected" : ""}" draggable="true" data-i="${i}">
-      <div class="pg-thumb" style="aspect-ratio: ${size.width} / ${size.height}" title="${t("pages.selectHint")}" role="checkbox" aria-checked="${sel}" aria-label="${t("pages.selectHint")}" tabindex="0">${it.from < 0 ? `<span>${t("pages.blankLabel")}</span>` : '<img alt="">'}</div>
-      <div class="pg-label"><b>${i + 1}</b><span class="pg-badge" title="${badge.replace(/"/g, "&quot;")}">${badge}</span></div>
-      <div class="pg-btns">${btn("left", "pages.left", "‹")}${btn("right", "pages.right", "›")}${btn("swap", "pages.swap", "⇄")}${turn}${btn("blank", "pages.insertBlank", "+")}${btn("file", "pages.insertFile", "+⎙")}${btn("save", pmSlides() ? "pages.saveOneSlide" : "pages.saveOne", "⤓", { fmt: pmFormat() })}${btn("remove", "pages.remove", "✕")}</div>
+      <div class="pg-thumb" style="aspect-ratio: ${size.width} / ${size.height}" title="${t("pages.selectHint")}" role="checkbox" aria-checked="${sel}" aria-label="${t("pages.selectHint")}" tabindex="0">${it.from < 0 ? `<span>${t("pages.blankLabel")}</span>` : '<img alt="">'}${badge && it.from >= 0 ? `<span class="pg-badge" title="${badge.replace(/"/g, "&quot;")}">${badge}</span>` : ""}</div>
+      <div class="pg-btns"><b class="pg-num">${i + 1}</b>${btn("left", "pages.left", "‹")}${btn("right", "pages.right", "›")}${btn("swap", "pages.swap", "⇄")}${turn}${btn("blank", "pages.insertBlank", "+")}${btn("file", "pages.insertFile", "+⎙")}${btn("save", pmSlides() ? "pages.saveOneSlide" : "pages.saveOne", "⤓", { fmt: pmFormat() })}${btn("remove", "pages.remove", "✕")}</div>
     </div>`;
   }).join("");
   $("#pagesCount").textContent = pmUnit(pm.items.length);
