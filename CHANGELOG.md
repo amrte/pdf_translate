@@ -4,6 +4,12 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.12
+
+- Text notes work properly: after typing (Enter; Shift+Enter for a new line) the note is selected and the selection tool is active again, so it can be moved, changed or deleted straight away. A click with the text tool on an existing note edits it instead of putting a new note on top; Esc closes the box and returns to the selection tool.
+- A selected note shows a bar above it: font (Sans, Serif, Mono), size, bold, italic, text colour, background colour (or none), frame colour (or none; its thickness with the line widths on the left), opacity, and buttons to edit, copy, duplicate and delete. The last style used is kept for the next note. Everything is saved into the PDF as an editable note with the same look.
+- Copy and paste for all markups: Ctrl+C, Ctrl+X, Ctrl+V (pasted where the pointer is, on any page), Ctrl+D duplicates, arrow keys move the selected markup (Shift: 10 steps), Delete removes it. Text pasted from elsewhere becomes a text note.
+
 ## 2.11
 
 - Straighten by hand: "By hand…" in the picture tools, and in "Arrange pages" for the selected page (or a double click on a page), shows the page large with three ways to straighten it:

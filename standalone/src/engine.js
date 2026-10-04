@@ -2431,7 +2431,7 @@ function addMarkups(doc, markups) {
     } else if (m.type === "text") {
       a = page.createAnnotation("FreeText");
       a.setRect([m.x0, m.y0, m.x0 + m.w, m.y0 + m.h]); a.setContents(m.text);
-      a.setDefaultAppearance("Helv", m.size, rgb); a.setBorderWidth(0);
+      a.setDefaultAppearance({ serif: "TiRo", monospace: "Cour" }[m.font] || "Helv", m.size, rgb); a.setBorderWidth(0);
       a.setAuthor("Kameleon");
       a.update();
       // MuPDF's own appearance uses plain Helvetica, which lacks signs such as ≥ or ✓; draw it
@@ -2447,15 +2447,33 @@ function addMarkups(doc, markups) {
   for (const p of pages.values()) free(p);
 }
 
-/** Appearance stream (operators + resources) for a text note, in its own box coordinates. */
+/**
+ * Appearance stream (operators + resources) for a text note, in its own box coordinates: the
+ * background and frame (when set), the text in the note's font, all at the note's opacity.
+ */
 function textAppearance(doc, fk, m, rgb) {
-  const chain = fk.chain({ family: "sans-serif", bold: false, italic: false }, m.text);
+  const chain = fk.chain({ family: m.font || "sans-serif", bold: Boolean(m.bold), italic: Boolean(m.italic) }, m.text);
   const used = new Set();
-  const ops = [`BT ${rgb.map(fmt).join(" ")} rg`];
+  const pad = m.pad != null ? m.pad : 2, op = m.opacity != null ? m.opacity : 1;
+  const res = doc.newDictionary(), fonts = doc.newDictionary();
+  const ops = [];
+  if (op < 1) {
+    const gs = doc.newDictionary(), ext = doc.newDictionary();
+    gs.put("Type", doc.newName("ExtGState")); gs.put("ca", op); gs.put("CA", op);
+    ext.put("GSo", doc.addObject(gs));
+    res.put("ExtGState", ext);
+    ops.push("/GSo gs");
+  }
+  if (m.bg) ops.push(`${hexRgb(m.bg).map(fmt).join(" ")} rg 0 0 ${fmt(m.w)} ${fmt(m.h)} re f`);
+  if (m.border) {
+    const bw = m.bw || 1;
+    ops.push(`${hexRgb(m.border).map(fmt).join(" ")} RG ${fmt(bw)} w ${fmt(bw / 2)} ${fmt(bw / 2)} ${fmt(m.w - bw)} ${fmt(m.h - bw)} re S`);
+  }
+  ops.push(`BT ${rgb.map(fmt).join(" ")} rg`);
   let cur = null;
   m.text.split("\n").forEach((line, i) => {
-    let x = 2;
-    const y = m.h - 2 - m.size * 0.88 - i * m.size * 1.2;
+    let x = pad;
+    const y = m.h - pad - m.size * 0.88 - i * m.size * 1.2;
     for (const ch of line) {
       const g = fk.glyph(chain, ch.codePointAt(0));
       fk.ref(g.e);
@@ -2466,7 +2484,6 @@ function textAppearance(doc, fk, m, rgb) {
     }
   });
   ops.push("ET");
-  const res = doc.newDictionary(), fonts = doc.newDictionary();
   for (const e of used) fonts.put(e.res, e.ref);
   res.put("Font", fonts);
   return { ops: ops.join("\n"), res };
