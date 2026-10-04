@@ -93,7 +93,7 @@ const I18N = {
     "tb.build": "{fmt} erstellen",
     "tb.download": "Download",
     "tb.picPdf": "PDF",
-    "tb.picPdfTitle": "Bild als PDF speichern – in der gezeigten Fassung: das Originalbild oder, in der Übersetzungs- bzw. Vergleichsansicht (nach dem Erstellen), die Übersetzung; mit Markierungen und Drehungen.",
+    "tb.picPdfTitle": "Als durchsuchbare PDF speichern – in der gezeigten Fassung: das Original oder, in der Übersetzungs- bzw. Vergleichsansicht (nach dem Erstellen), die Übersetzung; mit Markierungen und Drehungen. Der erkannte Text liegt unsichtbar unter dem Bild: er lässt sich suchen, markieren und kopieren.",
     "tb.downloadTitle": "Übersetzte {fmt}-Datei herunterladen",
 
     "progress": "{done} / {total} übersetzt",
@@ -928,7 +928,7 @@ const I18N = {
     "tb.build": "Build {fmt}",
     "tb.download": "Download",
     "tb.picPdf": "PDF",
-    "tb.picPdfTitle": "Save the picture as a PDF – the version shown: the original picture, or the translation in the translated or comparison view (after building), with markups and turns.",
+    "tb.picPdfTitle": "Save as a searchable PDF – the version shown: the original, or the translation in the translated or comparison view (after building), with markups and turns. The recognised text lies invisibly under the picture: it can be searched, selected and copied.",
     "tb.downloadTitle": "Download the translated {fmt}",
 
     "progress": "{done} / {total} translated",

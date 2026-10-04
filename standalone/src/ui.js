@@ -1343,10 +1343,11 @@ function setBuilt(built) {
 async function downloadOutput() {
   try {
     // (the copy saved by the build has no markups and no turned pages: those are added on saving)
-    const extras = (state.markups && state.markups.length) || (!isBook() && Object.keys(state.rotations).length);
+    // (a recognised scan also gets its text layer on saving)
+    const extras = (state.markups && state.markups.length) || (!isBook() && Object.keys(state.rotations).length) || (state.doc.ocr && !isBook());
     if (!state.outBytes || state.outDirty || extras) {
       busy(t("msg.saving"));
-      state.outBytes = await pool.workers[0].call("save", { markups: state.markups, rotations: isBook() ? {} : state.rotations });
+      state.outBytes = await pool.workers[0].call("save", { markups: state.markups, rotations: isBook() ? {} : state.rotations, layer: ocrTextLayer(true) });
       state.outDirty = false;
     }
     if (state.doc.image) { // a picture goes out as a picture again
@@ -1365,15 +1366,17 @@ async function downloadOutput() {
 }
 
 /**
- * An opened picture saved as a PDF: the version shown – the translation (in the translated or
- * comparison view, once built) or the picture as it is – with markups and turns.
+ * An opened picture, or a recognised scan, saved as a PDF: the version shown – the translation
+ * (in the translated or comparison view, once built) or the original – with markups and turns,
+ * and searchable: the recognised text lies invisibly under the picture (untranslated text only,
+ * in the translation).
  */
 async function downloadPicturePdf() {
-  if (!state.doc || !state.doc.image) return;
+  if (!state.doc || !(state.doc.image || state.doc.ocr) || isBook()) return;
   const translated = state.hasOutput && (state.variant === "translated" || (typeof cmp !== "undefined" && cmp.on));
   try {
     busy(t("msg.saving"));
-    const bytes = await pool.workers[0].call("save", { markups: state.markups, rotations: state.rotations, original: !translated });
+    const bytes = await pool.workers[0].call("save", { markups: state.markups, rotations: state.rotations, original: !translated, layer: ocrTextLayer(translated) });
     saveBlob(new Blob([bytes], { type: "application/pdf" }), `${stem()}${translated ? ".translated" : ""}.pdf`);
   } catch (err) {
     toast(t("msg.saveFailed", { err: userError(err) }), "error");

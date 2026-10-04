@@ -4,6 +4,12 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.22
+
+- Searchable PDFs: a scan or photo whose text was recognised is saved with that text lying invisibly under the picture – the PDF can be searched, its text selected and copied, while it looks exactly as before. Each word sits where it is in the picture; text corrected by hand goes in corrected.
+  - The "PDF" button is now there for recognised scans too, not only for pictures: in the original view it saves the original as a searchable PDF, in the translated view the translation.
+  - In the translated PDF ("Download"), recognised text that has no translation is searchable as well.
+
 ## 2.21
 
 - Much smaller PDFs from photos: large photos are compressed to JPEG before they become a PDF page. An iPhone photo (HEIC) gave a PDF page of about 18 MB, now about 3.5 MB (about the size of the photo itself); after the OCR preparation (straightened, cropped) 11 MB, now 2 MB.

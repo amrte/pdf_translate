@@ -93,7 +93,7 @@ function updateDownloadButton() {
   const turned = !isBook() && Object.keys(state.rotations || {}).length > 0;
   $("#btnDownload").hidden = !(state.hasOutput || (state.markups && state.markups.length) || turned);
   $("#btnDownloadBi").hidden = !state.hasOutput;
-  $("#btnPicPdf").hidden = !(state.doc && state.doc.image);
+  $("#btnPicPdf").hidden = !(state.doc && !isBook() && (state.doc.image || state.doc.ocr));
 }
 
 /** Replace all markups (used by undo/redo) and redraw. */

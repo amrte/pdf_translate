@@ -2448,6 +2448,47 @@ function addMarkups(doc, markups) {
 }
 
 /**
+ * Recognised text laid invisibly over the page pictures it was read from, so that a scan or photo
+ * saved as PDF can be searched, selected and copied. `layer`: [{page, lines: [{base, size,
+ * words: [{text, bbox}]}]}] in page coordinates; each word is stretched to the width it has in the
+ * picture (text render mode 3: neither filled nor stroked).
+ */
+function addTextLayer(doc, layer) {
+  const fk = new FontKit(doc, { fontMode: "auto" });
+  for (const { page: p, lines } of layer) {
+    if (p < 0 || p >= doc.countPages() || !lines.length) continue;
+    const page = doc.loadPage(p);
+    try {
+      const used = new Set(), ops = ["BT 3 Tr"];
+      for (const l of lines) {
+        const size = Math.max(1, l.size);
+        for (const w of l.words) {
+          const text = w.text.trim();
+          if (!text) continue;
+          const chain = fk.chain({ family: "sans-serif" }, text);
+          const glyphs = [...text].map((ch) => fk.glyph(chain, ch.codePointAt(0)));
+          const natural = glyphs.reduce((a, g) => a + g.adv, 0) * size;
+          const k = natural > 0 ? Math.max(0.05, (w.bbox[2] - w.bbox[0]) / natural) : 1;
+          let x = w.bbox[0], run = null;
+          const flush = () => { if (run) ops.push(`/${run.e.res} 1 Tf ${fmt(size * k)} 0 0 ${fmt(-size)} ${fmt(run.x)} ${fmt(l.base)} Tm <${run.hex}> Tj`); run = null; };
+          for (const g of glyphs) {
+            fk.ref(g.e); used.add(g.e);
+            if (!run || run.e !== g.e) { flush(); run = { e: g.e, x, hex: "" }; }
+            run.hex += g.gid.toString(16).padStart(4, "0");
+            x += g.adv * size * k;
+          }
+          flush();
+        }
+      }
+      ops.push("ET");
+      if (used.size) appendContent(doc, page, ops.join("\n"), used);
+    } finally {
+      free(page);
+    }
+  }
+}
+
+/**
  * Appearance stream (operators + resources) for a text note, in its own box coordinates: the
  * background and frame (when set), the text in the note's font, all at the note's opacity.
  */
@@ -2993,19 +3034,21 @@ function rotatePages(doc, rotations) {
  * The translated PDF (or the original when nothing is translated) with markups and turned
  * pages. Those go into a copy, so the editable document never accumulates them.
  */
-function savePdf(W, markups, rotations, original = false) {
-  const turned = Object.values(rotations).some(Boolean);
-  // (`original`: the document as opened, not the translation – e.g. a picture saved as PDF)
-  if (original && !markups.length && !turned) return W.bytes.slice();
-  if (!W.edit && !markups.length && !turned) throw new Error("Nothing to save yet.");
+function savePdf(W, markups, rotations, original = false, layer = null) {
+  const turned = Object.values(rotations).some(Boolean), searchable = Boolean(layer && layer.length);
+  // (`original`: the document as opened, not the translation – e.g. a picture saved as PDF;
+  // `layer`: recognised text put under the pictures invisibly, see addTextLayer)
+  if (original && !markups.length && !turned && !searchable) return W.bytes.slice();
+  if (!original && !W.edit && !markups.length && !turned && !searchable) throw new Error("Nothing to save yet.");
   let doc = original ? null : W.edit, temp = null;
   // Fonts added by page updates (shared by all updated pages, see updatePage) and by text notes
   // are embedded whole; the saved copy gets them subsetted.
-  const subset = Boolean(W.editFk) || markups.some((m) => m.type === "text");
+  const subset = Boolean(W.editFk) || markups.some((m) => m.type === "text") || searchable;
   if (markups.length || turned || !doc || subset) {
     let src = W.bytes;
     if (doc) { const b = W.edit.saveToBuffer(""); src = b.asUint8Array().slice(); free(b); }
     temp = doc = M.Document.openDocument(src.slice(), "application/pdf");
+    if (searchable) addTextLayer(doc, layer);
     addMarkups(doc, markups);
     if (subset) doc.subsetFonts();
     rotatePages(doc, rotations);
@@ -3295,7 +3338,7 @@ function createHandler() {
       return { result: bytes, transfer: [bytes.buffer] };
     }
     if (cmd === "save") {
-      const bytes = savePdf(W, args.markups || [], args.rotations || {}, Boolean(args.original));
+      const bytes = savePdf(W, args.markups || [], args.rotations || {}, Boolean(args.original), args.layer || null);
       return { result: bytes, transfer: [bytes.buffer] };
     }
     if (cmd === "saveBilingual" && W.kind !== "pdf") {

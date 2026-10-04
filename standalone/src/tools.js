@@ -820,6 +820,48 @@ function mapOcrData(data, map) {
   }
 }
 
+/**
+ * The recognised text for a searchable PDF (see addTextLayer in the engine): per page, the lines
+ * OCR read with their words where they are in the picture. A segment corrected by hand gives its
+ * corrected text, spread over its lines; with `untranslated`, only segments without a translation
+ * on the page (the translated ones are there as real text already).
+ */
+function ocrTextLayer(untranslated = false) {
+  const doc = state.doc;
+  if (!doc || !doc.ocr || isBook()) return null;
+  const out = [];
+  for (const [key, rec] of Object.entries(doc.ocr)) {
+    const p = Number(key), lines = [];
+    const segs = doc.segments.filter((s) => s.ocr && s.page === p && !(untranslated && (state.applied[s.id] || "").trim()));
+    const inside = (s, x, y) => x >= s.bbox[0] - 1 && x <= s.bbox[2] + 1 && y >= s.bbox[1] - 1 && y <= s.bbox[3] + 1;
+    // words as read, in the segments that are not corrected
+    for (const l of rec.raw || []) {
+      const words = l.words.filter((w) => {
+        const cx = (w.bbox[0] + w.bbox[2]) / 2, cy = (w.bbox[1] + w.bbox[3]) / 2, s = segs.find((x) => inside(x, cx, cy));
+        return s && !s.edited;
+      });
+      if (words.length) lines.push({ base: l.base, size: l.size, words });
+    }
+    // corrected segments (and results kept from before the lines were stored): the segment's text
+    // shared out over its lines, each stretched to its line's width
+    for (const s of segs.filter((x) => x.edited || !rec.raw)) {
+      const boxes = s.cover && s.cover.length ? s.cover : [s.bbox];
+      const words = s.text.split(/\s+/).filter(Boolean);
+      const widths = boxes.map((b) => b[2] - b[0]), total = widths.reduce((a, b) => a + b, 0) || 1;
+      let w0 = 0;
+      boxes.forEach((b, i) => {
+        const upto = i === boxes.length - 1 ? words.length : Math.round((words.length * widths.slice(0, i + 1).reduce((a, c) => a + c, 0)) / total);
+        const text = words.slice(w0, upto).join(" ");
+        w0 = upto;
+        const h = (b[3] - b[1]) / 1.24; // (the cover has 12 % room above and below the line)
+        if (text) lines.push({ base: b[3] - 0.12 * h - 0.22 * h, size: 0.85 * h, words: [{ text, bbox: b }] });
+      });
+    }
+    if (lines.length) out.push({ page: p, lines });
+  }
+  return out.length ? out : null;
+}
+
 /** On opening a document: OCR results from an earlier session. */
 async function restoreOcr(id, segments, pages) {
   const ocr = await idbGet(`ocr:${id}`);
