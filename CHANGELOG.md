@@ -4,6 +4,11 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.05
+
+- Arrange pages: pages can be turned – ↻ on a page turns it 90° clockwise; "Apply" saves the turn in the PDF.
+- Arrange pages: pages can be selected – click the picture or the box, Shift+click selects all pages in between, "Select all" selects everything. The selection can be turned left or right, removed, or saved as a PDF of its own ("Save selection as PDF"), in the order shown and with the turns; the open file stays as it is. ⤓ on a page saves just that page. For a presentation, selected slides are saved as a PPTX.
+
 ## 2.04
 
 - PDF: text that stays as it is (section numbers, page numbers in a contents list) no longer jumps to the top of the page when the text around it is translated. Some PDFs move to the next line with a special text command; removing the original text there pushed every line after it upwards, and parts of the original showed up again over the page head. Checked on a 26-page system description: all numbers stay in place.

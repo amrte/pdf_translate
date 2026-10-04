@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="Kameleon 2.04">
+  <meta name="generator" content="Kameleon 2.05">
   <meta name="description" content="Kameleon – Wechselt die Sprache, behält die Form. Changes language, keeps its shape.">
   <title>Kameleon</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2216%22 fill=%22%23287130%22/%3E%3Cg transform=%22translate(2.5 1) scale(0.9)%22 fill=%22%23ffffff%22 stroke=%22%23ffffff%22%3E%3Cpath d=%22M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6%22 fill=%22none%22 stroke-width=%223.8%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M21 43l-1 10M30 44v9M38 43l1 10%22 stroke-width=%223.6%22 stroke-linecap=%22round%22/%3E%3Cellipse cx=%2221%22 cy=%2225%22 rx=%227%22 ry=%227.5%22 stroke=%22none%22/%3E%3Cellipse cx=%2233%22 cy=%2223.5%22 rx=%227.5%22 ry=%228%22 stroke=%22none%22/%3E%3Cpath d=%22M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z%22 stroke=%22none%22/%3E%3Cpath d=%22M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z%22 stroke=%22none%22/%3E%3Cpath d=%22M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z%22 stroke=%22none%22/%3E%3Cpath d=%22M16 37l4-3 4 3 4-3 4 3 4-3 4 3%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%222.1%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3Cpath d=%22M43.5 33.9L57 32.6%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%221.5%22 stroke-linecap=%22round%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%224.4%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%222.7%22 stroke=%22none%22/%3E%3Ccircle cx=%2246.2%22 cy=%2226.7%22 r=%221.3%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Cpath d=%22M4 55.5c15-3 39-3 54 0%22 fill=%22none%22 stroke-width=%222.4%22 stroke-linecap=%22round%22/%3E%3C/g%3E%3C/svg%3E">
@@ -702,19 +702,27 @@ body.is-image .page img { filter: var(--pic-filter, none); }
 body:not(.has-pages) .pages-only { display: none !important; }
 #pagesDialog { width: min(1100px, calc(100% - 32px)); }
 .pages-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; max-height: min(62vh, 640px); overflow: auto; padding: 4px; }
-.pg-card { border: 1px solid var(--border); border-radius: 8px; background: var(--surface-2); padding: 6px; display: grid; gap: 5px; cursor: grab; }
+.pg-card { border: 1px solid var(--border); border-radius: 8px; background: var(--surface-2); padding: 6px; display: grid; gap: 5px; align-content: start; cursor: grab; }
 .pg-card.dragging { opacity: .4; }
 .pg-card.over { outline: 2px solid var(--accent); outline-offset: 1px; }
 .pg-card.swap { outline: 2px dashed var(--accent); outline-offset: 1px; }
 .pg-thumb { background: #fff; border: 1px solid var(--border); border-radius: 4px; display: grid; place-items: center; overflow: hidden; color: #888; font-size: 12px; }
 .pg-thumb img { width: 100%; height: 100%; object-fit: contain; display: block; }
-.pg-label { display: flex; gap: 6px; align-items: baseline; font-size: 12px; color: var(--muted); min-width: 0; }
+.pg-label { display: flex; gap: 6px; align-items: center; font-size: 12px; color: var(--muted); min-width: 0; }
 .pg-label b { color: var(--text); }
 .pg-badge { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 .pg-btns { display: flex; gap: 3px; flex-wrap: wrap; }
 .pg-btns button { height: 24px; min-width: 24px; padding: 0 6px; border: 1px solid var(--border); border-radius: 5px; background: var(--surface); color: var(--text); font: inherit; font-size: 12px; cursor: pointer; }
 .pg-btns button:hover { border-color: var(--accent); color: var(--accent); }
 .pages-actions { align-items: center; flex-wrap: wrap; }
+.pages-selbar { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 0 0 8px; }
+.pages-selbar .spacer { flex: 1; }
+.pages-selbar .btn { height: 28px; padding: 0 10px; font-size: 12.5px; }
+.pages-selbar .btn:disabled { opacity: .45; cursor: default; }
+.pg-card.selected { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--surface-2)); }
+.pg-card.selected .pg-thumb { outline: 2px solid var(--accent); outline-offset: -1px; }
+.pg-thumb { cursor: pointer; }
+.pg-sel { margin: 0; accent-color: var(--accent); cursor: pointer; flex: none; }
 .pages-actions .spacer { flex: 1; }
 
 /* ---------- v1.50: the Rainbow (a rare one) ---------- */
@@ -917,7 +925,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
   <div class="brand">
     <span class="logo"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#287130"/><g transform="translate(2.5 1) scale(0.9)" fill="#ffffff" stroke="#ffffff"><path d="M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6" fill="none" stroke-width="3.8" stroke-linecap="round"/><path d="M21 43l-1 10M30 44v9M38 43l1 10" stroke-width="3.6" stroke-linecap="round"/><ellipse cx="21" cy="25" rx="7" ry="7.5" stroke="none"/><ellipse cx="33" cy="23.5" rx="7.5" ry="8" stroke="none"/><path d="M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z" stroke="none"/><path d="M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z" stroke="none"/><path d="M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z" stroke="none"/><path d="M16 37l4-3 4 3 4-3 4 3 4-3 4 3" fill="none" stroke="#287130" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M43.5 33.9L57 32.6" fill="none" stroke="#287130" stroke-width="1.5" stroke-linecap="round"/><circle cx="45.5" cy="26.5" r="4.4" fill="#287130" stroke="none"/><circle cx="45.5" cy="26.5" r="2.7" stroke="none"/><circle cx="46.2" cy="26.7" r="1.3" fill="#287130" stroke="none"/><path d="M4 55.5c15-3 39-3 54 0" fill="none" stroke-width="2.4" stroke-linecap="round"/></g></svg></span>
     <span class="brand-name">Kameleon</span>
-    <span class="version" id="appVersion">v2.04</span>
+    <span class="version" id="appVersion">v2.05</span>
   </div>
   <div class="topbar-actions">
     <span class="doc-name" id="docName"></span>
@@ -1420,7 +1428,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
     </div>
     <input type="file" id="offlineZip" class="visually-hidden" accept=".zip,application/zip" multiple tabindex="-1">
     <input type="file" id="offlineFolder" class="visually-hidden" webkitdirectory multiple tabindex="-1">
-    <p class="muted small help-version help-part">Kameleon v2.04 · <span data-i18n="app.tagline"></span></p>
+    <p class="muted small help-version help-part">Kameleon v2.05 · <span data-i18n="app.tagline"></span></p>
     <div class="modal-actions">
       <button type="button" value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
     </div>
@@ -1572,7 +1580,16 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
 <dialog id="pagesDialog" class="modal" aria-labelledby="pagesTitle">
   <form method="dialog">
     <h2 id="pagesTitle" data-i18n="pages.title">Arrange pages</h2>
-    <p class="muted" data-i18n="pages.text"></p>
+    <p class="muted" id="pagesText" data-i18n="pages.text"></p>
+    <div class="pages-selbar">
+      <button type="button" class="btn small" id="pagesSelAll" data-i18n="pages.selectAll"></button>
+      <span class="muted" id="pagesSelCount"></span>
+      <span class="spacer"></span>
+      <button type="button" class="btn small" id="pagesSelLeft" data-i18n="pages.turnLeft" data-i18n-title="pages.turnLeftTitle"></button>
+      <button type="button" class="btn small" id="pagesSelRight" data-i18n="pages.turnRight" data-i18n-title="pages.turnRightTitle"></button>
+      <button type="button" class="btn small" id="pagesSelRemove" data-i18n="pages.removeSel"></button>
+      <button type="button" class="btn small primary" id="pagesSelSave"></button>
+    </div>
     <div class="pages-grid" id="pagesGrid"></div>
     <div class="modal-actions pages-actions">
       <button type="button" class="btn" id="pagesAddBlank" data-i18n="pages.blank"></button>
@@ -2195,15 +2212,17 @@ const I18N = {
     "pages.notesLabel": "Notizen",
     "pages.dropNotes": "Vortragsnotizen entfernen ({n} Folien)",
     "pages.dropNotesTitle": "Beim Übernehmen werden die Notizen aller Folien aus der Datei entfernt; die grauen Notizseiten der Vorschau verschwinden.",
-    "pages.button": "Seiten anordnen: verschieben, tauschen, löschen, einfügen",
+    "pages.button": "Seiten anordnen: verschieben, tauschen, drehen, löschen, einfügen, als PDF speichern",
     "pages.title": "Seiten anordnen",
     "pages.titleSlides": "Folien anordnen",
-    "pages.text": "Ziehen Sie eine Seite an eine andere Stelle oder nutzen Sie die Knöpfe: verschieben, tauschen, entfernen, eine leere Seite oder die Seiten einer Datei einfügen. Beim Übernehmen wird die Datei neu zusammengesetzt; die Übersetzungen der behaltenen Seiten werden wieder zugeordnet.",
+    "pages.text": "Ziehen Sie eine Seite an eine andere Stelle oder nutzen Sie die Knöpfe: verschieben, tauschen, drehen, entfernen, eine leere Seite oder die Seiten einer Datei einfügen. Ausgewählte Seiten lassen sich zusammen drehen oder als eigene PDF speichern. Beim Übernehmen wird die Datei neu zusammengesetzt; die Übersetzungen der behaltenen Seiten werden wieder zugeordnet.",
     "pages.blank": "Leere Seite anhängen",
     "pages.fromFile": "Seiten aus Datei anhängen…",
     "pages.apply": "Übernehmen",
     "pages.count": "{n} Seiten",
     "pages.countSlides": "{n} Folien",
+    "pages.countOne": "1 Seite",
+    "pages.countSlide": "1 Folie",
     "pages.left": "Nach vorn",
     "pages.right": "Nach hinten",
     "pages.swap": "Tauschen: zwei Seiten nacheinander anklicken",
@@ -2219,6 +2238,26 @@ const I18N = {
     "pages.done": "Fertig: {n}, {k} Übersetzungen übernommen.",
     "pages.failed": "Die Seiten konnten nicht neu angeordnet werden: {err}",
     "pages.badFile": "{name} passt nicht: zu einer PDF passen PDF- und Bilddateien, zu einer Präsentation PPTX- und PPT-Dateien.",
+    "pages.textSlides": "Ziehen Sie eine Folie an eine andere Stelle oder nutzen Sie die Knöpfe: verschieben, tauschen, entfernen, eine leere Folie oder die Folien einer Datei einfügen. Ausgewählte Folien lassen sich zusammen als eigene PPTX speichern. Beim Übernehmen wird die Datei neu zusammengesetzt; die Übersetzungen der behaltenen Folien werden wieder zugeordnet.",
+    "pages.rotate": "Um 90° im Uhrzeigersinn drehen",
+    "pages.turnLeft": "↺ Links drehen",
+    "pages.turnRight": "↻ Rechts drehen",
+    "pages.turnLeftTitle": "Die ausgewählten Seiten um 90° gegen den Uhrzeigersinn drehen",
+    "pages.turnRightTitle": "Die ausgewählten Seiten um 90° im Uhrzeigersinn drehen",
+    "pages.removeSel": "Entfernen",
+    "pages.saveSel": "Auswahl als {fmt} speichern",
+    "pages.saveOne": "Nur diese Seite als {fmt} speichern",
+    "pages.saveOneSlide": "Nur diese Folie als {fmt} speichern",
+    "pages.selectAll": "Alle auswählen",
+    "pages.unselectAll": "Auswahl aufheben",
+    "pages.selectNone": "Nichts ausgewählt – Seite anklicken zum Auswählen",
+    "pages.selected": "{n} ausgewählt",
+    "pages.selectHint": "Auswählen (Umschalt+Klick: alle Seiten dazwischen)",
+    "pages.filePages": "Seiten",
+    "pages.fileSlides": "Folien",
+    "pages.saving": "Die Seiten werden gespeichert…",
+    "pages.saved": "Gespeichert: {n} in {name}",
+    "pages.saveFailed": "Die Seiten konnten nicht gespeichert werden: {err}",
     "pic.brightness": "Helligkeit",
     "pic.contrast": "Kontrast",
     "pic.gray": "Graustufen",
@@ -2878,15 +2917,17 @@ const I18N = {
     "pages.notesLabel": "notes",
     "pages.dropNotes": "Remove speaker notes ({n} slides)",
     "pages.dropNotesTitle": "Apply removes the notes of all slides from the file; the grey notes pages of the preview disappear.",
-    "pages.button": "Arrange pages: move, swap, remove, insert",
+    "pages.button": "Arrange pages: move, swap, turn, remove, insert, save as PDF",
     "pages.title": "Arrange pages",
     "pages.titleSlides": "Arrange slides",
-    "pages.text": "Drag a page to another place or use the buttons: move, swap, remove, insert a blank page or the pages of a file. Apply puts the file together anew; the translations of the kept pages are matched up again.",
+    "pages.text": "Drag a page to another place or use the buttons: move, swap, turn, remove, insert a blank page or the pages of a file. Selected pages can be turned together or saved as a PDF of their own. Apply puts the file together anew; the translations of the kept pages are matched up again.",
     "pages.blank": "Add blank page",
     "pages.fromFile": "Add pages from file…",
     "pages.apply": "Apply",
     "pages.count": "{n} pages",
     "pages.countSlides": "{n} slides",
+    "pages.countOne": "1 page",
+    "pages.countSlide": "1 slide",
     "pages.left": "Move backward",
     "pages.right": "Move forward",
     "pages.swap": "Swap: click two pages in turn",
@@ -2902,6 +2943,26 @@ const I18N = {
     "pages.done": "Done: {n}, {k} translations carried over.",
     "pages.failed": "The pages could not be rearranged: {err}",
     "pages.badFile": "{name} does not fit: a PDF takes PDF and picture files, a presentation takes PPTX and PPT files.",
+    "pages.textSlides": "Drag a slide to another place or use the buttons: move, swap, remove, insert a blank slide or the slides of a file. Selected slides can be saved together as a PPTX of their own. Apply puts the file together anew; the translations of the kept slides are matched up again.",
+    "pages.rotate": "Turn 90° clockwise",
+    "pages.turnLeft": "↺ Turn left",
+    "pages.turnRight": "↻ Turn right",
+    "pages.turnLeftTitle": "Turn the selected pages 90° anticlockwise",
+    "pages.turnRightTitle": "Turn the selected pages 90° clockwise",
+    "pages.removeSel": "Remove",
+    "pages.saveSel": "Save selection as {fmt}",
+    "pages.saveOne": "Save only this page as {fmt}",
+    "pages.saveOneSlide": "Save only this slide as {fmt}",
+    "pages.selectAll": "Select all",
+    "pages.unselectAll": "Clear selection",
+    "pages.selectNone": "Nothing selected – click a page to select it",
+    "pages.selected": "{n} selected",
+    "pages.selectHint": "Select (Shift+click: all pages in between)",
+    "pages.filePages": "pages",
+    "pages.fileSlides": "slides",
+    "pages.saving": "Saving the pages…",
+    "pages.saved": "Saved: {n} in {name}",
+    "pages.saveFailed": "The pages could not be saved: {err}",
     "pic.brightness": "Brightness",
     "pic.contrast": "Contrast",
     "pic.gray": "Greyscale",
@@ -9410,7 +9471,7 @@ function slideShapeEdits(book, segments, edits) {
 
 // ---------------------------------------------------------------------------------------------
 // Rearranging pages. A plan lists the new pages in order: {from: 0, page} is a page of the open
-// file, {from: k ≥ 1, page} a page of the k-th extra file, {from: -1, w, h} a blank page. A PDF
+// file (a PDF page may carry rot: 90, 180, 270 – turned clockwise), {from: k ≥ 1, page} a page of the k-th extra file, {from: -1, w, h} a blank page. A PDF
 // is put together from the pages (grafted with their resources); a PPTX gets its slide list
 // rewritten, dropped slides removed, blank slides added and slides of other decks copied in with
 // their layouts, masters, themes and pictures. Runs with the engine.
@@ -9435,14 +9496,22 @@ function rearrangePdf(bytes, plan, extras) {
   try {
     let n = 0;
     for (const it of plan) {
+      const turn = (((Number(it.rot) || 0) % 360) + 360) % 360;
       if (it.from < 0) {
-        const page = out.addPage([0, 0, it.w || 595, it.h || 842], 0, out.newDictionary(), "q Q");
+        const page = out.addPage([0, 0, it.w || 595, it.h || 842], turn, out.newDictionary(), "q Q");
         out.insertPage(-1, page);
         free(page);
       } else {
         const d = docs[it.from];
         if (!d || it.page < 0 || it.page >= d.countPages()) continue;
         out.graftPage(out.countPages(), d, it.page);
+        if (turn) {
+          // turned on top of the page's own /Rotate (which the graft copies onto the page)
+          const pobj = out.findPage(out.countPages() - 1);
+          const own = pobj.getInheritable("Rotate");
+          const was = own.isNumber() ? own.asNumber() : 0;
+          pobj.put("Rotate", (((was + turn) % 360) + 360) % 360);
+        }
       }
       n++;
     }
@@ -15636,7 +15705,7 @@ function initPicture() {
 // from its own browser cache before the network, so language files are written into that cache.
 // ======================================================================
 
-const APP_VERSION = "2.04";
+const APP_VERSION = "2.05";
 // (a change of library version makes a stored set outdated: it is then ignored)
 const OFFLINE_VERSION = `${MUPDF_URL} ${OCR_LIB}`;
 const CORE_SIMD = "tesseract-core-simd-lstm.wasm.js", CORE_PLAIN = "tesseract-core-lstm.wasm.js";
@@ -15922,21 +15991,28 @@ function initOffline() {
 }
 
 /* ------------------------------------------------------------- page manager (PDF, PPTX) */
-// Pages (slides) of the open file can be reordered, swapped, removed, and blank pages or the
-// pages of other files inserted. "Apply" has the engine put the file together anew; the new file
-// is opened and the translations of the kept pages are carried over.
+// Pages (slides) of the open file can be reordered, swapped, removed, turned (PDF), and blank
+// pages or the pages of other files inserted. "Apply" has the engine put the file together anew;
+// the new file is opened and the translations of the kept pages are carried over. Selected pages
+// can be turned, removed or saved together as a file of their own, without touching the open one.
 
-const pm = { items: [], extras: [], thumbs: new Map(), swapFrom: null, slides: null, hidden: null, notes: null, showHidden: false, insertAt: null };
+const pm = { items: [], extras: [], thumbs: new Map(), swapFrom: null, slides: null, hidden: null, notes: null, showHidden: false, insertAt: null, sel: new Set(), lastSel: null };
 const pmNotesItem = (it) => Boolean(it.from === 0 && pm.notes && pm.notes[it.page]);
 const pmHiddenItem = (it) => Boolean(it.from === 0 && pm.hidden && pm.hidden[it.page]);
 const pmShown = (it) => pm.showHidden || !pmHiddenItem(it);
 
 const pagesSupported = () => Boolean(state.doc && !state.doc.image && (state.doc.kind === "pdf" || state.doc.kind === "pptx"));
 const pmSlides = () => pm.slides !== null;
-const pmUnit = (n) => t(pmSlides() ? "pages.countSlides" : "pages.count", { n });
+const pmUnit = (n) => t(n === 1 ? (pmSlides() ? "pages.countSlide" : "pages.countOne") : pmSlides() ? "pages.countSlides" : "pages.count", { n });
 
-/** Size of the page an item stands for ({width, height} in points). */
+/** Size of the page an item stands for as it is shown, turned ({width, height} in points). */
 function pmPageSize(it) {
+  const s = pmBaseSize(it);
+  return (it.rot || 0) % 180 ? { width: s.height, height: s.width } : s;
+}
+
+/** Size of the page an item stands for, unturned. */
+function pmBaseSize(it) {
   if (it.from < 0) return { width: it.w, height: it.h };
   if (it.from === 0) { const p = state.doc.pages[pmSlides() ? pm.slides[it.page] : it.page]; return p || { width: 595, height: 842 }; }
   const ex = pm.extras.find((e) => e.index === it.from);
@@ -15955,13 +16031,14 @@ async function openPagesDialog() {
   $("#pagesNotesWrap").hidden = !withNotes;
   $("#pagesDropNotes").checked = false;
   $("#pagesDropNotesText").textContent = t("pages.dropNotes", { n: withNotes });
-  pm.extras = []; pm.swapFrom = null; pm.insertAt = null;
+  pm.extras = []; pm.swapFrom = null; pm.insertAt = null; pm.sel.clear(); pm.lastSel = null;
   for (const url of pm.thumbs.values()) URL.revokeObjectURL(url);
   pm.thumbs.clear();
   await pool.workers[0].call("extraClear").catch(() => {});
   const n = pmSlides() ? pm.slides.length : state.doc.pages.length;
-  pm.items = Array.from({ length: n }, (_, i) => ({ from: 0, page: i }));
+  pm.items = Array.from({ length: n }, (_, i) => ({ from: 0, page: i, rot: 0 }));
   $("#pagesTitle").textContent = t(pmSlides() ? "pages.titleSlides" : "pages.title");
+  $("#pagesText").textContent = t(pmSlides() ? "pages.textSlides" : "pages.text");
   renderPagesGrid();
   openModal($("#pagesDialog"));
 }
@@ -15978,15 +16055,89 @@ function renderPagesGrid() {
     else if (it.page !== i) badge += t("pages.origin", { n: it.page + 1 });
     else badge = badge.replace(/ · $/, "");
     if (pmNotesItem(it)) badge = badge ? `${badge} · ${t("pages.notesLabel")}` : t("pages.notesLabel");
-    const btn = (act, key, label) => `<button type="button" data-act="${act}" title="${t(key)}" aria-label="${t(key)}">${label}</button>`;
-    return `<div class="pg-card${pm.swapFrom === i ? " swap" : ""}${pmHiddenItem(it) ? " hidden-slide" : ""}" draggable="true" data-i="${i}">
-      <div class="pg-thumb" style="aspect-ratio: ${size.width} / ${size.height}">${it.from < 0 ? `<span>${t("pages.blankLabel")}</span>` : '<img alt="">'}</div>
-      <div class="pg-label"><b>${i + 1}</b><span class="pg-badge" title="${badge.replace(/"/g, "&quot;")}">${badge}</span></div>
-      <div class="pg-btns">${btn("left", "pages.left", "‹")}${btn("right", "pages.right", "›")}${btn("swap", "pages.swap", "⇄")}${btn("blank", "pages.insertBlank", "+")}${btn("file", "pages.insertFile", "+⎙")}${btn("remove", "pages.remove", "✕")}</div>
+    if (it.rot) badge = badge ? `${badge} · ↻${it.rot}°` : `↻${it.rot}°`;
+    const btn = (act, key, label, vars) => `<button type="button" data-act="${act}" title="${t(key, vars)}" aria-label="${t(key, vars)}">${label}</button>`;
+    const sel = pm.sel.has(it);
+    const turn = pmSlides() ? "" : btn("rotate", "pages.rotate", "↻");
+    return `<div class="pg-card${pm.swapFrom === i ? " swap" : ""}${pmHiddenItem(it) ? " hidden-slide" : ""}${sel ? " selected" : ""}" draggable="true" data-i="${i}">
+      <div class="pg-thumb" style="aspect-ratio: ${size.width} / ${size.height}" title="${t("pages.selectHint")}">${it.from < 0 ? `<span>${t("pages.blankLabel")}</span>` : '<img alt="">'}</div>
+      <div class="pg-label"><input type="checkbox" class="pg-sel"${sel ? " checked" : ""} title="${t("pages.selectHint")}" aria-label="${t("pages.selectHint")}"><b>${i + 1}</b><span class="pg-badge" title="${badge.replace(/"/g, "&quot;")}">${badge}</span></div>
+      <div class="pg-btns">${btn("left", "pages.left", "‹")}${btn("right", "pages.right", "›")}${btn("swap", "pages.swap", "⇄")}${turn}${btn("blank", "pages.insertBlank", "+")}${btn("file", "pages.insertFile", "+⎙")}${btn("save", pmSlides() ? "pages.saveOneSlide" : "pages.saveOne", "⤓", { fmt: pmFormat() })}${btn("remove", "pages.remove", "✕")}</div>
     </div>`;
   }).join("");
   $("#pagesCount").textContent = pmUnit(pm.items.length);
   grid.querySelectorAll(".pg-card img").forEach((img) => loadThumb(img));
+  pmSelectionBar();
+}
+
+const pmFormat = () => (pmSlides() ? "PPTX" : "PDF");
+
+/** The tools for the selected pages: count, select all/none, turn, remove, save. */
+function pmSelectionBar() {
+  for (const it of [...pm.sel]) if (!pm.items.includes(it)) pm.sel.delete(it);
+  const n = pm.sel.size, shown = pm.items.filter(pmShown).length;
+  $("#pagesSelCount").textContent = n ? t("pages.selected", { n }) : t("pages.selectNone");
+  const all = $("#pagesSelAll");
+  all.textContent = t(n && n >= shown ? "pages.unselectAll" : "pages.selectAll");
+  for (const id of ["pagesSelLeft", "pagesSelRight", "pagesSelRemove", "pagesSelSave"]) $(`#${id}`).disabled = !n;
+  $("#pagesSelLeft").hidden = $("#pagesSelRight").hidden = pmSlides();
+  $("#pagesSelSave").textContent = t("pages.saveSel", { fmt: pmFormat() });
+}
+
+/** Turns an item by `deg` (a blank page swaps its sides instead). */
+function pmTurn(it, deg) {
+  if (it.from < 0) { if (deg % 180) [it.w, it.h] = [it.h, it.w]; return; }
+  it.rot = ((((it.rot || 0) + deg) % 360) + 360) % 360;
+}
+
+function pmToggle(i, range) {
+  const it = pm.items[i];
+  if (!it) return;
+  if (range && pm.lastSel !== null && pm.items.includes(pm.lastSel)) {
+    const a = pm.items.indexOf(pm.lastSel);
+    for (let k = Math.min(a, i); k <= Math.max(a, i); k++) if (pmShown(pm.items[k])) pm.sel.add(pm.items[k]);
+  } else if (pm.sel.has(it)) pm.sel.delete(it);
+  else pm.sel.add(it);
+  pm.lastSel = it;
+  renderPagesGrid();
+}
+
+/** Ranges of page numbers for a file name: [1, 2, 3, 5] → "1-3,5". */
+function pmRanges(nums) {
+  const out = [];
+  for (let k = 0; k < nums.length; k++) {
+    let j = k;
+    while (j + 1 < nums.length && nums[j + 1] === nums[j] + 1) j++;
+    out.push(j > k ? `${nums[k]}-${nums[j]}` : `${nums[k]}`);
+    k = j;
+  }
+  return out.join(",");
+}
+
+/** Saves the given items, in the order of the grid, as a file of their own. */
+async function pmSave(items) {
+  if (!items.length) return;
+  const plan = pm.items.filter((it) => items.includes(it)).map((it) => ({ from: it.from, page: it.page, w: it.w, h: it.h, rot: it.rot || 0 }));
+  const ext = pmSlides() ? "pptx" : "pdf";
+  const base = state.doc.name.replace(/\.[^.]+$/, "");
+  // Numbered by the open file's own pages when all come from it, else by their place in the grid.
+  const own = plan.every((p) => p.from === 0);
+  const nums = own ? plan.map((p) => p.page + 1) : pm.items.map((it, i) => (items.includes(it) ? i + 1 : 0)).filter(Boolean);
+  const sorted = own && nums.every((v, k) => k === 0 || v > nums[k - 1]);
+  const label = t(pmSlides() ? "pages.fileSlides" : "pages.filePages");
+  const name = `${base}_${label}_${sorted || !own ? pmRanges(nums) : nums.join(",")}`.slice(0, 120) + `.${ext}`;
+  busy(t("pages.saving"));
+  try {
+    const bytes = await pool.workers[0].call("rearrange", { plan, dropNotes: false });
+    const mime = ext === "pdf" ? "application/pdf" : "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+    saveBlob(new Blob([bytes], { type: mime }), name);
+    toast(t("pages.saved", { n: pmUnit(plan.length), name }), "ok");
+  } catch (err) {
+    console.error(err);
+    toast(t("pages.saveFailed", { err: userError(err) }), "error");
+  } finally {
+    busy("");
+  }
 }
 
 /** Thumbnails come from the workers (the open file) or from worker 0 (extra files). */
@@ -15994,18 +16145,43 @@ function loadThumb(img) {
   const card = img.closest(".pg-card"), it = pm.items[Number(card.dataset.i)];
   if (!it || it.from < 0) return;
   const key = `${it.from}:${it.page}`;
+  const rot = it.rot || 0;
+  const turned = pm.thumbs.get(`${key}@${rot}`);
+  if (rot && turned) { img.src = turned; return; }
+  const show = (url) => {
+    const cur = $("#pagesGrid").querySelector(`.pg-card[data-i="${pm.items.indexOf(it)}"] img`);
+    if (cur) cur.src = url;
+  };
   const cached = pm.thumbs.get(key);
-  if (cached) { img.src = cached; return; }
-  const size = pmPageSize(it), zoom = Math.max(0.15, Math.min(1.5, 170 / size.width));
+  if (cached) { pmTurnedThumb(key, cached, rot).then(show); return; }
+  const size = pmBaseSize(it), zoom = Math.max(0.15, Math.min(1.5, 170 / Math.max(size.width, size.height) * 1.3));
   const req = it.from === 0
     ? pool.leastBusy(null).call("render", { page: pmSlides() ? pm.slides[it.page] : it.page, zoom, variant: "original" })
     : pool.workers[0].call("extraRender", { index: it.from, page: it.page, zoom });
   req.then((buf) => {
     const url = URL.createObjectURL(new Blob([buf], { type: "image/png" }));
     pm.thumbs.set(key, url);
-    const cur = $("#pagesGrid").querySelector(`.pg-card[data-i="${pm.items.indexOf(it)}"] img`);
-    if (cur) cur.src = url;
+    return pmTurnedThumb(key, url, it.rot || 0).then(show);
   }).catch((err) => console.warn("thumbnail failed", err));
+}
+
+/** The thumbnail `url` turned clockwise by `rot` degrees (cached). */
+function pmTurnedThumb(key, url, rot) {
+  if (!rot) return Promise.resolve(url);
+  const done = pm.thumbs.get(`${key}@${rot}`);
+  if (done) return Promise.resolve(done);
+  return new Promise((resolve) => {
+    const im = new Image();
+    im.onload = () => {
+      const c = document.createElement("canvas"), side = rot % 180 !== 0;
+      c.width = side ? im.height : im.width; c.height = side ? im.width : im.height;
+      const g = c.getContext("2d");
+      g.translate(c.width / 2, c.height / 2); g.rotate((rot * Math.PI) / 180); g.drawImage(im, -im.width / 2, -im.height / 2);
+      c.toBlob((b) => { const u = b ? URL.createObjectURL(b) : url; if (b) pm.thumbs.set(`${key}@${rot}`, u); resolve(u); }, "image/png");
+    };
+    im.onerror = () => resolve(url);
+    im.src = url;
+  });
 }
 
 function pmMove(from, to) {
@@ -16034,7 +16210,7 @@ async function addPagesFromFiles(files, at) {
       if (kind !== want) { toast(t("pages.badFile", { name: file.name }), "error"); continue; }
       const r = await pool.workers[0].call("extraOpen", { bytes, kind });
       pm.extras.push({ index: r.index, name: file.name.replace(/\.[^.]+$/, ""), pages: r.pages });
-      const items = r.pages.map((_, p) => ({ from: r.index, page: p }));
+      const items = r.pages.map((_, p) => ({ from: r.index, page: p, rot: 0 }));
       pm.items.splice(at, 0, ...items);
       at += items.length;
     } catch (err) {
@@ -16075,10 +16251,10 @@ function pmRestoreTranslations(cap, plan) {
 }
 
 async function applyPages() {
-  const plan = pm.items.map((it) => ({ from: it.from, page: it.page, w: it.w, h: it.h }));
+  const plan = pm.items.map((it) => ({ from: it.from, page: it.page, w: it.w, h: it.h, rot: it.rot || 0 }));
   const n = pmSlides() ? pm.slides.length : state.doc.pages.length;
   const dropNotes = pmSlides() && !$("#pagesNotesWrap").hidden && $("#pagesDropNotes").checked;
-  if (!dropNotes && plan.length === n && plan.every((p, i) => p.from === 0 && p.page === i)) { toast(t("pages.unchanged")); return; }
+  if (!dropNotes && plan.length === n && plan.every((p, i) => p.from === 0 && p.page === i && !p.rot)) { toast(t("pages.unchanged")); return; }
   const name = state.doc.name.replace(/\.ppt$/i, ".pptx");
   const kind = state.doc.kind;
   busy(t("pages.working"));
@@ -16104,7 +16280,13 @@ function initPagesManager() {
   dlg.addEventListener("close", () => { if (dlg.returnValue === "ok") applyPages(); });
   grid.addEventListener("click", (e) => {
     const b = e.target.closest("button[data-act]"), card = e.target.closest(".pg-card");
-    if (!b || !card) return;
+    if (!card) return;
+    if (!b) {
+      // a click on the picture or the box selects (Shift+click: the pages in between too)
+      if (e.target.closest(".pg-sel")) { e.preventDefault(); pmToggle(Number(card.dataset.i), e.shiftKey); }
+      else if (e.target.closest(".pg-thumb")) pmToggle(Number(card.dataset.i), e.shiftKey);
+      return;
+    }
     const i = Number(card.dataset.i), act = b.dataset.act;
     const neighbour = (dir) => { let j = i + dir; while (j >= 0 && j < pm.items.length && !pmShown(pm.items[j])) j += dir; return j; };
     if (act === "left") pmMove(i, neighbour(-1));
@@ -16120,7 +16302,22 @@ function initPagesManager() {
       const size = pmPageSize(pm.items[i]);
       pm.items.splice(i + 1, 0, { from: -1, w: size.width, h: size.height }); pm.swapFrom = null; renderPagesGrid();
     } else if (act === "file") { pm.insertAt = i + 1; $("#pagesFile").click(); }
+    else if (act === "rotate") { pmTurn(pm.items[i], 90); renderPagesGrid(); }
+    else if (act === "save") pmSave([pm.items[i]]);
   });
+  $("#pagesSelAll").addEventListener("click", () => {
+    const shown = pm.items.filter(pmShown);
+    if (pm.sel.size >= shown.length) pm.sel.clear(); else shown.forEach((it) => pm.sel.add(it));
+    renderPagesGrid();
+  });
+  $("#pagesSelLeft").addEventListener("click", () => { pm.sel.forEach((it) => pmTurn(it, -90)); renderPagesGrid(); });
+  $("#pagesSelRight").addEventListener("click", () => { pm.sel.forEach((it) => pmTurn(it, 90)); renderPagesGrid(); });
+  $("#pagesSelRemove").addEventListener("click", () => {
+    const left = pm.items.filter((it) => !pm.sel.has(it));
+    if (!left.length) { toast(t("pages.none"), "error"); return; }
+    pm.items = left; pm.sel.clear(); pm.swapFrom = null; renderPagesGrid();
+  });
+  $("#pagesSelSave").addEventListener("click", () => pmSave([...pm.sel]));
   $("#pagesAddBlank").addEventListener("click", () => {
     const size = pm.items.length ? pmPageSize(pm.items[pm.items.length - 1]) : { width: 595, height: 842 };
     pm.items.push({ from: -1, w: size.width, h: size.height }); renderPagesGrid();

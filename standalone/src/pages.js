@@ -1,6 +1,6 @@
 // ---------------------------------------------------------------------------------------------
 // Rearranging pages. A plan lists the new pages in order: {from: 0, page} is a page of the open
-// file, {from: k ≥ 1, page} a page of the k-th extra file, {from: -1, w, h} a blank page. A PDF
+// file (a PDF page may carry rot: 90, 180, 270 – turned clockwise), {from: k ≥ 1, page} a page of the k-th extra file, {from: -1, w, h} a blank page. A PDF
 // is put together from the pages (grafted with their resources); a PPTX gets its slide list
 // rewritten, dropped slides removed, blank slides added and slides of other decks copied in with
 // their layouts, masters, themes and pictures. Runs with the engine.
@@ -25,14 +25,22 @@ function rearrangePdf(bytes, plan, extras) {
   try {
     let n = 0;
     for (const it of plan) {
+      const turn = (((Number(it.rot) || 0) % 360) + 360) % 360;
       if (it.from < 0) {
-        const page = out.addPage([0, 0, it.w || 595, it.h || 842], 0, out.newDictionary(), "q Q");
+        const page = out.addPage([0, 0, it.w || 595, it.h || 842], turn, out.newDictionary(), "q Q");
         out.insertPage(-1, page);
         free(page);
       } else {
         const d = docs[it.from];
         if (!d || it.page < 0 || it.page >= d.countPages()) continue;
         out.graftPage(out.countPages(), d, it.page);
+        if (turn) {
+          // turned on top of the page's own /Rotate (which the graft copies onto the page)
+          const pobj = out.findPage(out.countPages() - 1);
+          const own = pobj.getInheritable("Rotate");
+          const was = own.isNumber() ? own.asNumber() : 0;
+          pobj.put("Rotate", (((was + turn) % 360) + 360) % 360);
+        }
       }
       n++;
     }

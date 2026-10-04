@@ -671,7 +671,16 @@
 <dialog id="pagesDialog" class="modal" aria-labelledby="pagesTitle">
   <form method="dialog">
     <h2 id="pagesTitle" data-i18n="pages.title">Arrange pages</h2>
-    <p class="muted" data-i18n="pages.text"></p>
+    <p class="muted" id="pagesText" data-i18n="pages.text"></p>
+    <div class="pages-selbar">
+      <button type="button" class="btn small" id="pagesSelAll" data-i18n="pages.selectAll"></button>
+      <span class="muted" id="pagesSelCount"></span>
+      <span class="spacer"></span>
+      <button type="button" class="btn small" id="pagesSelLeft" data-i18n="pages.turnLeft" data-i18n-title="pages.turnLeftTitle"></button>
+      <button type="button" class="btn small" id="pagesSelRight" data-i18n="pages.turnRight" data-i18n-title="pages.turnRightTitle"></button>
+      <button type="button" class="btn small" id="pagesSelRemove" data-i18n="pages.removeSel"></button>
+      <button type="button" class="btn small primary" id="pagesSelSave"></button>
+    </div>
     <div class="pages-grid" id="pagesGrid"></div>
     <div class="modal-actions pages-actions">
       <button type="button" class="btn" id="pagesAddBlank" data-i18n="pages.blank"></button>
