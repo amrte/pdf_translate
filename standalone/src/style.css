@@ -1018,3 +1018,15 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
 @media (max-width: 520px) { .pdf-choices { grid-template-columns: 1fr; } }
 .kw-src { flex-basis: 100%; display: flex; justify-content: center; }
 .kw-src button { max-width: 22em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ---------- v2.34: pictures and sounds on the cards (Anki decks) ---------- */
+.kw-play { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; margin-left: 10px; vertical-align: middle; border-radius: 50%; border: 1px solid var(--border); background: var(--surface); color: inherit; font-size: 16px; line-height: 1; cursor: pointer; padding: 0; transition: transform .15s; }
+.kw-play:hover { transform: scale(1.1); border-color: var(--accent); }
+.kw-sentence .kw-play { width: 28px; height: 28px; font-size: 13px; margin-left: 8px; }
+.kw-back .kw-play { background: rgba(255, 255, 255, .92); border-color: transparent; color: #222; }
+.kw-img { max-width: min(100%, 420px); max-height: min(200px, 26vh); object-fit: contain; border-radius: 10px; box-shadow: 0 2px 10px rgba(0, 0, 0, .18); background: #fff; }
+.kw-card.has-img { min-height: 340px; }
+.kw-card.has-img .kw-back { gap: 10px; padding-top: 18px; padding-bottom: 18px; }
+.vocab-thumb { height: 40px; width: 40px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border); }
+#pairMediaRow { display: flex; align-items: center; gap: 8px; margin: 10px 0 0; font-size: 13.5px; }
+#pairMediaRow[hidden] { display: none; }

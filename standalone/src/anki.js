@@ -2,7 +2,7 @@
 // An .apkg is a zip with an SQLite database (collection.anki2 / .anki21) and a media list. The
 // reader walks the database's tables to pull the notes out of a deck; the writer builds a small
 // database of its own – the tables Anki expects, with one Basic note per term – so that the
-// vocabulary can be imported straight into Anki. Newer "collection.anki21b" packages are
+// vocabulary can be imported straight into Anki. Pictures and sounds of a deck come along both ways. Newer "collection.anki21b" packages are
 // compressed with zstd and cannot be read here: Anki exports the older format when "support older
 // Anki versions" is ticked.
 
@@ -86,7 +86,19 @@ function sqliteOpen(bytes) {
 
 const ankiPlain = (s) => (s || "").replace(/\[sound:[^\]]*\]/g, "").replace(/<br\s*\/?>|<\/div>|<\/p>|<\/li>/gi, "\n").replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, "&").replace(/[ \t]+\n/g, "\n").replace(/\n{2,}/g, "\n").trim();
 
-/** The notes of an .apkg as vocabulary rows, with the deck's name: {rows, deck, notes}. */
+/** The fields a card template shows, in order ("{{Front}}", "{{furigana:Reading}}", "{{tts en_US:Word}}"; no sections or FrontSide). */
+const templateFields = (fmt) => [...String(fmt || "").matchAll(/\{\{([^#^/!{}][^{}]*)\}\}/g)].map((m) => m[1].split(":").pop().trim()).filter((n) => n && n !== "FrontSide");
+/** The media a field refers to: sounds ("[sound:x.mp3]") and pictures (<img src="x.jpg">). */
+const fieldMedia = (s) => ({
+  sounds: [...String(s || "").matchAll(/\[sound:([^\]]+)\]/g)].map((m) => m[1].trim()),
+  images: [...String(s || "").matchAll(/<img\b[^>]*?\bsrc\s*=\s*(?:"([^"]+)"|'([^']+)'|([^\s>]+))/gi)].map((m) => ankiPlain(m[1] || m[2] || m[3] || "")),
+});
+
+/**
+ * The notes of an .apkg as vocabulary rows, with the deck's name: {rows, deck, notes, langs, media}.
+ * A row's pictures and sounds are named in `media` ({img, audio, exAudio}: the deck's file names);
+ * `media` of the result lists the deck's files ({name → zip entry}) – readApkgMedia reads them.
+ */
 async function readApkg(bytes) {
   const entries = zipEntries(bytes);
   const byName = new Map(entries.map((e) => [e.name, e]));
@@ -97,43 +109,87 @@ async function readApkg(bytes) {
   let models = {}, decks = {};
   try { models = JSON.parse(col[9] || "{}"); decks = JSON.parse(col[10] || "{}"); } catch (_) { /* odd json: field positions are used */ }
   const deckNames = Object.values(decks).map((d) => d.name).filter((n) => n && n !== "Default");
+  // the media list: {"0": "de.mp3", …} – the files are stored in the zip under their numbers
+  const media = new Map();
+  if (byName.has("media")) {
+    try {
+      const list = JSON.parse(new TextDecoder().decode(await zipRead(byName.get("media"))));
+      for (const [num, name] of Object.entries(list || {})) if (byName.has(num) && typeof name === "string") media.set(name, byName.get(num));
+    } catch (_) { /* no usable media list: text only */ }
+  }
   const rows = [];
   const EXAMPLE_RE = /example|beispiel|sentence|satz|пример|приклад|exemple|ejemplo|esempio|usage|context/i;
   const PRON_RE = /pinyin|pīnyīn|reading|romaji|furigana|translit|transcri|pronunc|aussprache|romani[sz]|jyutping|zhuyin|bopomofo|kana|ipa$/i;
   const MEDIA_RE = /audio|sound|image|picture|photo|bild|^ton$|mp3|recording/i;
+  const SKIP_RE = /^(key|id|no\.?|nr\.?|number|index|rank|sort\w*|freq\w*|tags?|notes?|remarks?|homophones?|homographs?|part of speech|pos|word ?type|cloze)$|cloze/i; // never the term or its translation
+  const TRANS_RE = /meaning|translat|english|übersetz|bedeutung|перевод|переклад|traduc|tradu|significa/i; // the translation of an example
   const langs = { src: "", tgt: "" }; // what the field names say about the languages ("Hanzi", "English")
-  for (const n of db.table("notes")) {
-    const flds = String(n[6] || "").split("\x1f");
-    const model = models[String(n[2])];
+  const layouts = new Map(); // per note type: which field is what
+  const layoutOf = (mid) => {
+    if (layouts.has(mid)) return layouts.get(mid);
+    const model = models[mid];
     const names = model ? model.flds.map((f) => f.name) : [];
-    let fi = 0, bi = 1, pi = -1;
-    if (names.length) { // the front is the first field that is no example, pronunciation or media; the back the next such field
-      const plain = (nm) => !EXAMPLE_RE.test(nm) && !PRON_RE.test(nm) && !MEDIA_RE.test(nm);
-      fi = Math.max(0, names.findIndex(plain));
-      bi = names.findIndex((nm, i) => i !== fi && plain(nm));
-      if (bi < 0) bi = names.findIndex((nm, i) => i !== fi && !MEDIA_RE.test(nm) && !EXAMPLE_RE.test(nm));
+    let fi = 0, bi = 1, pi = -1, ei = -1, eti = -1;
+    if (names.length) {
+      const plain = (nm) => !EXAMPLE_RE.test(nm) && !PRON_RE.test(nm) && !MEDIA_RE.test(nm) && !SKIP_RE.test(nm);
+      // the front: the first plain field the card's question shows; the back: the first one only its answer shows
+      const tmpl = (model.tmpls || [])[0] || {};
+      const q = templateFields(tmpl.qfmt).map((n) => names.indexOf(n)).filter((i) => i >= 0);
+      const a = templateFields(tmpl.afmt).map((n) => names.indexOf(n)).filter((i) => i >= 0 && !q.includes(i));
+      fi = q.find((i) => plain(names[i])) ?? -1;
+      if (fi < 0) fi = Math.max(0, names.findIndex(plain)); // (else the first plain field, then the next)
+      bi = a.find((i) => i !== fi && plain(names[i])) ?? names.findIndex((nm, i) => i !== fi && plain(nm));
+      if (bi < 0) bi = names.findIndex((nm, i) => i !== fi && !MEDIA_RE.test(nm) && !EXAMPLE_RE.test(nm) && !SKIP_RE.test(nm));
       if (bi < 0) bi = fi === 0 ? 1 : 0;
-      pi = names.findIndex((nm, i) => i !== fi && i !== bi && PRON_RE.test(nm));
+      pi = names.findIndex((nm, i) => i !== fi && i !== bi && PRON_RE.test(nm) && !EXAMPLE_RE.test(nm));
+      if (pi < 0) pi = names.findIndex((nm, i) => i !== fi && i !== bi && PRON_RE.test(nm));
+      // the example: a sentence field that is no transcription, cloze or media; its translation: one that says "meaning"
+      const exs = names.map((nm, i) => i).filter((i) => i !== fi && i !== bi && i !== pi && EXAMPLE_RE.test(names[i]) && !PRON_RE.test(names[i]) && !MEDIA_RE.test(names[i]) && !/cloze/i.test(names[i]));
+      ei = exs.find((i) => !TRANS_RE.test(names[i])) ?? -1;
+      eti = exs.find((i) => i !== ei && TRANS_RE.test(names[i])) ?? -1;
       if (!langs.src) langs.src = fieldLang(names[fi]);
       if (!langs.tgt) langs.tgt = fieldLang(names[bi]);
     }
+    const l = { names, fi, bi, pi, ei, eti };
+    layouts.set(mid, l);
+    return l;
+  };
+  let withMedia = 0;
+  for (const n of db.table("notes")) {
+    const flds = String(n[6] || "").split("\x1f");
+    const { names, fi, bi, pi, ei, eti } = layoutOf(String(n[2]));
     let term = ankiPlain(flds[fi]);
     const translation = ankiPlain(flds[bi]);
     if (!term || !translation) continue;
     const pron = pi >= 0 ? ankiPlain(flds[pi]).replace(/\s*\n\s*/g, " ") : "";
     if (pron && pron !== term) term += ` (${pron})`; // 的 (de)
-    const exIdx = names.findIndex((nm, i) => i !== fi && i !== bi && i !== pi && EXAMPLE_RE.test(nm));
-    const rest = flds.map((f, i) => (i === fi || i === bi || i === pi || (names[i] && MEDIA_RE.test(names[i])) ? "" : ankiPlain(f))).filter(Boolean);
-    let example = exIdx >= 0 ? ankiPlain(flds[exIdx]) : rest[0] || "", exampleTr = "";
+    const exIdx = ei >= 0 ? ei : names.findIndex((nm, i) => i !== fi && i !== bi && i !== pi && EXAMPLE_RE.test(nm));
+    const rest = flds.map((f, i) => (i === fi || i === bi || i === pi || (names[i] && (MEDIA_RE.test(names[i]) || SKIP_RE.test(names[i]) || PRON_RE.test(names[i]))) ? "" : ankiPlain(f))).filter(Boolean);
+    let example = exIdx >= 0 ? ankiPlain(flds[exIdx]) : rest[0] || "", exampleTr = eti >= 0 ? ankiPlain(flds[eti]) : "";
     const exLines = example.split("\n").filter((l) => l.trim());
-    if (exLines.length >= 2 && exLines.length % 2 === 0) { // "sentence / its translation" in one field, line by line
+    if (!exampleTr && exLines.length >= 2 && exLines.length % 2 === 0) { // "sentence / its translation" in one field, line by line
       const half = exLines.length / 2;
       example = exLines.slice(0, half).join(" "); exampleTr = exLines.slice(half).join(" ");
     } else example = exLines.join(" ");
-    rows.push({ term: term.replace(/\s*\n\s*/g, " "), translation: translation.replace(/\s*\n\s*/g, " "), example, exampleTr });
+    const row = { term: term.replace(/\s*\n\s*/g, " "), translation: translation.replace(/\s*\n\s*/g, " "), example, exampleTr: exampleTr.replace(/\s*\n\s*/g, " ") };
+    // pictures and sounds: a sound of a sentence field is the example's, any other the word's; the first picture of the note
+    const m = {};
+    flds.forEach((f, i) => {
+      const { sounds, images } = fieldMedia(f), exField = names[i] ? EXAMPLE_RE.test(names[i]) : i === exIdx;
+      for (const s of sounds) if (media.has(s)) { const k = exField ? "exAudio" : "audio"; if (!m[k]) m[k] = s; }
+      for (const s of images) if (media.has(s) && !m.img) m.img = s;
+    });
+    if (Object.keys(m).length) { row.media = m; withMedia++; }
+    rows.push(row);
   }
-  return { rows, deck: deckNames[0] || "", notes: rows.length, langs };
+  // only the files the rows use count
+  const used = new Map();
+  for (const r of rows) for (const name of Object.values(r.media || {})) used.set(name, media.get(name));
+  const size = [...used.values()].reduce((a, e) => a + (e.size || 0), 0);
+  return { rows, deck: deckNames[0] || "", notes: rows.length, langs, media: used, mediaSize: size, withMedia };
 }
+/** The bytes of a deck's media file, by its name (from readApkg's `media`). */
+const readApkgMedia = (media, name) => zipRead(media.get(name));
 
 /** The language a field name stands for ("English", "Deutsch", "Hanzi", "Kanji" …), or "". */
 function fieldLang(name) {
@@ -266,7 +322,7 @@ async function sha1hex(text) {
   return [...new Uint8Array(d)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-/** The vocabulary of a pair as an .apkg: one deck "Kameleon xx → yy", Basic notes (front: term, back: translation, examples under them). */
+/** The vocabulary of a pair as an .apkg: one deck "Kameleon xx → yy", Basic notes (front: term, back: translation, examples under them; pictures and sounds included). */
 async function buildApkg(pair, rows) {
   const now = Date.now(), secs = Math.floor(now / 1000);
   const mid = now - 1, did = now - 2, deckName = `Kameleon ${pairLabel(pair)}`;
@@ -282,12 +338,27 @@ async function buildApkg(pair, rows) {
   const conf = { nextPos: rows.length + 1, estTimes: true, activeDecks: [1], sortType: "noteFld", timeLim: 0, sortBackwards: false, addToCur: true, curDeck: 1, newBury: true, newSpread: 0, dueCounts: true, curModel: String(mid), collapseTime: 1200 };
   const colRow = [1, [1, secs - (secs % 86400), now, now, 11, 0, 0, 0, JSON.stringify(conf), JSON.stringify({ [mid]: model }), JSON.stringify({ 1: deck(1, "Default"), [did]: deck(did, deckName) }), JSON.stringify(dconf), "{}"]];
   const notes = [], cards = [];
+  // pictures and sounds: the stored files go into the package, the fields name them
+  const files = new Map(), media = [];
+  const fileOf = async (key) => {
+    if (!key) return "";
+    if (files.has(key)) return files.get(key);
+    const rec = await idbGet(key);
+    let name = "";
+    if (rec && rec.bytes) {
+      name = `kameleon-${key.slice(3)}.${(String(rec.name || "").match(/\.([a-z0-9]{1,5})$/i) || [0, "bin"])[1].toLowerCase()}`;
+      media.push({ name, data: new Uint8Array(rec.bytes) });
+    }
+    files.set(key, name);
+    return name;
+  };
   const GUID = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   for (const [i, r] of rows.entries()) {
     const nid = now + i, cid = now + rows.length + i;
     let guid = ""; for (let k = 0; k < 10; k++) guid += GUID[Math.floor(Math.random() * GUID.length)];
     const front = htmlEsc(r.term), csum = parseInt((await sha1hex(r.term)).slice(0, 8), 16);
-    const flds = [front, htmlEsc(r.translation), htmlEsc(r.example || ""), htmlEsc(r.exampleTr || "")].join("\x1f");
+    const [audio, img, exAudio] = [await fileOf(r.audio), await fileOf(r.img), await fileOf(r.exAudio)];
+    const flds = [front + (audio ? ` [sound:${audio}]` : ""), htmlEsc(r.translation) + (img ? `<br><img src="${img}">` : ""), htmlEsc(r.example || "") + (exAudio ? ` [sound:${exAudio}]` : ""), htmlEsc(r.exampleTr || "")].join("\x1f");
     notes.push([nid, [nid, guid, mid, secs, -1, ` kameleon ${ankiTag(pair)} `, flds, r.term, csum, 0, ""]]);
     cards.push([cid, [cid, nid, did, 0, secs, -1, 0, 0, i + 1, 0, 0, 0, 0, 0, 0, 0, 0, ""]]);
   }
@@ -298,5 +369,6 @@ async function buildApkg(pair, rows) {
     { name: "revlog", sql: ANKI_SQL.revlog, rows: [] },
     { name: "graves", sql: ANKI_SQL.graves, rows: [] },
   ]);
-  return zipWrite([{ name: "collection.anki2", data: db }, { name: "media", data: enc8.encode("{}") }]);
+  const list = Object.fromEntries(media.map((m, i) => [String(i), m.name])); // the files are stored under their numbers
+  return zipWrite([{ name: "collection.anki2", data: db }, { name: "media", data: enc8.encode(JSON.stringify(list)) }, ...media.map((m, i) => ({ name: String(i), data: m.data, store: true }))]);
 }

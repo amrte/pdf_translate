@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="Kameleon 2.33">
+  <meta name="generator" content="Kameleon 2.34">
   <meta name="description" content="Kameleon – Wechselt die Sprache, behält die Form. Changes language, keeps its shape.">
   <title>Kameleon</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2216%22 fill=%22%23287130%22/%3E%3Cg transform=%22translate(2.5 1) scale(0.9)%22 fill=%22%23ffffff%22 stroke=%22%23ffffff%22%3E%3Cpath d=%22M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6%22 fill=%22none%22 stroke-width=%223.8%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M21 43l-1 10M30 44v9M38 43l1 10%22 stroke-width=%223.6%22 stroke-linecap=%22round%22/%3E%3Cellipse cx=%2221%22 cy=%2225%22 rx=%227%22 ry=%227.5%22 stroke=%22none%22/%3E%3Cellipse cx=%2233%22 cy=%2223.5%22 rx=%227.5%22 ry=%228%22 stroke=%22none%22/%3E%3Cpath d=%22M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z%22 stroke=%22none%22/%3E%3Cpath d=%22M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z%22 stroke=%22none%22/%3E%3Cpath d=%22M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z%22 stroke=%22none%22/%3E%3Cpath d=%22M16 37l4-3 4 3 4-3 4 3 4-3 4 3%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%222.1%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3Cpath d=%22M43.5 33.9L57 32.6%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%221.5%22 stroke-linecap=%22round%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%224.4%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%222.7%22 stroke=%22none%22/%3E%3Ccircle cx=%2246.2%22 cy=%2226.7%22 r=%221.3%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Cpath d=%22M4 55.5c15-3 39-3 54 0%22 fill=%22none%22 stroke-width=%222.4%22 stroke-linecap=%22round%22/%3E%3C/g%3E%3C/svg%3E">
@@ -1029,6 +1029,18 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
 .kw-src { flex-basis: 100%; display: flex; justify-content: center; }
 .kw-src button { max-width: 22em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+/* ---------- v2.34: pictures and sounds on the cards (Anki decks) ---------- */
+.kw-play { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; margin-left: 10px; vertical-align: middle; border-radius: 50%; border: 1px solid var(--border); background: var(--surface); color: inherit; font-size: 16px; line-height: 1; cursor: pointer; padding: 0; transition: transform .15s; }
+.kw-play:hover { transform: scale(1.1); border-color: var(--accent); }
+.kw-sentence .kw-play { width: 28px; height: 28px; font-size: 13px; margin-left: 8px; }
+.kw-back .kw-play { background: rgba(255, 255, 255, .92); border-color: transparent; color: #222; }
+.kw-img { max-width: min(100%, 420px); max-height: min(200px, 26vh); object-fit: contain; border-radius: 10px; box-shadow: 0 2px 10px rgba(0, 0, 0, .18); background: #fff; }
+.kw-card.has-img { min-height: 340px; }
+.kw-card.has-img .kw-back { gap: 10px; padding-top: 18px; padding-bottom: 18px; }
+.vocab-thumb { height: 40px; width: 40px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border); }
+#pairMediaRow { display: flex; align-items: center; gap: 8px; margin: 10px 0 0; font-size: 13.5px; }
+#pairMediaRow[hidden] { display: none; }
+
   </style>
 </head>
 <body>
@@ -1036,7 +1048,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
   <div class="brand">
     <span class="logo"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#287130"/><g transform="translate(2.5 1) scale(0.9)" fill="#ffffff" stroke="#ffffff"><path d="M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6" fill="none" stroke-width="3.8" stroke-linecap="round"/><path d="M21 43l-1 10M30 44v9M38 43l1 10" stroke-width="3.6" stroke-linecap="round"/><ellipse cx="21" cy="25" rx="7" ry="7.5" stroke="none"/><ellipse cx="33" cy="23.5" rx="7.5" ry="8" stroke="none"/><path d="M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z" stroke="none"/><path d="M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z" stroke="none"/><path d="M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z" stroke="none"/><path d="M16 37l4-3 4 3 4-3 4 3 4-3 4 3" fill="none" stroke="#287130" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M43.5 33.9L57 32.6" fill="none" stroke="#287130" stroke-width="1.5" stroke-linecap="round"/><circle cx="45.5" cy="26.5" r="4.4" fill="#287130" stroke="none"/><circle cx="45.5" cy="26.5" r="2.7" stroke="none"/><circle cx="46.2" cy="26.7" r="1.3" fill="#287130" stroke="none"/><path d="M4 55.5c15-3 39-3 54 0" fill="none" stroke-width="2.4" stroke-linecap="round"/></g></svg></span>
     <span class="brand-name">Kameleon</span>
-    <span class="version" id="appVersion">v2.33</span>
+    <span class="version" id="appVersion">v2.34</span>
   </div>
   <div class="topbar-actions">
     <span class="doc-name" id="docName"></span>
@@ -1565,7 +1577,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
     </div>
     <input type="file" id="offlineZip" class="visually-hidden" accept=".zip,application/zip" multiple tabindex="-1">
     <input type="file" id="offlineFolder" class="visually-hidden" webkitdirectory multiple tabindex="-1">
-    <p class="muted small help-version help-part">Kameleon v2.33 · <span data-i18n="app.tagline"></span></p>
+    <p class="muted small help-version help-part">Kameleon v2.34 · <span data-i18n="app.tagline"></span></p>
     <div class="modal-actions">
       <button type="button" value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
     </div>
@@ -1695,6 +1707,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
       <label><span data-i18n="pair.target">To</span> <input id="pairTgt" list="langCodes" size="6" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
     </div>
     <p class="muted small" data-i18n="pair.hint"></p>
+    <label id="pairMediaRow" hidden><input type="checkbox" id="pairMedia" checked> <span id="pairMediaText"></span></label>
     <datalist id="langCodes"></datalist>
     <div class="modal-actions">
       <button value="cancel" class="btn ghost" data-i18n="common.cancel">Cancel</button>
@@ -2203,8 +2216,8 @@ const I18N = {
     "help.learnText": "Der Knopf „Lernen“ oben sammelt die Fachbegriffe des Dokuments und baut daraus einen Wortschatz je Sprachpaar – mit Lernkarten, PDF und Anki-Export. Ohne geöffnetes Dokument öffnet er den Wortschatz.",
     "help.learnList": "<b>Liste:</b> Die Begriffe kommen mit der KI-Antwort (Häkchen „Begriffsliste“ im KI-Fenster) oder werden von Hand eingetragen; rechts die PDF-Seite, wie sie gespeichert wird. Jeder Import ergänzt zugleich den Wortschatz des erkannten Sprachpaars.",
     "help.learnWords": "<b>Wörter:</b> Alle Wörter des Dokuments nach Häufigkeit, ohne Funktionswörter, und die wiederkehrenden Wortgruppen; sortierbar nach Häufigkeit, Alphabet oder Reihenfolge im Text. Wörter anklicken oder die häufigsten auswählen, den Prompt kopieren und die KI-Antwort rechts einfügen – die Wörter kommen mit Übersetzung und Beispielsatz in Liste, Wortschatz und Lernkarten.",
-    "help.learnCards": "<b>Lernkarten:</b> Oben wählen Sie die Quelle: die Begriffe dieses Dokuments oder den Wortschatz (so, wie der Reiter „Wortschatz“ ihn zeigt). „Heute fällig“ zeigt zuerst neue Wörter (so viele pro Tag wie eingestellt), dann die gewussten, deren Wiederholung ansteht (nach 1, 3, 7, 14, 30, dann alle 90 Tagen). Vier Bewertungen: Nochmal (zurück auf Anfang), Schwer (Abstand bleibt), Gewusst (eine Stufe weiter), Leicht (zwei Stufen). Der Beispielsatz vorn kann als Lücke, ganz oder gar nicht gezeigt werden; „Umgekehrt“ fragt von der Übersetzung nach dem Begriff. Tasten: <kbd>Leertaste</kbd> umdrehen, <kbd>←</kbd>/<kbd>→</kbd> blättern, <kbd>A</kbd>/<kbd>H</kbd>/<kbd>K</kbd>/<kbd>E</kbd> oder <kbd>1</kbd>–<kbd>4</kbd> bewerten, <kbd>F</kbd> Favorit, <kbd>R</kbd> Richtung.",
-    "help.learnVocab": "<b>Wortschatz:</b> Die Begriffe aller Dokumente je Sprachpaar, mit Suche, Filter nach Lernstand (neu, im Lernen, gefestigt, heute fällig), Favoriten (das Kameleon), Dubletten-Zusammenführung und Korrektur des Sprachpaars; darüber die Lernstatistik mit der Lernserie. Export als PDF-Liste, Karten-PDF zum Ausdrucken oder Anki-Paket (.apkg) – jeweils das, was gerade gezeigt wird. Import aus .txt/.tsv/.csv und aus Anki-Paketen. „Sichern“ speichert den ganzen Wortschatz mit Lernstand als Datei für ein anderes Gerät; „Importieren…“ führt sie dort zusammen.",
+    "help.learnCards": "<b>Lernkarten:</b> Oben wählen Sie die Quelle: die Begriffe dieses Dokuments oder den Wortschatz (so, wie der Reiter „Wortschatz“ ihn zeigt). „Heute fällig“ zeigt zuerst neue Wörter (so viele pro Tag wie eingestellt), dann die gewussten, deren Wiederholung ansteht (nach 1, 3, 7, 14, 30, dann alle 90 Tagen). Vier Bewertungen: Nochmal (zurück auf Anfang), Schwer (Abstand bleibt), Gewusst (eine Stufe weiter), Leicht (zwei Stufen). Der Beispielsatz vorn kann als Lücke, ganz oder gar nicht gezeigt werden; „Umgekehrt“ fragt von der Übersetzung nach dem Begriff. Tasten: <kbd>Leertaste</kbd> umdrehen, <kbd>←</kbd>/<kbd>→</kbd> blättern, <kbd>A</kbd>/<kbd>H</kbd>/<kbd>K</kbd>/<kbd>E</kbd> oder <kbd>1</kbd>–<kbd>4</kbd> bewerten, <kbd>F</kbd> Favorit, <kbd>R</kbd> Richtung. Karten aus Anki-Stapeln mit Bildern und Tönen zeigen das Bild auf der Rückseite und 🔊-Knöpfe neben Wort und Beispielsatz (<kbd>P</kbd> Aussprache, <kbd>S</kbd> Satz); „🔊 Automatisch“ spielt die Aussprache ab, sobald das Wort erscheint.",
+    "help.learnVocab": "<b>Wortschatz:</b> Die Begriffe aller Dokumente je Sprachpaar, mit Suche, Filter nach Lernstand (neu, im Lernen, gefestigt, heute fällig), Favoriten (das Kameleon), Dubletten-Zusammenführung und Korrektur des Sprachpaars; darüber die Lernstatistik mit der Lernserie. Export als PDF-Liste, Karten-PDF zum Ausdrucken oder Anki-Paket (.apkg) – jeweils das, was gerade gezeigt wird. Import aus .txt/.tsv/.csv und aus Anki-Paketen – mit deren Bildern und Tönen, die im Browser gespeichert werden (auf Wunsch nur die Wörter). „Sichern“ speichert den ganzen Wortschatz mit Lernstand, Bildern und Tönen als Datei für ein anderes Gerät; „Importieren…“ führt sie dort zusammen.",
     "help.learnDecks": "<b>Fertige Lernkarten:</b> Tausende freie Anki-Stapel für viele Sprachen gibt es unter <a href=\"https://ankiweb.net/shared/decks\" target=\"_blank\" rel=\"noopener noreferrer\">ankiweb.net/shared/decks</a> – die .apkg-Datei herunterladen und unter „Wortschatz → Importieren…“ laden.",
     "help.shortcuts": "Tastenkürzel im Übersetzungsfeld: <kbd>Strg</kbd>+<kbd>Enter</kbd> nächstes Segment · <kbd>Alt</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> vorheriges/nächstes · <kbd>Strg</kbd>+<kbd>S</kbd> Segment ins Dokument übernehmen · <kbd>Strg</kbd> + Mausrad zoomen.",
     "ai.title": "Mit KI übersetzen (ChatGPT, Claude, Gemini…)",
@@ -2512,7 +2525,7 @@ const I18N = {
     "vocab.previewTitle": "Die PDF-Seiten so zeigen, wie sie heruntergeladen werden – mit dem, was gerade gezeigt wird",
     "vocab.pdf": "PDF herunterladen",
     "vocab.apkg": "Anki-Paket (.apkg)",
-    "vocab.apkgTitle": "Ein fertiges Anki-Paket: Stapel „Kameleon xx → yy“ mit einer Karte je Begriff (Vorderseite Begriff und Beispielsatz, Rückseite Übersetzung und übersetzter Beispielsatz). Doppelklick öffnet es in Anki.",
+    "vocab.apkgTitle": "Ein fertiges Anki-Paket: Stapel „Kameleon xx → yy“ mit einer Karte je Begriff (Vorderseite Begriff und Beispielsatz, Rückseite Übersetzung und übersetzter Beispielsatz; Bilder und Töne gehen mit). Doppelklick öffnet es in Anki.",
     "anki.zstd": "Dieses Anki-Paket ist im neuen, komprimierten Format. Exportieren Sie es in Anki noch einmal mit der Option „Unterstützung älterer Anki-Versionen“.",
     "anki.noDb": "Dieses Anki-Paket enthält keine Kartensammlung.",
     "vocab.subtitle": "{n} Begriffe · {date}",
@@ -2520,6 +2533,17 @@ const I18N = {
     "vocab.empty": "Noch keine Begriffe für dieses Sprachpaar. Sie kommen mit jeder importierten KI-Antwort, die eine Begriffsliste enthält.",
     "vocab.noPair": "Das Sprachpaar ließ sich nicht bestimmen.",
     "vocab.added": "{n} neue Begriffe im Wortschatz {pair}.",
+    "vocab.importedMedia": "Dazu {n} Bilder und Töne ({size}).",
+    "vocab.mediaSaving": "Bilder und Töne werden gespeichert … {i}/{n}",
+    "vocab.mediaFull": "Der Speicher des Browsers ist voll: {n} Bilder/Töne konnten nicht gespeichert werden.",
+    "vocab.mediaMissing": "Diese Datei ist nicht mehr gespeichert.",
+    "vocab.backingUp": "Sicherung mit Bildern und Tönen wird erstellt …",
+    "vocab.play": "Aussprache anhören",
+    "pair.media": "Bilder und Töne übernehmen ({n} Dateien, {size})",
+    "kw.play": "Aussprache anhören (Taste P)",
+    "kw.playEx": "Beispielsatz anhören (Taste S)",
+    "kw.autoplay": "Automatisch",
+    "kw.autoplayTitle": "Die Aussprache wird abgespielt, sobald das Wort erscheint.",
     "vocab.imported": "{n} neue Begriffe ({total} gelesen) im Wortschatz {pair}.",
     "vocab.badFile": "Die Datei enthält keine Begriffspaare (je Zeile „Begriff ⇥ Übersetzung“ oder „Begriff = Übersetzung“, oder ein Anki-Paket .apkg).",
     "vocab.clearConfirm": "Alle Begriffe des Sprachpaars {pair} löschen?",
@@ -2544,7 +2568,7 @@ const I18N = {
     "pair.target": "Nach",
     "pair.hint": "Sprachcodes wie de, en, fr, uk, zh (ISO 639-1).",
     "kw.previewZoom": "Klick: die Seite in Fensterbreite anzeigen – und wieder klein",
-    "kw.cardsText": "Anklicken oder Leertaste dreht die Karte um · ←/→ blättern · A nochmal, H schwer, K gewusst, E leicht (oder 1–4) · F Favorit (das Kameleon) · R Richtung · Bewertete Karten verlassen die Runde und kommen nach wachsenden Abständen wieder.",
+    "kw.cardsText": "Anklicken oder Leertaste dreht die Karte um · ←/→ blättern · A nochmal, H schwer, K gewusst, E leicht (oder 1–4) · F Favorit (das Kameleon) · R Richtung · P/S Aussprache/Satz anhören · Bewertete Karten verlassen die Runde und kommen nach wachsenden Abständen wieder.",
     "kw.prev": "Vorherige Karte (←)",
     "kw.next": "Nächste Karte (→)",
     "kw.shuffle": "Mischen",
@@ -3088,8 +3112,8 @@ const I18N = {
     "help.learnText": "The \"Learn\" button at the top collects the document's terms and builds a vocabulary per language pair from them – with flashcards, PDF and Anki export. Without an open document it opens the vocabulary.",
     "help.learnList": "<b>List:</b> The terms arrive with the AI answer (tick \"Term list\" in the AI window) or are entered by hand; on the right the PDF page as it will be saved. Every import also adds to the vocabulary of the detected language pair.",
     "help.learnWords": "<b>Words:</b> Every word of the document by frequency, without function words, and the recurring word groups; sorted by frequency, alphabet or order in the text. Tick words or select the most frequent ones, copy the prompt and paste the AI's answer on the right – the words arrive with translation and example sentence in the list, the vocabulary and the flashcards.",
-    "help.learnCards": "<b>Flashcards:</b> At the top you choose the source: the terms of this document or the vocabulary (as the “Vocabulary” tab shows it). \"Due today\" shows new words first (as many per day as set), then the known ones whose review is due (after 1, 3, 7, 14, 30, then every 90 days). Four grades: Again (back to the start), Hard (interval stays), Known (one step up), Easy (two steps). The example sentence on the front can be shown as a gap, whole or not at all; \"Reversed\" asks from the translation for the term. Keys: <kbd>Space</kbd> turn, <kbd>←</kbd>/<kbd>→</kbd> browse, <kbd>A</kbd>/<kbd>H</kbd>/<kbd>K</kbd>/<kbd>E</kbd> or <kbd>1</kbd>–<kbd>4</kbd> grade, <kbd>F</kbd> favourite, <kbd>R</kbd> direction.",
-    "help.learnVocab": "<b>Vocabulary:</b> The terms of all documents per language pair, with search, a filter by learning stage (new, learning, mature, due today), favourites (the chameleon), merging of duplicates and correction of the pair; above it the learning statistics with the study streak. Export as a PDF list, a printable card sheet or an Anki package (.apkg) – each taking what is shown. Import from .txt/.tsv/.csv and from Anki packages. “Back up” saves the whole vocabulary with its learning state as a file for another device; “Import…” merges it there.",
+    "help.learnCards": "<b>Flashcards:</b> At the top you choose the source: the terms of this document or the vocabulary (as the “Vocabulary” tab shows it). \"Due today\" shows new words first (as many per day as set), then the known ones whose review is due (after 1, 3, 7, 14, 30, then every 90 days). Four grades: Again (back to the start), Hard (interval stays), Known (one step up), Easy (two steps). The example sentence on the front can be shown as a gap, whole or not at all; \"Reversed\" asks from the translation for the term. Keys: <kbd>Space</kbd> turn, <kbd>←</kbd>/<kbd>→</kbd> browse, <kbd>A</kbd>/<kbd>H</kbd>/<kbd>K</kbd>/<kbd>E</kbd> or <kbd>1</kbd>–<kbd>4</kbd> grade, <kbd>F</kbd> favourite, <kbd>R</kbd> direction. Cards from Anki decks with pictures and sounds show the picture on the back and 🔊 buttons next to the word and the example sentence (<kbd>P</kbd> pronunciation, <kbd>S</kbd> sentence); “🔊 Auto-play” plays the pronunciation as soon as the word appears.",
+    "help.learnVocab": "<b>Vocabulary:</b> The terms of all documents per language pair, with search, a filter by learning stage (new, learning, mature, due today), favourites (the chameleon), merging of duplicates and correction of the pair; above it the learning statistics with the study streak. Export as a PDF list, a printable card sheet or an Anki package (.apkg) – each taking what is shown. Import from .txt/.tsv/.csv and from Anki packages – with their pictures and sounds, which are stored in the browser (or the words alone, if you prefer). “Back up” saves the whole vocabulary with its learning state, pictures and sounds as a file for another device; “Import…” merges it there.",
     "help.learnDecks": "<b>Ready-made flashcards:</b> thousands of free Anki decks for many languages are at <a href=\"https://ankiweb.net/shared/decks\" target=\"_blank\" rel=\"noopener noreferrer\">ankiweb.net/shared/decks</a> – download the .apkg file and load it under \"Vocabulary → Import…\".",
     "help.shortcuts": "Shortcuts in a translation box: <kbd>Ctrl</kbd>+<kbd>Enter</kbd> next segment · <kbd>Alt</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> previous/next · <kbd>Ctrl</kbd>+<kbd>S</kbd> update this segment in the document · <kbd>Ctrl</kbd> + mouse wheel to zoom.",
     "ai.title": "Translate with AI (ChatGPT, Claude, Gemini…)",
@@ -3398,7 +3422,7 @@ const I18N = {
     "vocab.previewTitle": "Show the PDF pages as they will be downloaded – with what is shown right now",
     "vocab.pdf": "Download PDF",
     "vocab.apkg": "Anki package (.apkg)",
-    "vocab.apkgTitle": "A ready Anki package: deck “Kameleon xx → yy” with one card per term (front: term and example sentence, back: translation and translated example). Double-click opens it in Anki.",
+    "vocab.apkgTitle": "A ready Anki package: deck “Kameleon xx → yy” with one card per term (front: term and example sentence, back: translation and translated example; pictures and sounds go along). Double-click opens it in Anki.",
     "anki.zstd": "This Anki package is in the new compressed format. Export it from Anki again with “Support older Anki versions” ticked.",
     "anki.noDb": "This Anki package holds no card collection.",
     "vocab.subtitle": "{n} terms · {date}",
@@ -3406,6 +3430,17 @@ const I18N = {
     "vocab.empty": "No terms for this language pair yet. They arrive with every imported AI answer that holds a term list.",
     "vocab.noPair": "The language pair could not be determined.",
     "vocab.added": "{n} new terms in the vocabulary {pair}.",
+    "vocab.importedMedia": "With {n} pictures and sounds ({size}).",
+    "vocab.mediaSaving": "Saving pictures and sounds … {i}/{n}",
+    "vocab.mediaFull": "The browser's storage is full: {n} pictures/sounds could not be saved.",
+    "vocab.mediaMissing": "This file is no longer stored.",
+    "vocab.backingUp": "Creating the backup with pictures and sounds …",
+    "vocab.play": "Play the pronunciation",
+    "pair.media": "Include pictures and sounds ({n} files, {size})",
+    "kw.play": "Play the pronunciation (key P)",
+    "kw.playEx": "Play the example sentence (key S)",
+    "kw.autoplay": "Auto-play",
+    "kw.autoplayTitle": "The pronunciation plays as soon as the word appears.",
     "vocab.imported": "{n} new terms ({total} read) in the vocabulary {pair}.",
     "vocab.badFile": "The file holds no term pairs (one per line: “term ⇥ translation” or “term = translation”, or an Anki package .apkg).",
     "vocab.clearConfirm": "Delete all terms of the language pair {pair}?",
@@ -3430,7 +3465,7 @@ const I18N = {
     "pair.target": "To",
     "pair.hint": "Language codes such as de, en, fr, uk, zh (ISO 639-1).",
     "kw.previewZoom": "Click: show the page at window width – and small again",
-    "kw.cardsText": "Click or Space turns the card · ←/→ browse · A again, H hard, K known, E easy (or 1–4) · F favourite (the chameleon) · R direction · Graded cards leave the round and come back after growing intervals.",
+    "kw.cardsText": "Click or Space turns the card · ←/→ browse · A again, H hard, K known, E easy (or 1–4) · F favourite (the chameleon) · R direction · P/S play word/sentence · Graded cards leave the round and come back after growing intervals.",
     "kw.prev": "Previous card (←)",
     "kw.next": "Next card (→)",
     "kw.shuffle": "Shuffle",
@@ -14144,13 +14179,26 @@ function idb() {
   });
 }
 
-async function idbPut(value, key = "last") {
+/** Store a value; `strict` reports a failure (a full disk) instead of passing over it. */
+async function idbPut(value, key = "last", strict = false) {
   try {
     const db = await idb();
     const tx = db.transaction("files", "readwrite");
     tx.objectStore("files").put(value, key);
-    await new Promise((r) => { tx.oncomplete = r; tx.onerror = r; });
-  } catch (_) { /* storage unavailable: the session simply won't be restored */ }
+    await new Promise((resolve, reject) => { tx.oncomplete = resolve; tx.onerror = tx.onabort = () => (strict ? reject(tx.error || new Error("IndexedDB")) : resolve()); });
+  } catch (err) { if (strict) throw err; /* storage unavailable: the session simply won't be restored */ }
+}
+
+/** The stored keys that start with `prefix`. */
+async function idbKeys(prefix = "") {
+  try {
+    const db = await idb();
+    return await new Promise((resolve) => {
+      const req = db.transaction("files").objectStore("files").getAllKeys();
+      req.onsuccess = () => resolve((req.result || []).filter((k) => typeof k === "string" && k.startsWith(prefix)));
+      req.onerror = () => resolve([]);
+    });
+  } catch (_) { return []; }
 }
 
 async function idbDel(key) {
@@ -18691,7 +18739,7 @@ function initPicture() {
 // from its own browser cache before the network, so language files are written into that cache.
 // ======================================================================
 
-const APP_VERSION = "2.33";
+const APP_VERSION = "2.34";
 // (a change of library version makes a stored set outdated: it is then ignored)
 const OFFLINE_VERSION = `${MUPDF_URL} ${OCR_LIB}`;
 const CORE_SIMD = "tesseract-core-simd-lstm.wasm.js", CORE_PLAIN = "tesseract-core-lstm.wasm.js";
@@ -19987,7 +20035,7 @@ function initKeywords() {
 // The terms as flashcards: front the term (with its example sentence), back the translation.
 // Click or Space turns a card; "Known" takes it out of the round, "Again" puts it at the end.
 const fc = { queue: [], index: 0, flipped: false, known: 0, total: 0, all: [], scope: "new", example: "cloze", newCap: 20 };
-const LS_FC_SCOPE = "pdftr:fcscope", LS_FC_REVERSE = "pdftr:fcreverse", LS_FC_EXAMPLE = "pdftr:fcexample", LS_FC_NEWCAP = "pdftr:fcnewcap", LS_FC_NEWDAY = "pdftr:fcnewday";
+const LS_FC_SCOPE = "pdftr:fcscope", LS_FC_AUTOPLAY = "pdftr:fcautoplay", LS_FC_REVERSE = "pdftr:fcreverse", LS_FC_EXAMPLE = "pdftr:fcexample", LS_FC_NEWCAP = "pdftr:fcnewcap", LS_FC_NEWDAY = "pdftr:fcnewday";
 /** New words shown for the first time today, per pair: the daily cap counts against this. */
 function fcNewToday(add = 0) {
   const day = new Date().toISOString().slice(0, 10), key = fc.pair || "doc";
@@ -20049,14 +20097,19 @@ function fcStart() {
   fc.pair = fcSource ? fcPair : currentPair();
   let rows = (fcSource || kwRows()).filter((r) => r.term.trim() && r.translation.trim());
   if (!fcSource && fc.pair) { // the document's terms: their learning state is kept in the vocabulary
-    const known = new Map(vocabRows(fc.pair).map((r) => [r.term, r.known || 0]));
-    rows = rows.map((r) => ({ ...r, known: known.get(r.term) || 0 }));
+    const inVocab = new Map(vocabRows(fc.pair).map((r) => [r.term, r]));
+    rows = rows.map((r) => {
+      const v = inVocab.get(r.term), out = { ...r, known: (v && v.known) || 0 };
+      if (v) for (const k of VMEDIA_KEYS) if (v[k]) out[k] = v[k]; // (pictures and sounds the vocabulary has for the word)
+      return out;
+    });
   }
   fc.all = rows;
   let scope = "due";
   try {
     scope = localStorage.getItem(LS_FC_SCOPE) || "due";
     fc.reverse = localStorage.getItem(LS_FC_REVERSE) === "1";
+    fc.autoplay = localStorage.getItem(LS_FC_AUTOPLAY) === "1";
     fc.example = localStorage.getItem(LS_FC_EXAMPLE) || "cloze";
     fc.newCap = Math.max(0, Number(localStorage.getItem(LS_FC_NEWCAP) ?? 20));
   } catch (_) { /* fine */ }
@@ -20067,7 +20120,9 @@ function fcFrontSentence(sentence, word) {
   if (!sentence || fc.example === "hide") return "";
   if (fc.example === "show") return sentence;
   const esc = (x) => x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const core = word.replace(/^(der|die|das|the|a|an|le|la|les|un|une|el|los|las|il|lo|gli|o|os|as)\s+/i, "").trim();
+  const core = word.replace(/\s+\([^()]*\)$/, "").replace(/^(der|die|das|the|a|an|le|la|les|un|une|el|los|las|il|lo|gli|o|os|as)\s+/i, "").trim(); // (without "(pinyin)" after it)
+  // Chinese, Japanese, Thai … write without spaces: the word is found anywhere in the sentence
+  if (/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Thai}\p{Script=Lao}\p{Script=Khmer}\p{Script=Myanmar}]/u.test(core)) return sentence.split(core).join("_____");
   let out = sentence.replace(new RegExp(`(?<![\\p{L}\\p{M}])${esc(core)}(?![\\p{L}\\p{M}])`, "giu"), "_____");
   if (out === sentence && core.length >= 5) { // an inflected form: the stem with any ending
     const stem = core.slice(0, Math.max(4, core.length - 2));
@@ -20093,6 +20148,7 @@ function fcScopeHtml() {
       ${seg("due", due, "kw.scopeDue")}${seg("new", fresh, "kw.scopeNew")}${seg("all", fc.all.length, fcSource ? "kw.scopeAll" : "kw.scopeAllDoc")}
     </div>
     <button type="button" class="btn ghost kw-reverse${fc.reverse ? " on" : ""}" data-fc="reverse" aria-pressed="${fc.reverse ? "true" : "false"}" title="${escapeHtml(t("kw.reverseTitle"))}">⇄ ${escapeHtml(t("kw.reverse"))}</button>
+    ${fc.all.some((r) => r.audio) ? `<button type="button" class="btn ghost kw-reverse${fc.autoplay ? " on" : ""}" data-fc="autoplay" aria-pressed="${fc.autoplay ? "true" : "false"}" title="${escapeHtml(t("kw.autoplayTitle"))}">🔊 ${escapeHtml(t("kw.autoplay"))}</button>` : ""}
     <label class="kw-opt-inline" title="${escapeHtml(t("kw.exampleFrontTitle"))}"><span>${escapeHtml(t("kw.exampleFront"))}</span>
       <select data-fc-select="example">${["cloze", "show", "hide"].map((v) => `<option value="${v}"${fc.example === v ? " selected" : ""}>${escapeHtml(t(`kw.example_${v}`))}</option>`).join("")}</select></label>
     <label class="kw-opt-inline" title="${escapeHtml(t("kw.newPerDayTitle"))}"><span>${escapeHtml(t("kw.newPerDay"))}</span>
@@ -20119,7 +20175,7 @@ function fcRender() {
   }
   const r = fc.rows[fc.queue[fc.index]];
   const pair = r._pair || fc.pair, fav = pair ? isFav(pair, r.term) : false;
-  const sides = [{ word: r.term, sentence: r.example }, { word: r.translation, sentence: r.exampleTr }];
+  const sides = [{ word: r.term, sentence: r.example, term: true }, { word: r.translation, sentence: r.exampleTr }];
   const [front, back] = fc.reverse ? sides.reverse() : sides; // reversed: asked from the translation
   const frontFull = front.sentence;
   front.sentence = fcFrontSentence(front.sentence, front.word);
@@ -20129,12 +20185,17 @@ function fcRender() {
   const grade = (g, cls, label, next) => `<button type="button" class="btn${cls}" data-fc="${g}" title="${escapeHtml(t(`kw.${g}Title`))}"><span>${label}</span><small>${escapeHtml(fcIntervalLabel(next))}</small></button>`;
   const waiting = fcWaiting();
   const favBtn = `<button type="button" class="kw-fav${fav ? " on" : ""}" data-fc="fav" title="${escapeHtml(t("vocab.favTitle"))}" aria-label="${escapeHtml(t("vocab.fav"))}" aria-pressed="${fav ? "true" : "false"}"${pair ? "" : " disabled"}>${KAM_ICON}</button>`;
+  // sounds: the word's next to the term, the example's next to its whole sentence; the picture on the answer side
+  const play = (act, title) => `<button type="button" class="kw-play" data-fc="${act}" title="${escapeHtml(t(title))}" aria-label="${escapeHtml(t(title))}">🔊</button>`;
+  const word = (side) => `<div class="kw-word">${escapeHtml(side.word)}${side.term && r.audio ? play("play-word", "kw.play") : ""}</div>`;
+  const sentence = (x, cls = "") => `<div class="kw-sentence${cls}">${escapeHtml(x)}${r.exAudio && x === r.example ? play("play-ex", "kw.playEx") : ""}</div>`;
+  const picture = r.img ? `<img class="kw-img" data-media="${escapeHtml(r.img)}" alt=""${vmUrls.has(r.img) ? ` src="${vmUrls.get(r.img)}"` : ""}>` : "";
   box.innerHTML = `${scope}
     <div class="kw-progress"><span>${escapeHtml(t("kw.progress", { i: fc.index + 1, n: fc.queue.length }))}${rowKnown(r) ? "" : ` <span class="kw-new-badge">${escapeHtml(t("kw.newBadge"))}</span>`}</span><span class="muted">${escapeHtml(t("kw.knownCount", { n: fc.known, total: fc.total }))}${waiting ? ` · ${escapeHtml(t("kw.waiting", { n: waiting }))}` : ""}</span></div>
-    <div class="kw-card${fc.flipped ? " flipped" : ""}" tabindex="0" role="button" aria-label="${escapeHtml(t("kw.flip"))}" data-fc="flip">
+    <div class="kw-card${fc.flipped ? " flipped" : ""}${r.img ? " has-img" : ""}" tabindex="0" role="button" aria-label="${escapeHtml(t("kw.flip"))}" data-fc="flip">
       <div class="kw-card-inner">
-        <div class="kw-face kw-front">${favBtn}<div class="kw-word">${escapeHtml(front.word)}</div>${front.sentence ? `<div class="kw-sentence">${escapeHtml(front.sentence)}</div>` : ""}</div>
-        <div class="kw-face kw-back">${favBtn}<div class="kw-word">${escapeHtml(back.word)}</div>${backSentences.map((x, i) => `<div class="kw-sentence${i === 0 && backSentences.length > 1 ? " kw-sentence-src" : ""}">${escapeHtml(x)}</div>`).join("")}</div>
+        <div class="kw-face kw-front">${favBtn}${word(front)}${front.sentence ? sentence(front.sentence) : ""}</div>
+        <div class="kw-face kw-back">${favBtn}${word(back)}${picture}${backSentences.map((x, i) => sentence(x, i === 0 && backSentences.length > 1 ? " kw-sentence-src" : "")).join("")}</div>
       </div>
     </div>
     <div class="kw-fc-actions">
@@ -20151,8 +20212,11 @@ function fcRender() {
         <button type="button" class="btn ghost" data-fc="shuffle">${escapeHtml(t("kw.shuffle"))}</button>
       </div>
     </div>`;
+  vocabFillMedia(box);
   // the keyboard keeps working after a card was redrawn
   (box.querySelector(".kw-card") || box.querySelector("[data-fc]"))?.focus({ preventScroll: true });
+  // auto-play: the word is spoken when its side comes up (a new card's front; reversed, on turning)
+  if (fc.autoplay && r.audio && !fc.reverse && !fc.flipped && fc.lastAuto !== r) { fc.lastAuto = r; vocabPlay(r.audio); }
 }
 /**
  * The four grades. Again: back to the start, the card comes up again at the end of this round.
@@ -20198,6 +20262,12 @@ function fcGrade(grade) {
 function fcAction(act) {
   if (act === "src-doc" || act === "src-vocab") { fcSrc = act.slice(4); fcStart(); return; } // (where the cards come from)
   if (act.startsWith("scope-")) { fcSetScope(act.slice(6)); return; }
+  if (act === "autoplay") {
+    fc.autoplay = !fc.autoplay;
+    try { localStorage.setItem(LS_FC_AUTOPLAY, fc.autoplay ? "1" : "0"); } catch (_) { /* fine */ }
+    fc.lastAuto = null; fcRender();
+    return;
+  }
   if (act === "reverse") {
     fc.reverse = !fc.reverse;
     try { localStorage.setItem(LS_FC_REVERSE, fc.reverse ? "1" : "0"); } catch (_) { /* fine */ }
@@ -20212,7 +20282,13 @@ function fcAction(act) {
     return;
   }
   if (!fc.queue.length && act !== "restart") return;
-  if (act === "flip") { fc.flipped = !fc.flipped; $("#kwCards .kw-card")?.classList.toggle("flipped", fc.flipped); return; }
+  if (act === "flip") {
+    fc.flipped = !fc.flipped; $("#kwCards .kw-card")?.classList.toggle("flipped", fc.flipped);
+    const r = fc.rows[fc.queue[fc.index]];
+    if (fc.autoplay && fc.reverse && fc.flipped && r.audio) vocabPlay(r.audio);
+    return;
+  }
+  if (act === "play-word" || act === "play-ex") { const r = fc.rows[fc.queue[fc.index]]; if (r) vocabPlay(act === "play-word" ? r.audio : r.exAudio); return; }
   if (act === "fav") { // the chameleon: this card into the favourites (and out again)
     const r = fc.rows[fc.queue[fc.index]], pair = r._pair || fc.pair;
     if (!pair) { toast(t("vocab.noPair"), "error"); return; }
@@ -20264,10 +20340,10 @@ function initFlashcards() {
   document.addEventListener("keydown", (e) => {
     const dlg = $("#kwDialog");
     if (!dlg.open || dlg.dataset.mode !== "cards" || ["INPUT", "TEXTAREA", "SELECT"].includes(e.target.tagName)) return;
-    const keys = { " ": "flip", Enter: "flip", ArrowRight: "next", ArrowLeft: "prev", k: "known", K: "known", a: "again", A: "again", h: "hard", H: "hard", e: "easy", E: "easy", f: "fav", F: "fav", r: "reverse", R: "reverse", 1: "again", 2: "hard", 3: "known", 4: "easy" };
+    const keys = { " ": "flip", Enter: "flip", ArrowRight: "next", ArrowLeft: "prev", k: "known", K: "known", a: "again", A: "again", h: "hard", H: "hard", e: "easy", E: "easy", f: "fav", F: "fav", r: "reverse", R: "reverse", p: "play-word", P: "play-word", s: "play-ex", S: "play-ex", 1: "again", 2: "hard", 3: "known", 4: "easy" };
     if (keys[e.key]) { e.preventDefault(); fcAction(keys[e.key]); }
   });
-  $("#kwDialog").addEventListener("close", () => { fcSource = null; $("#kwDialog").dataset.mode = "list"; });
+  $("#kwDialog").addEventListener("close", () => { fcSource = null; $("#kwDialog").dataset.mode = "list"; vocabStopAudio(); });
 }
 
 /* ---------------------------------------------------------------- Learn: the document's words by frequency
@@ -21805,6 +21881,82 @@ function vocabLoad() {
 function vocabSave(v) {
   try { localStorage.setItem(LS_VOCAB, JSON.stringify(v)); } catch (_) { toast(t("vocab.full"), "error"); }
 }
+/* ---- pictures and sounds of terms (from Anki decks): the files are kept in IndexedDB, a row names them */
+// A row's `img` (a picture), `audio` (the word spoken) and `exAudio` (the example sentence spoken) are
+// keys "vm:<hash>" of stored files {name, type, bytes}: the same file is stored once.
+const VMEDIA_KEYS = ["img", "audio", "exAudio"];
+const MEDIA_TYPES = { jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", gif: "image/gif", webp: "image/webp", svg: "image/svg+xml", bmp: "image/bmp", avif: "image/avif", mp3: "audio/mpeg", ogg: "audio/ogg", oga: "audio/ogg", opus: "audio/ogg", spx: "audio/ogg", wav: "audio/wav", m4a: "audio/mp4", aac: "audio/aac", flac: "audio/flac", webm: "audio/webm" };
+const mediaType = (name) => MEDIA_TYPES[(String(name).split(".").pop() || "").toLowerCase()] || "application/octet-stream";
+const mbText = (bytes) => `${(bytes / 1048576).toFixed(bytes < 10485760 ? 1 : 0)} MB`;
+const vmUrls = new Map(); // key → object URL, while the page is open
+/** A file stored; returns its key. A full disk throws. */
+async function vocabMediaPut(name, bytes) {
+  const hash = [...new Uint8Array(await crypto.subtle.digest("SHA-1", bytes))].slice(0, 10).map((b) => b.toString(16).padStart(2, "0")).join("");
+  const key = `vm:${hash}`;
+  await idbPut({ name, type: mediaType(name), bytes: bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) }, key, true);
+  return key;
+}
+/** An object URL of a stored file ("" when it is gone). */
+async function vocabMediaUrl(key) {
+  if (!key) return "";
+  if (vmUrls.has(key)) return vmUrls.get(key);
+  const rec = await idbGet(key);
+  if (!rec || !rec.bytes) return "";
+  const url = URL.createObjectURL(new Blob([rec.bytes], { type: rec.type || mediaType(rec.name || "") }));
+  vmUrls.set(key, url);
+  return url;
+}
+let vmAudio = null;
+/** A stored sound played (the one before stops). */
+async function vocabPlay(key) {
+  const url = await vocabMediaUrl(key);
+  if (!url) { if (key) toast(t("vocab.mediaMissing"), "error"); return; }
+  if (vmAudio) vmAudio.pause();
+  vmAudio = new Audio(url);
+  vmAudio.play().catch(() => { /* the browser wants a click first */ });
+}
+const vocabStopAudio = () => { if (vmAudio) { vmAudio.pause(); vmAudio = null; } };
+/** Pictures in `root` with data-media get their stored file. */
+function vocabFillMedia(root) {
+  for (const img of root.querySelectorAll("img[data-media]")) {
+    if (img.src) continue;
+    vocabMediaUrl(img.dataset.media).then((url) => { if (url) img.src = url; else img.remove(); });
+  }
+}
+/** Files no term names any more are deleted (after removing terms, a pair, or merging). */
+let vmGcTimer = null;
+function vocabMediaGc() {
+  clearTimeout(vmGcTimer);
+  vmGcTimer = setTimeout(async () => {
+    const used = new Set();
+    for (const rows of Object.values(vocabLoad())) if (Array.isArray(rows)) for (const r of rows) for (const k of VMEDIA_KEYS) if (r[k]) used.add(r[k]);
+    for (const key of await idbKeys("vm:")) if (!used.has(key)) {
+      await idbDel(key);
+      if (vmUrls.has(key)) { URL.revokeObjectURL(vmUrls.get(key)); vmUrls.delete(key); }
+    }
+  }, 400);
+}
+/**
+ * The pictures and sounds of an Anki deck's rows stored: each row's `media` (the deck's file names)
+ * becomes its img/audio/exAudio keys. Returns {files, failed}.
+ */
+async function vocabStoreDeckMedia(rows, media) {
+  const names = [...media.keys()], keys = new Map();
+  let failed = 0, i = 0;
+  try { navigator.storage?.persist?.(); } catch (_) { /* the browser decides */ }
+  try {
+    for (const name of names) {
+      if (i++ % 10 === 0) busy(t("vocab.mediaSaving", { i, n: names.length }));
+      try { keys.set(name, await vocabMediaPut(name, await readApkgMedia(media, name))); } catch (err) { console.warn("media not stored", name, err); failed++; if (/quota/i.test(String(err && err.name))) { failed += names.length - i; break; } }
+    }
+  } finally { busy(""); }
+  for (const r of rows) {
+    for (const [k, name] of Object.entries(r.media || {})) if (keys.has(name)) r[k] = keys.get(name);
+    delete r.media;
+  }
+  return { files: keys.size, failed };
+}
+
 const FAV_ALL = "*fav"; // the pseudo pair that shows the favourites of every pair
 const pairLabel = (pair) => (pair === FAV_ALL ? t("vocab.favAll") : pair.replace("-", " → "));
 const pairFile = (pair) => (pair === FAV_ALL ? "favourites" : pair);
@@ -21853,9 +22005,11 @@ function vocabAdd(pair, rows, docName = "") {
       cur.translation = translation;
       if (r.example) cur.example = r.example;
       if (r.exampleTr) cur.exampleTr = r.exampleTr;
+      for (const m of VMEDIA_KEYS) if (r[m]) cur[m] = r[m];
       cur.seen = (cur.seen || 1) + 1;
     } else {
       const row = { term, translation, example: r.example || "", exampleTr: r.exampleTr || "", added: Date.now(), doc: docName, seen: 1 };
+      for (const m of VMEDIA_KEYS) if (r[m]) row[m] = r[m];
       list.push(row); have.set(k, row); added++;
     }
   }
@@ -21912,9 +22066,12 @@ function parseVocabText(text) {
 
 /* ---- asking for a language pair: on import, and to move terms */
 let pairAsk = null;
-function askPair({ src = "", tgt = "", text = "" } = {}) {
+function askPair({ src = "", tgt = "", text = "", media = null } = {}) {
   const dlg = $("#pairDialog");
   $("#pairSrc").value = src; $("#pairTgt").value = tgt; $("#pairText").textContent = text;
+  // a deck with pictures and sounds: take them too (ticked), or the words alone
+  $("#pairMediaRow").hidden = !media;
+  if (media) { $("#pairMedia").checked = true; $("#pairMediaText").textContent = t("pair.media", { n: media.n, size: mbText(media.size) }); }
   return new Promise((resolve) => {
     pairAsk = resolve;
     openModal(dlg);
@@ -21998,6 +22155,7 @@ function vocabMergeDupes() {
       keep.translation = trs.filter(Boolean).join("; ");
       if (!keep.example && r.example) { keep.example = r.example; keep.exampleTr = r.exampleTr || keep.exampleTr; }
       if (!keep.exampleTr && r.exampleTr) keep.exampleTr = r.exampleTr;
+      for (const m of VMEDIA_KEYS) if (!keep[m] && r[m]) keep[m] = r[m];
       keep.fav = keep.fav || r.fav || false;
       keep.known = Math.max(Number(keep.known) || 0, Number(r.known) || 0);
       keep.last = Math.max(Number(keep.last) || 0, Number(r.last) || 0) || undefined;
@@ -22009,12 +22167,23 @@ function vocabMergeDupes() {
   v[vb.pair] = list.filter((r) => !drop.has(r));
   vocabSave(v);
   toast(t("vocab.merged", { n: drop.size }), "ok");
-  vocabRender();
+  vocabRender(); vocabMediaGc();
 }
 /* ---- backup and restore: the whole vocabulary with its learning state, as one file */
-function vocabBackup() {
+const blobDataUrl = (blob) => new Promise((resolve, reject) => { const fr = new FileReader(); fr.onload = () => resolve(fr.result); fr.onerror = () => reject(fr.error); fr.readAsDataURL(blob); });
+async function vocabBackup() {
   const data = { app: "Kameleon", kind: "vocabulary", version: 1, exported: new Date().toISOString(), vocab: vocabLoad() };
   try { data.days = JSON.parse(localStorage.getItem(LS_FC_DAYS) || "[]"); } catch (_) { data.days = []; }
+  // the pictures and sounds go along (as data URLs)
+  const keys = new Set();
+  for (const rows of Object.values(data.vocab)) if (Array.isArray(rows)) for (const r of rows) for (const k of VMEDIA_KEYS) if (r[k]) keys.add(r[k]);
+  if (keys.size) {
+    data.media = {};
+    busy(t("vocab.backingUp"));
+    try {
+      for (const key of keys) { const rec = await idbGet(key); if (rec && rec.bytes) data.media[key] = { name: rec.name, url: await blobDataUrl(new Blob([rec.bytes], { type: rec.type })) }; }
+    } finally { busy(""); }
+  }
   const pairs = vocabPairs(data.vocab).length, n = Object.values(data.vocab).reduce((a, l) => a + (Array.isArray(l) ? l.length : 0), 0);
   saveBlob(new Blob([JSON.stringify(data)], { type: "application/json" }), `kameleon-vocabulary-${new Date().toISOString().slice(0, 10)}.json`);
   toast(t("vocab.backedUp", { n, pairs }), "ok");
@@ -22035,7 +22204,7 @@ function vocabRestore(data) {
       let changed = false;
       if ((Number(r.known) || 0) > (Number(cur.known) || 0) || ((Number(r.known) || 0) === (Number(cur.known) || 0) && (Number(r.last) || 0) > (Number(cur.last) || 0))) { cur.known = r.known; cur.last = r.last; changed = true; }
       if (r.fav && !cur.fav) { cur.fav = true; changed = true; }
-      for (const k of ["translation", "example", "exampleTr"]) if (!cur[k] && r[k]) { cur[k] = r[k]; changed = true; }
+      for (const k of ["translation", "example", "exampleTr", ...VMEDIA_KEYS]) if (!cur[k] && r[k]) { cur[k] = r[k]; changed = true; }
       if (changed) updated++;
     }
   }
@@ -22079,10 +22248,11 @@ function vocabRender() {
   list.innerHTML = rows.length ? rows.map((r) => `<div class="kw-row vocab-row${r.fav ? " fav" : ""}" data-term="${escapeHtml(r.term)}" data-pair="${escapeHtml(rowPair(r))}">
       <input data-k="term" value="${escapeHtml(r.term)}">
       <input data-k="translation" value="${escapeHtml(r.translation)}">
-      <span class="vocab-row-btns">${r._pair ? `<span class="vocab-pair-badge">${escapeHtml(pairLabel(r._pair))}</span>` : ""}<button type="button" class="mini fav${r.fav ? " on" : ""}" data-act="fav" title="${escapeHtml(t("vocab.favTitle"))}" aria-label="${escapeHtml(t("vocab.fav"))}" aria-pressed="${r.fav ? "true" : "false"}">${KAM_ICON}</button><button type="button" class="mini" data-act="move" title="${escapeHtml(t("vocab.moveRow"))}" aria-label="${escapeHtml(t("vocab.moveRow"))}">⇄</button><button type="button" class="mini" data-act="del" title="${escapeHtml(t("kw.remove"))}" aria-label="${escapeHtml(t("kw.remove"))}">✕</button></span>
+      <span class="vocab-row-btns">${r.img ? `<img class="vocab-thumb" data-media="${escapeHtml(r.img)}" alt="">` : ""}${r.audio ? `<button type="button" class="mini vocab-play" data-act="play" data-key="${escapeHtml(r.audio)}" title="${escapeHtml(t("vocab.play"))}" aria-label="${escapeHtml(t("vocab.play"))}">🔊</button>` : ""}${r._pair ? `<span class="vocab-pair-badge">${escapeHtml(pairLabel(r._pair))}</span>` : ""}<button type="button" class="mini fav${r.fav ? " on" : ""}" data-act="fav" title="${escapeHtml(t("vocab.favTitle"))}" aria-label="${escapeHtml(t("vocab.fav"))}" aria-pressed="${r.fav ? "true" : "false"}">${KAM_ICON}</button><button type="button" class="mini" data-act="move" title="${escapeHtml(t("vocab.moveRow"))}" aria-label="${escapeHtml(t("vocab.moveRow"))}">⇄</button><button type="button" class="mini" data-act="del" title="${escapeHtml(t("kw.remove"))}" aria-label="${escapeHtml(t("kw.remove"))}">✕</button></span>
       <input class="kw-ex" data-k="example" value="${escapeHtml(r.example || "")}" placeholder="${escapeHtml(t("kw.example"))}">
       <input class="kw-ex" data-k="exampleTr" value="${escapeHtml(r.exampleTr || "")}" placeholder="${escapeHtml(t("kw.exampleTr"))}">
     </div>`).join("") : `<p class="muted small">${escapeHtml(all.length ? t("vocab.noMatch") : t("vocab.empty"))}</p>`;
+  vocabFillMedia(list);
   const some = rows.length > 0;
   for (const id of ["#vocabPdf", "#vocabApkg", "#vocabMove", "#vocabPreview", "#vocabCardsPdf"]) $(id).disabled = !some && !vb.preview;
   $("#vocabPreview").textContent = t(vb.preview ? "vocab.previewOff" : "vocab.preview");
@@ -22092,6 +22262,7 @@ function vocabRender() {
   $("#vocabClear").disabled = !all.length || vb.pair === FAV_ALL;
   $("#vocabMove").textContent = rows.length === all.length ? t("vocab.moveAll") : t("vocab.moveShown", { n: rows.length });
   $("#vocabToHere").hidden = !(state.doc && (state.keywords || []).some((r) => r.term && r.translation));
+  $("#kwModeCards").disabled = !state.doc && !vocabPairs().length; // (an import into an empty vocabulary makes cards possible)
 }
 function vocabUpdateRow(pair, termKey, k, value) {
   const v = vocabLoad(), list = v[pair] || [];
@@ -22191,10 +22362,11 @@ function initVocab() {
     const b = e.target.closest("[data-act]"), row = e.target.closest(".vocab-row");
     if (!b || !row) return;
     const pair = row.dataset.pair;
-    if (b.dataset.act === "del") {
+    if (b.dataset.act === "play") vocabPlay(b.dataset.key);
+    else if (b.dataset.act === "del") {
       const v = vocabLoad();
       v[pair] = (v[pair] || []).filter((r) => r.term !== row.dataset.term);
-      vocabSave(v); vocabRender();
+      vocabSave(v); vocabRender(); vocabMediaGc();
     } else if (b.dataset.act === "fav") {
       const on = toggleFav(pair, { term: row.dataset.term, translation: row.querySelector('[data-k="translation"]').value });
       vocabRender(); // (the pair list's favourites entry and counts follow)
@@ -22222,7 +22394,7 @@ function initVocab() {
   $("#pairDialog").addEventListener("close", () => {
     const ok = $("#pairDialog").returnValue === "ok", src = codeOf($("#pairSrc").value), tgt = codeOf($("#pairTgt").value);
     const resolve = pairAsk; pairAsk = null;
-    if (resolve) resolve(ok && src && tgt ? { src, tgt, pair: `${src}-${tgt}` } : null);
+    if (resolve) resolve(ok && src && tgt ? { src, tgt, pair: `${src}-${tgt}`, media: !$("#pairMediaRow").hidden && $("#pairMedia").checked } : null);
   });
   $("#langCodes").innerHTML = [...new Set(Object.values(LANG_CODES))].sort().map((c) => `<option value="${c}">${escapeHtml(Object.keys(LANG_CODES).find((k) => LANG_CODES[k] === c) || c)}</option>`).join("");
   $("#vocabToHere").addEventListener("click", () => { // the open document's terms into the vocabulary (the pair as shown)
@@ -22246,33 +22418,50 @@ function initVocab() {
     e.target.value = "";
     if (!file) return;
     const bytes = new Uint8Array(await file.arrayBuffer());
-    let rows, deckName = file.name, hint = { src: "", tgt: "" };
+    let rows, deckName = file.name, hint = { src: "", tgt: "" }, deck = null;
     if (/\.json$/i.test(file.name) || bytes[0] === 0x7b) { // a backup of the whole vocabulary
       let data = null;
       try { data = JSON.parse(new TextDecoder().decode(bytes)); } catch (_) { /* not JSON */ }
       if (!data || data.app !== "Kameleon" || !data.vocab) { toast(t("vocab.badBackup"), "error"); return; }
+      if (data.media && typeof data.media === "object") { // the backup's pictures and sounds, under their keys
+        let failed = 0;
+        busy(t("vocab.mediaSaving", { i: 0, n: Object.keys(data.media).length }));
+        try {
+          for (const [key, m] of Object.entries(data.media)) {
+            if (!/^vm:[0-9a-f]+$/.test(key) || !m || typeof m.url !== "string" || !m.url.startsWith("data:")) continue;
+            try { const bytes = new Uint8Array(await (await fetch(m.url)).arrayBuffer()); await idbPut({ name: m.name || "", type: mediaType(m.name || ""), bytes: bytes.buffer }, key, true); } catch (_) { failed++; }
+          }
+        } finally { busy(""); }
+        if (failed) toast(t("vocab.mediaFull", { n: failed }), "error");
+      }
       const r = vocabRestore(data);
       toast(t("vocab.restored", r), "ok"); vocabRender();
       return;
     }
     if (/\.apkg$/i.test(file.name) || (bytes[0] === 0x50 && bytes[1] === 0x4b)) {
-      try { const r = await readApkg(bytes); rows = r.rows; deckName = r.deck || file.name; hint = r.langs || hint; } catch (err) { toast(userError(err), "error"); return; }
+      try { deck = await readApkg(bytes); rows = deck.rows; deckName = deck.deck || file.name; hint = deck.langs || hint; } catch (err) { toast(userError(err), "error"); return; }
     } else rows = parseVocabText(new TextDecoder().decode(bytes));
     if (!rows.length) { toast(t("vocab.badFile"), "error"); return; }
     // The pair: what the deck's field names say, else what the texts look like; the user confirms or corrects it.
     const [curSrc, curTgt] = (vb.pair || "-").split("-");
     const src = hint.src || detectLanguage(rows.map((r) => r.term).join(" ")) || curSrc || "";
     const tgt = hint.tgt || detectLanguage(rows.map((r) => r.translation).join(" ")) || curTgt || "";
-    const ans = await askPair({ src, tgt, text: t("pair.textImport", { n: rows.length, name: deckName }) });
+    const hasMedia = Boolean(deck && deck.media.size);
+    const ans = await askPair({ src, tgt, text: t("pair.textImport", { n: rows.length, name: deckName }), media: hasMedia ? { n: deck.media.size, size: deck.mediaSize } : null });
     if (!ans) return;
     const pair = ans.pair;
+    let stored = null;
+    if (hasMedia && ans.media) stored = await vocabStoreDeckMedia(rows, deck.media);
+    else for (const r of rows) delete r.media;
     const n = vocabAdd(pair, rows, deckName);
     vb.pair = pair;
-    toast(t("vocab.imported", { n, total: rows.length, pair: pairLabel(pair) }), "ok"); vocabRender();
+    toast(t("vocab.imported", { n, total: rows.length, pair: pairLabel(pair) }) + (stored && stored.files ? ` ${t("vocab.importedMedia", { n: stored.files, size: mbText(deck.mediaSize) })}` : ""), "ok");
+    if (stored && stored.failed) toast(t("vocab.mediaFull", { n: stored.failed }), "error");
+    vocabRender();
   });
   $("#vocabClear").addEventListener("click", () => {
     if (!confirm(t("vocab.clearConfirm", { pair: pairLabel(vb.pair) }))) return;
-    const v = vocabLoad(); delete v[vb.pair]; vocabSave(v); vb.pair = ""; vocabRender();
+    const v = vocabLoad(); delete v[vb.pair]; vocabSave(v); vb.pair = ""; vocabRender(); vocabMediaGc();
   });
 }
 
@@ -22280,7 +22469,7 @@ function initVocab() {
 // An .apkg is a zip with an SQLite database (collection.anki2 / .anki21) and a media list. The
 // reader walks the database's tables to pull the notes out of a deck; the writer builds a small
 // database of its own – the tables Anki expects, with one Basic note per term – so that the
-// vocabulary can be imported straight into Anki. Newer "collection.anki21b" packages are
+// vocabulary can be imported straight into Anki. Pictures and sounds of a deck come along both ways. Newer "collection.anki21b" packages are
 // compressed with zstd and cannot be read here: Anki exports the older format when "support older
 // Anki versions" is ticked.
 
@@ -22364,7 +22553,19 @@ function sqliteOpen(bytes) {
 
 const ankiPlain = (s) => (s || "").replace(/\[sound:[^\]]*\]/g, "").replace(/<br\s*\/?>|<\/div>|<\/p>|<\/li>/gi, "\n").replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, "&").replace(/[ \t]+\n/g, "\n").replace(/\n{2,}/g, "\n").trim();
 
-/** The notes of an .apkg as vocabulary rows, with the deck's name: {rows, deck, notes}. */
+/** The fields a card template shows, in order ("{{Front}}", "{{furigana:Reading}}", "{{tts en_US:Word}}"; no sections or FrontSide). */
+const templateFields = (fmt) => [...String(fmt || "").matchAll(/\{\{([^#^/!{}][^{}]*)\}\}/g)].map((m) => m[1].split(":").pop().trim()).filter((n) => n && n !== "FrontSide");
+/** The media a field refers to: sounds ("[sound:x.mp3]") and pictures (<img src="x.jpg">). */
+const fieldMedia = (s) => ({
+  sounds: [...String(s || "").matchAll(/\[sound:([^\]]+)\]/g)].map((m) => m[1].trim()),
+  images: [...String(s || "").matchAll(/<img\b[^>]*?\bsrc\s*=\s*(?:"([^"]+)"|'([^']+)'|([^\s>]+))/gi)].map((m) => ankiPlain(m[1] || m[2] || m[3] || "")),
+});
+
+/**
+ * The notes of an .apkg as vocabulary rows, with the deck's name: {rows, deck, notes, langs, media}.
+ * A row's pictures and sounds are named in `media` ({img, audio, exAudio}: the deck's file names);
+ * `media` of the result lists the deck's files ({name → zip entry}) – readApkgMedia reads them.
+ */
 async function readApkg(bytes) {
   const entries = zipEntries(bytes);
   const byName = new Map(entries.map((e) => [e.name, e]));
@@ -22375,43 +22576,87 @@ async function readApkg(bytes) {
   let models = {}, decks = {};
   try { models = JSON.parse(col[9] || "{}"); decks = JSON.parse(col[10] || "{}"); } catch (_) { /* odd json: field positions are used */ }
   const deckNames = Object.values(decks).map((d) => d.name).filter((n) => n && n !== "Default");
+  // the media list: {"0": "de.mp3", …} – the files are stored in the zip under their numbers
+  const media = new Map();
+  if (byName.has("media")) {
+    try {
+      const list = JSON.parse(new TextDecoder().decode(await zipRead(byName.get("media"))));
+      for (const [num, name] of Object.entries(list || {})) if (byName.has(num) && typeof name === "string") media.set(name, byName.get(num));
+    } catch (_) { /* no usable media list: text only */ }
+  }
   const rows = [];
   const EXAMPLE_RE = /example|beispiel|sentence|satz|пример|приклад|exemple|ejemplo|esempio|usage|context/i;
   const PRON_RE = /pinyin|pīnyīn|reading|romaji|furigana|translit|transcri|pronunc|aussprache|romani[sz]|jyutping|zhuyin|bopomofo|kana|ipa$/i;
   const MEDIA_RE = /audio|sound|image|picture|photo|bild|^ton$|mp3|recording/i;
+  const SKIP_RE = /^(key|id|no\.?|nr\.?|number|index|rank|sort\w*|freq\w*|tags?|notes?|remarks?|homophones?|homographs?|part of speech|pos|word ?type|cloze)$|cloze/i; // never the term or its translation
+  const TRANS_RE = /meaning|translat|english|übersetz|bedeutung|перевод|переклад|traduc|tradu|significa/i; // the translation of an example
   const langs = { src: "", tgt: "" }; // what the field names say about the languages ("Hanzi", "English")
-  for (const n of db.table("notes")) {
-    const flds = String(n[6] || "").split("\x1f");
-    const model = models[String(n[2])];
+  const layouts = new Map(); // per note type: which field is what
+  const layoutOf = (mid) => {
+    if (layouts.has(mid)) return layouts.get(mid);
+    const model = models[mid];
     const names = model ? model.flds.map((f) => f.name) : [];
-    let fi = 0, bi = 1, pi = -1;
-    if (names.length) { // the front is the first field that is no example, pronunciation or media; the back the next such field
-      const plain = (nm) => !EXAMPLE_RE.test(nm) && !PRON_RE.test(nm) && !MEDIA_RE.test(nm);
-      fi = Math.max(0, names.findIndex(plain));
-      bi = names.findIndex((nm, i) => i !== fi && plain(nm));
-      if (bi < 0) bi = names.findIndex((nm, i) => i !== fi && !MEDIA_RE.test(nm) && !EXAMPLE_RE.test(nm));
+    let fi = 0, bi = 1, pi = -1, ei = -1, eti = -1;
+    if (names.length) {
+      const plain = (nm) => !EXAMPLE_RE.test(nm) && !PRON_RE.test(nm) && !MEDIA_RE.test(nm) && !SKIP_RE.test(nm);
+      // the front: the first plain field the card's question shows; the back: the first one only its answer shows
+      const tmpl = (model.tmpls || [])[0] || {};
+      const q = templateFields(tmpl.qfmt).map((n) => names.indexOf(n)).filter((i) => i >= 0);
+      const a = templateFields(tmpl.afmt).map((n) => names.indexOf(n)).filter((i) => i >= 0 && !q.includes(i));
+      fi = q.find((i) => plain(names[i])) ?? -1;
+      if (fi < 0) fi = Math.max(0, names.findIndex(plain)); // (else the first plain field, then the next)
+      bi = a.find((i) => i !== fi && plain(names[i])) ?? names.findIndex((nm, i) => i !== fi && plain(nm));
+      if (bi < 0) bi = names.findIndex((nm, i) => i !== fi && !MEDIA_RE.test(nm) && !EXAMPLE_RE.test(nm) && !SKIP_RE.test(nm));
       if (bi < 0) bi = fi === 0 ? 1 : 0;
-      pi = names.findIndex((nm, i) => i !== fi && i !== bi && PRON_RE.test(nm));
+      pi = names.findIndex((nm, i) => i !== fi && i !== bi && PRON_RE.test(nm) && !EXAMPLE_RE.test(nm));
+      if (pi < 0) pi = names.findIndex((nm, i) => i !== fi && i !== bi && PRON_RE.test(nm));
+      // the example: a sentence field that is no transcription, cloze or media; its translation: one that says "meaning"
+      const exs = names.map((nm, i) => i).filter((i) => i !== fi && i !== bi && i !== pi && EXAMPLE_RE.test(names[i]) && !PRON_RE.test(names[i]) && !MEDIA_RE.test(names[i]) && !/cloze/i.test(names[i]));
+      ei = exs.find((i) => !TRANS_RE.test(names[i])) ?? -1;
+      eti = exs.find((i) => i !== ei && TRANS_RE.test(names[i])) ?? -1;
       if (!langs.src) langs.src = fieldLang(names[fi]);
       if (!langs.tgt) langs.tgt = fieldLang(names[bi]);
     }
+    const l = { names, fi, bi, pi, ei, eti };
+    layouts.set(mid, l);
+    return l;
+  };
+  let withMedia = 0;
+  for (const n of db.table("notes")) {
+    const flds = String(n[6] || "").split("\x1f");
+    const { names, fi, bi, pi, ei, eti } = layoutOf(String(n[2]));
     let term = ankiPlain(flds[fi]);
     const translation = ankiPlain(flds[bi]);
     if (!term || !translation) continue;
     const pron = pi >= 0 ? ankiPlain(flds[pi]).replace(/\s*\n\s*/g, " ") : "";
     if (pron && pron !== term) term += ` (${pron})`; // 的 (de)
-    const exIdx = names.findIndex((nm, i) => i !== fi && i !== bi && i !== pi && EXAMPLE_RE.test(nm));
-    const rest = flds.map((f, i) => (i === fi || i === bi || i === pi || (names[i] && MEDIA_RE.test(names[i])) ? "" : ankiPlain(f))).filter(Boolean);
-    let example = exIdx >= 0 ? ankiPlain(flds[exIdx]) : rest[0] || "", exampleTr = "";
+    const exIdx = ei >= 0 ? ei : names.findIndex((nm, i) => i !== fi && i !== bi && i !== pi && EXAMPLE_RE.test(nm));
+    const rest = flds.map((f, i) => (i === fi || i === bi || i === pi || (names[i] && (MEDIA_RE.test(names[i]) || SKIP_RE.test(names[i]) || PRON_RE.test(names[i]))) ? "" : ankiPlain(f))).filter(Boolean);
+    let example = exIdx >= 0 ? ankiPlain(flds[exIdx]) : rest[0] || "", exampleTr = eti >= 0 ? ankiPlain(flds[eti]) : "";
     const exLines = example.split("\n").filter((l) => l.trim());
-    if (exLines.length >= 2 && exLines.length % 2 === 0) { // "sentence / its translation" in one field, line by line
+    if (!exampleTr && exLines.length >= 2 && exLines.length % 2 === 0) { // "sentence / its translation" in one field, line by line
       const half = exLines.length / 2;
       example = exLines.slice(0, half).join(" "); exampleTr = exLines.slice(half).join(" ");
     } else example = exLines.join(" ");
-    rows.push({ term: term.replace(/\s*\n\s*/g, " "), translation: translation.replace(/\s*\n\s*/g, " "), example, exampleTr });
+    const row = { term: term.replace(/\s*\n\s*/g, " "), translation: translation.replace(/\s*\n\s*/g, " "), example, exampleTr: exampleTr.replace(/\s*\n\s*/g, " ") };
+    // pictures and sounds: a sound of a sentence field is the example's, any other the word's; the first picture of the note
+    const m = {};
+    flds.forEach((f, i) => {
+      const { sounds, images } = fieldMedia(f), exField = names[i] ? EXAMPLE_RE.test(names[i]) : i === exIdx;
+      for (const s of sounds) if (media.has(s)) { const k = exField ? "exAudio" : "audio"; if (!m[k]) m[k] = s; }
+      for (const s of images) if (media.has(s) && !m.img) m.img = s;
+    });
+    if (Object.keys(m).length) { row.media = m; withMedia++; }
+    rows.push(row);
   }
-  return { rows, deck: deckNames[0] || "", notes: rows.length, langs };
+  // only the files the rows use count
+  const used = new Map();
+  for (const r of rows) for (const name of Object.values(r.media || {})) used.set(name, media.get(name));
+  const size = [...used.values()].reduce((a, e) => a + (e.size || 0), 0);
+  return { rows, deck: deckNames[0] || "", notes: rows.length, langs, media: used, mediaSize: size, withMedia };
 }
+/** The bytes of a deck's media file, by its name (from readApkg's `media`). */
+const readApkgMedia = (media, name) => zipRead(media.get(name));
 
 /** The language a field name stands for ("English", "Deutsch", "Hanzi", "Kanji" …), or "". */
 function fieldLang(name) {
@@ -22544,7 +22789,7 @@ async function sha1hex(text) {
   return [...new Uint8Array(d)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-/** The vocabulary of a pair as an .apkg: one deck "Kameleon xx → yy", Basic notes (front: term, back: translation, examples under them). */
+/** The vocabulary of a pair as an .apkg: one deck "Kameleon xx → yy", Basic notes (front: term, back: translation, examples under them; pictures and sounds included). */
 async function buildApkg(pair, rows) {
   const now = Date.now(), secs = Math.floor(now / 1000);
   const mid = now - 1, did = now - 2, deckName = `Kameleon ${pairLabel(pair)}`;
@@ -22560,12 +22805,27 @@ async function buildApkg(pair, rows) {
   const conf = { nextPos: rows.length + 1, estTimes: true, activeDecks: [1], sortType: "noteFld", timeLim: 0, sortBackwards: false, addToCur: true, curDeck: 1, newBury: true, newSpread: 0, dueCounts: true, curModel: String(mid), collapseTime: 1200 };
   const colRow = [1, [1, secs - (secs % 86400), now, now, 11, 0, 0, 0, JSON.stringify(conf), JSON.stringify({ [mid]: model }), JSON.stringify({ 1: deck(1, "Default"), [did]: deck(did, deckName) }), JSON.stringify(dconf), "{}"]];
   const notes = [], cards = [];
+  // pictures and sounds: the stored files go into the package, the fields name them
+  const files = new Map(), media = [];
+  const fileOf = async (key) => {
+    if (!key) return "";
+    if (files.has(key)) return files.get(key);
+    const rec = await idbGet(key);
+    let name = "";
+    if (rec && rec.bytes) {
+      name = `kameleon-${key.slice(3)}.${(String(rec.name || "").match(/\.([a-z0-9]{1,5})$/i) || [0, "bin"])[1].toLowerCase()}`;
+      media.push({ name, data: new Uint8Array(rec.bytes) });
+    }
+    files.set(key, name);
+    return name;
+  };
   const GUID = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   for (const [i, r] of rows.entries()) {
     const nid = now + i, cid = now + rows.length + i;
     let guid = ""; for (let k = 0; k < 10; k++) guid += GUID[Math.floor(Math.random() * GUID.length)];
     const front = htmlEsc(r.term), csum = parseInt((await sha1hex(r.term)).slice(0, 8), 16);
-    const flds = [front, htmlEsc(r.translation), htmlEsc(r.example || ""), htmlEsc(r.exampleTr || "")].join("\x1f");
+    const [audio, img, exAudio] = [await fileOf(r.audio), await fileOf(r.img), await fileOf(r.exAudio)];
+    const flds = [front + (audio ? ` [sound:${audio}]` : ""), htmlEsc(r.translation) + (img ? `<br><img src="${img}">` : ""), htmlEsc(r.example || "") + (exAudio ? ` [sound:${exAudio}]` : ""), htmlEsc(r.exampleTr || "")].join("\x1f");
     notes.push([nid, [nid, guid, mid, secs, -1, ` kameleon ${ankiTag(pair)} `, flds, r.term, csum, 0, ""]]);
     cards.push([cid, [cid, nid, did, 0, secs, -1, 0, 0, i + 1, 0, 0, 0, 0, 0, 0, 0, 0, ""]]);
   }
@@ -22576,7 +22836,8 @@ async function buildApkg(pair, rows) {
     { name: "revlog", sql: ANKI_SQL.revlog, rows: [] },
     { name: "graves", sql: ANKI_SQL.graves, rows: [] },
   ]);
-  return zipWrite([{ name: "collection.anki2", data: db }, { name: "media", data: enc8.encode("{}") }]);
+  const list = Object.fromEntries(media.map((m, i) => [String(i), m.name])); // the files are stored under their numbers
+  return zipWrite([{ name: "collection.anki2", data: db }, { name: "media", data: enc8.encode(JSON.stringify(list)) }, ...media.map((m, i) => ({ name: String(i), data: m.data, store: true }))]);
 }
 
 // Start-up (runs after ui.js, markup.js and tools.js have defined everything).

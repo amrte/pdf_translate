@@ -271,13 +271,26 @@ function idb() {
   });
 }
 
-async function idbPut(value, key = "last") {
+/** Store a value; `strict` reports a failure (a full disk) instead of passing over it. */
+async function idbPut(value, key = "last", strict = false) {
   try {
     const db = await idb();
     const tx = db.transaction("files", "readwrite");
     tx.objectStore("files").put(value, key);
-    await new Promise((r) => { tx.oncomplete = r; tx.onerror = r; });
-  } catch (_) { /* storage unavailable: the session simply won't be restored */ }
+    await new Promise((resolve, reject) => { tx.oncomplete = resolve; tx.onerror = tx.onabort = () => (strict ? reject(tx.error || new Error("IndexedDB")) : resolve()); });
+  } catch (err) { if (strict) throw err; /* storage unavailable: the session simply won't be restored */ }
+}
+
+/** The stored keys that start with `prefix`. */
+async function idbKeys(prefix = "") {
+  try {
+    const db = await idb();
+    return await new Promise((resolve) => {
+      const req = db.transaction("files").objectStore("files").getAllKeys();
+      req.onsuccess = () => resolve((req.result || []).filter((k) => typeof k === "string" && k.startsWith(prefix)));
+      req.onerror = () => resolve([]);
+    });
+  } catch (_) { return []; }
 }
 
 async function idbDel(key) {

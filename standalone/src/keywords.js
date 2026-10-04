@@ -173,7 +173,7 @@ function initKeywords() {
 // The terms as flashcards: front the term (with its example sentence), back the translation.
 // Click or Space turns a card; "Known" takes it out of the round, "Again" puts it at the end.
 const fc = { queue: [], index: 0, flipped: false, known: 0, total: 0, all: [], scope: "new", example: "cloze", newCap: 20 };
-const LS_FC_SCOPE = "pdftr:fcscope", LS_FC_REVERSE = "pdftr:fcreverse", LS_FC_EXAMPLE = "pdftr:fcexample", LS_FC_NEWCAP = "pdftr:fcnewcap", LS_FC_NEWDAY = "pdftr:fcnewday";
+const LS_FC_SCOPE = "pdftr:fcscope", LS_FC_AUTOPLAY = "pdftr:fcautoplay", LS_FC_REVERSE = "pdftr:fcreverse", LS_FC_EXAMPLE = "pdftr:fcexample", LS_FC_NEWCAP = "pdftr:fcnewcap", LS_FC_NEWDAY = "pdftr:fcnewday";
 /** New words shown for the first time today, per pair: the daily cap counts against this. */
 function fcNewToday(add = 0) {
   const day = new Date().toISOString().slice(0, 10), key = fc.pair || "doc";
@@ -235,14 +235,19 @@ function fcStart() {
   fc.pair = fcSource ? fcPair : currentPair();
   let rows = (fcSource || kwRows()).filter((r) => r.term.trim() && r.translation.trim());
   if (!fcSource && fc.pair) { // the document's terms: their learning state is kept in the vocabulary
-    const known = new Map(vocabRows(fc.pair).map((r) => [r.term, r.known || 0]));
-    rows = rows.map((r) => ({ ...r, known: known.get(r.term) || 0 }));
+    const inVocab = new Map(vocabRows(fc.pair).map((r) => [r.term, r]));
+    rows = rows.map((r) => {
+      const v = inVocab.get(r.term), out = { ...r, known: (v && v.known) || 0 };
+      if (v) for (const k of VMEDIA_KEYS) if (v[k]) out[k] = v[k]; // (pictures and sounds the vocabulary has for the word)
+      return out;
+    });
   }
   fc.all = rows;
   let scope = "due";
   try {
     scope = localStorage.getItem(LS_FC_SCOPE) || "due";
     fc.reverse = localStorage.getItem(LS_FC_REVERSE) === "1";
+    fc.autoplay = localStorage.getItem(LS_FC_AUTOPLAY) === "1";
     fc.example = localStorage.getItem(LS_FC_EXAMPLE) || "cloze";
     fc.newCap = Math.max(0, Number(localStorage.getItem(LS_FC_NEWCAP) ?? 20));
   } catch (_) { /* fine */ }
@@ -253,7 +258,9 @@ function fcFrontSentence(sentence, word) {
   if (!sentence || fc.example === "hide") return "";
   if (fc.example === "show") return sentence;
   const esc = (x) => x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const core = word.replace(/^(der|die|das|the|a|an|le|la|les|un|une|el|los|las|il|lo|gli|o|os|as)\s+/i, "").trim();
+  const core = word.replace(/\s+\([^()]*\)$/, "").replace(/^(der|die|das|the|a|an|le|la|les|un|une|el|los|las|il|lo|gli|o|os|as)\s+/i, "").trim(); // (without "(pinyin)" after it)
+  // Chinese, Japanese, Thai … write without spaces: the word is found anywhere in the sentence
+  if (/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Thai}\p{Script=Lao}\p{Script=Khmer}\p{Script=Myanmar}]/u.test(core)) return sentence.split(core).join("_____");
   let out = sentence.replace(new RegExp(`(?<![\\p{L}\\p{M}])${esc(core)}(?![\\p{L}\\p{M}])`, "giu"), "_____");
   if (out === sentence && core.length >= 5) { // an inflected form: the stem with any ending
     const stem = core.slice(0, Math.max(4, core.length - 2));
@@ -279,6 +286,7 @@ function fcScopeHtml() {
       ${seg("due", due, "kw.scopeDue")}${seg("new", fresh, "kw.scopeNew")}${seg("all", fc.all.length, fcSource ? "kw.scopeAll" : "kw.scopeAllDoc")}
     </div>
     <button type="button" class="btn ghost kw-reverse${fc.reverse ? " on" : ""}" data-fc="reverse" aria-pressed="${fc.reverse ? "true" : "false"}" title="${escapeHtml(t("kw.reverseTitle"))}">⇄ ${escapeHtml(t("kw.reverse"))}</button>
+    ${fc.all.some((r) => r.audio) ? `<button type="button" class="btn ghost kw-reverse${fc.autoplay ? " on" : ""}" data-fc="autoplay" aria-pressed="${fc.autoplay ? "true" : "false"}" title="${escapeHtml(t("kw.autoplayTitle"))}">🔊 ${escapeHtml(t("kw.autoplay"))}</button>` : ""}
     <label class="kw-opt-inline" title="${escapeHtml(t("kw.exampleFrontTitle"))}"><span>${escapeHtml(t("kw.exampleFront"))}</span>
       <select data-fc-select="example">${["cloze", "show", "hide"].map((v) => `<option value="${v}"${fc.example === v ? " selected" : ""}>${escapeHtml(t(`kw.example_${v}`))}</option>`).join("")}</select></label>
     <label class="kw-opt-inline" title="${escapeHtml(t("kw.newPerDayTitle"))}"><span>${escapeHtml(t("kw.newPerDay"))}</span>
@@ -305,7 +313,7 @@ function fcRender() {
   }
   const r = fc.rows[fc.queue[fc.index]];
   const pair = r._pair || fc.pair, fav = pair ? isFav(pair, r.term) : false;
-  const sides = [{ word: r.term, sentence: r.example }, { word: r.translation, sentence: r.exampleTr }];
+  const sides = [{ word: r.term, sentence: r.example, term: true }, { word: r.translation, sentence: r.exampleTr }];
   const [front, back] = fc.reverse ? sides.reverse() : sides; // reversed: asked from the translation
   const frontFull = front.sentence;
   front.sentence = fcFrontSentence(front.sentence, front.word);
@@ -315,12 +323,17 @@ function fcRender() {
   const grade = (g, cls, label, next) => `<button type="button" class="btn${cls}" data-fc="${g}" title="${escapeHtml(t(`kw.${g}Title`))}"><span>${label}</span><small>${escapeHtml(fcIntervalLabel(next))}</small></button>`;
   const waiting = fcWaiting();
   const favBtn = `<button type="button" class="kw-fav${fav ? " on" : ""}" data-fc="fav" title="${escapeHtml(t("vocab.favTitle"))}" aria-label="${escapeHtml(t("vocab.fav"))}" aria-pressed="${fav ? "true" : "false"}"${pair ? "" : " disabled"}>${KAM_ICON}</button>`;
+  // sounds: the word's next to the term, the example's next to its whole sentence; the picture on the answer side
+  const play = (act, title) => `<button type="button" class="kw-play" data-fc="${act}" title="${escapeHtml(t(title))}" aria-label="${escapeHtml(t(title))}">🔊</button>`;
+  const word = (side) => `<div class="kw-word">${escapeHtml(side.word)}${side.term && r.audio ? play("play-word", "kw.play") : ""}</div>`;
+  const sentence = (x, cls = "") => `<div class="kw-sentence${cls}">${escapeHtml(x)}${r.exAudio && x === r.example ? play("play-ex", "kw.playEx") : ""}</div>`;
+  const picture = r.img ? `<img class="kw-img" data-media="${escapeHtml(r.img)}" alt=""${vmUrls.has(r.img) ? ` src="${vmUrls.get(r.img)}"` : ""}>` : "";
   box.innerHTML = `${scope}
     <div class="kw-progress"><span>${escapeHtml(t("kw.progress", { i: fc.index + 1, n: fc.queue.length }))}${rowKnown(r) ? "" : ` <span class="kw-new-badge">${escapeHtml(t("kw.newBadge"))}</span>`}</span><span class="muted">${escapeHtml(t("kw.knownCount", { n: fc.known, total: fc.total }))}${waiting ? ` · ${escapeHtml(t("kw.waiting", { n: waiting }))}` : ""}</span></div>
-    <div class="kw-card${fc.flipped ? " flipped" : ""}" tabindex="0" role="button" aria-label="${escapeHtml(t("kw.flip"))}" data-fc="flip">
+    <div class="kw-card${fc.flipped ? " flipped" : ""}${r.img ? " has-img" : ""}" tabindex="0" role="button" aria-label="${escapeHtml(t("kw.flip"))}" data-fc="flip">
       <div class="kw-card-inner">
-        <div class="kw-face kw-front">${favBtn}<div class="kw-word">${escapeHtml(front.word)}</div>${front.sentence ? `<div class="kw-sentence">${escapeHtml(front.sentence)}</div>` : ""}</div>
-        <div class="kw-face kw-back">${favBtn}<div class="kw-word">${escapeHtml(back.word)}</div>${backSentences.map((x, i) => `<div class="kw-sentence${i === 0 && backSentences.length > 1 ? " kw-sentence-src" : ""}">${escapeHtml(x)}</div>`).join("")}</div>
+        <div class="kw-face kw-front">${favBtn}${word(front)}${front.sentence ? sentence(front.sentence) : ""}</div>
+        <div class="kw-face kw-back">${favBtn}${word(back)}${picture}${backSentences.map((x, i) => sentence(x, i === 0 && backSentences.length > 1 ? " kw-sentence-src" : "")).join("")}</div>
       </div>
     </div>
     <div class="kw-fc-actions">
@@ -337,8 +350,11 @@ function fcRender() {
         <button type="button" class="btn ghost" data-fc="shuffle">${escapeHtml(t("kw.shuffle"))}</button>
       </div>
     </div>`;
+  vocabFillMedia(box);
   // the keyboard keeps working after a card was redrawn
   (box.querySelector(".kw-card") || box.querySelector("[data-fc]"))?.focus({ preventScroll: true });
+  // auto-play: the word is spoken when its side comes up (a new card's front; reversed, on turning)
+  if (fc.autoplay && r.audio && !fc.reverse && !fc.flipped && fc.lastAuto !== r) { fc.lastAuto = r; vocabPlay(r.audio); }
 }
 /**
  * The four grades. Again: back to the start, the card comes up again at the end of this round.
@@ -384,6 +400,12 @@ function fcGrade(grade) {
 function fcAction(act) {
   if (act === "src-doc" || act === "src-vocab") { fcSrc = act.slice(4); fcStart(); return; } // (where the cards come from)
   if (act.startsWith("scope-")) { fcSetScope(act.slice(6)); return; }
+  if (act === "autoplay") {
+    fc.autoplay = !fc.autoplay;
+    try { localStorage.setItem(LS_FC_AUTOPLAY, fc.autoplay ? "1" : "0"); } catch (_) { /* fine */ }
+    fc.lastAuto = null; fcRender();
+    return;
+  }
   if (act === "reverse") {
     fc.reverse = !fc.reverse;
     try { localStorage.setItem(LS_FC_REVERSE, fc.reverse ? "1" : "0"); } catch (_) { /* fine */ }
@@ -398,7 +420,13 @@ function fcAction(act) {
     return;
   }
   if (!fc.queue.length && act !== "restart") return;
-  if (act === "flip") { fc.flipped = !fc.flipped; $("#kwCards .kw-card")?.classList.toggle("flipped", fc.flipped); return; }
+  if (act === "flip") {
+    fc.flipped = !fc.flipped; $("#kwCards .kw-card")?.classList.toggle("flipped", fc.flipped);
+    const r = fc.rows[fc.queue[fc.index]];
+    if (fc.autoplay && fc.reverse && fc.flipped && r.audio) vocabPlay(r.audio);
+    return;
+  }
+  if (act === "play-word" || act === "play-ex") { const r = fc.rows[fc.queue[fc.index]]; if (r) vocabPlay(act === "play-word" ? r.audio : r.exAudio); return; }
   if (act === "fav") { // the chameleon: this card into the favourites (and out again)
     const r = fc.rows[fc.queue[fc.index]], pair = r._pair || fc.pair;
     if (!pair) { toast(t("vocab.noPair"), "error"); return; }
@@ -450,8 +478,8 @@ function initFlashcards() {
   document.addEventListener("keydown", (e) => {
     const dlg = $("#kwDialog");
     if (!dlg.open || dlg.dataset.mode !== "cards" || ["INPUT", "TEXTAREA", "SELECT"].includes(e.target.tagName)) return;
-    const keys = { " ": "flip", Enter: "flip", ArrowRight: "next", ArrowLeft: "prev", k: "known", K: "known", a: "again", A: "again", h: "hard", H: "hard", e: "easy", E: "easy", f: "fav", F: "fav", r: "reverse", R: "reverse", 1: "again", 2: "hard", 3: "known", 4: "easy" };
+    const keys = { " ": "flip", Enter: "flip", ArrowRight: "next", ArrowLeft: "prev", k: "known", K: "known", a: "again", A: "again", h: "hard", H: "hard", e: "easy", E: "easy", f: "fav", F: "fav", r: "reverse", R: "reverse", p: "play-word", P: "play-word", s: "play-ex", S: "play-ex", 1: "again", 2: "hard", 3: "known", 4: "easy" };
     if (keys[e.key]) { e.preventDefault(); fcAction(keys[e.key]); }
   });
-  $("#kwDialog").addEventListener("close", () => { fcSource = null; $("#kwDialog").dataset.mode = "list"; });
+  $("#kwDialog").addEventListener("close", () => { fcSource = null; $("#kwDialog").dataset.mode = "list"; vocabStopAudio(); });
 }

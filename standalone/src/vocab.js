@@ -72,6 +72,82 @@ function vocabLoad() {
 function vocabSave(v) {
   try { localStorage.setItem(LS_VOCAB, JSON.stringify(v)); } catch (_) { toast(t("vocab.full"), "error"); }
 }
+/* ---- pictures and sounds of terms (from Anki decks): the files are kept in IndexedDB, a row names them */
+// A row's `img` (a picture), `audio` (the word spoken) and `exAudio` (the example sentence spoken) are
+// keys "vm:<hash>" of stored files {name, type, bytes}: the same file is stored once.
+const VMEDIA_KEYS = ["img", "audio", "exAudio"];
+const MEDIA_TYPES = { jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", gif: "image/gif", webp: "image/webp", svg: "image/svg+xml", bmp: "image/bmp", avif: "image/avif", mp3: "audio/mpeg", ogg: "audio/ogg", oga: "audio/ogg", opus: "audio/ogg", spx: "audio/ogg", wav: "audio/wav", m4a: "audio/mp4", aac: "audio/aac", flac: "audio/flac", webm: "audio/webm" };
+const mediaType = (name) => MEDIA_TYPES[(String(name).split(".").pop() || "").toLowerCase()] || "application/octet-stream";
+const mbText = (bytes) => `${(bytes / 1048576).toFixed(bytes < 10485760 ? 1 : 0)} MB`;
+const vmUrls = new Map(); // key → object URL, while the page is open
+/** A file stored; returns its key. A full disk throws. */
+async function vocabMediaPut(name, bytes) {
+  const hash = [...new Uint8Array(await crypto.subtle.digest("SHA-1", bytes))].slice(0, 10).map((b) => b.toString(16).padStart(2, "0")).join("");
+  const key = `vm:${hash}`;
+  await idbPut({ name, type: mediaType(name), bytes: bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) }, key, true);
+  return key;
+}
+/** An object URL of a stored file ("" when it is gone). */
+async function vocabMediaUrl(key) {
+  if (!key) return "";
+  if (vmUrls.has(key)) return vmUrls.get(key);
+  const rec = await idbGet(key);
+  if (!rec || !rec.bytes) return "";
+  const url = URL.createObjectURL(new Blob([rec.bytes], { type: rec.type || mediaType(rec.name || "") }));
+  vmUrls.set(key, url);
+  return url;
+}
+let vmAudio = null;
+/** A stored sound played (the one before stops). */
+async function vocabPlay(key) {
+  const url = await vocabMediaUrl(key);
+  if (!url) { if (key) toast(t("vocab.mediaMissing"), "error"); return; }
+  if (vmAudio) vmAudio.pause();
+  vmAudio = new Audio(url);
+  vmAudio.play().catch(() => { /* the browser wants a click first */ });
+}
+const vocabStopAudio = () => { if (vmAudio) { vmAudio.pause(); vmAudio = null; } };
+/** Pictures in `root` with data-media get their stored file. */
+function vocabFillMedia(root) {
+  for (const img of root.querySelectorAll("img[data-media]")) {
+    if (img.src) continue;
+    vocabMediaUrl(img.dataset.media).then((url) => { if (url) img.src = url; else img.remove(); });
+  }
+}
+/** Files no term names any more are deleted (after removing terms, a pair, or merging). */
+let vmGcTimer = null;
+function vocabMediaGc() {
+  clearTimeout(vmGcTimer);
+  vmGcTimer = setTimeout(async () => {
+    const used = new Set();
+    for (const rows of Object.values(vocabLoad())) if (Array.isArray(rows)) for (const r of rows) for (const k of VMEDIA_KEYS) if (r[k]) used.add(r[k]);
+    for (const key of await idbKeys("vm:")) if (!used.has(key)) {
+      await idbDel(key);
+      if (vmUrls.has(key)) { URL.revokeObjectURL(vmUrls.get(key)); vmUrls.delete(key); }
+    }
+  }, 400);
+}
+/**
+ * The pictures and sounds of an Anki deck's rows stored: each row's `media` (the deck's file names)
+ * becomes its img/audio/exAudio keys. Returns {files, failed}.
+ */
+async function vocabStoreDeckMedia(rows, media) {
+  const names = [...media.keys()], keys = new Map();
+  let failed = 0, i = 0;
+  try { navigator.storage?.persist?.(); } catch (_) { /* the browser decides */ }
+  try {
+    for (const name of names) {
+      if (i++ % 10 === 0) busy(t("vocab.mediaSaving", { i, n: names.length }));
+      try { keys.set(name, await vocabMediaPut(name, await readApkgMedia(media, name))); } catch (err) { console.warn("media not stored", name, err); failed++; if (/quota/i.test(String(err && err.name))) { failed += names.length - i; break; } }
+    }
+  } finally { busy(""); }
+  for (const r of rows) {
+    for (const [k, name] of Object.entries(r.media || {})) if (keys.has(name)) r[k] = keys.get(name);
+    delete r.media;
+  }
+  return { files: keys.size, failed };
+}
+
 const FAV_ALL = "*fav"; // the pseudo pair that shows the favourites of every pair
 const pairLabel = (pair) => (pair === FAV_ALL ? t("vocab.favAll") : pair.replace("-", " → "));
 const pairFile = (pair) => (pair === FAV_ALL ? "favourites" : pair);
@@ -120,9 +196,11 @@ function vocabAdd(pair, rows, docName = "") {
       cur.translation = translation;
       if (r.example) cur.example = r.example;
       if (r.exampleTr) cur.exampleTr = r.exampleTr;
+      for (const m of VMEDIA_KEYS) if (r[m]) cur[m] = r[m];
       cur.seen = (cur.seen || 1) + 1;
     } else {
       const row = { term, translation, example: r.example || "", exampleTr: r.exampleTr || "", added: Date.now(), doc: docName, seen: 1 };
+      for (const m of VMEDIA_KEYS) if (r[m]) row[m] = r[m];
       list.push(row); have.set(k, row); added++;
     }
   }
@@ -179,9 +257,12 @@ function parseVocabText(text) {
 
 /* ---- asking for a language pair: on import, and to move terms */
 let pairAsk = null;
-function askPair({ src = "", tgt = "", text = "" } = {}) {
+function askPair({ src = "", tgt = "", text = "", media = null } = {}) {
   const dlg = $("#pairDialog");
   $("#pairSrc").value = src; $("#pairTgt").value = tgt; $("#pairText").textContent = text;
+  // a deck with pictures and sounds: take them too (ticked), or the words alone
+  $("#pairMediaRow").hidden = !media;
+  if (media) { $("#pairMedia").checked = true; $("#pairMediaText").textContent = t("pair.media", { n: media.n, size: mbText(media.size) }); }
   return new Promise((resolve) => {
     pairAsk = resolve;
     openModal(dlg);
@@ -265,6 +346,7 @@ function vocabMergeDupes() {
       keep.translation = trs.filter(Boolean).join("; ");
       if (!keep.example && r.example) { keep.example = r.example; keep.exampleTr = r.exampleTr || keep.exampleTr; }
       if (!keep.exampleTr && r.exampleTr) keep.exampleTr = r.exampleTr;
+      for (const m of VMEDIA_KEYS) if (!keep[m] && r[m]) keep[m] = r[m];
       keep.fav = keep.fav || r.fav || false;
       keep.known = Math.max(Number(keep.known) || 0, Number(r.known) || 0);
       keep.last = Math.max(Number(keep.last) || 0, Number(r.last) || 0) || undefined;
@@ -276,12 +358,23 @@ function vocabMergeDupes() {
   v[vb.pair] = list.filter((r) => !drop.has(r));
   vocabSave(v);
   toast(t("vocab.merged", { n: drop.size }), "ok");
-  vocabRender();
+  vocabRender(); vocabMediaGc();
 }
 /* ---- backup and restore: the whole vocabulary with its learning state, as one file */
-function vocabBackup() {
+const blobDataUrl = (blob) => new Promise((resolve, reject) => { const fr = new FileReader(); fr.onload = () => resolve(fr.result); fr.onerror = () => reject(fr.error); fr.readAsDataURL(blob); });
+async function vocabBackup() {
   const data = { app: "Kameleon", kind: "vocabulary", version: 1, exported: new Date().toISOString(), vocab: vocabLoad() };
   try { data.days = JSON.parse(localStorage.getItem(LS_FC_DAYS) || "[]"); } catch (_) { data.days = []; }
+  // the pictures and sounds go along (as data URLs)
+  const keys = new Set();
+  for (const rows of Object.values(data.vocab)) if (Array.isArray(rows)) for (const r of rows) for (const k of VMEDIA_KEYS) if (r[k]) keys.add(r[k]);
+  if (keys.size) {
+    data.media = {};
+    busy(t("vocab.backingUp"));
+    try {
+      for (const key of keys) { const rec = await idbGet(key); if (rec && rec.bytes) data.media[key] = { name: rec.name, url: await blobDataUrl(new Blob([rec.bytes], { type: rec.type })) }; }
+    } finally { busy(""); }
+  }
   const pairs = vocabPairs(data.vocab).length, n = Object.values(data.vocab).reduce((a, l) => a + (Array.isArray(l) ? l.length : 0), 0);
   saveBlob(new Blob([JSON.stringify(data)], { type: "application/json" }), `kameleon-vocabulary-${new Date().toISOString().slice(0, 10)}.json`);
   toast(t("vocab.backedUp", { n, pairs }), "ok");
@@ -302,7 +395,7 @@ function vocabRestore(data) {
       let changed = false;
       if ((Number(r.known) || 0) > (Number(cur.known) || 0) || ((Number(r.known) || 0) === (Number(cur.known) || 0) && (Number(r.last) || 0) > (Number(cur.last) || 0))) { cur.known = r.known; cur.last = r.last; changed = true; }
       if (r.fav && !cur.fav) { cur.fav = true; changed = true; }
-      for (const k of ["translation", "example", "exampleTr"]) if (!cur[k] && r[k]) { cur[k] = r[k]; changed = true; }
+      for (const k of ["translation", "example", "exampleTr", ...VMEDIA_KEYS]) if (!cur[k] && r[k]) { cur[k] = r[k]; changed = true; }
       if (changed) updated++;
     }
   }
@@ -346,10 +439,11 @@ function vocabRender() {
   list.innerHTML = rows.length ? rows.map((r) => `<div class="kw-row vocab-row${r.fav ? " fav" : ""}" data-term="${escapeHtml(r.term)}" data-pair="${escapeHtml(rowPair(r))}">
       <input data-k="term" value="${escapeHtml(r.term)}">
       <input data-k="translation" value="${escapeHtml(r.translation)}">
-      <span class="vocab-row-btns">${r._pair ? `<span class="vocab-pair-badge">${escapeHtml(pairLabel(r._pair))}</span>` : ""}<button type="button" class="mini fav${r.fav ? " on" : ""}" data-act="fav" title="${escapeHtml(t("vocab.favTitle"))}" aria-label="${escapeHtml(t("vocab.fav"))}" aria-pressed="${r.fav ? "true" : "false"}">${KAM_ICON}</button><button type="button" class="mini" data-act="move" title="${escapeHtml(t("vocab.moveRow"))}" aria-label="${escapeHtml(t("vocab.moveRow"))}">⇄</button><button type="button" class="mini" data-act="del" title="${escapeHtml(t("kw.remove"))}" aria-label="${escapeHtml(t("kw.remove"))}">✕</button></span>
+      <span class="vocab-row-btns">${r.img ? `<img class="vocab-thumb" data-media="${escapeHtml(r.img)}" alt="">` : ""}${r.audio ? `<button type="button" class="mini vocab-play" data-act="play" data-key="${escapeHtml(r.audio)}" title="${escapeHtml(t("vocab.play"))}" aria-label="${escapeHtml(t("vocab.play"))}">🔊</button>` : ""}${r._pair ? `<span class="vocab-pair-badge">${escapeHtml(pairLabel(r._pair))}</span>` : ""}<button type="button" class="mini fav${r.fav ? " on" : ""}" data-act="fav" title="${escapeHtml(t("vocab.favTitle"))}" aria-label="${escapeHtml(t("vocab.fav"))}" aria-pressed="${r.fav ? "true" : "false"}">${KAM_ICON}</button><button type="button" class="mini" data-act="move" title="${escapeHtml(t("vocab.moveRow"))}" aria-label="${escapeHtml(t("vocab.moveRow"))}">⇄</button><button type="button" class="mini" data-act="del" title="${escapeHtml(t("kw.remove"))}" aria-label="${escapeHtml(t("kw.remove"))}">✕</button></span>
       <input class="kw-ex" data-k="example" value="${escapeHtml(r.example || "")}" placeholder="${escapeHtml(t("kw.example"))}">
       <input class="kw-ex" data-k="exampleTr" value="${escapeHtml(r.exampleTr || "")}" placeholder="${escapeHtml(t("kw.exampleTr"))}">
     </div>`).join("") : `<p class="muted small">${escapeHtml(all.length ? t("vocab.noMatch") : t("vocab.empty"))}</p>`;
+  vocabFillMedia(list);
   const some = rows.length > 0;
   for (const id of ["#vocabPdf", "#vocabApkg", "#vocabMove", "#vocabPreview", "#vocabCardsPdf"]) $(id).disabled = !some && !vb.preview;
   $("#vocabPreview").textContent = t(vb.preview ? "vocab.previewOff" : "vocab.preview");
@@ -359,6 +453,7 @@ function vocabRender() {
   $("#vocabClear").disabled = !all.length || vb.pair === FAV_ALL;
   $("#vocabMove").textContent = rows.length === all.length ? t("vocab.moveAll") : t("vocab.moveShown", { n: rows.length });
   $("#vocabToHere").hidden = !(state.doc && (state.keywords || []).some((r) => r.term && r.translation));
+  $("#kwModeCards").disabled = !state.doc && !vocabPairs().length; // (an import into an empty vocabulary makes cards possible)
 }
 function vocabUpdateRow(pair, termKey, k, value) {
   const v = vocabLoad(), list = v[pair] || [];
@@ -458,10 +553,11 @@ function initVocab() {
     const b = e.target.closest("[data-act]"), row = e.target.closest(".vocab-row");
     if (!b || !row) return;
     const pair = row.dataset.pair;
-    if (b.dataset.act === "del") {
+    if (b.dataset.act === "play") vocabPlay(b.dataset.key);
+    else if (b.dataset.act === "del") {
       const v = vocabLoad();
       v[pair] = (v[pair] || []).filter((r) => r.term !== row.dataset.term);
-      vocabSave(v); vocabRender();
+      vocabSave(v); vocabRender(); vocabMediaGc();
     } else if (b.dataset.act === "fav") {
       const on = toggleFav(pair, { term: row.dataset.term, translation: row.querySelector('[data-k="translation"]').value });
       vocabRender(); // (the pair list's favourites entry and counts follow)
@@ -489,7 +585,7 @@ function initVocab() {
   $("#pairDialog").addEventListener("close", () => {
     const ok = $("#pairDialog").returnValue === "ok", src = codeOf($("#pairSrc").value), tgt = codeOf($("#pairTgt").value);
     const resolve = pairAsk; pairAsk = null;
-    if (resolve) resolve(ok && src && tgt ? { src, tgt, pair: `${src}-${tgt}` } : null);
+    if (resolve) resolve(ok && src && tgt ? { src, tgt, pair: `${src}-${tgt}`, media: !$("#pairMediaRow").hidden && $("#pairMedia").checked } : null);
   });
   $("#langCodes").innerHTML = [...new Set(Object.values(LANG_CODES))].sort().map((c) => `<option value="${c}">${escapeHtml(Object.keys(LANG_CODES).find((k) => LANG_CODES[k] === c) || c)}</option>`).join("");
   $("#vocabToHere").addEventListener("click", () => { // the open document's terms into the vocabulary (the pair as shown)
@@ -513,32 +609,49 @@ function initVocab() {
     e.target.value = "";
     if (!file) return;
     const bytes = new Uint8Array(await file.arrayBuffer());
-    let rows, deckName = file.name, hint = { src: "", tgt: "" };
+    let rows, deckName = file.name, hint = { src: "", tgt: "" }, deck = null;
     if (/\.json$/i.test(file.name) || bytes[0] === 0x7b) { // a backup of the whole vocabulary
       let data = null;
       try { data = JSON.parse(new TextDecoder().decode(bytes)); } catch (_) { /* not JSON */ }
       if (!data || data.app !== "Kameleon" || !data.vocab) { toast(t("vocab.badBackup"), "error"); return; }
+      if (data.media && typeof data.media === "object") { // the backup's pictures and sounds, under their keys
+        let failed = 0;
+        busy(t("vocab.mediaSaving", { i: 0, n: Object.keys(data.media).length }));
+        try {
+          for (const [key, m] of Object.entries(data.media)) {
+            if (!/^vm:[0-9a-f]+$/.test(key) || !m || typeof m.url !== "string" || !m.url.startsWith("data:")) continue;
+            try { const bytes = new Uint8Array(await (await fetch(m.url)).arrayBuffer()); await idbPut({ name: m.name || "", type: mediaType(m.name || ""), bytes: bytes.buffer }, key, true); } catch (_) { failed++; }
+          }
+        } finally { busy(""); }
+        if (failed) toast(t("vocab.mediaFull", { n: failed }), "error");
+      }
       const r = vocabRestore(data);
       toast(t("vocab.restored", r), "ok"); vocabRender();
       return;
     }
     if (/\.apkg$/i.test(file.name) || (bytes[0] === 0x50 && bytes[1] === 0x4b)) {
-      try { const r = await readApkg(bytes); rows = r.rows; deckName = r.deck || file.name; hint = r.langs || hint; } catch (err) { toast(userError(err), "error"); return; }
+      try { deck = await readApkg(bytes); rows = deck.rows; deckName = deck.deck || file.name; hint = deck.langs || hint; } catch (err) { toast(userError(err), "error"); return; }
     } else rows = parseVocabText(new TextDecoder().decode(bytes));
     if (!rows.length) { toast(t("vocab.badFile"), "error"); return; }
     // The pair: what the deck's field names say, else what the texts look like; the user confirms or corrects it.
     const [curSrc, curTgt] = (vb.pair || "-").split("-");
     const src = hint.src || detectLanguage(rows.map((r) => r.term).join(" ")) || curSrc || "";
     const tgt = hint.tgt || detectLanguage(rows.map((r) => r.translation).join(" ")) || curTgt || "";
-    const ans = await askPair({ src, tgt, text: t("pair.textImport", { n: rows.length, name: deckName }) });
+    const hasMedia = Boolean(deck && deck.media.size);
+    const ans = await askPair({ src, tgt, text: t("pair.textImport", { n: rows.length, name: deckName }), media: hasMedia ? { n: deck.media.size, size: deck.mediaSize } : null });
     if (!ans) return;
     const pair = ans.pair;
+    let stored = null;
+    if (hasMedia && ans.media) stored = await vocabStoreDeckMedia(rows, deck.media);
+    else for (const r of rows) delete r.media;
     const n = vocabAdd(pair, rows, deckName);
     vb.pair = pair;
-    toast(t("vocab.imported", { n, total: rows.length, pair: pairLabel(pair) }), "ok"); vocabRender();
+    toast(t("vocab.imported", { n, total: rows.length, pair: pairLabel(pair) }) + (stored && stored.files ? ` ${t("vocab.importedMedia", { n: stored.files, size: mbText(deck.mediaSize) })}` : ""), "ok");
+    if (stored && stored.failed) toast(t("vocab.mediaFull", { n: stored.failed }), "error");
+    vocabRender();
   });
   $("#vocabClear").addEventListener("click", () => {
     if (!confirm(t("vocab.clearConfirm", { pair: pairLabel(vb.pair) }))) return;
-    const v = vocabLoad(); delete v[vb.pair]; vocabSave(v); vb.pair = ""; vocabRender();
+    const v = vocabLoad(); delete v[vb.pair]; vocabSave(v); vb.pair = ""; vocabRender(); vocabMediaGc();
   });
 }

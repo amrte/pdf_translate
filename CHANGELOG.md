@@ -4,6 +4,14 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.34
+
+- Anki decks with pictures and sounds: importing an .apkg now brings its media along. Each term keeps its picture, the spoken word and the spoken example sentence; the files are stored in the browser (IndexedDB), and the language-pair dialog shows how many files and MB come with the deck, with a tick box to take the words alone.
+- Flashcards: the picture appears on the answer side, 🔊 buttons sit next to the word and the example sentence (keys P and S), and "🔊 Auto-play" speaks the word as soon as it appears (reversed cards: when they are turned). Document terms that are also in the vocabulary get its pictures and sounds too.
+- Vocabulary: a small picture and a 🔊 button per term. "Back up" includes the pictures and sounds, and the Anki export (.apkg) contains them again. Files no longer used by any term are deleted when terms or pairs are removed.
+- Better reading of Anki decks: the front and back fields are taken from the card templates, so columns such as "Key", "Traditional" or "Part of speech" are no longer mistaken for the word or its translation, and a separate "sentence meaning" field becomes the example's translation (e.g. HSK decks: 的 (de) = indicates possession …, "我是他的朋友。" = "I'm a friend of his.").
+- Flashcards: the example's gap now also works for Chinese, Japanese and Thai (written without spaces) and for terms with a pronunciation in brackets ("的 (de)" → "我是他_____朋友。"). The Flashcards tab is available right after a first import into an empty vocabulary.
+
 ## 2.33
 
 - Keywords → Flashcards: one place for all flashcards. The extra "Flashcards" buttons at the bottom (under Words and Vocabulary) are gone; instead the Flashcards tab has a switch above the cards – "This document (n)" or "Vocabulary <pair> (n)", the latter as the Vocabulary tab shows it (pair, search, filter, favourites). Opened from the Vocabulary tab, or without a document, it starts with the vocabulary; otherwise with the document's terms.
