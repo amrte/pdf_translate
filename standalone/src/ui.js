@@ -370,7 +370,8 @@ async function loadBytes(bytes, name, remember, knownId = null) {
       const r = await pool.workers[0].call("imageToPdf", { bytes: src });
       if (stale()) return;
       bytes = r.bytes; kind = "pdf";
-      const jpeg = fmt === "jpeg" || fmt === "dng"; // (a RAW photo is shown, and saved, as its JPEG preview)
+      // (a RAW photo is shown, and saved, as its JPEG preview; a HEIC or AVIF photo as JPEG too)
+      const jpeg = fmt === "jpeg" || fmt === "dng" || Engine.imageKindOf(src) === "jpeg";
       image = { format: jpeg ? "jpeg" : "png", label: jpeg ? "JPG" : "PNG", width: r.width, height: r.height, source: original };
     }
     if (LEGACY_KINDS.has(kind)) { // Word/Excel/PowerPoint 97–2003: converted to the modern format first
@@ -460,12 +461,28 @@ async function transcodeImage(bytes) {
     try { bmp = await decodeHeif(bytes); } catch (err) { console.warn("heic", err); throw new Error("This picture format is not supported."); }
   }
   try {
-    const canvas = new OffscreenCanvas(bmp.width, bmp.height);
-    canvas.getContext("2d").drawImage(bmp, 0, 0);
-    return new Uint8Array(await (await canvas.convertToBlob({ type: "image/png" })).arrayBuffer());
+    // A photo (HEIC, AVIF, a lossy WebP) becomes a JPEG – as PNG a phone photo would take ten
+    // times the space, in the page and in every PDF made from it; other pictures a PNG.
+    const photo = isPhotoFormat(bytes);
+    const canvas = new OffscreenCanvas(bmp.width, bmp.height), ctx = canvas.getContext("2d");
+    if (photo) { ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, bmp.width, bmp.height); }
+    ctx.drawImage(bmp, 0, 0);
+    const blob = await canvas.convertToBlob(photo ? { type: "image/jpeg", quality: 0.92 } : { type: "image/png" });
+    return new Uint8Array(await blob.arrayBuffer());
   } finally {
     bmp.close && bmp.close();
   }
+}
+
+/** Whether a picture the browser decodes is a photo, kept as JPEG (see transcodeImage): HEIC, AVIF, WebP without transparency or lossless data. */
+function isPhotoFormat(bytes) {
+  const fmt = Engine.imageKindOf(bytes);
+  if (fmt === "heic" || fmt === "avif") return true;
+  if (fmt !== "webp") return false;
+  const chunk = String.fromCharCode(...bytes.subarray(12, 16));
+  if (chunk === "VP8 ") return true; // lossy
+  if (chunk === "VP8X") return !(bytes[20] & 0x10) && !String.fromCharCode(...bytes.subarray(0, Math.min(bytes.length, 4096))).includes("VP8L"); // (no alpha, not lossless)
+  return false;
 }
 
 /** The translated picture: the finished page rendered at the picture's pixel size, as PNG or JPEG. */

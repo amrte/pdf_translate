@@ -2523,11 +2523,28 @@ function imageToPdf(bytes) {
     if (!p) throw new Error("RAW photo without a preview");
     bytes = p.bytes; orient = p.orientation;
   }
-  const img = new M.Image(bytes);
+  let img = new M.Image(bytes);
   try {
     const w = img.getWidth(), h = img.getHeight();
+    // A large photo stored losslessly (a PNG, TIFF or BMP from a camera or a scanner app) is put into
+    // the page as a JPEG: lossless, a phone photo takes 10–20 MB per page. Pictures that PNG packs
+    // well (screenshots, drawings, text) stay as they are, and so does anything with transparency.
     const ok = (r) => (r >= 50 && r <= 1200 ? r : 0);
-    const dpiX = ok(img.getXResolution()) || 96, dpiY = ok(img.getYResolution()) || dpiX;
+    const dpiX = ok(img.getXResolution()) || 96, dpiY = ok(img.getYResolution()) || dpiX; // (before a JPEG takes its place)
+    const kind = imageKindOf(bytes);
+    // (a JPEG only when saved at a wastefully high quality: a phone's takes about 0.25 bytes a pixel, quality 100 twice that)
+    const heavy = kind === "jpeg" || kind === "dng" ? bytes.length > w * h * 0.45 : bytes.length > w * h * 0.6;
+    if (w * h >= 300000 && heavy) {
+      const pix = img.toPixmap();
+      try {
+        if (!pix.getAlpha()) {
+          const jpeg = pix.asJPEG(90);
+          if (jpeg.length < bytes.length * 0.7) { free(img); img = new M.Image(jpeg); }
+        }
+      } finally {
+        free(pix);
+      }
+    }
     const iw = (w * 72) / dpiX, ih = (h * 72) / dpiY, side = orient >= 5;
     const pw = side ? ih : iw, ph = side ? iw : ih;
     // where a point (u, v) of the stored picture (fractions, v downwards) is shown (y downwards)

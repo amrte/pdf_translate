@@ -4,6 +4,13 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.21
+
+- Much smaller PDFs from photos: large photos are compressed to JPEG before they become a PDF page. An iPhone photo (HEIC) gave a PDF page of about 18 MB, now about 3.5 MB (about the size of the photo itself); after the OCR preparation (straightened, cropped) 11 MB, now 2 MB.
+  - HEIC, AVIF and WebP photos (without transparency) are read as JPEG instead of PNG, and saved as JPG again after translating or editing.
+  - Large photographic PNG, TIFF and BMP pictures and JPEGs saved at a wastefully high quality are put into the page as JPEG (quality 90) – also for pages added in "Arrange pages". Screenshots, drawings and text that PNG packs well, and pictures with transparency, stay lossless.
+  - Edited pictures (picture tools, OCR preparation) are saved at JPEG quality 92 instead of 95.
+
 ## 2.20
 
 - Recognised (OCR) segments can be split and joined like the segments of a PDF: ✂ splits a segment between two of its lines, ⤵ joins it with the next recognised segment; the toast offers to undo it. A join keeps both translations, one after the other. The lines OCR found are now kept with its result, so pages recognised with an earlier version need to be recognised again first (a message says so).

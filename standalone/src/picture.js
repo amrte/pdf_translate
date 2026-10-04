@@ -212,7 +212,7 @@ async function picApply(quiet = false) {
       ctx.rotate((rot * Math.PI) / 180);
       ctx.drawImage(bmp, sx, sy, sw, sh, -sw / 2, -sh / 2, sw, sh);
       if (!hasFilter) { ctx.setTransform(1, 0, 0, 1, 0, 0); const d = ctx.getImageData(0, 0, canvas.width, canvas.height); picFilterPixels(d.data); ctx.putImageData(d, 0, 0); }
-      const blob = await canvas.convertToBlob(img.format === "jpeg" ? { type: "image/jpeg", quality: 0.95 } : { type: "image/png" });
+      const blob = await canvas.convertToBlob(img.format === "jpeg" ? { type: "image/jpeg", quality: 0.92 } : { type: "image/png" });
       const bytes = new Uint8Array(await blob.arrayBuffer());
       picOpenPanel(false);
       // The first picture of a line of edits is kept, so all of them can be undone at once.
