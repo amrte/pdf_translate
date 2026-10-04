@@ -1212,7 +1212,9 @@ let splitDrag = null;
 function setSplit(share) {
   const wv = $("#workView");
   if (share === null) { wv.style.gridTemplateColumns = ""; return; }
-  wv.style.gridTemplateColumns = `minmax(240px, ${share}fr) 6px minmax(320px, ${1 - share}fr)`;
+  // (in hundreds: fr factors that add up to less than 1 leave part of the width empty once a
+  // column is held at its minimum)
+  wv.style.gridTemplateColumns = `minmax(240px, ${share * 100}fr) 6px minmax(320px, ${(1 - share) * 100}fr)`;
 }
 
 function initLayout() {

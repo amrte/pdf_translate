@@ -6,12 +6,12 @@
 // starts the text recognition afresh (the recognised text of the old picture would not fit).
 // ======================================================================
 
-const PIC_DEFAULT = { bright: 100, contrast: 100, gray: false, rotate: 0, fine: 0, quad: null, crop: null }; // crop: page fractions [x0, y0, x1, y1]; fine: degrees, clockwise; quad: the page's corners (see straighten.js)
+const PIC_DEFAULT = { bright: 100, contrast: 100, gray: false, rotate: 0, fine: 0, quad: null, tracks: null, crop: null }; // crop: page fractions [x0, y0, x1, y1]; fine: degrees, clockwise; quad: the page's corners (see straighten.js)
 const picEdit = { ...PIC_DEFAULT };
 let picCropMode = false;
 
 const picFilter = () => `brightness(${picEdit.bright / 100}) contrast(${picEdit.contrast / 100})${picEdit.gray ? " grayscale(1)" : ""}`;
-const picIsDefault = () => picEdit.bright === 100 && picEdit.contrast === 100 && !picEdit.gray && !picEdit.rotate && !picEdit.fine && !picEdit.quad && !picEdit.crop;
+const picIsDefault = () => picEdit.bright === 100 && picEdit.contrast === 100 && !picEdit.gray && !picEdit.rotate && !picEdit.fine && !picEdit.quad && !picEdit.tracks && !picEdit.crop;
 
 /** Show the edit state in the panel and in the preview. */
 function picSync() {
@@ -20,7 +20,7 @@ function picSync() {
   $("#picGray").checked = picEdit.gray;
   $("#picRotOut").textContent = picEdit.rotate ? `${picEdit.rotate}°` : "";
   $("#picFine").value = picEdit.fine;
-  $("#picFineOut").textContent = (picEdit.quad ? "▱ " : "") + (picEdit.fine ? pmDeg(picEdit.fine, true) : "");
+  $("#picFineOut").textContent = (picEdit.tracks ? "〰 " : "") + (picEdit.quad ? "▱ " : "") + (picEdit.fine ? pmDeg(picEdit.fine, true) : "");
   // (the straightening is shown live: the crop area is chosen on the straightened picture)
   document.documentElement.style.setProperty("--pic-turn", `${picEdit.fine}deg`);
   $("#picCropOut").textContent = picEdit.crop ? t("pic.cropSet") : "";
@@ -143,10 +143,10 @@ async function picHand() {
     busy("");
     await openStraighten({
       image: new Blob([png], { type: "image/png" }), width: page.width, height: page.height,
-      angle: picEdit.fine, quad: picEdit.quad, title: t("pic.handTitleShort"),
+      angle: picEdit.fine, quad: picEdit.quad, tracks: picEdit.tracks, title: t("pic.handTitleShort"),
       measure: () => pool.workers[0].call("skewDetect", { page: 0 }),
-      onApply: (angle, quad) => {
-        picEdit.fine = angle; picEdit.quad = quad;
+      onApply: (angle, quad, tracks) => {
+        picEdit.fine = angle; picEdit.quad = quad; picEdit.tracks = tracks;
         if (quad) picEdit.crop = null; // (the corners take the place of a crop)
         picSync();
         if (!picIsDefault()) picApply();
@@ -170,13 +170,13 @@ async function picApply(quiet = false) {
     const png = await pool.workers[0].call("render", { page: 0, zoom: img.width / page.width, variant: "original" });
     let bmp = await createImageBitmap(new Blob([png], { type: "image/png" }));
     try {
-      if (picEdit.fine || picEdit.quad) {
+      if (picEdit.fine || picEdit.quad || picEdit.tracks) {
         // Straightened (and flattened from its corners) first; a turn keeps the size, the corners
         // turned in are white.
         const src = new OffscreenCanvas(bmp.width, bmp.height), sx = src.getContext("2d", { willReadFrequently: true });
         sx.drawImage(bmp, 0, 0);
         const px = sx.getImageData(0, 0, bmp.width, bmp.height);
-        const res = Engine.warpPixels(px.data, bmp.width, bmp.height, 4, { angle: picEdit.fine, quad: picEdit.quad });
+        const res = Engine.warpPixels(px.data, bmp.width, bmp.height, 4, { angle: picEdit.fine, quad: picEdit.quad, tracks: picEdit.tracks });
         const st2 = new OffscreenCanvas(res.width, res.height);
         st2.getContext("2d").putImageData(new ImageData(res.data, res.width, res.height), 0, 0);
         bmp.close && bmp.close();

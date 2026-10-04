@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="Kameleon 2.12">
+  <meta name="generator" content="Kameleon 2.13">
   <meta name="description" content="Kameleon – Wechselt die Sprache, behält die Form. Changes language, keeps its shape.">
   <title>Kameleon</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2216%22 fill=%22%23287130%22/%3E%3Cg transform=%22translate(2.5 1) scale(0.9)%22 fill=%22%23ffffff%22 stroke=%22%23ffffff%22%3E%3Cpath d=%22M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6%22 fill=%22none%22 stroke-width=%223.8%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M21 43l-1 10M30 44v9M38 43l1 10%22 stroke-width=%223.6%22 stroke-linecap=%22round%22/%3E%3Cellipse cx=%2221%22 cy=%2225%22 rx=%227%22 ry=%227.5%22 stroke=%22none%22/%3E%3Cellipse cx=%2233%22 cy=%2223.5%22 rx=%227.5%22 ry=%228%22 stroke=%22none%22/%3E%3Cpath d=%22M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z%22 stroke=%22none%22/%3E%3Cpath d=%22M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z%22 stroke=%22none%22/%3E%3Cpath d=%22M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z%22 stroke=%22none%22/%3E%3Cpath d=%22M16 37l4-3 4 3 4-3 4 3 4-3 4 3%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%222.1%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3Cpath d=%22M43.5 33.9L57 32.6%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%221.5%22 stroke-linecap=%22round%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%224.4%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%222.7%22 stroke=%22none%22/%3E%3Ccircle cx=%2246.2%22 cy=%2226.7%22 r=%221.3%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Cpath d=%22M4 55.5c15-3 39-3 54 0%22 fill=%22none%22 stroke-width=%222.4%22 stroke-linecap=%22round%22/%3E%3C/g%3E%3C/svg%3E">
@@ -972,13 +972,30 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
 .st-stage { position: relative; background: #fff; overflow: hidden; touch-action: none; cursor: grab; box-shadow: var(--page-shadow); }
 .st-stage:active { cursor: grabbing; }
 .st-dialog.mode-line .st-stage, .st-dialog.mode-corners .st-stage { cursor: crosshair; }
-#stImg { position: absolute; inset: 0; width: 100%; height: 100%; transform-origin: 50% 50%; user-select: none; pointer-events: none; }
+#stImg, #stPreview { position: absolute; inset: 0; width: 100%; height: 100%; transform-origin: 50% 50%; user-select: none; pointer-events: none; }
+#stPreview { background: #fff; }
+#stPreview[hidden] { display: none; }
+.st-lines-tools { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.st-dialog.mode-lines .st-stage { cursor: crosshair; }
+#stSvg .st-track { fill: none; stroke: #e53935; stroke-width: 2.5; stroke-linejoin: round; opacity: .8; cursor: pointer; pointer-events: stroke; }
+#stSvg .st-track:hover { stroke: #1e66f5; stroke-width: 4; }
+#stSvg .st-track.new { stroke: #1e66f5; stroke-dasharray: 5 4; pointer-events: none; }
 #stSvg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
 #stSvg .st-guide { stroke: rgba(30, 102, 245, .45); stroke-width: 1; stroke-dasharray: 4 4; }
 #stSvg .st-line { stroke: #e53935; stroke-width: 2.5; }
 #stSvg .st-quad { fill: none; stroke: var(--accent); stroke-width: 2; }
 #stSvg .st-shade { fill: rgba(0, 0, 0, .35); }
 #stSvg .st-handle { fill: #fff; stroke: var(--accent); stroke-width: 3; cursor: move; }
+
+/* a narrow field column (the border dragged far to the right): rows wrap instead of sticking out */
+.editor-pane { min-width: 0; overflow-x: hidden; }
+@container (max-width: 2000px) { .filter-row select { min-width: 0; max-width: 100%; } }
+.filter-row { flex-wrap: wrap; }
+.filter-row .search-box { flex: 1 1 180px; min-width: 0; }
+.filter-row select { flex: 1 1 auto; min-width: 0; }
+.seg-head { flex-wrap: wrap; row-gap: 2px; }
+.viewer-pane { min-width: 0; }
+.viewer-pane .pane-toolbar { flex-wrap: wrap; row-gap: 4px; min-width: 0; }
 
   </style>
 </head>
@@ -987,7 +1004,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
   <div class="brand">
     <span class="logo"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#287130"/><g transform="translate(2.5 1) scale(0.9)" fill="#ffffff" stroke="#ffffff"><path d="M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6" fill="none" stroke-width="3.8" stroke-linecap="round"/><path d="M21 43l-1 10M30 44v9M38 43l1 10" stroke-width="3.6" stroke-linecap="round"/><ellipse cx="21" cy="25" rx="7" ry="7.5" stroke="none"/><ellipse cx="33" cy="23.5" rx="7.5" ry="8" stroke="none"/><path d="M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z" stroke="none"/><path d="M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z" stroke="none"/><path d="M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z" stroke="none"/><path d="M16 37l4-3 4 3 4-3 4 3 4-3 4 3" fill="none" stroke="#287130" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M43.5 33.9L57 32.6" fill="none" stroke="#287130" stroke-width="1.5" stroke-linecap="round"/><circle cx="45.5" cy="26.5" r="4.4" fill="#287130" stroke="none"/><circle cx="45.5" cy="26.5" r="2.7" stroke="none"/><circle cx="46.2" cy="26.7" r="1.3" fill="#287130" stroke="none"/><path d="M4 55.5c15-3 39-3 54 0" fill="none" stroke-width="2.4" stroke-linecap="round"/></g></svg></span>
     <span class="brand-name">Kameleon</span>
-    <span class="version" id="appVersion">v2.12</span>
+    <span class="version" id="appVersion">v2.13</span>
   </div>
   <div class="topbar-actions">
     <span class="doc-name" id="docName"></span>
@@ -1495,7 +1512,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
     </div>
     <input type="file" id="offlineZip" class="visually-hidden" accept=".zip,application/zip" multiple tabindex="-1">
     <input type="file" id="offlineFolder" class="visually-hidden" webkitdirectory multiple tabindex="-1">
-    <p class="muted small help-version help-part">Kameleon v2.12 · <span data-i18n="app.tagline"></span></p>
+    <p class="muted small help-version help-part">Kameleon v2.13 · <span data-i18n="app.tagline"></span></p>
     <div class="modal-actions">
       <button type="button" value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
     </div>
@@ -1652,6 +1669,13 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
         <button type="button" class="btn small" id="stMode_turn" data-i18n="st2.mode_turn" data-i18n-title="st2.hint_turn"></button>
         <button type="button" class="btn small" id="stMode_line" data-i18n="st2.mode_line" data-i18n-title="st2.hint_line"></button>
         <button type="button" class="btn small" id="stMode_corners" data-i18n="st2.mode_corners" data-i18n-title="st2.hint_corners"></button>
+        <button type="button" class="btn small" id="stMode_lines" data-i18n="st2.mode_lines" data-i18n-title="st2.hint_lines"></button>
+      </span>
+      <span class="st-lines-tools" id="stLinesTools" hidden>
+        <button type="button" class="btn small" id="stFindLines" data-i18n="st2.findLines" data-i18n-title="st2.findLinesTitle"></button>
+        <button type="button" class="btn small" id="stClearLines" data-i18n="st2.clearLines"></button>
+        <label class="check"><input type="checkbox" id="stPreviewOn"> <span data-i18n="st2.preview"></span></label>
+        <span class="muted small" id="stLinesCount"></span>
       </span>
       <span class="spacer"></span>
       <button type="button" class="btn small" id="stAuto" data-i18n="pic.auto" data-i18n-title="pic.autoTitle"></button>
@@ -1663,7 +1687,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
       </span>
     </div>
     <p class="muted small st-hint"><span id="stHint"></span> <button type="button" class="linkish" id="stCornersReset" data-i18n="st2.cornersOff" hidden></button></p>
-    <div class="st-area" id="stArea"><div class="st-stage" id="stStage"><img id="stImg" alt="" draggable="false"><svg id="stSvg" xmlns="http://www.w3.org/2000/svg"></svg></div></div>
+    <div class="st-area" id="stArea"><div class="st-stage" id="stStage"><img id="stImg" alt="" draggable="false"><img id="stPreview" alt="" draggable="false" hidden><svg id="stSvg" xmlns="http://www.w3.org/2000/svg"></svg></div></div>
     <div class="modal-actions">
       <button type="button" class="btn ghost" id="stReset" data-i18n="pic.reset">Reset</button>
       <span class="spacer"></span>
@@ -1831,6 +1855,16 @@ const I18N = {
     "filter.todo": "Nicht übersetzt",
     "filter.done": "Übersetzt",
     "filter.numbers": "Zahlen & Formeln (bleiben)",
+    "st2.mode_lines": "〰 Zeilen glätten",
+    "st2.hint_lines": "Für gewölbte Seiten (ein aufgeschlagenes Buch): „Zeilen erkennen“ zeichnet den Verlauf der Textzeilen ein; ziehen Sie selbst eine Linie an einer gebogenen Zeile entlang, um eine zu ergänzen, ein Klick auf eine Linie entfernt sie. Alle Linien werden gerade gebogen. Tipp: zuerst die Seitenränder setzen.",
+    "st2.findLines": "Zeilen erkennen",
+    "st2.findLinesTitle": "Den Verlauf der Textzeilen automatisch finden (innerhalb der Seitenränder, wenn gesetzt)",
+    "st2.clearLines": "Linien entfernen",
+    "st2.preview": "Ergebnis zeigen",
+    "st2.linesCount": "{n} Zeilen",
+    "st2.finding": "Textzeilen werden gesucht…",
+    "st2.linesFound": "{n} Textzeilen gefunden – prüfen Sie sie mit „Ergebnis zeigen“.",
+    "st2.noLines": "Keine Textzeilen gefunden – ziehen Sie Linien von Hand an den Zeilen entlang.",
     "note.font": "Schrift",
     "note.sans": "Sans",
     "note.serif": "Serif",
@@ -1889,7 +1923,7 @@ const I18N = {
     "ocr.straightened": "{n} schiefe Seite(n) gerade gerichtet.",
     "ocr.straightFailed": "Die Seiten konnten nicht gerade gerichtet werden: {err}",
     "msg.heicLoading": "HEIC-Bildleser wird geladen…",
-    "help.deskew": "<b>Gerade richten:</b> Schief gescannte Seiten und schief fotografierte Bilder werden gerade gedreht. Die Neigung wird an den Textzeilen gemessen (bis ±15°). In der Texterkennung (OCR) geschieht das vorher von selbst („Schiefe Seiten vorher gerade richten“); unter „Seiten anordnen“ mit „⟂ Gerade richten“ für die ausgewählten Seiten oder von Hand im Feld daneben; bei einem Bild im Bild-Werkzeug mit „Automatisch“ oder dem Regler. „Von Hand…“ zeigt die Seite groß: drehen wie an einem Drehknopf, eine Linie an einer Textzeile anlegen oder die vier Seitenecken ziehen – eine schräg fotografierte Seite wird so zu einem geraden Rechteck (dabei wird sie als Bild neu gespeichert). Ein Scan in einer PDF wird dabei nicht neu gespeichert, nur gedreht – die Qualität bleibt gleich. Gewölbte Buchseiten werden als Ganzes gedreht, nicht geglättet.",
+    "help.deskew": "<b>Gerade richten:</b> Schief gescannte Seiten und schief fotografierte Bilder werden gerade gedreht. Die Neigung wird an den Textzeilen gemessen (bis ±15°). In der Texterkennung (OCR) geschieht das vorher von selbst („Schiefe Seiten vorher gerade richten“); unter „Seiten anordnen“ mit „⟂ Gerade richten“ für die ausgewählten Seiten oder von Hand im Feld daneben; bei einem Bild im Bild-Werkzeug mit „Automatisch“ oder dem Regler. „Von Hand…“ zeigt die Seite groß: drehen wie an einem Drehknopf, eine Linie an einer Textzeile anlegen oder die vier Seitenecken ziehen – eine schräg fotografierte Seite wird so zu einem geraden Rechteck – und „Zeilen glätten“ biegt gewölbte Textzeilen (ein aufgeschlagenes Buch) gerade, automatisch erkannt oder von Hand nachgezogen (dabei wird die Seite als Bild neu gespeichert). Ein Scan in einer PDF wird dabei nicht neu gespeichert, nur gedreht – die Qualität bleibt gleich. Gewölbte Buchseiten werden als Ganzes gedreht, nicht geglättet.",
     "filter.repeats": "Kopf- & Fußzeilen",
     "rep.header": "Kopfzeile · {n} Seiten",
     "rep.footer": "Fußzeile · {n} Seiten",
@@ -2620,6 +2654,16 @@ const I18N = {
     "filter.todo": "Untranslated",
     "filter.done": "Translated",
     "filter.numbers": "Numbers & formulas (kept)",
+    "st2.mode_lines": "〰 Flatten lines",
+    "st2.hint_lines": "For curved pages (a book photographed open): \"Find lines\" traces the course of the text lines; drag a line along a curved text line yourself to add one, a click on a line removes it. All traced lines are bent straight. Tip: set the page borders first.",
+    "st2.findLines": "Find lines",
+    "st2.findLinesTitle": "Find the course of the text lines automatically (within the page borders, when set)",
+    "st2.clearLines": "Remove lines",
+    "st2.preview": "Show result",
+    "st2.linesCount": "{n} lines",
+    "st2.finding": "Looking for the text lines…",
+    "st2.linesFound": "{n} text lines found – check them with \"Show result\".",
+    "st2.noLines": "No text lines found – drag lines along the text lines by hand.",
     "note.font": "Font",
     "note.sans": "Sans",
     "note.serif": "Serif",
@@ -2678,7 +2722,7 @@ const I18N = {
     "ocr.straightened": "{n} tilted page(s) straightened.",
     "ocr.straightFailed": "The pages could not be straightened: {err}",
     "msg.heicLoading": "Loading the HEIC picture reader…",
-    "help.deskew": "<b>Straighten:</b> Pages scanned askew and pictures photographed at a slant are turned straight. The tilt is measured on the text lines (up to ±15°). Text recognition (OCR) does it first by itself (\"Straighten tilted pages first\"); in \"Arrange pages\" use \"⟂ Straighten\" for the selected pages or the field beside it by hand; for a picture use \"Auto\" or the slider in the picture tools. \"By hand…\" shows the page large: turn it like a dial, draw a line along a text line, or drag the four page corners – a page photographed at a slant becomes a straight rectangle (it is then saved anew as a picture). A scan in a PDF is not saved anew, only turned – its quality stays the same. Curved book pages are turned as a whole, not flattened.",
+    "help.deskew": "<b>Straighten:</b> Pages scanned askew and pictures photographed at a slant are turned straight. The tilt is measured on the text lines (up to ±15°). Text recognition (OCR) does it first by itself (\"Straighten tilted pages first\"); in \"Arrange pages\" use \"⟂ Straighten\" for the selected pages or the field beside it by hand; for a picture use \"Auto\" or the slider in the picture tools. \"By hand…\" shows the page large: turn it like a dial, draw a line along a text line, or drag the four page corners – a page photographed at a slant becomes a straight rectangle – and \"Flatten lines\" bends curved text lines (a book photographed open) straight, found automatically or traced by hand (the page is then saved anew as a picture). A scan in a PDF is not saved anew, only turned – its quality stays the same. Curved book pages are turned as a whole, not flattened.",
     "filter.repeats": "Headers & footers",
     "rep.header": "Header · {n} pages",
     "rep.footer": "Footer · {n} pages",
@@ -6161,7 +6205,7 @@ function cardsPdf(args) {
 
 const Engine = {
   init: initEngine, extract: extractDocument, extractPages, build: buildTranslated, renderPNG,
-  detectKind, imageKindOf, imageToPdf, warpPixels, keywordsPdf, cardsPdf, openBook, saveBook, extractBook, openLaidOut, mapTranslated, openOffice, officePreviewHtml, ocrToBlocks, sampleColors, refineOcr,
+  detectKind, imageKindOf, imageToPdf, warpPixels, findTextLines, keywordsPdf, cardsPdf, openBook, saveBook, extractBook, openLaidOut, mapTranslated, openOffice, officePreviewHtml, ocrToBlocks, sampleColors, refineOcr,
   open: (bytes) => M.Document.openDocument(bytes, "application/pdf"),
   exportTxt, exportCsv, exportJson, exportXliff, exportDocx, parseImport, parseMarkedText,
 };
@@ -9795,7 +9839,7 @@ function rearrangePdf(bytes, plan, extras) {
       } else {
         const d = docs[it.from];
         if (!d || it.page < 0 || it.page >= d.countPages()) continue;
-        if (it.quad) { warpedPdfPage(out, d, it.page, it); n++; continue; } // (page borders drawn: the page as a flattened picture)
+        if (it.quad || (it.tracks && it.tracks.length)) { warpedPdfPage(out, d, it.page, it); n++; continue; } // (page borders drawn: the page as a flattened picture)
         out.graftPage(out.countPages(), d, it.page);
         if (turn) {
           // turned on top of the page's own /Rotate (which the graft copies onto the page)
@@ -10192,10 +10236,13 @@ function quadSize(q) {
  * 4) and is `sw`×`sh`. As shown it is first turned by `turn` (0/90/180/270, clockwise), then by
  * `angle` degrees clockwise about its middle (same size, corners filled with `bg`); `quad`
  * (fractions of that straightened picture: top left, top right, bottom right, bottom left) is
- * then stretched to a rectangle. Returns {data, width, height}.
+ * then stretched to a rectangle; `tracks` (text lines traced on the straightened picture, as
+ * fractions) are bent straight before that. Returns {data, width, height}.
  */
-function warpPixels(src, sw, sh, n, { turn = 0, angle = 0, quad = null, bg = 255 } = {}) {
+function warpPixels(src, sw, sh, n, { turn = 0, angle = 0, quad = null, tracks = null, bg = 255 } = {}) {
   const tr = ((turn % 360) + 360) % 360, dw = tr % 180 ? sh : sw, dh = tr % 180 ? sw : sh;
+  // curved lines bent straight (tracks: fractions of the straightened picture, see dewarpMap)
+  const bend = tracks && tracks.length ? dewarpMap(tracks.map((t) => t.map(([x, y]) => [x * dw, y * dh])), dw, dh) : null;
   let W = dw, H = dh, map = null;
   if (quad) {
     const q = quad.map(([x, y]) => [x * dw, y * dh]);
@@ -10210,6 +10257,7 @@ function warpPixels(src, sw, sh, n, { turn = 0, angle = 0, quad = null, bg = 255
     for (let u = 0; u < W; u++) {
       let X, Y;
       if (map) [X, Y] = map(u, v); else { X = u + 0.5; Y = v + 0.5; }
+      if (bend) Y = bend(X, Y);
       // undo the straightening turn, then the quarter turns
       const dx = X - cx, dy = Y - cy;
       const Xs = cx + c * dx + s * dy, Ys = cy - s * dx + c * dy;
@@ -10243,7 +10291,7 @@ function warpedPdfPage(out, doc, pno, it) {
     const pix = page.toPixmap(M.Matrix.scale(zoom, zoom), M.ColorSpace.DeviceRGB, false);
     let res;
     try {
-      res = warpPixels(pix.getPixels(), pix.getWidth(), pix.getHeight(), pix.getNumberOfComponents(), { turn: it.rot || 0, angle: -(Number(it.skew) || 0), quad: it.quad || null });
+      res = warpPixels(pix.getPixels(), pix.getWidth(), pix.getHeight(), pix.getNumberOfComponents(), { turn: it.rot || 0, angle: -(Number(it.skew) || 0), quad: it.quad || null, tracks: it.tracks || null });
     } finally {
       free(pix);
     }
@@ -10265,6 +10313,251 @@ function warpedPdfPage(out, doc, pno, it) {
   } finally {
     free(page);
   }
+}
+
+/* ---- curved text lines (a book page photographed open): found, then bent straight */
+
+/** Dark strokes of a grey picture: 1 where a pixel is clearly darker than its surroundings. */
+function inkMask(px, w, h) {
+  const r = Math.max(6, Math.round(Math.max(w, h) / 70));
+  const W1 = w + 1, sum = new Float64Array(W1 * (h + 1));
+  for (let y = 0; y < h; y++) {
+    let row = 0;
+    for (let x = 0; x < w; x++) { row += px[y * w + x]; sum[(y + 1) * W1 + x + 1] = sum[y * W1 + x + 1] + row; }
+  }
+  const ink = new Uint8Array(w * h);
+  for (let y = 0; y < h; y++) {
+    const y0 = Math.max(0, y - r), y1 = Math.min(h, y + r + 1);
+    for (let x = 0; x < w; x++) {
+      const x0 = Math.max(0, x - r), x1 = Math.min(w, x + r + 1);
+      const mean = (sum[y1 * W1 + x1] - sum[y0 * W1 + x1] - sum[y1 * W1 + x0] + sum[y0 * W1 + x0]) / ((x1 - x0) * (y1 - y0));
+      const g = px[y * w + x];
+      if (g < mean * 0.82 && mean - g > 18) ink[y * w + x] = 1;
+    }
+  }
+  return ink;
+}
+
+/**
+ * The text lines of a grey picture as tracks: each a list of [x, y] points (pixels) along the
+ * middle of one line, from left to right. The picture is cut into narrow vertical strips; in each
+ * the rows with ink form peaks (the lines); peaks of neighbouring strips at about the same height
+ * are joined. Only the main text block is kept (not a neighbouring page at the edge). `region`
+ * ([x0, y0, x1, y1] in pixels) limits the search.
+ */
+function findTextLines(px, w, h, region = null) {
+  const [rx0, ry0, rx1, ry1] = region ? region.map(Math.round) : [0, 0, w, h];
+  const ink = inkMask(px, w, h);
+  // The line pitch: the strongest repeat of the rows' ink in the middle of the region.
+  const mid0 = Math.round(rx0 + (rx1 - rx0) * 0.3), mid1 = Math.round(rx0 + (rx1 - rx0) * 0.7);
+  const prof = new Float64Array(h);
+  for (let y = ry0; y < ry1; y++) { let n = 0; for (let x = mid0; x < mid1; x++) n += ink[y * w + x]; prof[y] = n; }
+  // (neighbouring rows always look alike: the pitch is the first clear repeat after that
+  // likeness has faded, not the overall maximum)
+  const mean = prof.reduce((a, b) => a + b, 0) / Math.max(1, ry1 - ry0);
+  const corr = (d) => {
+    let c = 0;
+    for (let y = ry0; y + d < ry1; y++) c += (prof[y] - mean) * (prof[y + d] - mean);
+    return c / Math.max(1, ry1 - ry0 - d);
+  };
+  const dMax = Math.min(Math.floor((ry1 - ry0) / 3), 300), c0 = corr(0);
+  let pitch = 0;
+  if (c0 > 0) {
+    let d1 = 1;
+    while (d1 < dMax && corr(d1) > c0 * 0.25) d1++;
+    let bestC = -Infinity;
+    for (let d = d1; d <= Math.min(dMax, d1 * 6); d++) { const c = corr(d); if (c > bestC) { bestC = c; pitch = d; } }
+    if (bestC < c0 * 0.1) pitch = 0; // no repeating lines
+  }
+  if (!pitch) return [];
+  // Peaks per strip.
+  const sw = Math.max(8, Math.round(pitch * 1.5)), strips = [];
+  for (let x0 = rx0; x0 + sw <= rx1; x0 += Math.max(4, Math.round(sw / 2))) { // (overlapping, to follow a curl closely)
+    const p = new Float64Array(h);
+    for (let y = ry0; y < ry1; y++) { let n = 0; const o = y * w; for (let x = x0; x < x0 + sw; x++) n += ink[o + x]; p[y] = n; }
+    // smoothed with a window of about a third of the pitch
+    const k = Math.max(1, Math.round(pitch / 6)), sm = new Float64Array(h);
+    let acc = 0;
+    for (let y = ry0; y < ry1; y++) {
+      acc += p[y]; if (y - 2 * k - 1 >= ry0) acc -= p[y - 2 * k - 1];
+      if (y - k >= ry0) sm[y - k] = acc;
+    }
+    let top = 0; for (let y = ry0; y < ry1; y++) top = Math.max(top, sm[y]);
+    const peaks = [];
+    if (top > 0) {
+      for (let y = ry0 + 1; y < ry1 - 1; y++) {
+        if (sm[y] < top * 0.25 || sm[y] < sm[y - 1] || sm[y] < sm[y + 1]) continue;
+        const last = peaks[peaks.length - 1];
+        if (last && y - last.y < pitch * 0.55) { if (sm[y] > last.v) { last.y = y; last.v = sm[y]; } continue; }
+        peaks.push({ y, v: sm[y] });
+      }
+    }
+    strips.push({ x: x0 + sw / 2, peaks: peaks.map((q) => q.y) });
+  }
+  // Joining, from the strip with the most lines outwards (to the right, then to the left): each
+  // track goes on to the peak nearest to where it was heading (its last few points give the
+  // direction, so a line curling up near the spine is followed); a track may skip two strips (a
+  // gap between words). Peaks no track reaches start tracks of their own.
+  let seed = 0;
+  strips.forEach((st, i) => { if (st.peaks.length > strips[seed].peaks.length || (st.peaks.length === strips[seed].peaks.length && Math.abs(i - strips.length / 2) < Math.abs(seed - strips.length / 2))) seed = i; });
+  const follow = (dir, starts) => {
+    const tracks = starts.map((y) => ({ pts: [[strips[seed].x, y]], last: seed, seeded: y }));
+    for (let si = seed + dir; si >= 0 && si < strips.length; si += dir) {
+      const strip = strips[si], free = new Set(strip.peaks.keys()), pairs = [];
+      for (const t of tracks) {
+        if (t.done || Math.abs(si - t.last) > 4) continue;
+        const n = t.pts.length, [lx, ly] = t.pts[n - 1];
+        const back = t.pts[Math.max(0, n - 4)];
+        const slope = n > 1 ? (ly - back[1]) / ((lx - back[0]) || 1) : 0;
+        const want = ly + slope * (strip.x - lx);
+        strip.peaks.forEach((y, k) => {
+          const d = Math.abs(y - want);
+          // (a sudden turn is another line: the neighbouring page across the spine, a heading)
+          const turn = Math.abs((y - ly) / ((strip.x - lx) || 1) - slope);
+          if (d < pitch * 0.45 && turn < 0.3) pairs.push([d, t, k]);
+        });
+      }
+      pairs.sort((a, b) => a[0] - b[0]);
+      const used = new Set();
+      for (const [, t, k] of pairs) {
+        if (used.has(t) || !free.has(k)) continue;
+        used.add(t); free.delete(k);
+        t.pts.push([strip.x, strip.peaks[k]]); t.last = si;
+      }
+      for (const k of free) tracks.push({ pts: [[strip.x, strip.peaks[k]]], last: si, seeded: null });
+    }
+    return tracks;
+  };
+  const right = follow(1, strips[seed].peaks), left = follow(-1, strips[seed].peaks);
+  const tracks = [];
+  for (const r of right) {
+    if (r.seeded === null) { tracks.push(r); continue; }
+    const l = left.find((x) => x.seeded === r.seeded);
+    tracks.push({ pts: l ? l.pts.slice(1).reverse().concat(r.pts) : r.pts });
+  }
+  for (const l of left) if (l.seeded === null) tracks.push({ pts: l.pts.slice().reverse() });
+  // Long tracks only, and only those of the main text block (where most tracks overlap).
+  const minLen = (rx1 - rx0) * 0.25;
+  let long = tracks.filter((t) => t.pts.length >= 4 && t.pts[t.pts.length - 1][0] - t.pts[0][0] >= minLen);
+  if (!long.length) return [];
+  const cover = new Float64Array(strips.length);
+  for (const t of long) for (const [x] of t.pts) cover[Math.min(strips.length - 1, Math.max(0, Math.round((x - rx0 - sw / 2) / sw)))]++;
+  const cmax = Math.max(...cover);
+  let a = cover.indexOf(cmax), b = a;
+  while (a > 0 && cover[a - 1] >= cmax * 0.35) a--;
+  while (b < cover.length - 1 && cover[b + 1] >= cmax * 0.35) b++;
+  const bx0 = rx0 + a * sw, bx1 = rx0 + (b + 1) * sw;
+  long = long.filter((t) => {
+    const inside = t.pts.filter(([x]) => x >= bx0 && x <= bx1).length;
+    return inside >= t.pts.length * 0.6;
+  }).map((t) => t.pts.filter(([x]) => x >= bx0 - sw * 0.5 && x <= bx1 + sw * 0.5)).filter((pts) => pts.length >= 3);
+  // Smoothed a little (a peak may sit on an ascender or descender).
+  return long.map((pts) => pts.map(([x, y], i) => {
+    const lo = Math.max(0, i - 1), hi = Math.min(pts.length - 1, i + 1);
+    let s = 0; for (let j = lo; j <= hi; j++) s += pts[j][1];
+    return [Math.round(x * 10) / 10, Math.round((s / (hi - lo + 1)) * 10) / 10];
+  })).sort((p, q) => p[0][1] - q[0][1]);
+}
+
+/**
+ * The bending that makes the given tracks (each [[x, y], …], pixels) straight: a function
+ * (x, Y) → y that tells, for a point of the straightened picture, where to take it from. Each
+ * track becomes level at its height in the middle of the text. The bend is one smooth surface
+ * fitted to all tracks (a polynomial in x and height, least squares), so a slightly wrong track or
+ * one that covers only part of a line does not dent the page; beyond the tracks it is held.
+ */
+function dewarpMap(tracks, w, h) {
+  const good = tracks.filter((t) => t.length >= 2).map((t) => t.slice().sort((a, b) => a[0] - b[0]));
+  if (!good.length) return null;
+  const all = good.flat(), xs = all.map((p) => p[0]).sort((a, b) => a - b);
+  const xRef = xs[xs.length >> 1], H = h || Math.max(...all.map((p) => p[1])) + 1;
+  // Each track's height at xRef: from a straight line fitted to it (refined below).
+  const lineAt = (t, x) => {
+    let sx = 0, sy = 0, sxx = 0, sxy = 0;
+    for (const [px, py] of t) { sx += px; sy += py; sxx += px * px; sxy += px * py; }
+    const n = t.length, den = n * sxx - sx * sx;
+    const b = den ? (n * sxy - sx * sy) / den : 0, a = (sy - b * sx) / n;
+    return a + b * x;
+  };
+  let targets = good.map((t) => lineAt(t, xRef));
+  const nx = Math.min(4, Math.max(1, Math.floor(all.length / Math.max(1, good.length) / 2))); // degree in x
+  const ny = Math.min(3, good.length - 1); // degree in height
+  const X = (x) => (x - xRef) / w, Y = (y) => (y - H / 2) / H;
+  const terms = [];
+  for (let i = 1; i <= nx; i++) for (let j = 0; j <= ny; j++) terms.push([i, j]); // (no x⁰ terms: the height at xRef stays)
+  const basis = (x, y) => { const a = X(x), b = Y(y); return terms.map(([i, j]) => a ** i * b ** j); };
+  let coef = new Float64Array(terms.length);
+  const solve = () => {
+    const m = terms.length, A = Array.from({ length: m }, () => new Float64Array(m + 1));
+    good.forEach((t, k) => {
+      for (const [x, y] of t) {
+        const f = basis(x, targets[k]), o = (y - targets[k]) / H;
+        for (let r = 0; r < m; r++) { for (let c = 0; c < m; c++) A[r][c] += f[r] * f[c]; A[r][m] += f[r] * o; }
+      }
+    });
+    for (let r = 0; r < m; r++) A[r][r] += 1e-9;
+    for (let c = 0; c < m; c++) { // Gaussian elimination with pivoting
+      let piv = c; for (let r = c + 1; r < m; r++) if (Math.abs(A[r][c]) > Math.abs(A[piv][c])) piv = r;
+      [A[c], A[piv]] = [A[piv], A[c]];
+      const d = A[c][c] || 1e-12;
+      for (let r = 0; r < m; r++) { if (r === c) continue; const f = A[r][c] / d; if (f) for (let k = c; k <= m; k++) A[r][k] -= f * A[c][k]; }
+    }
+    coef = Float64Array.from(A.map((row, r) => row[m] / (row[r] || 1e-12)));
+  };
+  const offset = (x, y) => { const f = basis(x, y); let o = 0; for (let k = 0; k < f.length; k++) o += coef[k] * f[k]; return o * H; };
+  // Fitted twice: the heights of the tracks follow the first fit.
+  for (let round = 0; round < 2; round++) {
+    solve();
+    targets = good.map((t, k) => t.reduce((sum, [x, y]) => sum + y - offset(x, targets[k]), 0) / t.length);
+  }
+  solve();
+  // What the surface misses (a sharp curl at the start of the lines near the spine) is added
+  // from the tracks themselves: their remaining distance to it, smoothed along the line (median,
+  // then mean), blended between neighbouring tracks and fading out beyond their ends.
+  const step = 4, cols = Math.ceil(w / step) + 2, rows = Math.ceil(H / step) + 2;
+  const order = targets.map((t, k) => k).sort((a, b) => targets[a] - targets[b]);
+  const rest = order.map((k) => {
+    const t = good[k], res = t.map(([x, y]) => y - targets[k] - offset(x, targets[k]));
+    const med = res.map((v, i) => { const a = res.slice(Math.max(0, i - 1), i + 2).sort((p, q) => p - q); return a[a.length >> 1]; });
+    const sm = med.map((v, i) => { const a = med.slice(Math.max(0, i - 1), i + 2); return a.reduce((p, q) => p + q, 0) / a.length; });
+    const fade = Math.max(8, (t[t.length - 1][0] - t[0][0]) * 0.08);
+    const tab = new Float32Array(cols);
+    let j = 0;
+    for (let c = 0; c < cols; c++) {
+      const x = c * step;
+      if (x <= t[0][0]) tab[c] = sm[0] * Math.max(0, 1 - (t[0][0] - x) / fade);
+      else if (x >= t[t.length - 1][0]) tab[c] = sm[sm.length - 1] * Math.max(0, 1 - (x - t[t.length - 1][0]) / fade);
+      else {
+        while (j < t.length - 2 && t[j + 1][0] < x) j++;
+        const f = (x - t[j][0]) / Math.max(1e-6, t[j + 1][0] - t[j][0]);
+        tab[c] = sm[j] + f * (sm[j + 1] - sm[j]);
+      }
+    }
+    return { t: targets[k], tab };
+  });
+  const gap = rest.length > 1 ? (rest[rest.length - 1].t - rest[0].t) / (rest.length - 1) : 40;
+  const restAt = (c, y) => {
+    if (y <= rest[0].t) return rest[0].tab[c] * Math.max(0, 1 - (rest[0].t - y) / gap);
+    const last = rest[rest.length - 1];
+    if (y >= last.t) return last.tab[c] * Math.max(0, 1 - (y - last.t) / gap);
+    let lo = 0, hi = rest.length - 1;
+    while (hi - lo > 1) { const m = (lo + hi) >> 1; if (rest[m].t <= y) lo = m; else hi = m; }
+    const f = (y - rest[lo].t) / Math.max(1e-6, rest[hi].t - rest[lo].t);
+    return rest[lo].tab[c] * (1 - f) + rest[hi].tab[c] * f;
+  };
+  // Beyond the tracks the surface is held as it is at their edge.
+  const x0 = xs[0], x1 = xs[xs.length - 1], t0 = Math.min(...targets), t1 = Math.max(...targets);
+  const grid = new Float32Array(cols * rows);
+  for (let r = 0; r < rows; r++) {
+    const y = Math.min(t1, Math.max(t0, r * step));
+    for (let c = 0; c < cols; c++) grid[r * cols + c] = offset(Math.min(x1, Math.max(x0, c * step)), y) + restAt(c, r * step);
+  }
+  return (x, y) => {
+    const fx = Math.max(0, Math.min(cols - 1.001, x / step)), fy = Math.max(0, Math.min(rows - 1.001, y / step));
+    const c = Math.floor(fx), r = Math.floor(fy), ax = fx - c, ay = fy - r;
+    const g00 = grid[r * cols + c], g01 = grid[r * cols + c + 1], g10 = grid[(r + 1) * cols + c], g11 = grid[(r + 1) * cols + c + 1];
+    return y + (g00 * (1 - ax) + g01 * ax) * (1 - ay) + (g10 * (1 - ax) + g11 * ax) * ay;
+  };
 }
 
 // ======================================================================
@@ -16341,7 +16634,9 @@ let splitDrag = null;
 function setSplit(share) {
   const wv = $("#workView");
   if (share === null) { wv.style.gridTemplateColumns = ""; return; }
-  wv.style.gridTemplateColumns = `minmax(240px, ${share}fr) 6px minmax(320px, ${1 - share}fr)`;
+  // (in hundreds: fr factors that add up to less than 1 leave part of the width empty once a
+  // column is held at its minimum)
+  wv.style.gridTemplateColumns = `minmax(240px, ${share * 100}fr) 6px minmax(320px, ${(1 - share) * 100}fr)`;
 }
 
 function initLayout() {
@@ -16406,12 +16701,12 @@ function initLayout() {
 // starts the text recognition afresh (the recognised text of the old picture would not fit).
 // ======================================================================
 
-const PIC_DEFAULT = { bright: 100, contrast: 100, gray: false, rotate: 0, fine: 0, quad: null, crop: null }; // crop: page fractions [x0, y0, x1, y1]; fine: degrees, clockwise; quad: the page's corners (see straighten.js)
+const PIC_DEFAULT = { bright: 100, contrast: 100, gray: false, rotate: 0, fine: 0, quad: null, tracks: null, crop: null }; // crop: page fractions [x0, y0, x1, y1]; fine: degrees, clockwise; quad: the page's corners (see straighten.js)
 const picEdit = { ...PIC_DEFAULT };
 let picCropMode = false;
 
 const picFilter = () => `brightness(${picEdit.bright / 100}) contrast(${picEdit.contrast / 100})${picEdit.gray ? " grayscale(1)" : ""}`;
-const picIsDefault = () => picEdit.bright === 100 && picEdit.contrast === 100 && !picEdit.gray && !picEdit.rotate && !picEdit.fine && !picEdit.quad && !picEdit.crop;
+const picIsDefault = () => picEdit.bright === 100 && picEdit.contrast === 100 && !picEdit.gray && !picEdit.rotate && !picEdit.fine && !picEdit.quad && !picEdit.tracks && !picEdit.crop;
 
 /** Show the edit state in the panel and in the preview. */
 function picSync() {
@@ -16420,7 +16715,7 @@ function picSync() {
   $("#picGray").checked = picEdit.gray;
   $("#picRotOut").textContent = picEdit.rotate ? `${picEdit.rotate}°` : "";
   $("#picFine").value = picEdit.fine;
-  $("#picFineOut").textContent = (picEdit.quad ? "▱ " : "") + (picEdit.fine ? pmDeg(picEdit.fine, true) : "");
+  $("#picFineOut").textContent = (picEdit.tracks ? "〰 " : "") + (picEdit.quad ? "▱ " : "") + (picEdit.fine ? pmDeg(picEdit.fine, true) : "");
   // (the straightening is shown live: the crop area is chosen on the straightened picture)
   document.documentElement.style.setProperty("--pic-turn", `${picEdit.fine}deg`);
   $("#picCropOut").textContent = picEdit.crop ? t("pic.cropSet") : "";
@@ -16543,10 +16838,10 @@ async function picHand() {
     busy("");
     await openStraighten({
       image: new Blob([png], { type: "image/png" }), width: page.width, height: page.height,
-      angle: picEdit.fine, quad: picEdit.quad, title: t("pic.handTitleShort"),
+      angle: picEdit.fine, quad: picEdit.quad, tracks: picEdit.tracks, title: t("pic.handTitleShort"),
       measure: () => pool.workers[0].call("skewDetect", { page: 0 }),
-      onApply: (angle, quad) => {
-        picEdit.fine = angle; picEdit.quad = quad;
+      onApply: (angle, quad, tracks) => {
+        picEdit.fine = angle; picEdit.quad = quad; picEdit.tracks = tracks;
         if (quad) picEdit.crop = null; // (the corners take the place of a crop)
         picSync();
         if (!picIsDefault()) picApply();
@@ -16570,13 +16865,13 @@ async function picApply(quiet = false) {
     const png = await pool.workers[0].call("render", { page: 0, zoom: img.width / page.width, variant: "original" });
     let bmp = await createImageBitmap(new Blob([png], { type: "image/png" }));
     try {
-      if (picEdit.fine || picEdit.quad) {
+      if (picEdit.fine || picEdit.quad || picEdit.tracks) {
         // Straightened (and flattened from its corners) first; a turn keeps the size, the corners
         // turned in are white.
         const src = new OffscreenCanvas(bmp.width, bmp.height), sx = src.getContext("2d", { willReadFrequently: true });
         sx.drawImage(bmp, 0, 0);
         const px = sx.getImageData(0, 0, bmp.width, bmp.height);
-        const res = Engine.warpPixels(px.data, bmp.width, bmp.height, 4, { angle: picEdit.fine, quad: picEdit.quad });
+        const res = Engine.warpPixels(px.data, bmp.width, bmp.height, 4, { angle: picEdit.fine, quad: picEdit.quad, tracks: picEdit.tracks });
         const st2 = new OffscreenCanvas(res.width, res.height);
         st2.getContext("2d").putImageData(new ImageData(res.data, res.width, res.height), 0, 0);
         bmp.close && bmp.close();
@@ -16641,7 +16936,7 @@ function initPicture() {
 // from its own browser cache before the network, so language files are written into that cache.
 // ======================================================================
 
-const APP_VERSION = "2.12";
+const APP_VERSION = "2.13";
 // (a change of library version makes a stored set outdated: it is then ignored)
 const OFFLINE_VERSION = `${MUPDF_URL} ${OCR_LIB}`;
 const CORE_SIMD = "tesseract-core-simd-lstm.wasm.js", CORE_PLAIN = "tesseract-core-lstm.wasm.js";
@@ -16992,8 +17287,8 @@ function renderPagesGrid() {
     else badge = badge.replace(/ · $/, "");
     if (pmNotesItem(it)) badge = badge ? `${badge} · ${t("pages.notesLabel")}` : t("pages.notesLabel");
     if (it.rot) badge = badge ? `${badge} · ↻${it.rot}°` : `↻${it.rot}°`;
-    const fix = `${it.quad ? "▱" : "⟂"}${it.skew ? ` ${pmDeg(-it.skew, true)}` : ""}`; // (the correction: + clockwise)
-    if (it.skew || it.quad) badge = badge ? `${badge} · ${fix}` : fix;
+    const fix = `${it.tracks ? "〰" : ""}${it.quad ? "▱" : it.tracks ? "" : "⟂"}${it.skew ? ` ${pmDeg(-it.skew, true)}` : ""}`; // (the correction: + clockwise)
+    if (it.skew || it.quad || it.tracks) badge = badge ? `${badge} · ${fix}` : fix;
     const btn = (act, key, label, vars) => `<button type="button" data-act="${act}" title="${t(key, vars)}" aria-label="${t(key, vars)}">${label}</button>`;
     const sel = pm.sel.has(it);
     const turn = pmSlides() ? "" : btn("rotate", "pages.rotate", "↻");
@@ -17039,7 +17334,7 @@ async function pmStraighten(items) {
   if (!todo.length) return;
   let fixed = 0, straight = 0, unclear = 0;
   for (const [k, it] of todo.entries()) {
-    if (it.quad) { straight++; continue; } // (corners drawn by hand keep their own angle)
+    if (it.quad || it.tracks) { straight++; continue; } // (corners and lines traced by hand keep their own angle)
     busy(t("pages.measuring", { i: k + 1, n: todo.length }));
     try {
       const r = await pool.workers[0].call("skewDetect", { page: pmSlides() ? pm.slides[it.page] : it.page, index: it.from });
@@ -17076,10 +17371,10 @@ async function pmHand(it) {
     const size = pmPageSize(it);
     busy("");
     await openStraighten({
-      image: blob, width: size.width, height: size.height, angle: -(it.skew || 0), quad: it.quad || null,
+      image: blob, width: size.width, height: size.height, angle: -(it.skew || 0), quad: it.quad || null, tracks: it.tracks || null,
       title: t("pages.handTitleShort", { n: pm.items.indexOf(it) + 1 }),
       measure: () => pool.workers[0].call("skewDetect", { page, index: it.from }),
-      onApply: (angle, quad) => { it.skew = angle ? -angle : 0; it.quad = quad; renderPagesGrid(); },
+      onApply: (angle, quad, tracks) => { it.skew = angle ? -angle : 0; it.quad = quad; it.tracks = tracks; renderPagesGrid(); },
     });
   } catch (err) {
     console.error(err);
@@ -17122,7 +17417,7 @@ function pmRanges(nums) {
 /** Saves the given items, in the order of the grid, as a file of their own. */
 async function pmSave(items) {
   if (!items.length) return;
-  const plan = pm.items.filter((it) => items.includes(it)).map((it) => ({ from: it.from, page: it.page, w: it.w, h: it.h, rot: it.rot || 0, skew: pmSlides() ? 0 : it.skew || 0, quad: pmSlides() ? null : it.quad || null }));
+  const plan = pm.items.filter((it) => items.includes(it)).map((it) => ({ from: it.from, page: it.page, w: it.w, h: it.h, rot: it.rot || 0, skew: pmSlides() ? 0 : it.skew || 0, quad: pmSlides() ? null : it.quad || null, tracks: pmSlides() ? null : it.tracks || null }));
   const ext = pmSlides() ? "pptx" : "pdf";
   const base = state.doc.name.replace(/\.[^.]+$/, "");
   // Numbered by the open file's own pages when all come from it, else by their place in the grid.
@@ -17150,15 +17445,15 @@ function loadThumb(img) {
   const card = img.closest(".pg-card"), it = pm.items[Number(card.dataset.i)];
   if (!it || it.from < 0) return;
   const key = `${it.from}:${it.page}`;
-  const rot = it.rot || 0, skew = it.skew || 0, quad = it.quad || null;
-  const turned = pm.thumbs.get(`${key}@${rot}@${skew}@${quad}`);
-  if ((rot || skew || quad) && turned) { img.src = turned; return; }
+  const rot = it.rot || 0, skew = it.skew || 0, quad = it.quad || null, tracks = it.tracks || null;
+  const turned = pm.thumbs.get(`${key}@${rot}@${skew}@${quad}@${tracks ? tracks.length + ":" + tracks[0][0] : ""}`);
+  if ((rot || skew || quad || tracks) && turned) { img.src = turned; return; }
   const show = (url) => {
     const cur = $("#pagesGrid").querySelector(`.pg-card[data-i="${pm.items.indexOf(it)}"] img`);
     if (cur) cur.src = url;
   };
   const cached = pm.thumbs.get(key);
-  if (cached) { pmTurnedThumb(key, cached, rot, skew, quad).then(show); return; }
+  if (cached) { pmTurnedThumb(key, cached, rot, skew, quad, tracks).then(show); return; }
   const size = pmBaseSize(it), zoom = Math.max(0.15, Math.min(1.5, 170 / Math.max(size.width, size.height) * 1.3));
   const req = it.from === 0
     ? pool.leastBusy(null).call("render", { page: pmSlides() ? pm.slides[it.page] : it.page, zoom, variant: "original" })
@@ -17166,14 +17461,14 @@ function loadThumb(img) {
   req.then((buf) => {
     const url = URL.createObjectURL(new Blob([buf], { type: "image/png" }));
     pm.thumbs.set(key, url);
-    return pmTurnedThumb(key, url, it.rot || 0, it.skew || 0, it.quad || null).then(show);
+    return pmTurnedThumb(key, url, it.rot || 0, it.skew || 0, it.quad || null, it.tracks || null).then(show);
   }).catch((err) => console.warn("thumbnail failed", err));
 }
 
 /** The thumbnail `url` turned clockwise by `rot` degrees, straightened and flattened (cached). */
-function pmTurnedThumb(key, url, rot, skew = 0, quad = null) {
-  if (!rot && !skew && !quad) return Promise.resolve(url);
-  const id = `${key}@${rot}@${skew}@${quad}`, done = pm.thumbs.get(id);
+function pmTurnedThumb(key, url, rot, skew = 0, quad = null, tracks = null) {
+  if (!rot && !skew && !quad && !tracks) return Promise.resolve(url);
+  const id = `${key}@${rot}@${skew}@${quad}@${tracks ? tracks.length + ":" + tracks[0][0] : ""}`, done = pm.thumbs.get(id);
   if (done) return Promise.resolve(done);
   return new Promise((resolve) => {
     const im = new Image();
@@ -17183,7 +17478,7 @@ function pmTurnedThumb(key, url, rot, skew = 0, quad = null) {
       const ga = a.getContext("2d", { willReadFrequently: true });
       ga.drawImage(im, 0, 0);
       const px = ga.getImageData(0, 0, a.width, a.height);
-      const res = Engine.warpPixels(px.data, a.width, a.height, 4, { turn: rot, angle: -skew, quad });
+      const res = Engine.warpPixels(px.data, a.width, a.height, 4, { turn: rot, angle: -skew, quad, tracks });
       const c = document.createElement("canvas");
       c.width = res.width; c.height = res.height;
       c.getContext("2d").putImageData(new ImageData(res.data, res.width, res.height), 0, 0);
@@ -17261,10 +17556,10 @@ function pmRestoreTranslations(cap, plan) {
 }
 
 async function applyPages() {
-  const plan = pm.items.map((it) => ({ from: it.from, page: it.page, w: it.w, h: it.h, rot: it.rot || 0, skew: pmSlides() ? 0 : it.skew || 0, quad: pmSlides() ? null : it.quad || null }));
+  const plan = pm.items.map((it) => ({ from: it.from, page: it.page, w: it.w, h: it.h, rot: it.rot || 0, skew: pmSlides() ? 0 : it.skew || 0, quad: pmSlides() ? null : it.quad || null, tracks: pmSlides() ? null : it.tracks || null }));
   const n = pmSlides() ? pm.slides.length : state.doc.pages.length;
   const dropNotes = pmSlides() && !$("#pagesNotesWrap").hidden && $("#pagesDropNotes").checked;
-  if (!dropNotes && plan.length === n && plan.every((p, i) => p.from === 0 && p.page === i && !p.rot && !p.skew && !p.quad)) { toast(t("pages.unchanged")); return; }
+  if (!dropNotes && plan.length === n && plan.every((p, i) => p.from === 0 && p.page === i && !p.rot && !p.skew && !p.quad && !p.tracks)) { toast(t("pages.unchanged")); return; }
   const name = state.doc.name.replace(/\.ppt$/i, ".pptx");
   const kind = state.doc.kind;
   busy(t("pages.working"));
@@ -17388,9 +17683,12 @@ function initPagesManager() {
  * pages"): the page is shown large and can be turned by dragging it like a dial, turned so that a
  * line drawn along a text line or an edge becomes level (or upright), measured automatically, or
  * flattened from its four corners dragged onto the page's corners (a photographed page seen at a
- * slant). The angle is in degrees, clockwise; the corners are fractions of the straightened page.
+ * slant), and its text lines bent straight where the page is curved (a book photographed open):
+ * found automatically, or traced by hand along a line. The angle is in degrees, clockwise; the
+ * corners and the traced lines are fractions of the straightened page.
  */
-const st = { open: false, angle: 0, quad: null, mode: "turn", ratio: 1, onApply: null, measure: null, drag: null, line: null };
+const st = { open: false, angle: 0, quad: null, tracks: [], mode: "turn", ratio: 1, onApply: null, measure: null, drag: null, line: null, src: null, preview: false, previewTimer: 0 };
+const ST_MODES = ["turn", "line", "corners", "lines"];
 
 const ST_DEFAULT_QUAD = () => [[0.06, 0.06], [0.94, 0.06], [0.94, 0.94], [0.06, 0.94]];
 const stRound = (a) => Math.round(Math.max(-SKEW_LIMIT, Math.min(SKEW_LIMIT, a)) * 10) / 10;
@@ -17399,10 +17697,22 @@ const stRound = (a) => Math.round(Math.max(-SKEW_LIMIT, Math.min(SKEW_LIMIT, a))
  * Opens the editor. `image`: the page as a picture (Blob) and its size; `angle`/`quad`: the
  * current setting; `measure()`: the measured tilt ({angle, confidence}); `onApply(angle, quad)`.
  */
-async function openStraighten({ image, width, height, angle = 0, quad = null, measure, onApply, title }) {
+async function openStraighten({ image, width, height, angle = 0, quad = null, tracks = null, measure, onApply, title }) {
   st.angle = stRound(angle || 0);
   st.quad = quad ? quad.map((p) => p.slice()) : null;
-  st.mode = st.quad ? "corners" : "turn";
+  st.tracks = tracks ? tracks.map((t) => t.map((p) => p.slice())) : [];
+  st.mode = st.tracks.length ? "lines" : st.quad ? "corners" : "turn";
+  st.preview = false;
+  st.src = null;
+  // (the picture's pixels, for finding the lines and for the preview of the bending)
+  createImageBitmap(image).then((bmp) => {
+    const c = document.createElement("canvas");
+    c.width = bmp.width; c.height = bmp.height;
+    const g = c.getContext("2d", { willReadFrequently: true });
+    g.drawImage(bmp, 0, 0);
+    bmp.close && bmp.close();
+    st.src = { data: g.getImageData(0, 0, c.width, c.height).data, w: c.width, h: c.height };
+  }).catch((err) => console.warn("straighten", err));
   st.ratio = width / height;
   st.onApply = onApply;
   st.measure = measure;
@@ -17433,7 +17743,14 @@ function stSync() {
   $("#stAngle").value = String(st.angle);
   $("#stAngleOut").textContent = pmDeg(st.angle, true);
   $("#stImg").style.transform = `rotate(${st.angle}deg)`;
-  for (const m of ["turn", "line", "corners"]) {
+  // The bent result is shown while choosing the corners (they belong to it) or when asked for.
+  const showBent = st.tracks.length > 0 && (st.preview || st.mode === "corners");
+  $("#stPreview").hidden = !showBent;
+  if (showBent) stQueuePreview();
+  $("#stLinesTools").hidden = st.mode !== "lines";
+  $("#stPreviewOn").checked = st.preview;
+  $("#stLinesCount").textContent = st.tracks.length ? t("st2.linesCount", { n: st.tracks.length }) : "";
+  for (const m of ST_MODES) {
     $(`#stMode_${m}`).classList.toggle("primary", st.mode === m);
     $("#straightDialog").classList.toggle(`mode-${m}`, st.mode === m);
   }
@@ -17451,6 +17768,11 @@ function stDraw() {
   if (st.mode !== "corners") for (let k = 1; k < 10; k++) html += `<line class="st-guide" x1="0" y1="${(k * h) / 10}" x2="${w}" y2="${(k * h) / 10}"/>`;
   if (st.mode !== "corners") for (let k = 1; k < 6; k++) html += `<line class="st-guide" x1="${(k * w) / 6}" y1="0" x2="${(k * w) / 6}" y2="${h}"/>`;
   if (st.line) html += `<line class="st-line" x1="${st.line[0]}" y1="${st.line[1]}" x2="${st.line[2]}" y2="${st.line[3]}"/>`;
+  // traced lines (on the picture before bending; hidden while the bent preview is shown)
+  if (st.mode === "lines" && !st.preview) st.tracks.forEach((tr, k) => {
+    html += `<polyline class="st-track" data-k="${k}" points="${tr.map(([x, y]) => `${x * w},${y * h}`).join(" ")}"/>`;
+  });
+  if (st.drag && st.drag.kind === "trace") html += `<polyline class="st-track new" points="${st.drag.pts.map((p) => p.join(",")).join(" ")}"/>`;
   if (st.quad) {
     const pts = st.quad.map(([x, y]) => [x * w, y * h]);
     const poly = pts.map((p) => p.join(",")).join(" ");
@@ -17482,6 +17804,9 @@ function stPointerDown(e) {
   } else if (st.mode === "line") {
     st.drag = { kind: "line" };
     st.line = [x, y, x, y];
+  } else if (st.mode === "lines") {
+    if (st.preview) { st.preview = false; stSync(); }
+    st.drag = { kind: "trace", pts: [[x, y]] };
   } else {
     st.drag = { kind: "turn", from: Math.atan2(y - h / 2, x - w / 2), angle: st.angle };
   }
@@ -17491,6 +17816,12 @@ function stPointerDown(e) {
 function stPointerMove(e) {
   if (!st.drag) return;
   const stage = $("#stStage"), [x, y] = stPoint(e), w = stage.clientWidth, h = stage.clientHeight;
+  if (st.drag.kind === "trace") {
+    const last = st.drag.pts[st.drag.pts.length - 1];
+    if (Math.hypot(x - last[0], y - last[1]) > 6) st.drag.pts.push([x, y]);
+    stDraw();
+    return;
+  }
   if (st.drag.kind === "corner") st.quad[st.drag.k] = [Math.min(1, Math.max(0, x / w)), Math.min(1, Math.max(0, y / h))];
   else if (st.drag.kind === "line") { st.line[2] = x; st.line[3] = y; } else {
     // like a dial: the page follows the pointer's angle around its middle
@@ -17502,8 +17833,33 @@ function stPointerMove(e) {
   stSync();
 }
 
-function stPointerUp() {
+function stPointerUp(e) {
   if (!st.drag) return;
+  if (st.drag.kind === "trace") {
+    const stage = $("#stStage"), w = stage.clientWidth, h = stage.clientHeight, pts = st.drag.pts;
+    st.drag = null;
+    const span = pts.length > 1 ? Math.abs(pts[pts.length - 1][0] - pts[0][0]) : 0;
+    if (span > 30) {
+      // a line traced along a text line (from either side)
+      const tr = pts.map(([x, y]) => [Math.round((x / w) * 1e4) / 1e4, Math.round((y / h) * 1e4) / 1e4]).sort((a, b) => a[0] - b[0]);
+      st.tracks.push(tr);
+    } else if (pts.length) {
+      // a click on a traced line removes it
+      const [px, py] = pts[0];
+      let best = -1, bestD = 8;
+      st.tracks.forEach((tr, k) => {
+        for (let i = 1; i < tr.length; i++) {
+          const ax = tr[i - 1][0] * w, ay = tr[i - 1][1] * h, bx = tr[i][0] * w, by = tr[i][1] * h;
+          const l2 = (bx - ax) ** 2 + (by - ay) ** 2 || 1, f = Math.max(0, Math.min(1, ((px - ax) * (bx - ax) + (py - ay) * (by - ay)) / l2));
+          const d = Math.hypot(px - (ax + f * (bx - ax)), py - (ay + f * (by - ay)));
+          if (d < bestD) { bestD = d; best = k; }
+        }
+      });
+      if (best >= 0) st.tracks.splice(best, 1);
+    }
+    stSync();
+    return;
+  }
   if (st.drag.kind === "line" && st.line) {
     const [x0, y0, x1, y1] = st.line;
     if (Math.hypot(x1 - x0, y1 - y0) > 12) {
@@ -17518,6 +17874,56 @@ function stPointerUp() {
   }
   st.drag = null;
   stSync();
+}
+
+/** The picture as shown in the editor (turned by the angle), as grey pixels. */
+function stTurnedGray() {
+  const { data, w, h } = st.src;
+  const res = Engine.warpPixels(data, w, h, 4, { angle: st.angle });
+  const gray = new Uint8Array(res.width * res.height);
+  for (let i = 0; i < gray.length; i++) gray[i] = (res.data[i * 4] * 30 + res.data[i * 4 + 1] * 59 + res.data[i * 4 + 2] * 11) / 100;
+  return { gray, w: res.width, h: res.height };
+}
+
+/** Finds the text lines (within the corners, when set) and traces them. */
+async function stFindLines() {
+  if (!st.src) { toast(t("pic.preparing")); return; }
+  busy(t("st2.finding"));
+  await new Promise((res) => setTimeout(res, 30));
+  try {
+    const { gray, w, h } = stTurnedGray();
+    let region = null;
+    if (st.quad) {
+      const xs = st.quad.map((p) => p[0] * w), ys = st.quad.map((p) => p[1] * h);
+      region = [Math.max(0, Math.min(...xs)), Math.max(0, Math.min(...ys)), Math.min(w, Math.max(...xs)), Math.min(h, Math.max(...ys))];
+    }
+    const found = Engine.findTextLines(gray, w, h, region);
+    st.tracks = found.map((tr) => tr.map(([x, y]) => [Math.round((x / w) * 1e4) / 1e4, Math.round((y / h) * 1e4) / 1e4]));
+    st.preview = false;
+    toast(found.length ? t("st2.linesFound", { n: found.length }) : t("st2.noLines"), found.length ? "ok" : "error");
+    stSync();
+  } finally {
+    busy("");
+  }
+}
+
+/** The bent picture, shown instead of the original (computed shortly after a change). */
+function stQueuePreview() {
+  clearTimeout(st.previewTimer);
+  st.previewTimer = setTimeout(() => {
+    if (!st.src || !st.tracks.length) return;
+    const { data, w, h } = st.src;
+    const res = Engine.warpPixels(data, w, h, 4, { angle: st.angle, tracks: st.tracks });
+    const c = document.createElement("canvas");
+    c.width = res.width; c.height = res.height;
+    c.getContext("2d").putImageData(new ImageData(res.data, res.width, res.height), 0, 0);
+    c.toBlob((b) => {
+      if (!b) return;
+      const img = $("#stPreview");
+      if (img.src) URL.revokeObjectURL(img.src);
+      img.src = URL.createObjectURL(b);
+    }, "image/jpeg", 0.85);
+  }, 120);
 }
 
 async function stAuto() {
@@ -17546,18 +17952,21 @@ function initStraighten() {
   $("#stMinus").addEventListener("click", () => { st.angle = stRound(st.angle - 0.1); stSync(); });
   $("#stPlus").addEventListener("click", () => { st.angle = stRound(st.angle + 0.1); stSync(); });
   $("#stAuto").addEventListener("click", stAuto);
-  for (const m of ["turn", "line", "corners"]) $(`#stMode_${m}`).addEventListener("click", () => {
+  $("#stFindLines").addEventListener("click", stFindLines);
+  $("#stClearLines").addEventListener("click", () => { st.tracks = []; st.preview = false; stSync(); });
+  $("#stPreviewOn").addEventListener("change", (e) => { st.preview = e.target.checked && st.tracks.length > 0; stSync(); });
+  for (const m of ST_MODES) $(`#stMode_${m}`).addEventListener("click", () => {
     st.mode = m;
     if (m === "corners" && !st.quad) st.quad = ST_DEFAULT_QUAD();
     stSync();
   });
   $("#stCornersReset").addEventListener("click", () => { st.quad = null; if (st.mode === "corners") st.mode = "turn"; stSync(); });
-  $("#stReset").addEventListener("click", () => { st.angle = 0; st.quad = null; st.mode = "turn"; stSync(); });
+  $("#stReset").addEventListener("click", () => { st.angle = 0; st.quad = null; st.tracks = []; st.preview = false; st.mode = "turn"; stSync(); });
   $("#stApply").addEventListener("click", (e) => {
     e.preventDefault();
     const done = st.onApply;
     $("#straightDialog").close("ok");
-    if (done) done(st.angle, st.quad);
+    if (done) done(st.angle, st.quad, st.tracks.length ? st.tracks : null);
   });
   $("#straightDialog").addEventListener("close", () => { st.open = false; st.drag = null; });
   window.addEventListener("resize", () => { if (st.open) stLayout(); });

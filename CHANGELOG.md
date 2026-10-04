@@ -4,6 +4,11 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.13
+
+- Straighten by hand → **Flatten lines** (for a book page photographed open, its lines curved near the spine): "Find lines" traces the course of the text lines (within the page borders when they are set); drag along a curved line to add one, click a line to remove it; "Show result" shows the page bent straight. The bend is one smooth surface fitted to all lines plus the fine curl of each line, so single words are not dented; two lines traced by hand (the top and the bottom one) are enough to bend everything between them. Works for opened pictures and, in "Arrange pages", for PDF pages (the page is then saved anew as a picture).
+- Fixed: dragging the border between the page and the fields far to the right left a large empty area on the right; the fields column now also wraps its rows when it is narrow instead of sticking out, and the toolbar above the page wraps when the page view is narrow.
+
 ## 2.12
 
 - Text notes work properly: after typing (Enter; Shift+Enter for a new line) the note is selected and the selection tool is active again, so it can be moved, changed or deleted straight away. A click with the text tool on an existing note edits it instead of putting a new note on top; Esc closes the box and returns to the selection tool.

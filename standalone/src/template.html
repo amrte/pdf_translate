@@ -681,6 +681,13 @@
         <button type="button" class="btn small" id="stMode_turn" data-i18n="st2.mode_turn" data-i18n-title="st2.hint_turn"></button>
         <button type="button" class="btn small" id="stMode_line" data-i18n="st2.mode_line" data-i18n-title="st2.hint_line"></button>
         <button type="button" class="btn small" id="stMode_corners" data-i18n="st2.mode_corners" data-i18n-title="st2.hint_corners"></button>
+        <button type="button" class="btn small" id="stMode_lines" data-i18n="st2.mode_lines" data-i18n-title="st2.hint_lines"></button>
+      </span>
+      <span class="st-lines-tools" id="stLinesTools" hidden>
+        <button type="button" class="btn small" id="stFindLines" data-i18n="st2.findLines" data-i18n-title="st2.findLinesTitle"></button>
+        <button type="button" class="btn small" id="stClearLines" data-i18n="st2.clearLines"></button>
+        <label class="check"><input type="checkbox" id="stPreviewOn"> <span data-i18n="st2.preview"></span></label>
+        <span class="muted small" id="stLinesCount"></span>
       </span>
       <span class="spacer"></span>
       <button type="button" class="btn small" id="stAuto" data-i18n="pic.auto" data-i18n-title="pic.autoTitle"></button>
@@ -692,7 +699,7 @@
       </span>
     </div>
     <p class="muted small st-hint"><span id="stHint"></span> <button type="button" class="linkish" id="stCornersReset" data-i18n="st2.cornersOff" hidden></button></p>
-    <div class="st-area" id="stArea"><div class="st-stage" id="stStage"><img id="stImg" alt="" draggable="false"><svg id="stSvg" xmlns="http://www.w3.org/2000/svg"></svg></div></div>
+    <div class="st-area" id="stArea"><div class="st-stage" id="stStage"><img id="stImg" alt="" draggable="false"><img id="stPreview" alt="" draggable="false" hidden><svg id="stSvg" xmlns="http://www.w3.org/2000/svg"></svg></div></div>
     <div class="modal-actions">
       <button type="button" class="btn ghost" id="stReset" data-i18n="pic.reset">Reset</button>
       <span class="spacer"></span>
