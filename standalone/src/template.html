@@ -195,6 +195,7 @@
       <label class="pic-row"><span data-i18n="pic.brightness">Brightness</span><input type="range" id="picBright" min="50" max="150" value="100"><output id="picBrightOut">100%</output></label>
       <label class="pic-row"><span data-i18n="pic.contrast">Contrast</span><input type="range" id="picContrast" min="50" max="150" value="100"><output id="picContrastOut">100%</output></label>
       <label class="check"><input type="checkbox" id="picGray"> <span data-i18n="pic.gray">Greyscale</span></label>
+      <label class="check" data-i18n-title="pic.cleanTitle"><input type="checkbox" id="picClean"> <span data-i18n="pic.clean">White paper</span></label>
       <div class="pic-row"><span data-i18n="pic.rotate">Rotate</span><span class="pic-buttons"><button type="button" class="btn" id="picRotL" data-i18n-title="pic.rotL">⟲ 90°</button><button type="button" class="btn" id="picRotR" data-i18n-title="pic.rotR">⟳ 90°</button></span><output id="picRotOut"></output></div>
       <div class="pic-row"><span data-i18n="pic.straight">Straighten</span><span class="pic-buttons"><button type="button" class="btn" id="picAuto" data-i18n="pic.auto" data-i18n-title="pic.autoTitle">Auto</button><button type="button" class="btn" id="picHand" data-i18n="pic.hand" data-i18n-title="pic.handTitle">By hand…</button></span><output id="picFineOut"></output></div>
       <label class="pic-row"><span></span><input type="range" id="picFine" min="-15" max="15" step="0.1" value="0" data-i18n-title="pic.fineTitle" data-i18n-aria="pic.fineTitle"><span></span></label>
@@ -776,6 +777,7 @@
       <label class="check" data-i18n-title="ocr.dewarpTitle"><input type="checkbox" id="ocrDewarp" checked> <span data-i18n="ocr.dewarp"></span></label>
       <label class="check" data-i18n-title="ocr.cropTitle"><input type="checkbox" id="ocrCrop" checked> <span data-i18n="ocr.crop"></span></label>
       <label class="check" data-i18n-title="ocr.splitTitle"><input type="checkbox" id="ocrSplit" checked> <span data-i18n="ocr.split"></span></label>
+      <label class="check" data-i18n-title="ocr.cleanTitle"><input type="checkbox" id="ocrClean" checked> <span data-i18n="ocr.clean"></span></label>
     </div>
     <label class="field"><span data-i18n="ocr.family">Font of the translation</span>
       <select id="ocrFamily"><option value="serif" data-i18n="st.serif"></option><option value="sans-serif" data-i18n="st.sans"></option></select>

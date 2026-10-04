@@ -297,6 +297,7 @@ function warpedPdfPage(out, doc, pno, it) {
     let res;
     try {
       res = warpPixels(pix.getPixels(), pix.getWidth(), pix.getHeight(), pix.getNumberOfComponents(), { turn: it.rot || 0, angle: -(Number(it.skew) || 0), quad: it.quad || null, tracks: it.tracks || null });
+      if (it.clean) cleanPixels(res.data, res.width, res.height, pix.getNumberOfComponents());
     } finally {
       free(pix);
     }
@@ -318,6 +319,89 @@ function warpedPdfPage(out, doc, pno, it) {
   } finally {
     free(page);
   }
+}
+
+/* ---- the paper made white: shadows, uneven light and a colour cast taken out */
+
+/**
+ * The paper's own colour across a picture (`n` bytes per pixel, 3 or 4): in blocks of about a
+ * sixtieth of the picture, the mean colour of the brightest tenth (the paper between the
+ * letters), smoothed. Blocks inside a dark picture would pass for very dark paper: none is taken
+ * as darker than 60 % of the page's usual paper. Returns {grid, gw, gh, bs, paper} (grid: RGB per
+ * block, paper: the usual paper brightness).
+ */
+function paperColour(src, w, h, n) {
+  const bs = Math.max(12, Math.round(Math.max(w, h) / 60)), gw = Math.ceil(w / bs), gh = Math.ceil(h / bs);
+  const grid = new Float32Array(gw * gh * 3), lum = new Float32Array(gw * gh), hist = new Uint32Array(256);
+  for (let by = 0; by < gh; by++) for (let bx = 0; bx < gw; bx++) {
+    const x0 = bx * bs, y0 = by * bs, x1 = Math.min(w, x0 + bs), y1 = Math.min(h, y0 + bs);
+    hist.fill(0);
+    let cnt = 0;
+    for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) { const o = (y * w + x) * n; hist[(src[o] * 30 + src[o + 1] * 59 + src[o + 2] * 11) / 100 | 0]++; cnt++; }
+    let thr = 255, acc = 0;
+    while (thr > 0 && acc + hist[thr] < cnt * 0.1) acc += hist[thr--];
+    let r = 0, g = 0, b = 0, k = 0;
+    for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) {
+      const o = (y * w + x) * n;
+      if ((src[o] * 30 + src[o + 1] * 59 + src[o + 2] * 11) / 100 >= thr) { r += src[o]; g += src[o + 1]; b += src[o + 2]; k++; }
+    }
+    const i = by * gw + bx;
+    grid[i * 3] = r / k; grid[i * 3 + 1] = g / k; grid[i * 3 + 2] = b / k;
+    lum[i] = (grid[i * 3] * 30 + grid[i * 3 + 1] * 59 + grid[i * 3 + 2] * 11) / 100;
+  }
+  const sorted = Array.from(lum).sort((p, q) => p - q), paper = sorted[Math.floor(sorted.length * 0.75)] || 255;
+  // too dark for paper: lifted to 60 % of the usual paper, keeping its hue
+  for (let i = 0; i < gw * gh; i++) if (lum[i] < paper * 0.6) { const f = (paper * 0.6) / Math.max(1, lum[i]); for (let c = 0; c < 3; c++) grid[i * 3 + c] = Math.min(255, grid[i * 3 + c] * f); }
+  // smoothed: a median of each block's neighbours (a letter-filled block), then a mean
+  const out = new Float32Array(grid.length);
+  for (let pass = 0; pass < 2; pass++) {
+    for (let by = 0; by < gh; by++) for (let bx = 0; bx < gw; bx++) for (let c = 0; c < 3; c++) {
+      const v = [];
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+        const yy = by + dy, xx = bx + dx;
+        if (yy >= 0 && xx >= 0 && yy < gh && xx < gw) v.push(grid[(yy * gw + xx) * 3 + c]);
+      }
+      out[(by * gw + bx) * 3 + c] = pass === 0 ? v.sort((p, q) => p - q)[v.length >> 1] : v.reduce((p, q) => p + q, 0) / v.length;
+    }
+    grid.set(out);
+  }
+  return { grid, gw, gh, bs, paper, spread: (sorted[Math.floor(sorted.length * 0.9)] - sorted[Math.floor(sorted.length * 0.1)]) / Math.max(1, paper) };
+}
+
+/**
+ * Whether a picture of a page would gain from cleaning (see cleanPixels): its paper is dim,
+ * unevenly lit or tinted. A clean scan or a page of a PDF made on a computer is left alone.
+ */
+function needsCleaning(src, w, h, n) {
+  const { grid, paper, spread } = paperColour(src, w, h, n);
+  let tint = 0, k = 0;
+  for (let i = 0; i < grid.length; i += 3) { tint += Math.max(grid[i], grid[i + 1], grid[i + 2]) - Math.min(grid[i], grid[i + 1], grid[i + 2]); k++; }
+  return paper < 228 || spread > 0.1 || tint / Math.max(1, k) > 14;
+}
+
+/**
+ * The picture with white paper (`n` bytes per pixel, changed in place): every pixel divided by the
+ * paper's colour at its place (see paperColour), which takes out shadows, uneven light and a
+ * colour cast; then near-white made white and the text a little darker. Pictures on the page keep
+ * their colours, a little lighter.
+ */
+function cleanPixels(src, w, h, n) {
+  const { grid, gw, gh, bs } = paperColour(src, w, h, n);
+  const lut = new Uint8ClampedArray(512);
+  for (let i = 0; i < 512; i++) { const v = i / 255; lut[i] = Math.round(255 * Math.min(1, Math.max(0, (v - 0.06) / (0.9 - 0.06))) ** 1.15); }
+  for (let y = 0; y < h; y++) {
+    const fy = Math.min(gh - 1.001, Math.max(0, y / bs - 0.5)), gy = Math.floor(fy), ay = fy - gy, gy1 = Math.min(gh - 1, gy + 1);
+    for (let x = 0; x < w; x++) {
+      const fx = Math.min(gw - 1.001, Math.max(0, x / bs - 0.5)), gx = Math.floor(fx), ax = fx - gx, gx1 = Math.min(gw - 1, gx + 1);
+      const o = (y * w + x) * n;
+      for (let c = 0; c < 3; c++) {
+        const bg = (grid[(gy * gw + gx) * 3 + c] * (1 - ax) + grid[(gy * gw + gx1) * 3 + c] * ax) * (1 - ay)
+          + (grid[(gy1 * gw + gx) * 3 + c] * (1 - ax) + grid[(gy1 * gw + gx1) * 3 + c] * ax) * ay;
+        src[o + c] = lut[Math.min(511, Math.round((src[o + c] * 255) / Math.max(24, bg)))];
+      }
+    }
+  }
+  return src;
 }
 
 /* ---- curved text lines (a book page photographed open): found, then bent straight */

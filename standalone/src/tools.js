@@ -430,6 +430,7 @@ function openOcrDialog() {
   $("#ocrDeskew").checked = saved.deskew !== false;
   $("#ocrOrient").checked = saved.orient !== false;
   $("#ocrSplit").checked = saved.split !== false;
+  $("#ocrClean").checked = saved.clean !== false;
   $("#ocrDewarp").checked = saved.dewarp !== false;
   $("#ocrCrop").checked = saved.crop !== false;
   openModal($("#ocrDialog"));
@@ -476,13 +477,13 @@ function ocrWorkerOptions(stored) {
 async function startOcr({ area = null } = {}) {
   const langs = [...document.querySelectorAll("#ocrLangs input:checked")].map((i) => i.value);
   if (!langs.length) { toast(t("ocr.noLang"), "error"); return; }
-  const family = $("#ocrFamily").value, deskew = $("#ocrDeskew").checked, dewarp = $("#ocrDewarp").checked, crop = $("#ocrCrop").checked, orient = $("#ocrOrient").checked, split = $("#ocrSplit").checked;
-  try { localStorage.setItem(LS_OCR, JSON.stringify({ langs, family, deskew, dewarp, crop, orient, split })); } catch (_) { /* fine */ }
+  const family = $("#ocrFamily").value, deskew = $("#ocrDeskew").checked, dewarp = $("#ocrDewarp").checked, crop = $("#ocrCrop").checked, orient = $("#ocrOrient").checked, split = $("#ocrSplit").checked, clean = $("#ocrClean").checked;
+  try { localStorage.setItem(LS_OCR, JSON.stringify({ langs, family, deskew, dewarp, crop, orient, split, clean })); } catch (_) { /* fine */ }
   let pages = area ? [area.page] : ocrPageChoice() || [];
   if (!pages.length) { toast(t("ocr.none")); return; }
   ocrCancel = false;
-  if (!area && (deskew || dewarp || crop || orient || split)) {
-    const prep = await ocrStraighten(pages, { deskew, dewarp, crop, orient, split });
+  if (!area && (deskew || dewarp || crop || orient || split || clean)) {
+    const prep = await ocrStraighten(pages, { deskew, dewarp, crop, orient, split, clean });
     if (prep && prep.pages) pages = prep.pages; // (a book page split in two: both are recognised)
   }
   if (ocrCancel || !state.doc) return;
@@ -583,7 +584,7 @@ async function startOcr({ area = null } = {}) {
  * see deskew.js). A picture is edited and opened again (its original stays restorable), a PDF is
  * put together anew; text recognised earlier on the other pages and the translations are kept.
  */
-async function ocrStraighten(pages, { deskew = true, dewarp = false, crop = false, orient = false, split = false, turned = 0 } = {}) {
+async function ocrStraighten(pages, { deskew = true, dewarp = false, crop = false, orient = false, split = false, clean = false, turned = 0 } = {}) {
   const doc = state.doc, fixes = new Map();
   const cancel = () => { ocrCancel = true; };
   for (const [k, p] of pages.entries()) {
@@ -599,8 +600,8 @@ async function ocrStraighten(pages, { deskew = true, dewarp = false, crop = fals
         if (r && r.confidence >= 0.15 && Math.abs(r.angle) >= 0.1) tilt = r.angle;
       }
       let quad = null, tracks = null;
-      let spread = null;
-      if (dewarp || crop || split) {
+      let spread = null, dim = false;
+      if (dewarp || crop || split || clean) {
         // the page as a picture of about 1600 pixels, turned upright and straight, in grey
         const page = doc.pages[p], zoom = Math.min(4, 1600 / Math.max(page.width, page.height));
         const buf = await pool.workers[0].call("render", { page: p, zoom, variant: "original" });
@@ -609,8 +610,10 @@ async function ocrStraighten(pages, { deskew = true, dewarp = false, crop = fals
         const gray = new Uint8Array(turned.width * turned.height);
         for (let i = 0; i < gray.length; i++) gray[i] = (turned.data[i * 4] * 30 + turned.data[i * 4 + 1] * 59 + turned.data[i * 4 + 2] * 11) / 100;
         ({ quad, tracks, spread } = Engine.autoPrepare(gray, turned.width, turned.height, { crop, dewarp, split }));
+        // (only paper that is dim, unevenly lit or tinted is made white: a clean scan stays as it is)
+        dim = clean && Engine.needsCleaning(img.data, img.width, img.height, 4);
       }
-      if (turn || tilt || quad || tracks || spread) fixes.set(p, { rot: turn, skew: tilt, quad, tracks, ...(spread ? { spread } : {}) });
+      if (turn || tilt || quad || tracks || spread || dim) fixes.set(p, { rot: turn, skew: tilt, quad, tracks, ...(spread ? { spread } : {}), ...(dim ? { clean: true } : {}) });
     } catch (err) { console.warn("prepare", err); }
   }
   busy("");
@@ -627,7 +630,7 @@ async function ocrStraighten(pages, { deskew = true, dewarp = false, crop = fals
   const plan = [], from = [];
   doc.pages.forEach((_, i) => {
     const f = fixes.get(i), base = { from: 0, page: i, rot: 0, skew: 0, quad: null, tracks: null };
-    if (f && f.spread) for (const half of f.spread) { from.push(i); plan.push({ ...base, rot: f.rot, skew: f.skew, quad: half.quad, tracks: half.tracks }); }
+    if (f && f.spread) for (const half of f.spread) { from.push(i); plan.push({ ...base, rot: f.rot, skew: f.skew, quad: half.quad, tracks: half.tracks, clean: Boolean(f.clean) }); }
     else { from.push(i); plan.push({ ...base, ...(f || {}), spread: undefined }); }
   });
   const split2 = [...fixes.values()].filter((f) => f.spread).length;
@@ -640,9 +643,9 @@ async function ocrStraighten(pages, { deskew = true, dewarp = false, crop = fals
       await picApply(true);
       if (state.doc === doc || ocrCancel) return null;
       if ($("#ocrDialog").open) $("#ocrDialog").close(); // (opened again for the new picture)
-      return ocrStraighten(pages, { deskew, dewarp, crop, split, orient: false, turned: turned + 1 });
+      return ocrStraighten(pages, { deskew, dewarp, crop, split, clean, orient: false, turned: turned + 1 });
     }
-    Object.assign(picEdit, PIC_DEFAULT, { fine: f.skew ? -Math.round(f.skew * 10) / 10 : 0, quad: f.quad, tracks: f.tracks });
+    Object.assign(picEdit, PIC_DEFAULT, { fine: f.skew ? -Math.round(f.skew * 10) / 10 : 0, quad: f.quad, tracks: f.tracks, clean: Boolean(f.clean) });
     await picApply(true);
   } else {
     // (a picture showing an open book becomes a PDF of its two pages)
@@ -671,6 +674,7 @@ async function ocrStraighten(pages, { deskew = true, dewarp = false, crop = fals
   if ($("#ocrDialog").open) $("#ocrDialog").close(); // (opened again for the new picture or scan)
   const count = (key) => [...fixes.values()].filter((f) => f[key]).length;
   toast(t("ocr.prepared", { o: count("rot") + turned, s: count("skew"), c: count("quad"), l: count("tracks") })
+    + (count("clean") ? " " + t("ocr.cleaned", { n: count("clean") }) : "")
     + (split2 ? " " + t("ocr.splitDone", { n: split2 }) : ""), "ok");
   return { pages: newPages };
 }

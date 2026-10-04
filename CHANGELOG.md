@@ -4,6 +4,11 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.25
+
+- White paper: new option "Make the paper white (remove shadows and colour cast)" before text recognition (on by default). Where the paper of a photo or scan is grey, unevenly lit (the shadow at a book's spine, a lamp) or tinted, it becomes white and the text a little stronger; text shining through from the back of the page disappears too. Recognition gets clearly better (the test photo: whole paragraphs, umlauts right), the page is nicer to read and the PDF smaller (the test photo 2.0 → 1.2 MB). Clean scans and pages made on a computer are left as they are.
+- Picture tools: "White paper" does the same for an opened picture (with "Apply"; "Restore original" brings the photo back).
+
 ## 2.24
 
 - Open books split into their two pages: new option "Split open books into two pages" before text recognition (on by default). A photo or scan showing both pages of an open book (wider than tall, text on both sides of the spine) becomes two pages, each cut out, straightened and flattened on its own; a picture becomes a PDF of two pages. Single pages – also in two columns – stay as they are.

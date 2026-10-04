@@ -33,7 +33,7 @@ function rearrangePdf(bytes, plan, extras) {
       } else {
         const d = docs[it.from];
         if (!d || it.page < 0 || it.page >= d.countPages()) continue;
-        if (it.quad || (it.tracks && it.tracks.length)) { warpedPdfPage(out, d, it.page, it); n++; continue; } // (page borders drawn: the page as a flattened picture)
+        if (it.quad || (it.tracks && it.tracks.length) || it.clean) { warpedPdfPage(out, d, it.page, it); n++; continue; } // (page borders drawn, or the paper made white: the page as a picture drawn anew)
         out.graftPage(out.countPages(), d, it.page);
         if (turn) {
           // turned on top of the page's own /Rotate (which the graft copies onto the page)

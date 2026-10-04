@@ -6,18 +6,19 @@
 // starts the text recognition afresh (the recognised text of the old picture would not fit).
 // ======================================================================
 
-const PIC_DEFAULT = { bright: 100, contrast: 100, gray: false, rotate: 0, fine: 0, quad: null, tracks: null, crop: null }; // crop: page fractions [x0, y0, x1, y1]; fine: degrees, clockwise; quad: the page's corners (see straighten.js)
+const PIC_DEFAULT = { bright: 100, contrast: 100, gray: false, clean: false, rotate: 0, fine: 0, quad: null, tracks: null, crop: null }; // crop: page fractions [x0, y0, x1, y1]; fine: degrees, clockwise; quad: the page's corners (see straighten.js)
 const picEdit = { ...PIC_DEFAULT };
 let picCropMode = false;
 
 const picFilter = () => `brightness(${picEdit.bright / 100}) contrast(${picEdit.contrast / 100})${picEdit.gray ? " grayscale(1)" : ""}`;
-const picIsDefault = () => picEdit.bright === 100 && picEdit.contrast === 100 && !picEdit.gray && !picEdit.rotate && !picEdit.fine && !picEdit.quad && !picEdit.tracks && !picEdit.crop;
+const picIsDefault = () => picEdit.bright === 100 && picEdit.contrast === 100 && !picEdit.gray && !picEdit.clean && !picEdit.rotate && !picEdit.fine && !picEdit.quad && !picEdit.tracks && !picEdit.crop;
 
 /** Show the edit state in the panel and in the preview. */
 function picSync() {
   $("#picBright").value = picEdit.bright; $("#picBrightOut").textContent = `${picEdit.bright}%`;
   $("#picContrast").value = picEdit.contrast; $("#picContrastOut").textContent = `${picEdit.contrast}%`;
   $("#picGray").checked = picEdit.gray;
+  $("#picClean").checked = picEdit.clean;
   $("#picRotOut").textContent = picEdit.rotate ? `${picEdit.rotate}°` : "";
   $("#picFine").value = picEdit.fine;
   $("#picFineOut").textContent = (picEdit.tracks ? "〰 " : "") + (picEdit.quad ? "▱ " : "") + (picEdit.fine ? pmDeg(picEdit.fine, true) : "");
@@ -215,6 +216,12 @@ async function picApply(quiet = false) {
       ctx.rotate((rot * Math.PI) / 180);
       ctx.drawImage(bmp, sx, sy, sw, sh, -sw / 2, -sh / 2, sw, sh);
       if (!hasFilter) { ctx.setTransform(1, 0, 0, 1, 0, 0); const d = ctx.getImageData(0, 0, canvas.width, canvas.height); picFilterPixels(d.data); ctx.putImageData(d, 0, 0); }
+      if (picEdit.clean) { // the paper made white (see cleanPixels)
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        const d = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        Engine.cleanPixels(d.data, canvas.width, canvas.height, 4);
+        ctx.putImageData(d, 0, 0);
+      }
       const blob = await canvas.convertToBlob(img.format === "jpeg" ? { type: "image/jpeg", quality: 0.92 } : { type: "image/png" });
       const bytes = new Uint8Array(await blob.arrayBuffer());
       picOpenPanel(false);
@@ -240,6 +247,7 @@ function initPicture() {
   $("#picBright").addEventListener("input", (e) => { picEdit.bright = Number(e.target.value); picSync(); });
   $("#picContrast").addEventListener("input", (e) => { picEdit.contrast = Number(e.target.value); picSync(); });
   $("#picGray").addEventListener("change", (e) => { picEdit.gray = e.target.checked; picSync(); });
+  $("#picClean").addEventListener("change", (e) => { picEdit.clean = e.target.checked; picSync(); });
   $("#picRotL").addEventListener("click", () => { picEdit.rotate = (picEdit.rotate + 270) % 360; picSync(); });
   $("#picRotR").addEventListener("click", () => { picEdit.rotate = (picEdit.rotate + 90) % 360; picSync(); });
   $("#picFine").addEventListener("input", (e) => { picEdit.fine = Math.round(Number(e.target.value) * 10) / 10; picSync(); });
