@@ -569,8 +569,8 @@ function continuesParagraph(prev, next, pageLines, seps, marginsByRot, blockLine
   if (URLISH_RE.test(nt) || URLISH_RE.test(pt)) return false; // web / e-mail addresses stand alone
   // Table-of-contents entries: a line ending in leader dots and a page number is complete, and
   // two lines that both start with a section number ("2.1.3 …", "2.1.3.1 …") are two entries.
-  if (LEADER_RE.test(pt) || LEADER_RE.test(nt)) return false;
-  if (NUMBERED_RE.test(pt) && NUMBERED_RE.test(nt)) return false;
+  if (LEADER_RE.test(pt)) return false; // (an entry whose title wraps joins its second line, which carries the leader)
+  if (NUMBERED_RE.test(nt) && (NUMBERED_RE.test(pt) || LEADER_RE.test(nt))) return false;
   if (!/\p{L}{2}/u.test(pt) && !/\p{L}{2}/u.test(nt)) return false; // rows of numbers, dates, amounts ("4.2 M")
   // Table/form rows: when both lines have text right before them on their own baseline,
   // they belong together only if those left neighbours do too (the left column of a
@@ -935,10 +935,13 @@ function mergeVisualLines(lines) {
 }
 
 function dominant(spans, key) {
+  // Weighed by letters and digits; leader dots and other punctuation count little, so a bold
+  // title keeps its weight against the run of dots after it.
   const w = new Map();
   for (const s of spans) {
-    const k = key(s);
-    w.set(k, (w.get(k) || 0) + s.text.trim().length + 0.01);
+    const k = key(s), text = s.text.trim();
+    const strong = (text.match(/[\p{L}\p{N}]/gu) || []).length;
+    w.set(k, (w.get(k) || 0) + strong + 0.1 * (text.length - strong) + 0.01);
   }
   let best = null, bw = -1;
   for (const [k, v] of w) if (v > bw) { best = k; bw = v; }

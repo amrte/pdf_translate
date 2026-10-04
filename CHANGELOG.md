@@ -4,6 +4,11 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.01
+
+- PDF: a contents entry whose title wraps onto a second line stays one segment again (the second line carries the leader dots). Checked on a real report: the translated contents page keeps one entry per line, with leaders and page numbers in place.
+- PDF: the style of a segment is chosen by its letters and digits, so a bold title followed by leader dots stays bold in the translation.
+
 ## 2.00
 
 - PDF: table-of-contents entries are no longer joined into one paragraph. A line that ends in leader dots and a page number is complete, and two lines that both start with a section number are two entries – so the translated contents page keeps one entry per line.
