@@ -23,6 +23,7 @@ const LIB_FILES = {
   "worker.min.js": OCR_WORKER,
   [CORE_SIMD]: `${OCR_CORE}/${CORE_SIMD}`,
   [CORE_PLAIN]: `${OCR_CORE}/${CORE_PLAIN}`,
+  "libheif-bundle.mjs": HEIF_LIB, // (iPhone photos, HEIC: optional)
 };
 const LIB_REQUIRED = ["mupdf.js", "mupdf-wasm.js", "mupdf-wasm.wasm"];
 const langUrl = (l) => (OCR_LANG_PATH ? `${OCR_LANG_PATH}/${l}.traineddata.gz` : `https://cdn.jsdelivr.net/npm/@tesseract.js-data/${l}/4.0.0_best_int/${l}.traineddata.gz`);
@@ -69,6 +70,7 @@ function buildLibs(data) {
     const worker = dec.decode(core) + "\n;\n" + dec.decode(data["worker.min.js"]);
     libs.ocr = { lib: blobUrl(data["tesseract.esm.min.js"], "text/javascript"), worker: blobUrl(worker, "text/javascript"), core: OCR_CORE };
   }
+  if (data["libheif-bundle.mjs"]) libs.heif = blobUrl(data["libheif-bundle.mjs"], "text/javascript");
   return libs;
 }
 
@@ -178,13 +180,35 @@ async function downloadOfflineZip(langs) {
 
 const OFFLINE_README = `Kameleon ${APP_VERSION} – Bibliotheken für die Offline-Nutzung / libraries for offline use
 
-DE: Diese ZIP enthält die Dokument-Engine (MuPDF), die Texterkennung (Tesseract) und Sprachdaten.
-Ohne Internet: Kameleon öffnen, dann auf der Startseite oder unter Hilfe → „Offline arbeiten“
-diese ZIP-Datei (oder den entpackten Ordner) wählen. Die Dateien bleiben auf Ihrem Computer.
+DE: Diese ZIP enthält die Dokument-Engine (MuPDF), die Texterkennung (Tesseract), Sprachdaten und den
+Leser für iPhone-Fotos (libheif). Ohne Internet: Kameleon öffnen, dann auf der Startseite oder unter
+Hilfe → „Offline arbeiten“ diese ZIP-Datei (oder den entpackten Ordner) wählen. Die Dateien bleiben
+auf Ihrem Computer; die Dateinamen bitte nicht ändern.
 
-EN: This ZIP holds the document engine (MuPDF), text recognition (Tesseract) and language data.
-Without internet: open Kameleon, then choose this ZIP file (or the unpacked folder) on the start
-page or under Help → "Working offline". The files stay on your computer.
+  mupdf.js                           Dokument-Engine MuPDF, Programmteil (immer nötig)
+  mupdf-wasm.js                      verbindet ihn mit dem WebAssembly-Kern (immer nötig)
+  mupdf-wasm.wasm                    Kern der Engine: Dokumente lesen, zeichnen, schreiben (immer nötig)
+  tesseract.esm.min.js               Texterkennung Tesseract.js, Steuerteil
+  worker.min.js                      Texterkennung, Teil im Hintergrund
+  tesseract-core-simd-lstm.wasm.js   Erkennungs-Engine für Browser mit SIMD (alle aktuellen)
+  tesseract-core-lstm.wasm.js        dieselbe für ältere Browser ohne SIMD
+  <sprache>.traineddata.gz           Sprachdaten der Texterkennung, eine je Sprache (deu, eng, fra …)
+  libheif-bundle.mjs                 liest iPhone-Fotos (HEIC/HEIF)
+
+EN: This ZIP holds the document engine (MuPDF), text recognition (Tesseract), language data and the
+reader for iPhone photos (libheif). Without internet: open Kameleon, then choose this ZIP file (or
+the unpacked folder) on the start page or under Help → "Working offline". The files stay on your
+computer; please do not rename them.
+
+  mupdf.js                           document engine MuPDF, program part (always needed)
+  mupdf-wasm.js                      connects it with the WebAssembly core (always needed)
+  mupdf-wasm.wasm                    core of the engine: reads, draws and writes documents (always needed)
+  tesseract.esm.min.js               text recognition Tesseract.js, controlling part
+  worker.min.js                      text recognition, the part working in the background
+  tesseract-core-simd-lstm.wasm.js   recognition engine for browsers with SIMD (all current ones)
+  tesseract-core-lstm.wasm.js        the same for older browsers without SIMD
+  <language>.traineddata.gz          language data for text recognition, one per language (deu, eng, fra …)
+  libheif-bundle.mjs                 reads iPhone photos (HEIC/HEIF)
 `;
 
 /** Store the set in the browser directly (fetched from the internet). */

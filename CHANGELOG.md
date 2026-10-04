@@ -12,6 +12,8 @@ shown in the app's top bar and help dialog.
 - After text recognition the language of the text is checked: when it looks like a language that was not chosen (a Swedish scan read as English, say), a message offers to recognise it again with that language – the OCR window opens with the language ticked and the pages filled in.
 - Recognised text can be translated in a monospace (typewriter) font too.
 - Fixed: when the language data for text recognition could not be loaded, a message says so (also in the other workers).
+- Help lists the files needed for working offline, each with what it is for and when it is needed (the same list is in the README of the offline ZIP).
+- The reader for iPhone photos (HEIC) is now part of the offline files too, so such photos open without internet as well.
 
 ## 2.26
 

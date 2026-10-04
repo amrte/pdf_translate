@@ -476,7 +476,8 @@ let heifLib = null;
 async function decodeHeif(bytes) {
   if (!heifLib) {
     setLoading(t("msg.heicLoading"));
-    const mod = await import(HEIF_LIB);
+    const libs = await offlineLibs(); // (the copy saved for offline use, if any)
+    const mod = await import((libs && libs.heif) || HEIF_LIB);
     const lib = (mod.default || mod)();
     if (!lib.HeifDecoder && lib.ready) await lib.ready;
     heifLib = lib;
