@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.02
+
+- Translate with AI and batch: the parts follow the marker numbers. With 500 per part, part 1 is [[1]] – [[500]], part 2 [[501]] – [[1000]] and so on; skipped segments keep their numbers, so a part may hold fewer segments to translate.
+
 ## 2.01
 
 - PDF: a contents entry whose title wraps onto a second line stays one segment again (the second line carries the leader dots). Checked on a real report: the translated contents page keeps one entry per line, with leaders and page numbers in place.

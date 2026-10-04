@@ -1777,8 +1777,15 @@ function aiSegments() {
 function aiParts() {
   const segs = aiSegments();
   const size = Math.max(20, Number($("#aiPartSize").value) || 1000);
+  // Parts follow the marker numbers: with 500 per part, part 1 holds [[1]]–[[500]], part 2
+  // [[501]]–[[1000]] … (skipped segments keep their numbers, so a part may hold fewer segments).
   const parts = [];
-  for (let i = 0; i < segs.length; i += size) parts.push(segs.slice(i, i + size));
+  let cur = null, bucket = -1;
+  for (const s of segs) {
+    const k = Math.floor((s.id - 1) / size);
+    if (k !== bucket) { bucket = k; cur = []; parts.push(cur); }
+    cur.push(s);
+  }
   return parts;
 }
 

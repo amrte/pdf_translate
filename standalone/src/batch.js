@@ -144,7 +144,12 @@ async function batchParts() {
     if (f.state !== "ready") continue;
     const segs = await batchSegs(f.id);
     const todo = $("#batchOnlyTodo").checked ? (() => { const tr = state.doc && state.doc.id === f.id ? state.translations : batchTranslations(f.id); return segs.filter((s) => !(tr[s.id] || "").trim()); })() : segs;
-    for (let i = 0; i < todo.length; i += size) parts.push({ file: f, offset: off.get(f.id), segs: todo.slice(i, i + size) });
+    let cur = null, bucket = -1; // parts follow the marker numbers, as in the AI window
+    for (const sg of todo) {
+      const k = Math.floor((sg.id - 1) / size);
+      if (k !== bucket) { bucket = k; cur = { file: f, offset: off.get(f.id), segs: [] }; parts.push(cur); }
+      cur.segs.push(sg);
+    }
   }
   return parts;
 }
