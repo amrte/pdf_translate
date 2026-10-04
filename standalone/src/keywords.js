@@ -220,7 +220,18 @@ function fcSetScope(scope, remember = true) {
 }
 
 let fcSource = null, fcPair = ""; // rows other than the document's (the vocabulary) and their pair, while set
+// The cards come from the open document's terms ("doc") or from the vocabulary as the Vocabulary
+// tab shows it – pair, search, filter, favourites ("vocab"); a switch above the cards changes it.
+let fcSrc = "doc";
+const fcDocRows = () => (state.doc ? kwRows().filter((r) => r.term.trim() && r.translation.trim()) : []);
+function fcVocabRows() {
+  if (!vb.pair) { const pairs = vocabPairs(), cur = currentPair(); vb.pair = pairs.includes(cur) && cur ? cur : pairs[0] || ""; }
+  return vb.pair ? vocabFiltered().filter((r) => r.term && r.translation) : [];
+}
 function fcStart() {
+  // (without a document, or without terms in it: the vocabulary)
+  if (fcSrc === "doc" && !fcDocRows().length && fcVocabRows().length) fcSrc = "vocab";
+  if (fcSrc === "vocab") { fcSource = fcVocabRows(); fcPair = vb.pair; } else fcSource = null;
   fc.pair = fcSource ? fcPair : currentPair();
   let rows = (fcSource || kwRows()).filter((r) => r.term.trim() && r.translation.trim());
   if (!fcSource && fc.pair) { // the document's terms: their learning state is kept in the vocabulary
@@ -253,11 +264,17 @@ function fcFrontSentence(sentence, word) {
 const fcIntervalLabel = (n) => (n <= 0 ? t("kw.intervalNow") : t("kw.days", { n: FC_STEPS[Math.min(n, FC_STEPS.length) - 1] }));
 /** Due today / new words / the whole set, and the direction of the cards, above the card. */
 function fcScopeHtml() {
-  if (!fc.all.length) return "";
+  // where the cards come from: this document or the vocabulary
+  const nDoc = fcDocRows().length, nVocab = fcVocabRows().length;
+  const src = (key, n, label) => `<button type="button" class="${fcSrc === key ? "active" : ""}" data-fc="src-${key}"${n ? "" : " disabled"}>${label}</button>`;
+  const srcHtml = state.doc || nVocab ? `<div class="kw-src"><div class="seg-toggle" role="group" title="${escapeHtml(t("kw.srcTitle"))}">
+    ${src("doc", nDoc, escapeHtml(t("kw.srcDoc", { n: nDoc })))}${src("vocab", nVocab, escapeHtml(t("kw.srcVocab", { pair: vb.pair && vb.pair !== FAV_ALL ? pairLabel(vb.pair) : t("vocab.favAll"), n: nVocab })))}</div></div>` : "";
+  if (!fc.all.length) return srcHtml ? `<div class="kw-scope">${srcHtml}</div>` : "";
   const fresh = fc.all.filter((r) => !rowKnown(r)).length, known = fc.all.length - fresh;
   const due = fc.all.filter((r) => rowKnown(r) && fcDueAt(r) <= Date.now()).length + Math.min(fresh, Math.max(fc.newCap - fcNewToday(), fc.all.filter((r) => !rowKnown(r) && r._seen).length));
   const seg = (key, n, label) => `<button type="button" class="${fc.scope === key ? "active" : ""}" data-fc="scope-${key}"${n ? "" : " disabled"}>${escapeHtml(t(label, { n }))}</button>`;
   return `<div class="kw-scope">
+    ${srcHtml}
     <div class="seg-toggle" role="group" title="${escapeHtml(t("kw.scopeTitle"))}">
       ${seg("due", due, "kw.scopeDue")}${seg("new", fresh, "kw.scopeNew")}${seg("all", fc.all.length, fcSource ? "kw.scopeAll" : "kw.scopeAllDoc")}
     </div>
@@ -365,6 +382,7 @@ function fcGrade(grade) {
   fcRender();
 }
 function fcAction(act) {
+  if (act === "src-doc" || act === "src-vocab") { fcSrc = act.slice(4); fcStart(); return; } // (where the cards come from)
   if (act.startsWith("scope-")) { fcSetScope(act.slice(6)); return; }
   if (act === "reverse") {
     fc.reverse = !fc.reverse;
@@ -398,7 +416,7 @@ function fcAction(act) {
   fcRender();
 }
 function kwSetMode(mode) {
-  if (!state.doc && mode !== "vocab" && !(mode === "cards" && fcSource)) mode = "vocab"; // without a document: the vocabulary, and cards made from it
+  if (!state.doc && mode !== "vocab" && mode !== "cards") mode = "vocab"; // without a document: the vocabulary, and cards made from it
   const cards = mode === "cards", vocab = mode === "vocab", words = mode === "words";
   $("#kwDialog").dataset.mode = mode;
   $("#kwModeList").classList.toggle("active", mode === "list");
@@ -407,14 +425,15 @@ function kwSetMode(mode) {
   $("#kwModeVocab").classList.toggle("active", vocab);
   $("#kwModeList").disabled = $("#kwModeWords").disabled = !state.doc;
   if (words) wordsRender();
-  $("#kwModeCards").disabled = !state.doc && !fcSource;
+  $("#kwModeCards").disabled = !state.doc && !vocabPairs().length;
   if (!cards) fcSource = null;
   if (cards) { fcStart(); $("#kwCards .kw-card")?.focus(); }
   if (vocab) { vocabRender(); }
 }
 function initFlashcards() {
   $("#kwModeList").addEventListener("click", () => kwSetMode("list"));
-  $("#kwModeCards").addEventListener("click", () => kwSetMode("cards"));
+  // (from the Vocabulary tab, or without a document: cards from the vocabulary as shown there)
+  $("#kwModeCards").addEventListener("click", () => { fcSrc = $("#kwDialog").dataset.mode === "vocab" || !state.doc ? "vocab" : "doc"; kwSetMode("cards"); });
   $("#kwModeWords").addEventListener("click", () => kwSetMode("words"));
   $("#kwCards").addEventListener("click", (e) => { const b = e.target.closest("[data-fc]"); if (b) fcAction(b.dataset.fc); });
   $("#kwCards").addEventListener("change", (e) => {

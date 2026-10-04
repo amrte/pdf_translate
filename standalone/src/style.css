@@ -1016,3 +1016,5 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
 .pdf-choice { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; height: auto; padding: 12px 14px; text-align: left; white-space: normal; }
 .pdf-choice:focus-visible, .pdf-choice:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 @media (max-width: 520px) { .pdf-choices { grid-template-columns: 1fr; } }
+.kw-src { flex-basis: 100%; display: flex; justify-content: center; }
+.kw-src button { max-width: 22em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

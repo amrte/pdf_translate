@@ -131,7 +131,6 @@ function wordsRender() {
   $("#wordsViewPhrases").textContent = t("words.viewPhrases", { n: wd.phrases.length });
   $("#wordsPrompt").disabled = !wd.sel.size;
   $("#wordsPrompt").textContent = t("words.prompt", { n: wd.sel.size });
-  $("#wordsCards").disabled = !(state.keywords || []).some((r) => r.term.trim() && r.translation.trim());
 }
 
 /** The prompt: the chosen words with a passage each, the target language and context from the AI window. */
@@ -188,5 +187,4 @@ function initWords() {
   });
   $("#wordsImport").addEventListener("click", wordsImport);
   $("#wordsAnswer").addEventListener("keydown", (e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); wordsImport(); } });
-  $("#wordsCards").addEventListener("click", () => kwSetMode("cards"));
 }

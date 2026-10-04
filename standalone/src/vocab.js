@@ -351,7 +351,7 @@ function vocabRender() {
       <input class="kw-ex" data-k="exampleTr" value="${escapeHtml(r.exampleTr || "")}" placeholder="${escapeHtml(t("kw.exampleTr"))}">
     </div>`).join("") : `<p class="muted small">${escapeHtml(all.length ? t("vocab.noMatch") : t("vocab.empty"))}</p>`;
   const some = rows.length > 0;
-  for (const id of ["#vocabCards", "#vocabPdf", "#vocabApkg", "#vocabMove", "#vocabPreview", "#vocabCardsPdf"]) $(id).disabled = !some && !vb.preview;
+  for (const id of ["#vocabPdf", "#vocabApkg", "#vocabMove", "#vocabPreview", "#vocabCardsPdf"]) $(id).disabled = !some && !vb.preview;
   $("#vocabPreview").textContent = t(vb.preview ? "vocab.previewOff" : "vocab.preview");
   $("#vocabPreview").classList.toggle("on", vb.preview);
   $("#vocabList").parentElement.classList.toggle("preview", vb.preview);
@@ -499,7 +499,6 @@ function initVocab() {
     setCurrentPair(pair);
     toast(t("vocab.added", { n, pair: pairLabel(pair) }), "ok"); vocabRender();
   });
-  $("#vocabCards").addEventListener("click", () => { fcSource = vocabFiltered().filter((r) => r.term && r.translation); fcPair = vb.pair; kwSetMode("cards"); });
   $("#vocabPdf").addEventListener("click", async () => {
     try { saveBlob(new Blob([await vocabPdfBytes()], { type: "application/pdf" }), `vocabulary-${pairFile(vb.pair)}.pdf`); } catch (err) { toast(userError(err), "error"); }
   });

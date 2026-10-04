@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.33
+
+- Keywords → Flashcards: one place for all flashcards. The extra "Flashcards" buttons at the bottom (under Words and Vocabulary) are gone; instead the Flashcards tab has a switch above the cards – "This document (n)" or "Vocabulary <pair> (n)", the latter as the Vocabulary tab shows it (pair, search, filter, favourites). Opened from the Vocabulary tab, or without a document, it starts with the vocabulary; otherwise with the document's terms.
+
 ## 2.32
 
 - Tables of contents keep their shape in the translation: an entry of the original (title, leader dots, page number) is recognised, and its translation is laid out the same way – the title where the original title starts, the page number right-aligned exactly where the original's ends, and dot leaders between them, set so that the dots of all entries stand in columns. Whatever leader the translation itself brings (dots, an ellipsis, spaces, none) is replaced; a translation without the page number gets the original's. Long titles wrap or shrink only as far as needed – the dots no longer take their room.

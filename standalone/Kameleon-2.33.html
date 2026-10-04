@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="Kameleon 2.32">
+  <meta name="generator" content="Kameleon 2.33">
   <meta name="description" content="Kameleon – Wechselt die Sprache, behält die Form. Changes language, keeps its shape.">
   <title>Kameleon</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2216%22 fill=%22%23287130%22/%3E%3Cg transform=%22translate(2.5 1) scale(0.9)%22 fill=%22%23ffffff%22 stroke=%22%23ffffff%22%3E%3Cpath d=%22M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6%22 fill=%22none%22 stroke-width=%223.8%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M21 43l-1 10M30 44v9M38 43l1 10%22 stroke-width=%223.6%22 stroke-linecap=%22round%22/%3E%3Cellipse cx=%2221%22 cy=%2225%22 rx=%227%22 ry=%227.5%22 stroke=%22none%22/%3E%3Cellipse cx=%2233%22 cy=%2223.5%22 rx=%227.5%22 ry=%228%22 stroke=%22none%22/%3E%3Cpath d=%22M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z%22 stroke=%22none%22/%3E%3Cpath d=%22M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z%22 stroke=%22none%22/%3E%3Cpath d=%22M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z%22 stroke=%22none%22/%3E%3Cpath d=%22M16 37l4-3 4 3 4-3 4 3 4-3 4 3%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%222.1%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3Cpath d=%22M43.5 33.9L57 32.6%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%221.5%22 stroke-linecap=%22round%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%224.4%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%222.7%22 stroke=%22none%22/%3E%3Ccircle cx=%2246.2%22 cy=%2226.7%22 r=%221.3%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Cpath d=%22M4 55.5c15-3 39-3 54 0%22 fill=%22none%22 stroke-width=%222.4%22 stroke-linecap=%22round%22/%3E%3C/g%3E%3C/svg%3E">
@@ -1026,6 +1026,8 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
 .pdf-choice { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; height: auto; padding: 12px 14px; text-align: left; white-space: normal; }
 .pdf-choice:focus-visible, .pdf-choice:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 @media (max-width: 520px) { .pdf-choices { grid-template-columns: 1fr; } }
+.kw-src { flex-basis: 100%; display: flex; justify-content: center; }
+.kw-src button { max-width: 22em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
   </style>
 </head>
@@ -1034,7 +1036,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
   <div class="brand">
     <span class="logo"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#287130"/><g transform="translate(2.5 1) scale(0.9)" fill="#ffffff" stroke="#ffffff"><path d="M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6" fill="none" stroke-width="3.8" stroke-linecap="round"/><path d="M21 43l-1 10M30 44v9M38 43l1 10" stroke-width="3.6" stroke-linecap="round"/><ellipse cx="21" cy="25" rx="7" ry="7.5" stroke="none"/><ellipse cx="33" cy="23.5" rx="7.5" ry="8" stroke="none"/><path d="M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z" stroke="none"/><path d="M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z" stroke="none"/><path d="M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z" stroke="none"/><path d="M16 37l4-3 4 3 4-3 4 3 4-3 4 3" fill="none" stroke="#287130" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M43.5 33.9L57 32.6" fill="none" stroke="#287130" stroke-width="1.5" stroke-linecap="round"/><circle cx="45.5" cy="26.5" r="4.4" fill="#287130" stroke="none"/><circle cx="45.5" cy="26.5" r="2.7" stroke="none"/><circle cx="46.2" cy="26.7" r="1.3" fill="#287130" stroke="none"/><path d="M4 55.5c15-3 39-3 54 0" fill="none" stroke-width="2.4" stroke-linecap="round"/></g></svg></span>
     <span class="brand-name">Kameleon</span>
-    <span class="version" id="appVersion">v2.32</span>
+    <span class="version" id="appVersion">v2.33</span>
   </div>
   <div class="topbar-actions">
     <span class="doc-name" id="docName"></span>
@@ -1563,7 +1565,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
     </div>
     <input type="file" id="offlineZip" class="visually-hidden" accept=".zip,application/zip" multiple tabindex="-1">
     <input type="file" id="offlineFolder" class="visually-hidden" webkitdirectory multiple tabindex="-1">
-    <p class="muted small help-version help-part">Kameleon v2.32 · <span data-i18n="app.tagline"></span></p>
+    <p class="muted small help-version help-part">Kameleon v2.33 · <span data-i18n="app.tagline"></span></p>
     <div class="modal-actions">
       <button type="button" value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
     </div>
@@ -1667,8 +1669,6 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
     <div class="modal-actions kw-actions">
       <button type="button" class="btn kw-list-only" id="kwAdd" data-i18n="kw.add"></button>
       <button type="button" class="btn kw-list-only" id="kwCopy" data-i18n="kw.copy"></button>
-      <button type="button" class="btn kw-words-only" id="wordsCards" data-i18n="words.cards"></button>
-      <button type="button" class="btn kw-vocab-only" id="vocabCards" data-i18n="vocab.cards"></button>
       <button type="button" class="btn kw-vocab-only" id="vocabImport" data-i18n="vocab.import" data-i18n-title="vocab.importTitle"></button>
       <button type="button" class="btn kw-vocab-only" id="vocabBuiltin" data-i18n-title="decks.buttonTitle" hidden></button>
       <button type="button" class="btn kw-vocab-only" id="vocabMerge" data-i18n-title="vocab.mergeTitle"></button>
@@ -2203,7 +2203,7 @@ const I18N = {
     "help.learnText": "Der Knopf „Lernen“ oben sammelt die Fachbegriffe des Dokuments und baut daraus einen Wortschatz je Sprachpaar – mit Lernkarten, PDF und Anki-Export. Ohne geöffnetes Dokument öffnet er den Wortschatz.",
     "help.learnList": "<b>Liste:</b> Die Begriffe kommen mit der KI-Antwort (Häkchen „Begriffsliste“ im KI-Fenster) oder werden von Hand eingetragen; rechts die PDF-Seite, wie sie gespeichert wird. Jeder Import ergänzt zugleich den Wortschatz des erkannten Sprachpaars.",
     "help.learnWords": "<b>Wörter:</b> Alle Wörter des Dokuments nach Häufigkeit, ohne Funktionswörter, und die wiederkehrenden Wortgruppen; sortierbar nach Häufigkeit, Alphabet oder Reihenfolge im Text. Wörter anklicken oder die häufigsten auswählen, den Prompt kopieren und die KI-Antwort rechts einfügen – die Wörter kommen mit Übersetzung und Beispielsatz in Liste, Wortschatz und Lernkarten.",
-    "help.learnCards": "<b>Lernkarten:</b> „Heute fällig“ zeigt zuerst neue Wörter (so viele pro Tag wie eingestellt), dann die gewussten, deren Wiederholung ansteht (nach 1, 3, 7, 14, 30, dann alle 90 Tagen). Vier Bewertungen: Nochmal (zurück auf Anfang), Schwer (Abstand bleibt), Gewusst (eine Stufe weiter), Leicht (zwei Stufen). Der Beispielsatz vorn kann als Lücke, ganz oder gar nicht gezeigt werden; „Umgekehrt“ fragt von der Übersetzung nach dem Begriff. Tasten: <kbd>Leertaste</kbd> umdrehen, <kbd>←</kbd>/<kbd>→</kbd> blättern, <kbd>A</kbd>/<kbd>H</kbd>/<kbd>K</kbd>/<kbd>E</kbd> oder <kbd>1</kbd>–<kbd>4</kbd> bewerten, <kbd>F</kbd> Favorit, <kbd>R</kbd> Richtung.",
+    "help.learnCards": "<b>Lernkarten:</b> Oben wählen Sie die Quelle: die Begriffe dieses Dokuments oder den Wortschatz (so, wie der Reiter „Wortschatz“ ihn zeigt). „Heute fällig“ zeigt zuerst neue Wörter (so viele pro Tag wie eingestellt), dann die gewussten, deren Wiederholung ansteht (nach 1, 3, 7, 14, 30, dann alle 90 Tagen). Vier Bewertungen: Nochmal (zurück auf Anfang), Schwer (Abstand bleibt), Gewusst (eine Stufe weiter), Leicht (zwei Stufen). Der Beispielsatz vorn kann als Lücke, ganz oder gar nicht gezeigt werden; „Umgekehrt“ fragt von der Übersetzung nach dem Begriff. Tasten: <kbd>Leertaste</kbd> umdrehen, <kbd>←</kbd>/<kbd>→</kbd> blättern, <kbd>A</kbd>/<kbd>H</kbd>/<kbd>K</kbd>/<kbd>E</kbd> oder <kbd>1</kbd>–<kbd>4</kbd> bewerten, <kbd>F</kbd> Favorit, <kbd>R</kbd> Richtung.",
     "help.learnVocab": "<b>Wortschatz:</b> Die Begriffe aller Dokumente je Sprachpaar, mit Suche, Filter nach Lernstand (neu, im Lernen, gefestigt, heute fällig), Favoriten (das Kameleon), Dubletten-Zusammenführung und Korrektur des Sprachpaars; darüber die Lernstatistik mit der Lernserie. Export als PDF-Liste, Karten-PDF zum Ausdrucken oder Anki-Paket (.apkg) – jeweils das, was gerade gezeigt wird. Import aus .txt/.tsv/.csv und aus Anki-Paketen. „Sichern“ speichert den ganzen Wortschatz mit Lernstand als Datei für ein anderes Gerät; „Importieren…“ führt sie dort zusammen.",
     "help.learnDecks": "<b>Fertige Lernkarten:</b> Tausende freie Anki-Stapel für viele Sprachen gibt es unter <a href=\"https://ankiweb.net/shared/decks\" target=\"_blank\" rel=\"noopener noreferrer\">ankiweb.net/shared/decks</a> – die .apkg-Datei herunterladen und unter „Wortschatz → Importieren…“ laden.",
     "help.shortcuts": "Tastenkürzel im Übersetzungsfeld: <kbd>Strg</kbd>+<kbd>Enter</kbd> nächstes Segment · <kbd>Alt</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> vorheriges/nächstes · <kbd>Strg</kbd>+<kbd>S</kbd> Segment ins Dokument übernehmen · <kbd>Strg</kbd> + Mausrad zoomen.",
@@ -2459,7 +2459,6 @@ const I18N = {
     "words.answerPh": "[[keywords]]\nSprachen: de → en\nWort = Übersetzung | Beispielsatz | Beispielsatz übersetzt",
     "words.import": "Antwort importieren",
     "words.noRows": "Keine Liste erkannt – die Antwort braucht Zeilen „Wort = Übersetzung“.",
-    "words.cards": "Lernkarten",
     "kw.modeCards": "Lernkarten",
     "kw.flip": "Karte umdrehen (Leertaste)",
     "kw.flipBtn": "Umdrehen",
@@ -2506,7 +2505,6 @@ const I18N = {
     "vocab.cardsPdfTitle": "Lernkarten zum Ausdrucken: 8 Karten je A4-Blatt, Vorderseiten und Rückseiten auf aufeinanderfolgenden Seiten – beidseitig drucken (Wenden an der langen Kante) und an den Linien schneiden",
     "vocab.countOf": "{n} von {total} Begriffen",
     "vocab.toHere": "Begriffe dieses Dokuments übernehmen",
-    "vocab.cards": "Lernkarten",
     "vocab.import": "Importieren…",
     "vocab.clear": "Sprachpaar leeren",
     "vocab.preview": "PDF-Vorschau",
@@ -2583,6 +2581,9 @@ const I18N = {
     "kw.reverseTitle": "Die Karte fragt von der Übersetzung nach dem Begriff (Taste R).",
     "kw.scopeAll": "Ganzer Wortschatz ({n})",
     "kw.scopeAllDoc": "Alle Begriffe ({n})",
+    "kw.srcDoc": "Dieses Dokument ({n})",
+    "kw.srcVocab": "Wortschatz {pair} ({n})",
+    "kw.srcTitle": "Woher die Karten kommen: die Begriffe dieses Dokuments oder der Wortschatz – so, wie der Reiter „Wortschatz“ ihn zeigt (Sprachpaar, Suche, Filter, Favoriten)",
     "kw.scopeTitle": "Heute fällig: neue Wörter und gewusste, deren Wiederholung ansteht (nach 1, 3, 7, 14, 30 und dann alle 90 Tage). Neu: noch nie oder zuletzt nicht gewusst. Der Lernstand wird im Wortschatz gespeichert.",
     "kw.noNew": "Keine neuen Wörter mehr – alle wurden schon einmal gewusst. „Ganzer Wortschatz“ zeigt sie alle.",
     "kw.reset": "Lernstand zurücksetzen ({n})",
@@ -3087,7 +3088,7 @@ const I18N = {
     "help.learnText": "The \"Learn\" button at the top collects the document's terms and builds a vocabulary per language pair from them – with flashcards, PDF and Anki export. Without an open document it opens the vocabulary.",
     "help.learnList": "<b>List:</b> The terms arrive with the AI answer (tick \"Term list\" in the AI window) or are entered by hand; on the right the PDF page as it will be saved. Every import also adds to the vocabulary of the detected language pair.",
     "help.learnWords": "<b>Words:</b> Every word of the document by frequency, without function words, and the recurring word groups; sorted by frequency, alphabet or order in the text. Tick words or select the most frequent ones, copy the prompt and paste the AI's answer on the right – the words arrive with translation and example sentence in the list, the vocabulary and the flashcards.",
-    "help.learnCards": "<b>Flashcards:</b> \"Due today\" shows new words first (as many per day as set), then the known ones whose review is due (after 1, 3, 7, 14, 30, then every 90 days). Four grades: Again (back to the start), Hard (interval stays), Known (one step up), Easy (two steps). The example sentence on the front can be shown as a gap, whole or not at all; \"Reversed\" asks from the translation for the term. Keys: <kbd>Space</kbd> turn, <kbd>←</kbd>/<kbd>→</kbd> browse, <kbd>A</kbd>/<kbd>H</kbd>/<kbd>K</kbd>/<kbd>E</kbd> or <kbd>1</kbd>–<kbd>4</kbd> grade, <kbd>F</kbd> favourite, <kbd>R</kbd> direction.",
+    "help.learnCards": "<b>Flashcards:</b> At the top you choose the source: the terms of this document or the vocabulary (as the “Vocabulary” tab shows it). \"Due today\" shows new words first (as many per day as set), then the known ones whose review is due (after 1, 3, 7, 14, 30, then every 90 days). Four grades: Again (back to the start), Hard (interval stays), Known (one step up), Easy (two steps). The example sentence on the front can be shown as a gap, whole or not at all; \"Reversed\" asks from the translation for the term. Keys: <kbd>Space</kbd> turn, <kbd>←</kbd>/<kbd>→</kbd> browse, <kbd>A</kbd>/<kbd>H</kbd>/<kbd>K</kbd>/<kbd>E</kbd> or <kbd>1</kbd>–<kbd>4</kbd> grade, <kbd>F</kbd> favourite, <kbd>R</kbd> direction.",
     "help.learnVocab": "<b>Vocabulary:</b> The terms of all documents per language pair, with search, a filter by learning stage (new, learning, mature, due today), favourites (the chameleon), merging of duplicates and correction of the pair; above it the learning statistics with the study streak. Export as a PDF list, a printable card sheet or an Anki package (.apkg) – each taking what is shown. Import from .txt/.tsv/.csv and from Anki packages. “Back up” saves the whole vocabulary with its learning state as a file for another device; “Import…” merges it there.",
     "help.learnDecks": "<b>Ready-made flashcards:</b> thousands of free Anki decks for many languages are at <a href=\"https://ankiweb.net/shared/decks\" target=\"_blank\" rel=\"noopener noreferrer\">ankiweb.net/shared/decks</a> – download the .apkg file and load it under \"Vocabulary → Import…\".",
     "help.shortcuts": "Shortcuts in a translation box: <kbd>Ctrl</kbd>+<kbd>Enter</kbd> next segment · <kbd>Alt</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> previous/next · <kbd>Ctrl</kbd>+<kbd>S</kbd> update this segment in the document · <kbd>Ctrl</kbd> + mouse wheel to zoom.",
@@ -3344,7 +3345,6 @@ const I18N = {
     "words.answerPh": "[[keywords]]\nLanguages: de → en\nword = translation | example sentence | example sentence translated",
     "words.import": "Import answer",
     "words.noRows": "No list recognised – the answer needs lines like “word = translation”.",
-    "words.cards": "Flashcards",
     "kw.modeCards": "Flashcards",
     "kw.flip": "Turn the card (Space)",
     "kw.flipBtn": "Turn",
@@ -3391,7 +3391,6 @@ const I18N = {
     "vocab.cardsPdfTitle": "Flashcards to print: 8 cards per A4 sheet, fronts and backs on consecutive pages – print on both sides (flip on the long edge) and cut along the lines",
     "vocab.countOf": "{n} of {total} terms",
     "vocab.toHere": "Add this document's terms",
-    "vocab.cards": "Flashcards",
     "vocab.import": "Import…",
     "vocab.clear": "Clear language pair",
     "vocab.preview": "PDF preview",
@@ -3468,6 +3467,9 @@ const I18N = {
     "kw.reverseTitle": "The card asks from the translation for the term (key R).",
     "kw.scopeAll": "Whole vocabulary ({n})",
     "kw.scopeAllDoc": "All terms ({n})",
+    "kw.srcDoc": "This document ({n})",
+    "kw.srcVocab": "Vocabulary {pair} ({n})",
+    "kw.srcTitle": "Where the cards come from: the terms of this document or the vocabulary – as the “Vocabulary” tab shows it (language pair, search, filter, favourites)",
     "kw.scopeTitle": "Due today: new words and known ones whose review is due (after 1, 3, 7, 14, 30 and then every 90 days). New: never known, or not known the last time. The learning state is kept in the vocabulary.",
     "kw.noNew": "No new words left – every one has been known once. “Whole vocabulary” shows them all.",
     "kw.reset": "Reset learning state ({n})",
@@ -18689,7 +18691,7 @@ function initPicture() {
 // from its own browser cache before the network, so language files are written into that cache.
 // ======================================================================
 
-const APP_VERSION = "2.32";
+const APP_VERSION = "2.33";
 // (a change of library version makes a stored set outdated: it is then ignored)
 const OFFLINE_VERSION = `${MUPDF_URL} ${OCR_LIB}`;
 const CORE_SIMD = "tesseract-core-simd-lstm.wasm.js", CORE_PLAIN = "tesseract-core-lstm.wasm.js";
@@ -20032,7 +20034,18 @@ function fcSetScope(scope, remember = true) {
 }
 
 let fcSource = null, fcPair = ""; // rows other than the document's (the vocabulary) and their pair, while set
+// The cards come from the open document's terms ("doc") or from the vocabulary as the Vocabulary
+// tab shows it – pair, search, filter, favourites ("vocab"); a switch above the cards changes it.
+let fcSrc = "doc";
+const fcDocRows = () => (state.doc ? kwRows().filter((r) => r.term.trim() && r.translation.trim()) : []);
+function fcVocabRows() {
+  if (!vb.pair) { const pairs = vocabPairs(), cur = currentPair(); vb.pair = pairs.includes(cur) && cur ? cur : pairs[0] || ""; }
+  return vb.pair ? vocabFiltered().filter((r) => r.term && r.translation) : [];
+}
 function fcStart() {
+  // (without a document, or without terms in it: the vocabulary)
+  if (fcSrc === "doc" && !fcDocRows().length && fcVocabRows().length) fcSrc = "vocab";
+  if (fcSrc === "vocab") { fcSource = fcVocabRows(); fcPair = vb.pair; } else fcSource = null;
   fc.pair = fcSource ? fcPair : currentPair();
   let rows = (fcSource || kwRows()).filter((r) => r.term.trim() && r.translation.trim());
   if (!fcSource && fc.pair) { // the document's terms: their learning state is kept in the vocabulary
@@ -20065,11 +20078,17 @@ function fcFrontSentence(sentence, word) {
 const fcIntervalLabel = (n) => (n <= 0 ? t("kw.intervalNow") : t("kw.days", { n: FC_STEPS[Math.min(n, FC_STEPS.length) - 1] }));
 /** Due today / new words / the whole set, and the direction of the cards, above the card. */
 function fcScopeHtml() {
-  if (!fc.all.length) return "";
+  // where the cards come from: this document or the vocabulary
+  const nDoc = fcDocRows().length, nVocab = fcVocabRows().length;
+  const src = (key, n, label) => `<button type="button" class="${fcSrc === key ? "active" : ""}" data-fc="src-${key}"${n ? "" : " disabled"}>${label}</button>`;
+  const srcHtml = state.doc || nVocab ? `<div class="kw-src"><div class="seg-toggle" role="group" title="${escapeHtml(t("kw.srcTitle"))}">
+    ${src("doc", nDoc, escapeHtml(t("kw.srcDoc", { n: nDoc })))}${src("vocab", nVocab, escapeHtml(t("kw.srcVocab", { pair: vb.pair && vb.pair !== FAV_ALL ? pairLabel(vb.pair) : t("vocab.favAll"), n: nVocab })))}</div></div>` : "";
+  if (!fc.all.length) return srcHtml ? `<div class="kw-scope">${srcHtml}</div>` : "";
   const fresh = fc.all.filter((r) => !rowKnown(r)).length, known = fc.all.length - fresh;
   const due = fc.all.filter((r) => rowKnown(r) && fcDueAt(r) <= Date.now()).length + Math.min(fresh, Math.max(fc.newCap - fcNewToday(), fc.all.filter((r) => !rowKnown(r) && r._seen).length));
   const seg = (key, n, label) => `<button type="button" class="${fc.scope === key ? "active" : ""}" data-fc="scope-${key}"${n ? "" : " disabled"}>${escapeHtml(t(label, { n }))}</button>`;
   return `<div class="kw-scope">
+    ${srcHtml}
     <div class="seg-toggle" role="group" title="${escapeHtml(t("kw.scopeTitle"))}">
       ${seg("due", due, "kw.scopeDue")}${seg("new", fresh, "kw.scopeNew")}${seg("all", fc.all.length, fcSource ? "kw.scopeAll" : "kw.scopeAllDoc")}
     </div>
@@ -20177,6 +20196,7 @@ function fcGrade(grade) {
   fcRender();
 }
 function fcAction(act) {
+  if (act === "src-doc" || act === "src-vocab") { fcSrc = act.slice(4); fcStart(); return; } // (where the cards come from)
   if (act.startsWith("scope-")) { fcSetScope(act.slice(6)); return; }
   if (act === "reverse") {
     fc.reverse = !fc.reverse;
@@ -20210,7 +20230,7 @@ function fcAction(act) {
   fcRender();
 }
 function kwSetMode(mode) {
-  if (!state.doc && mode !== "vocab" && !(mode === "cards" && fcSource)) mode = "vocab"; // without a document: the vocabulary, and cards made from it
+  if (!state.doc && mode !== "vocab" && mode !== "cards") mode = "vocab"; // without a document: the vocabulary, and cards made from it
   const cards = mode === "cards", vocab = mode === "vocab", words = mode === "words";
   $("#kwDialog").dataset.mode = mode;
   $("#kwModeList").classList.toggle("active", mode === "list");
@@ -20219,14 +20239,15 @@ function kwSetMode(mode) {
   $("#kwModeVocab").classList.toggle("active", vocab);
   $("#kwModeList").disabled = $("#kwModeWords").disabled = !state.doc;
   if (words) wordsRender();
-  $("#kwModeCards").disabled = !state.doc && !fcSource;
+  $("#kwModeCards").disabled = !state.doc && !vocabPairs().length;
   if (!cards) fcSource = null;
   if (cards) { fcStart(); $("#kwCards .kw-card")?.focus(); }
   if (vocab) { vocabRender(); }
 }
 function initFlashcards() {
   $("#kwModeList").addEventListener("click", () => kwSetMode("list"));
-  $("#kwModeCards").addEventListener("click", () => kwSetMode("cards"));
+  // (from the Vocabulary tab, or without a document: cards from the vocabulary as shown there)
+  $("#kwModeCards").addEventListener("click", () => { fcSrc = $("#kwDialog").dataset.mode === "vocab" || !state.doc ? "vocab" : "doc"; kwSetMode("cards"); });
   $("#kwModeWords").addEventListener("click", () => kwSetMode("words"));
   $("#kwCards").addEventListener("click", (e) => { const b = e.target.closest("[data-fc]"); if (b) fcAction(b.dataset.fc); });
   $("#kwCards").addEventListener("change", (e) => {
@@ -20382,7 +20403,6 @@ function wordsRender() {
   $("#wordsViewPhrases").textContent = t("words.viewPhrases", { n: wd.phrases.length });
   $("#wordsPrompt").disabled = !wd.sel.size;
   $("#wordsPrompt").textContent = t("words.prompt", { n: wd.sel.size });
-  $("#wordsCards").disabled = !(state.keywords || []).some((r) => r.term.trim() && r.translation.trim());
 }
 
 /** The prompt: the chosen words with a passage each, the target language and context from the AI window. */
@@ -20439,7 +20459,6 @@ function initWords() {
   });
   $("#wordsImport").addEventListener("click", wordsImport);
   $("#wordsAnswer").addEventListener("keydown", (e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); wordsImport(); } });
-  $("#wordsCards").addEventListener("click", () => kwSetMode("cards"));
 }
 
 /* ---------------------------------------------------------------- batch: several files at once
@@ -22065,7 +22084,7 @@ function vocabRender() {
       <input class="kw-ex" data-k="exampleTr" value="${escapeHtml(r.exampleTr || "")}" placeholder="${escapeHtml(t("kw.exampleTr"))}">
     </div>`).join("") : `<p class="muted small">${escapeHtml(all.length ? t("vocab.noMatch") : t("vocab.empty"))}</p>`;
   const some = rows.length > 0;
-  for (const id of ["#vocabCards", "#vocabPdf", "#vocabApkg", "#vocabMove", "#vocabPreview", "#vocabCardsPdf"]) $(id).disabled = !some && !vb.preview;
+  for (const id of ["#vocabPdf", "#vocabApkg", "#vocabMove", "#vocabPreview", "#vocabCardsPdf"]) $(id).disabled = !some && !vb.preview;
   $("#vocabPreview").textContent = t(vb.preview ? "vocab.previewOff" : "vocab.preview");
   $("#vocabPreview").classList.toggle("on", vb.preview);
   $("#vocabList").parentElement.classList.toggle("preview", vb.preview);
@@ -22213,7 +22232,6 @@ function initVocab() {
     setCurrentPair(pair);
     toast(t("vocab.added", { n, pair: pairLabel(pair) }), "ok"); vocabRender();
   });
-  $("#vocabCards").addEventListener("click", () => { fcSource = vocabFiltered().filter((r) => r.term && r.translation); fcPair = vb.pair; kwSetMode("cards"); });
   $("#vocabPdf").addEventListener("click", async () => {
     try { saveBlob(new Blob([await vocabPdfBytes()], { type: "application/pdf" }), `vocabulary-${pairFile(vb.pair)}.pdf`); } catch (err) { toast(userError(err), "error"); }
   });
