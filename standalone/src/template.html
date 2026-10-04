@@ -678,6 +678,17 @@
     </div>
   </form>
 </dialog>
+<dialog id="pdfDialog" class="modal" aria-labelledby="pdfTitle">
+  <form method="dialog">
+    <h2 id="pdfTitle" data-i18n="pdf.title">Save as PDF</h2>
+    <p class="muted" id="pdfText"></p>
+    <div class="pdf-choices">
+      <button value="full" class="btn pdf-choice"><b data-i18n="pdf.full">Full quality</b><span class="small muted" data-i18n="pdf.fullNote"></span></button>
+      <button value="compact" class="btn pdf-choice"><b data-i18n="pdf.compact">Compact</b><span class="small muted" data-i18n="pdf.compactNote"></span></button>
+    </div>
+    <div class="modal-actions"><button value="cancel" class="btn ghost" data-i18n="common.cancel">Cancel</button></div>
+  </form>
+</dialog>
 <dialog id="srcDialog" class="modal" aria-labelledby="srcTitle">
   <form method="dialog">
     <h2 id="srcTitle" data-i18n="src.title">Correct the recognised text</h2>
@@ -751,6 +762,7 @@
     <div class="modal-actions pages-actions">
       <button type="button" class="btn" id="pagesAddBlank" data-i18n="pages.blank"></button>
       <button type="button" class="btn" id="pagesAddFile" data-i18n="pages.fromFile"></button>
+      <button type="button" class="btn" id="pagesRestore" data-i18n="orig.restore" data-i18n-title="orig.restoreTitle" hidden></button>
       <label class="check" id="pagesHiddenWrap" hidden><input type="checkbox" id="pagesShowHidden"> <span data-i18n="pages.showHidden"></span></label>
       <label class="check" id="pagesNotesWrap" hidden data-i18n-title="pages.dropNotesTitle"><input type="checkbox" id="pagesDropNotes"> <span id="pagesDropNotesText"></span></label>
       <span class="muted" id="pagesCount"></span>
@@ -782,7 +794,7 @@
       <label class="check" data-i18n-title="ocr.cleanTitle"><input type="checkbox" id="ocrClean" checked> <span data-i18n="ocr.clean"></span></label>
     </div>
     <label class="field"><span data-i18n="ocr.family">Font of the translation</span>
-      <select id="ocrFamily"><option value="serif" data-i18n="st.serif"></option><option value="sans-serif" data-i18n="st.sans"></option></select>
+      <select id="ocrFamily"><option value="serif" data-i18n="st.serif"></option><option value="sans-serif" data-i18n="st.sans"></option><option value="monospace" data-i18n="st.mono"></option></select>
     </label>
     <p class="muted small" data-i18n="ocr.note"></p>
     <div class="modal-actions">

@@ -3052,21 +3052,77 @@ function rotatePages(doc, rotations) {
  * The translated PDF (or the original when nothing is translated) with markups and turned
  * pages. Those go into a copy, so the editable document never accumulates them.
  */
-function savePdf(W, markups, rotations, original = false, layer = null) {
+/**
+ * The pictures of a PDF made smaller (a compact PDF of scans and photos): each image drawn anew
+ * at no more than `maxSide` pixels on its longer side (2000: about 170 dpi on A4) and stored as
+ * JPEG, when that saves at least a fifth. Masks, 1-bit scans and pictures with transparency stay
+ * as they are; an image used on several pages is done once.
+ */
+function compactImages(doc, maxSide = 2000, quality = 72) {
+  const done = new Map(); // object number → its replacement (or null: kept)
+  for (let p = 0; p < doc.countPages(); p++) {
+    const page = doc.loadPage(p);
+    try {
+      const res = page.getObject().getInheritable("Resources");
+      const xo = res.isDictionary() ? res.get("XObject") : null;
+      if (!xo || !xo.isDictionary()) continue;
+      const list = [];
+      xo.forEach((v, k) => list.push([k, v]));
+      for (const [name, ref] of list) {
+        if (!ref.isIndirect() || !ref.isStream() || ref.get("Subtype").asName() !== "Image") continue;
+        const num = ref.asIndirect();
+        if (done.has(num)) { if (done.get(num)) xo.put(name, done.get(num)); continue; }
+        let repl = null;
+        try {
+          const img = doc.loadImage(ref);
+          try {
+            const w = img.getWidth(), h = img.getHeight(), cs = img.getColorSpace();
+            if (!img.getImageMask() && img.getBitsPerComponent() > 1 && !img.getMask() && cs && w * h > 250000) {
+              const k = Math.min(1, maxSide / Math.max(w, h)), W = Math.max(1, Math.round(w * k)), H = Math.max(1, Math.round(h * k));
+              const pix = new M.Pixmap(cs.isGray() ? M.ColorSpace.DeviceGray : M.ColorSpace.DeviceRGB, [0, 0, W, H], false);
+              let jpeg;
+              try {
+                pix.clear(255);
+                const dev = new M.DrawDevice(M.Matrix.identity, pix);
+                try { dev.fillImage(img, [W, 0, 0, H, 0, 0], 1); dev.close(); } finally { free(dev); }
+                jpeg = pix.asJPEG(quality);
+              } finally {
+                free(pix);
+              }
+              if (jpeg.length < ref.readRawStream().length * 0.8) {
+                const small = new M.Image(jpeg);
+                try { repl = doc.addImage(small); } finally { free(small); }
+                xo.put(name, repl);
+              }
+            }
+          } finally {
+            free(img);
+          }
+        } catch (err) { /* (an image MuPDF cannot read stays as it is) */ }
+        done.set(num, repl);
+      }
+    } finally {
+      free(page);
+    }
+  }
+}
+
+function savePdf(W, markups, rotations, original = false, layer = null, compact = false) {
   const turned = Object.values(rotations).some(Boolean), searchable = Boolean(layer && layer.length);
   // (`original`: the document as opened, not the translation – e.g. a picture saved as PDF;
   // `layer`: recognised text put under the pictures invisibly, see addTextLayer)
-  if (original && !markups.length && !turned && !searchable) return W.bytes.slice();
+  if (original && !markups.length && !turned && !searchable && !compact) return W.bytes.slice();
   if (!original && !W.edit && !markups.length && !turned && !searchable) throw new Error("Nothing to save yet.");
   let doc = original ? null : W.edit, temp = null;
   // Fonts added by page updates (shared by all updated pages, see updatePage) and by text notes
   // are embedded whole; the saved copy gets them subsetted.
-  const subset = Boolean(W.editFk) || markups.some((m) => m.type === "text") || searchable;
+  const subset = Boolean(W.editFk) || markups.some((m) => m.type === "text") || searchable || compact;
   if (markups.length || turned || !doc || subset) {
     let src = W.bytes;
     if (doc) { const b = W.edit.saveToBuffer(""); src = b.asUint8Array().slice(); free(b); }
     temp = doc = M.Document.openDocument(src.slice(), "application/pdf");
     if (searchable) addTextLayer(doc, layer);
+    if (compact) compactImages(doc);
     addMarkups(doc, markups);
     if (subset) doc.subsetFonts();
     rotatePages(doc, rotations);
@@ -3276,6 +3332,10 @@ function createHandler() {
       if (!doc) throw new Error("No document is open.");
       return { result: splitPage(doc, args.page, args.rot || 0, args.skew || 0) };
     }
+    if (cmd === "preparePage") { // what text recognition prepares on a page (see preparePage)
+      if (!W.doc) throw new Error("No document is open.");
+      return { result: preparePage(W.doc, args.page, args.opts || {}) };
+    }
     if (cmd === "orientDetect") { // which way up a page is (quarter turns) and its tilt then
       const doc = args.index ? (W.extras[args.index - 1] || {}).doc : W.doc;
       if (!doc) throw new Error("No document is open.");
@@ -3367,7 +3427,7 @@ function createHandler() {
       return { result: bytes, transfer: [bytes.buffer] };
     }
     if (cmd === "save") {
-      const bytes = savePdf(W, args.markups || [], args.rotations || {}, Boolean(args.original), args.layer || null);
+      const bytes = savePdf(W, args.markups || [], args.rotations || {}, Boolean(args.original), args.layer || null, Boolean(args.compact));
       return { result: bytes, transfer: [bytes.buffer] };
     }
     if (cmd === "saveBilingual" && W.kind !== "pdf") {

@@ -383,6 +383,36 @@ const OCR_CORE = "https://cdn.jsdelivr.net/npm/tesseract.js-core@6.0.0";
 const OCR_LANG_PATH = ""; // "" = the language data on jsDelivr (@tesseract.js-data/<lang>)
 const OCR_LANGS = ["eng", "deu", "fra", "spa", "por", "nld", "swe", "pol", "ces", "slk", "hun", "bul", "ukr", "fin", "ell", "ara", "jpn", "chi_sim", "chi_tra"];
 const LS_OCR = "pdftr:ocr-options";
+/**
+ * The language of recognised text, told by its most common short words (written without accents,
+ * as a reading with the wrong language gives them): one of the OCR languages with Latin script, or
+ * null when unclear. Used to suggest a language that was not chosen.
+ */
+const OCR_STOPWORDS = {
+  eng: "the and of to is in that for with are this be was it on as by not have from",
+  deu: "der die und das ist nicht mit ein eine den von zu auf sich des dem werden wird im fur auch",
+  fra: "le la les et des est une pour dans que qui du pas sur au ne par plus avec",
+  spa: "el los las y que en es por una para con del se al lo como mas pero",
+  por: "os as que em um uma para com nao do da se ao dos das como mais",
+  nld: "het een en van is dat op te niet met voor zijn ook bij aan er maar",
+  swe: "och att det som av for med pa ar inte till har om ett jag var ska",
+  pol: "sie nie do jest ze jak przez dla od na ale tak po czy tylko",
+  ces: "je se na ze to do ktery jsou pro by jak ale tak po jako jeho",
+  slk: "je sa na ze to do ktory su pre by ako ale tak po aj jeho",
+  hun: "az es egy hogy nem is meg van de ez mint csak volt mar el",
+  fin: "ja on ei se etta mutta kun niin han oli ovat myos kuin joka tai sen",
+};
+function guessOcrLanguage(text) {
+  const words = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").match(/[a-z]+/g) || [];
+  if (words.length < 30) return null;
+  const score = Object.entries(OCR_STOPWORDS).map(([lang, list]) => {
+    const set = new Set(list.split(" "));
+    return [lang, words.filter((w) => set.has(w)).length / words.length];
+  }).sort((a, b) => b[1] - a[1]);
+  const [best, second] = score;
+  return best[1] >= 0.08 && best[1] >= second[1] * 1.4 ? best[0] : null;
+}
+
 /** The OCR languages in alphabetical order of their names in the interface language. */
 const sortedOcrLangs = () => [...OCR_LANGS].sort((a, b) => t("ocrlang." + a).localeCompare(t("ocrlang." + b), LANG));
 
@@ -488,10 +518,10 @@ async function startOcr({ area = null } = {}) {
   }
   if (ocrCancel || !state.doc) return;
   const doc = state.doc, results = {};
-  let worker = null;
   // Cancel stops the recognition at once (a running step fails, which is fine); the pages that
   // are finished are kept.
-  const cancel = () => { ocrCancel = true; if (worker) worker.terminate().catch(() => {}); };
+  const workers = [];
+  const cancel = () => { ocrCancel = true; for (const w of workers) w.terminate().catch(() => {}); };
   try {
     busy(t("ocr.loading"), cancel);
     const libs = await offlineLibs(), stored = libs && libs.ocr; // Tesseract saved for offline use, if any
@@ -499,21 +529,28 @@ async function startOcr({ area = null } = {}) {
     if (ocrCancel) return;
     const createWorker = T.createWorker || (T.default && T.default.createWorker);
     // (a language that cannot be fetched is reported; the worker itself would wait for ever)
-    let failLoad = null;
-    const failed = new Promise((_, reject) => { failLoad = reject; });
-    worker = await Promise.race([
-      createWorker(langs.join("+"), 1, { ...ocrWorkerOptions(stored), errorHandler: (e) => failLoad(new Error(`OCR language data could not be loaded (${String((e && e.message) || e).slice(0, 120)})`)) }),
-      failed,
-    ]);
-    if (ocrCancel) return;
-    await worker.setParameters({ tessedit_pageseg_mode: "11" }); // sparse text: table cells and labels too
-    for (const [k, p] of pages.entries()) {
-      if (ocrCancel || state.doc !== doc) break;
-      busy(t("ocr.page", { i: k + 1, n: pages.length }), cancel);
+    const make = () => {
+      let failLoad = null;
+      const failed = new Promise((_, reject) => { failLoad = reject; });
+      return Promise.race([
+        createWorker(langs.join("+"), 1, { ...ocrWorkerOptions(stored), errorHandler: (e) => failLoad(new Error(`OCR language data could not be loaded (${String((e && e.message) || e).slice(0, 120)})`)) }),
+        failed,
+      ]);
+    };
+    // Several pages are read at once: up to three workers, as many as the computer has cores to
+    // spare (one on a device with little memory). The first loads the language data, the others
+    // find it in the browser's cache.
+    const cores = navigator.hardwareConcurrency || 2, memory = navigator.deviceMemory || 8;
+    const count = Math.max(1, Math.min(3, pages.length, Math.floor(cores / 2), memory < 4 ? 1 : 3));
+    workers.push(await make());
+    if (count > 1) for (const w of await Promise.all(Array.from({ length: count - 1 }, () => make().catch(() => null)))) if (w) workers.push(w);
+    if (ocrCancel) { cancel(); return; }
+    for (const w of workers) await w.setParameters({ tessedit_pageseg_mode: "11" }); // sparse text: table cells and labels too
+    const readPage = async (worker, p) => {
       const page = doc.pages[p];
       const zoom = Math.min(3, 3600 / Math.max(page.width, page.height));
-      const buf = await pool.workers[0].call("render", { page: p, zoom, variant: "original" });
-      if (ocrCancel) break;
+      const buf = await pool.leastBusy(null).call("render", { page: p, zoom, variant: "original" });
+      if (ocrCancel) return;
       let blob = new Blob([buf], { type: "image/png" }), whole = null, back = null;
       if (area) {
         // Only the area, pulled straight from its four corners into a rectangle (a slanted block
@@ -534,7 +571,7 @@ async function startOcr({ area = null } = {}) {
       await worker.setParameters({ tessedit_pageseg_mode: "7" });
       const data = await Engine.refineOcr(first, async (rectangle) => (await worker.recognize(blob, { rectangle }, { blocks: true })).data);
       await worker.setParameters({ tessedit_pageseg_mode: "11" });
-      if (ocrCancel || state.doc !== doc) break;
+      if (ocrCancel || state.doc !== doc) return;
       if (back) mapOcrData(data, back);
       const img = whole || await imageDataOf(blob);
       const { blocks, seps } = Engine.ocrToBlocks(data, zoom, [page.x0, page.y0], (box) => Engine.sampleColors(img, box));
@@ -557,10 +594,20 @@ async function startOcr({ area = null } = {}) {
           return !insidePolygon(area.quad, (Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2);
         });
         results[p] = { segs, seps: ((doc.ocr && doc.ocr[p] && doc.ocr[p].seps) || []).concat(seps), raw: keptRaw.concat(raw), family };
-        continue;
+        return;
       }
       results[p] = { segs, seps, raw, family };
-    }
+    };
+    const queue = pages.slice();
+    let done = 0;
+    busy(t("ocr.page", { i: 1, n: pages.length }), cancel);
+    await Promise.all(workers.map(async (w) => {
+      while (queue.length && !ocrCancel && state.doc === doc) {
+        await readPage(w, queue.shift());
+        done++;
+        if (done < pages.length) busy(t("ocr.page", { i: done + 1, n: pages.length }), cancel);
+      }
+    }));
   } catch (err) {
     if (!ocrCancel) {
       console.error(err);
@@ -568,7 +615,7 @@ async function startOcr({ area = null } = {}) {
       return;
     }
   } finally {
-    if (worker) worker.terminate().catch(() => {});
+    for (const w of workers) w.terminate().catch(() => {});
     busy("");
   }
   if (state.doc !== doc) return;
@@ -576,6 +623,17 @@ async function startOcr({ area = null } = {}) {
   const found = Object.values(results).reduce((n, r) => n + r.segs.length, 0);
   const added = found ? addOcrResults(results) : 0;
   toast(ocrCancel ? t("ocr.cancelled", { n: added }) : t("ocr.done", { n: added, p: Object.keys(results).length }), "ok");
+  // The text looks like a language that was not chosen: recognising again with it reads it better.
+  const guess = !ocrCancel && guessOcrLanguage(Object.values(results).flatMap((r) => r.segs.map((s) => s.text)).join(" "));
+  if (guess && !langs.includes(guess) && OCR_LANGS.includes(guess)) {
+    const again = Object.keys(results).map((p) => Number(p) + 1);
+    toast(t("ocr.langGuess", { lang: t("ocrlang." + guess) }), "", { label: t("ocr.langRetry", { lang: t("ocrlang." + guess) }), run: () => {
+      openOcrDialog();
+      document.querySelectorAll("#ocrLangs input").forEach((i) => { if (i.value === guess) i.checked = true; });
+      $("#ocrPagesRange").checked = true;
+      $("#ocrRange").value = again.join(", ");
+    } });
+  }
 }
 
 /**
@@ -587,35 +645,23 @@ async function startOcr({ area = null } = {}) {
 async function ocrStraighten(pages, { deskew = true, dewarp = false, crop = false, orient = false, split = false, clean = false, turned = 0 } = {}) {
   const doc = state.doc, fixes = new Map();
   const cancel = () => { ocrCancel = true; };
-  for (const [k, p] of pages.entries()) {
-    if (ocrCancel || state.doc !== doc) return 0;
-    busy(t("ocr.preparing", { i: k + 1, n: pages.length }), cancel);
-    try {
-      let tilt = 0, turn = 0;
-      if (orient) { // which way up (a page lying on its side or upside down), and the tilt then
-        const r = await pool.workers[0].call("orientDetect", { page: p });
-        if (r) { turn = r.turn; if (deskew && Math.abs(r.tilt) >= 0.1) tilt = r.tilt; }
-      } else if (deskew) {
-        const r = await pool.workers[0].call("skewDetect", { page: p });
-        if (r && r.confidence >= 0.15 && Math.abs(r.angle) >= 0.1) tilt = r.angle;
-      }
-      let quad = null, tracks = null;
-      let spread = null, dim = false;
-      if (dewarp || crop || split || clean) {
-        // the page as a picture of about 1600 pixels, turned upright and straight, in grey
-        const page = doc.pages[p], zoom = Math.min(4, 1600 / Math.max(page.width, page.height));
-        const buf = await pool.workers[0].call("render", { page: p, zoom, variant: "original" });
-        const img = await imageDataOf(new Blob([buf], { type: "image/png" }));
-        const turned = Engine.warpPixels(img.data, img.width, img.height, 4, { turn, angle: -tilt });
-        const gray = new Uint8Array(turned.width * turned.height);
-        for (let i = 0; i < gray.length; i++) gray[i] = (turned.data[i * 4] * 30 + turned.data[i * 4 + 1] * 59 + turned.data[i * 4 + 2] * 11) / 100;
-        ({ quad, tracks, spread } = Engine.autoPrepare(gray, turned.width, turned.height, { crop, dewarp, split }));
-        // (only paper that is dim, unevenly lit or tinted is made white: a clean scan stays as it is)
-        dim = clean && Engine.needsCleaning(img.data, img.width, img.height, 4);
-      }
-      if (turn || tilt || quad || tracks || spread || dim) fixes.set(p, { rot: turn, skew: tilt, quad, tracks, ...(spread ? { spread } : {}), ...(dim ? { clean: true } : {}) });
-    } catch (err) { console.warn("prepare", err); }
-  }
+  // The pages are measured by the engine's workers, several at once (see preparePage).
+  const opts = { deskew, dewarp, crop, orient, split, clean }, queue = pages.slice();
+  let done = 0;
+  busy(t("ocr.preparing", { i: 1, n: pages.length }), cancel);
+  await Promise.all(pool.workers.map(async (w) => {
+    while (queue.length && !ocrCancel && state.doc === doc) {
+      const p = queue.shift();
+      try {
+        const r = await w.call("preparePage", { page: p, opts });
+        if (r.rot || r.skew || r.quad || r.tracks || r.spread || r.clean) {
+          fixes.set(p, { rot: r.rot, skew: r.skew, quad: r.quad, tracks: r.tracks, ...(r.spread ? { spread: r.spread } : {}), ...(r.clean ? { clean: true } : {}) });
+        }
+      } catch (err) { console.warn("prepare", err); }
+      done++;
+      if (done < pages.length) busy(t("ocr.preparing", { i: done + 1, n: pages.length }), cancel);
+    }
+  }));
   busy("");
   if (ocrCancel || state.doc !== doc) return null;
   if (!fixes.size) {
@@ -658,6 +704,7 @@ async function ocrStraighten(pages, { deskew = true, dewarp = false, crop = fals
       }
       const cap = doc.image ? null : pmCaptureTranslations();
       const bytes = await pool.workers[0].call("rearrange", { plan });
+      await keepOrigin(doc, bytes); // ("Restore original" brings the document back as it was)
       const name = doc.image ? doc.name.replace(/\.[^.]+$/, "") + ".pdf" : doc.name;
       await loadBytes(new Uint8Array(bytes), name, true);
       if (!state.doc || state.doc === doc) return null;
@@ -675,7 +722,7 @@ async function ocrStraighten(pages, { deskew = true, dewarp = false, crop = fals
   const count = (key) => [...fixes.values()].filter((f) => f[key]).length;
   toast(t("ocr.prepared", { o: count("rot") + turned, s: count("skew"), c: count("quad"), l: count("tracks") })
     + (count("clean") ? " " + t("ocr.cleaned", { n: count("clean") }) : "")
-    + (split2 ? " " + t("ocr.splitDone", { n: split2 }) : ""), "ok");
+    + (split2 ? " " + t("ocr.splitDone", { n: split2 }) : ""), "ok", { label: t("orig.restoreShort"), run: restoreOrigin });
   return { pages: newPages };
 }
 

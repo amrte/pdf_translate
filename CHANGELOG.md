@@ -4,6 +4,15 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.27
+
+- Faster text recognition: several pages are read at once (up to three at a time, as many as the computer has cores to spare), and the preparation (turning upright, straightening, cropping, flattening, white paper) runs beside the interface instead of in it. A 5-page scan took 11 instead of 19 seconds on a 4-core computer, with the same result.
+- "Restore original" for PDFs too: when the pages of a document were straightened, flattened, split or arranged anew, the original is kept. "↺ Original" in the message after the preparation for text recognition and "↺ Restore original" in "Arrange pages" bring it back (as for pictures already).
+- Compact PDFs: the "PDF" button now asks for full quality or compact. Compact draws the pictures anew at about 170 dpi as JPEG – the test photo 3.4 MB → 0.4 MB, still sharp to read.
+- After text recognition the language of the text is checked: when it looks like a language that was not chosen (a Swedish scan read as English, say), a message offers to recognise it again with that language – the OCR window opens with the language ticked and the pages filled in.
+- Recognised text can be translated in a monospace (typewriter) font too.
+- Fixed: when the language data for text recognition could not be loaded, a message says so (also in the other workers).
+
 ## 2.26
 
 - Words OCR was unsure of are marked: in the segment list they are highlighted (a tooltip says how sure the recognition was), the card says "n uncertain", and the new list filter "Uncertain OCR words" shows just the segments with such words – a quick way to check a recognised document. In the correction dialog (✎) they are outlined on the cutout of the page and listed. A corrected segment is no longer marked. (Pages recognised before this version have no marks; recognise them again to get them.)

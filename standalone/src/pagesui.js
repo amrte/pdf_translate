@@ -48,6 +48,8 @@ async function openPagesDialog() {
   $("#pagesTitle").textContent = t(pmSlides() ? "pages.titleSlides" : "pages.title");
   $("#pagesText").textContent = t(pmSlides() ? "pages.textSlides" : "pages.text");
   renderPagesGrid();
+  $("#pagesRestore").hidden = true;
+  hasOrigin().then((v) => { $("#pagesRestore").hidden = !v; });
   openModal($("#pagesDialog"));
 }
 
@@ -372,6 +374,7 @@ async function applyPages() {
   busy(t("pages.working"));
   try {
     const bytes = await pool.workers[0].call("rearrange", { plan, dropNotes });
+    await keepOrigin(state.doc, bytes); // ("Restore original" brings the document back as it was)
     const cap = pmCaptureTranslations();
     await loadBytes(new Uint8Array(bytes), name, true);
     if (!state.doc || state.doc.kind !== kind) return;
@@ -453,6 +456,7 @@ function initPagesManager() {
   $("#pagesSelSave").addEventListener("click", () => pmSave([...pm.sel]));
   $("#pagesSelStraight").addEventListener("click", () => pmStraighten([...pm.sel]));
   $("#pagesSelSplit").addEventListener("click", () => pmSplit([...pm.sel]));
+  $("#pagesRestore").addEventListener("click", restoreOrigin);
   $("#pagesSelHand").addEventListener("click", () => { const it = [...pm.sel][0]; if (pm.sel.size === 1 && it.from >= 0) pmHand(it); });
 
   $("#pagesSkew").addEventListener("keydown", (e) => { // (Enter sets the angle; it must not close the dialog)

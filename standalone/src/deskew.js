@@ -160,6 +160,47 @@ function splitPage(doc, pno, rot = 0, skew = 0) {
   return { found: Boolean(found), halves: halves.map((quad) => ({ quad, tracks: tracksFor(t.data, t.width, t.height, quad) })) };
 }
 
+/**
+ * Everything the text recognition prepares on page `pno` of `doc`, measured on a picture of
+ * about SKEW_SIDE pixels: {rot, skew, quad, tracks, spread, clean} – the quarter turn that sets it
+ * upright (`orient`), its tilt (`deskew`), the paper's corners (`crop`), curved lines (`dewarp`),
+ * the two pages of an open book (`split`) and whether its paper wants making white (`clean`).
+ */
+function preparePage(doc, pno, { deskew = true, dewarp = false, crop = false, orient = false, split = false, clean = false } = {}) {
+  const page = doc.loadPage(pno);
+  let rgb, w, h;
+  try {
+    const b = page.getBounds();
+    const zoom = Math.min(4, SKEW_SIDE / Math.max(1, b[2] - b[0], b[3] - b[1]));
+    const pix = page.toPixmap(M.Matrix.scale(zoom, zoom), M.ColorSpace.DeviceRGB, false);
+    try { w = pix.getWidth(); h = pix.getHeight(); rgb = pix.getPixels().slice(); } finally { free(pix); }
+  } finally {
+    free(page);
+  }
+  // (the tilt is measured on the page in grey as MuPDF draws it, the rest on the colour picture
+  // turned and greyed – as in detectSkew and the picture tools, so the results agree)
+  let rot = 0, skew = 0;
+  if (orient || deskew) {
+    const g = grayOfPage(doc, pno);
+    if (orient) {
+      const o = detectOrientation(g.px, g.w, g.h);
+      rot = o.turn;
+      if (deskew && Math.abs(o.tilt) >= 0.1) skew = o.tilt;
+    } else {
+      const s = skewOfGray(g.px, g.w, g.h);
+      if (s.confidence >= 0.15 && Math.abs(s.angle) >= 0.1) skew = s.angle;
+    }
+  }
+  let quad = null, tracks = null, spread = null;
+  if (dewarp || crop || split) {
+    const t = warpPixels(rgb, w, h, 3, { turn: rot, angle: -skew });
+    const gray = new Uint8Array(t.width * t.height);
+    for (let i = 0; i < gray.length; i++) gray[i] = (t.data[i * 3] * 30 + t.data[i * 3 + 1] * 59 + t.data[i * 3 + 2] * 11) / 100;
+    ({ quad = null, tracks = null, spread = null } = autoPrepare(gray, t.width, t.height, { crop, dewarp, split }));
+  }
+  return { rot, skew, quad, tracks, spread, clean: Boolean(clean && needsCleaning(rgb, w, h, 3)) };
+}
+
 /** The tilt of page `pno` of `doc` (see skewOfGray). */
 function detectSkew(doc, pno) {
   const page = doc.loadPage(pno);

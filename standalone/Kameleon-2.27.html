@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="Kameleon 2.26">
+  <meta name="generator" content="Kameleon 2.27">
   <meta name="description" content="Kameleon – Wechselt die Sprache, behält die Form. Changes language, keeps its shape.">
   <title>Kameleon</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2216%22 fill=%22%23287130%22/%3E%3Cg transform=%22translate(2.5 1) scale(0.9)%22 fill=%22%23ffffff%22 stroke=%22%23ffffff%22%3E%3Cpath d=%22M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6%22 fill=%22none%22 stroke-width=%223.8%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M21 43l-1 10M30 44v9M38 43l1 10%22 stroke-width=%223.6%22 stroke-linecap=%22round%22/%3E%3Cellipse cx=%2221%22 cy=%2225%22 rx=%227%22 ry=%227.5%22 stroke=%22none%22/%3E%3Cellipse cx=%2233%22 cy=%2223.5%22 rx=%227.5%22 ry=%228%22 stroke=%22none%22/%3E%3Cpath d=%22M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z%22 stroke=%22none%22/%3E%3Cpath d=%22M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z%22 stroke=%22none%22/%3E%3Cpath d=%22M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z%22 stroke=%22none%22/%3E%3Cpath d=%22M16 37l4-3 4 3 4-3 4 3 4-3 4 3%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%222.1%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3Cpath d=%22M43.5 33.9L57 32.6%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%221.5%22 stroke-linecap=%22round%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%224.4%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%222.7%22 stroke=%22none%22/%3E%3Ccircle cx=%2246.2%22 cy=%2226.7%22 r=%221.3%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Cpath d=%22M4 55.5c15-3 39-3 54 0%22 fill=%22none%22 stroke-width=%222.4%22 stroke-linecap=%22round%22/%3E%3C/g%3E%3C/svg%3E">
@@ -1021,6 +1021,11 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
 /* words OCR was unsure of */
 .seg-src .unsure { background: color-mix(in srgb, #f59e0b 26%, transparent); border-bottom: 2px dotted #d97706; border-radius: 2px; }
 .src-unsure { margin: 0 0 8px; color: #b45309; }
+/* saving a picture or scan as PDF: full quality or compact */
+.pdf-choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 6px 0 4px; }
+.pdf-choice { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; height: auto; padding: 12px 14px; text-align: left; white-space: normal; }
+.pdf-choice:focus-visible, .pdf-choice:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+@media (max-width: 520px) { .pdf-choices { grid-template-columns: 1fr; } }
 
   </style>
 </head>
@@ -1029,7 +1034,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
   <div class="brand">
     <span class="logo"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#287130"/><g transform="translate(2.5 1) scale(0.9)" fill="#ffffff" stroke="#ffffff"><path d="M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6" fill="none" stroke-width="3.8" stroke-linecap="round"/><path d="M21 43l-1 10M30 44v9M38 43l1 10" stroke-width="3.6" stroke-linecap="round"/><ellipse cx="21" cy="25" rx="7" ry="7.5" stroke="none"/><ellipse cx="33" cy="23.5" rx="7.5" ry="8" stroke="none"/><path d="M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z" stroke="none"/><path d="M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z" stroke="none"/><path d="M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z" stroke="none"/><path d="M16 37l4-3 4 3 4-3 4 3 4-3 4 3" fill="none" stroke="#287130" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M43.5 33.9L57 32.6" fill="none" stroke="#287130" stroke-width="1.5" stroke-linecap="round"/><circle cx="45.5" cy="26.5" r="4.4" fill="#287130" stroke="none"/><circle cx="45.5" cy="26.5" r="2.7" stroke="none"/><circle cx="46.2" cy="26.7" r="1.3" fill="#287130" stroke="none"/><path d="M4 55.5c15-3 39-3 54 0" fill="none" stroke-width="2.4" stroke-linecap="round"/></g></svg></span>
     <span class="brand-name">Kameleon</span>
-    <span class="version" id="appVersion">v2.26</span>
+    <span class="version" id="appVersion">v2.27</span>
   </div>
   <div class="topbar-actions">
     <span class="doc-name" id="docName"></span>
@@ -1542,7 +1547,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
     </div>
     <input type="file" id="offlineZip" class="visually-hidden" accept=".zip,application/zip" multiple tabindex="-1">
     <input type="file" id="offlineFolder" class="visually-hidden" webkitdirectory multiple tabindex="-1">
-    <p class="muted small help-version help-part">Kameleon v2.26 · <span data-i18n="app.tagline"></span></p>
+    <p class="muted small help-version help-part">Kameleon v2.27 · <span data-i18n="app.tagline"></span></p>
     <div class="modal-actions">
       <button type="button" value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
     </div>
@@ -1691,6 +1696,17 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
     </div>
   </form>
 </dialog>
+<dialog id="pdfDialog" class="modal" aria-labelledby="pdfTitle">
+  <form method="dialog">
+    <h2 id="pdfTitle" data-i18n="pdf.title">Save as PDF</h2>
+    <p class="muted" id="pdfText"></p>
+    <div class="pdf-choices">
+      <button value="full" class="btn pdf-choice"><b data-i18n="pdf.full">Full quality</b><span class="small muted" data-i18n="pdf.fullNote"></span></button>
+      <button value="compact" class="btn pdf-choice"><b data-i18n="pdf.compact">Compact</b><span class="small muted" data-i18n="pdf.compactNote"></span></button>
+    </div>
+    <div class="modal-actions"><button value="cancel" class="btn ghost" data-i18n="common.cancel">Cancel</button></div>
+  </form>
+</dialog>
 <dialog id="srcDialog" class="modal" aria-labelledby="srcTitle">
   <form method="dialog">
     <h2 id="srcTitle" data-i18n="src.title">Correct the recognised text</h2>
@@ -1764,6 +1780,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
     <div class="modal-actions pages-actions">
       <button type="button" class="btn" id="pagesAddBlank" data-i18n="pages.blank"></button>
       <button type="button" class="btn" id="pagesAddFile" data-i18n="pages.fromFile"></button>
+      <button type="button" class="btn" id="pagesRestore" data-i18n="orig.restore" data-i18n-title="orig.restoreTitle" hidden></button>
       <label class="check" id="pagesHiddenWrap" hidden><input type="checkbox" id="pagesShowHidden"> <span data-i18n="pages.showHidden"></span></label>
       <label class="check" id="pagesNotesWrap" hidden data-i18n-title="pages.dropNotesTitle"><input type="checkbox" id="pagesDropNotes"> <span id="pagesDropNotesText"></span></label>
       <span class="muted" id="pagesCount"></span>
@@ -1795,7 +1812,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
       <label class="check" data-i18n-title="ocr.cleanTitle"><input type="checkbox" id="ocrClean" checked> <span data-i18n="ocr.clean"></span></label>
     </div>
     <label class="field"><span data-i18n="ocr.family">Font of the translation</span>
-      <select id="ocrFamily"><option value="serif" data-i18n="st.serif"></option><option value="sans-serif" data-i18n="st.sans"></option></select>
+      <select id="ocrFamily"><option value="serif" data-i18n="st.serif"></option><option value="sans-serif" data-i18n="st.sans"></option><option value="monospace" data-i18n="st.mono"></option></select>
     </label>
     <p class="muted small" data-i18n="ocr.note"></p>
     <div class="modal-actions">
@@ -2099,6 +2116,21 @@ const I18N = {
     "lang.target": "Zielsprache",
     "common.cancel": "Abbrechen",
     "src.title": "Erkannten Text korrigieren",
+    "ocr.langGuess": "Der Text scheint {lang} zu sein, das nicht gewählt war – mit dieser Sprache werden Umlaute und Sonderzeichen richtig gelesen.",
+    "ocr.langRetry": "Mit {lang} neu erkennen",
+    "pdf.title": "Als PDF speichern",
+    "pdf.text": "Das Original als durchsuchbare PDF (der erkannte Text liegt unsichtbar unter dem Bild).",
+    "pdf.textTranslated": "Die Übersetzung als PDF (nicht übersetzter erkannter Text bleibt durchsuchbar).",
+    "pdf.full": "Volle Qualität",
+    "pdf.fullNote": "Bilder in voller Auflösung",
+    "pdf.compact": "Kompakt",
+    "pdf.compactNote": "Bilder kleiner (ca. 170 dpi, JPEG) – oft ein Zehntel der Größe, gut zum Lesen und Versenden",
+    "orig.restore": "↺ Original wiederherstellen",
+    "orig.restoreShort": "↺ Original",
+    "orig.restoreTitle": "Das Dokument so öffnen, wie es vor dem Geraderichten, Glätten, Teilen oder Anordnen der Seiten war",
+    "orig.confirm": "Das Original wiederherstellen? Das Dokument wird so geöffnet, wie es vor dem Geraderichten, Glätten, Teilen oder Anordnen der Seiten war. Texterkennung und Übersetzungen, die seitdem gemacht wurden, gehören zur bearbeiteten Fassung.",
+    "orig.restored": "Das Original ist wieder geöffnet.",
+    "orig.none": "Für dieses Dokument ist kein Original gespeichert.",
     "src.unsure": "Unsicher gelesen (oben markiert): {words}",
     "ocr.unsureWord": "Unsicher gelesen ({n} % sicher) – bitte prüfen; ✎ korrigiert",
     "meta.unsure": "{n} unsicher",
@@ -2956,6 +2988,21 @@ const I18N = {
     "lang.target": "Target language",
     "common.cancel": "Cancel",
     "src.title": "Correct the recognised text",
+    "ocr.langGuess": "The text seems to be {lang}, which was not chosen – with that language its accented and special letters are read right.",
+    "ocr.langRetry": "Recognise again with {lang}",
+    "pdf.title": "Save as PDF",
+    "pdf.text": "The original as a searchable PDF (the recognised text lies invisibly under the picture).",
+    "pdf.textTranslated": "The translation as a PDF (recognised text without a translation stays searchable).",
+    "pdf.full": "Full quality",
+    "pdf.fullNote": "Pictures at full resolution",
+    "pdf.compact": "Compact",
+    "pdf.compactNote": "Pictures smaller (about 170 dpi, JPEG) – often a tenth of the size, fine for reading and sending",
+    "orig.restore": "↺ Restore original",
+    "orig.restoreShort": "↺ Original",
+    "orig.restoreTitle": "Open the document as it was before its pages were straightened, flattened, split or arranged",
+    "orig.confirm": "Restore the original? The document is opened as it was before its pages were straightened, flattened, split or arranged. Text recognition and translations made since belong to the edited version.",
+    "orig.restored": "The original is open again.",
+    "orig.none": "No original is stored for this document.",
     "src.unsure": "Read with doubt (marked above): {words}",
     "ocr.unsureWord": "Read with doubt ({n} % sure) – please check; ✎ corrects it",
     "meta.unsure": "{n} uncertain",
@@ -6725,21 +6772,77 @@ function rotatePages(doc, rotations) {
  * The translated PDF (or the original when nothing is translated) with markups and turned
  * pages. Those go into a copy, so the editable document never accumulates them.
  */
-function savePdf(W, markups, rotations, original = false, layer = null) {
+/**
+ * The pictures of a PDF made smaller (a compact PDF of scans and photos): each image drawn anew
+ * at no more than `maxSide` pixels on its longer side (2000: about 170 dpi on A4) and stored as
+ * JPEG, when that saves at least a fifth. Masks, 1-bit scans and pictures with transparency stay
+ * as they are; an image used on several pages is done once.
+ */
+function compactImages(doc, maxSide = 2000, quality = 72) {
+  const done = new Map(); // object number → its replacement (or null: kept)
+  for (let p = 0; p < doc.countPages(); p++) {
+    const page = doc.loadPage(p);
+    try {
+      const res = page.getObject().getInheritable("Resources");
+      const xo = res.isDictionary() ? res.get("XObject") : null;
+      if (!xo || !xo.isDictionary()) continue;
+      const list = [];
+      xo.forEach((v, k) => list.push([k, v]));
+      for (const [name, ref] of list) {
+        if (!ref.isIndirect() || !ref.isStream() || ref.get("Subtype").asName() !== "Image") continue;
+        const num = ref.asIndirect();
+        if (done.has(num)) { if (done.get(num)) xo.put(name, done.get(num)); continue; }
+        let repl = null;
+        try {
+          const img = doc.loadImage(ref);
+          try {
+            const w = img.getWidth(), h = img.getHeight(), cs = img.getColorSpace();
+            if (!img.getImageMask() && img.getBitsPerComponent() > 1 && !img.getMask() && cs && w * h > 250000) {
+              const k = Math.min(1, maxSide / Math.max(w, h)), W = Math.max(1, Math.round(w * k)), H = Math.max(1, Math.round(h * k));
+              const pix = new M.Pixmap(cs.isGray() ? M.ColorSpace.DeviceGray : M.ColorSpace.DeviceRGB, [0, 0, W, H], false);
+              let jpeg;
+              try {
+                pix.clear(255);
+                const dev = new M.DrawDevice(M.Matrix.identity, pix);
+                try { dev.fillImage(img, [W, 0, 0, H, 0, 0], 1); dev.close(); } finally { free(dev); }
+                jpeg = pix.asJPEG(quality);
+              } finally {
+                free(pix);
+              }
+              if (jpeg.length < ref.readRawStream().length * 0.8) {
+                const small = new M.Image(jpeg);
+                try { repl = doc.addImage(small); } finally { free(small); }
+                xo.put(name, repl);
+              }
+            }
+          } finally {
+            free(img);
+          }
+        } catch (err) { /* (an image MuPDF cannot read stays as it is) */ }
+        done.set(num, repl);
+      }
+    } finally {
+      free(page);
+    }
+  }
+}
+
+function savePdf(W, markups, rotations, original = false, layer = null, compact = false) {
   const turned = Object.values(rotations).some(Boolean), searchable = Boolean(layer && layer.length);
   // (`original`: the document as opened, not the translation – e.g. a picture saved as PDF;
   // `layer`: recognised text put under the pictures invisibly, see addTextLayer)
-  if (original && !markups.length && !turned && !searchable) return W.bytes.slice();
+  if (original && !markups.length && !turned && !searchable && !compact) return W.bytes.slice();
   if (!original && !W.edit && !markups.length && !turned && !searchable) throw new Error("Nothing to save yet.");
   let doc = original ? null : W.edit, temp = null;
   // Fonts added by page updates (shared by all updated pages, see updatePage) and by text notes
   // are embedded whole; the saved copy gets them subsetted.
-  const subset = Boolean(W.editFk) || markups.some((m) => m.type === "text") || searchable;
+  const subset = Boolean(W.editFk) || markups.some((m) => m.type === "text") || searchable || compact;
   if (markups.length || turned || !doc || subset) {
     let src = W.bytes;
     if (doc) { const b = W.edit.saveToBuffer(""); src = b.asUint8Array().slice(); free(b); }
     temp = doc = M.Document.openDocument(src.slice(), "application/pdf");
     if (searchable) addTextLayer(doc, layer);
+    if (compact) compactImages(doc);
     addMarkups(doc, markups);
     if (subset) doc.subsetFonts();
     rotatePages(doc, rotations);
@@ -6949,6 +7052,10 @@ function createHandler() {
       if (!doc) throw new Error("No document is open.");
       return { result: splitPage(doc, args.page, args.rot || 0, args.skew || 0) };
     }
+    if (cmd === "preparePage") { // what text recognition prepares on a page (see preparePage)
+      if (!W.doc) throw new Error("No document is open.");
+      return { result: preparePage(W.doc, args.page, args.opts || {}) };
+    }
     if (cmd === "orientDetect") { // which way up a page is (quarter turns) and its tilt then
       const doc = args.index ? (W.extras[args.index - 1] || {}).doc : W.doc;
       if (!doc) throw new Error("No document is open.");
@@ -7040,7 +7147,7 @@ function createHandler() {
       return { result: bytes, transfer: [bytes.buffer] };
     }
     if (cmd === "save") {
-      const bytes = savePdf(W, args.markups || [], args.rotations || {}, Boolean(args.original), args.layer || null);
+      const bytes = savePdf(W, args.markups || [], args.rotations || {}, Boolean(args.original), args.layer || null, Boolean(args.compact));
       return { result: bytes, transfer: [bytes.buffer] };
     }
     if (cmd === "saveBilingual" && W.kind !== "pdf") {
@@ -10669,6 +10776,47 @@ function splitPage(doc, pno, rot = 0, skew = 0) {
   const found = findSpread(t.data, t.width, t.height, lines);
   const halves = found || [[[0, 0], [0.5, 0], [0.5, 1], [0, 1]], [[0.5, 0], [1, 0], [1, 1], [0.5, 1]]];
   return { found: Boolean(found), halves: halves.map((quad) => ({ quad, tracks: tracksFor(t.data, t.width, t.height, quad) })) };
+}
+
+/**
+ * Everything the text recognition prepares on page `pno` of `doc`, measured on a picture of
+ * about SKEW_SIDE pixels: {rot, skew, quad, tracks, spread, clean} – the quarter turn that sets it
+ * upright (`orient`), its tilt (`deskew`), the paper's corners (`crop`), curved lines (`dewarp`),
+ * the two pages of an open book (`split`) and whether its paper wants making white (`clean`).
+ */
+function preparePage(doc, pno, { deskew = true, dewarp = false, crop = false, orient = false, split = false, clean = false } = {}) {
+  const page = doc.loadPage(pno);
+  let rgb, w, h;
+  try {
+    const b = page.getBounds();
+    const zoom = Math.min(4, SKEW_SIDE / Math.max(1, b[2] - b[0], b[3] - b[1]));
+    const pix = page.toPixmap(M.Matrix.scale(zoom, zoom), M.ColorSpace.DeviceRGB, false);
+    try { w = pix.getWidth(); h = pix.getHeight(); rgb = pix.getPixels().slice(); } finally { free(pix); }
+  } finally {
+    free(page);
+  }
+  // (the tilt is measured on the page in grey as MuPDF draws it, the rest on the colour picture
+  // turned and greyed – as in detectSkew and the picture tools, so the results agree)
+  let rot = 0, skew = 0;
+  if (orient || deskew) {
+    const g = grayOfPage(doc, pno);
+    if (orient) {
+      const o = detectOrientation(g.px, g.w, g.h);
+      rot = o.turn;
+      if (deskew && Math.abs(o.tilt) >= 0.1) skew = o.tilt;
+    } else {
+      const s = skewOfGray(g.px, g.w, g.h);
+      if (s.confidence >= 0.15 && Math.abs(s.angle) >= 0.1) skew = s.angle;
+    }
+  }
+  let quad = null, tracks = null, spread = null;
+  if (dewarp || crop || split) {
+    const t = warpPixels(rgb, w, h, 3, { turn: rot, angle: -skew });
+    const gray = new Uint8Array(t.width * t.height);
+    for (let i = 0; i < gray.length; i++) gray[i] = (t.data[i * 3] * 30 + t.data[i * 3 + 1] * 59 + t.data[i * 3 + 2] * 11) / 100;
+    ({ quad = null, tracks = null, spread = null } = autoPrepare(gray, t.width, t.height, { crop, dewarp, split }));
+  }
+  return { rot, skew, quad, tracks, spread, clean: Boolean(clean && needsCleaning(rgb, w, h, 3)) };
 }
 
 /** The tilt of page `pno` of `doc` (see skewOfGray). */
@@ -14995,12 +15143,12 @@ async function downloadOutput() {
  * and searchable: the recognised text lies invisibly under the picture (untranslated text only,
  * in the translation).
  */
-async function downloadPicturePdf() {
+async function downloadPicturePdf(compact = false) {
   if (!state.doc || !(state.doc.image || state.doc.ocr) || isBook()) return;
   const translated = state.hasOutput && (state.variant === "translated" || (typeof cmp !== "undefined" && cmp.on));
   try {
     busy(t("msg.saving"));
-    const bytes = await pool.workers[0].call("save", { markups: state.markups, rotations: state.rotations, original: !translated, layer: ocrTextLayer(translated) });
+    const bytes = await pool.workers[0].call("save", { markups: state.markups, rotations: state.rotations, original: !translated, layer: ocrTextLayer(translated), compact });
     saveBlob(new Blob([bytes], { type: "application/pdf" }), `${stem()}${translated ? ".translated" : ""}.pdf`);
   } catch (err) {
     toast(t("msg.saveFailed", { err: userError(err) }), "error");
@@ -15370,7 +15518,22 @@ function init() {
   });
 
   $("#btnDownload").addEventListener("click", (e) => { e.preventDefault(); downloadOutput(); });
-  $("#btnPicPdf").addEventListener("click", (e) => { e.preventDefault(); downloadPicturePdf(); });
+  // The PDF of a picture or scan: in full quality or compact (the pictures smaller, see compactImages).
+  $("#btnPicPdf").addEventListener("click", (e) => {
+    e.preventDefault();
+    const translated = state.hasOutput && (state.variant === "translated" || (typeof cmp !== "undefined" && cmp.on));
+    $("#pdfText").textContent = t(translated ? "pdf.textTranslated" : "pdf.text");
+    let last = "full";
+    try { last = localStorage.getItem("pdftr:pdf-size") || "full"; } catch (_) { /* storage blocked */ }
+    openModal($("#pdfDialog"));
+    $(`#pdfDialog button[value="${last}"]`).focus();
+  });
+  $("#pdfDialog").addEventListener("close", () => {
+    const v = $("#pdfDialog").returnValue;
+    if (v !== "full" && v !== "compact") return;
+    try { localStorage.setItem("pdftr:pdf-size", v); } catch (_) { /* storage blocked */ }
+    downloadPicturePdf(v === "compact");
+  });
   $("#btnBuild").addEventListener("click", () => {
     $("#fontUploadRow").hidden = $("#fontMode").value !== "custom";
     openModal($("#buildDialog"));
@@ -16856,6 +17019,36 @@ const OCR_CORE = "https://cdn.jsdelivr.net/npm/tesseract.js-core@6.0.0";
 const OCR_LANG_PATH = ""; // "" = the language data on jsDelivr (@tesseract.js-data/<lang>)
 const OCR_LANGS = ["eng", "deu", "fra", "spa", "por", "nld", "swe", "pol", "ces", "slk", "hun", "bul", "ukr", "fin", "ell", "ara", "jpn", "chi_sim", "chi_tra"];
 const LS_OCR = "pdftr:ocr-options";
+/**
+ * The language of recognised text, told by its most common short words (written without accents,
+ * as a reading with the wrong language gives them): one of the OCR languages with Latin script, or
+ * null when unclear. Used to suggest a language that was not chosen.
+ */
+const OCR_STOPWORDS = {
+  eng: "the and of to is in that for with are this be was it on as by not have from",
+  deu: "der die und das ist nicht mit ein eine den von zu auf sich des dem werden wird im fur auch",
+  fra: "le la les et des est une pour dans que qui du pas sur au ne par plus avec",
+  spa: "el los las y que en es por una para con del se al lo como mas pero",
+  por: "os as que em um uma para com nao do da se ao dos das como mais",
+  nld: "het een en van is dat op te niet met voor zijn ook bij aan er maar",
+  swe: "och att det som av for med pa ar inte till har om ett jag var ska",
+  pol: "sie nie do jest ze jak przez dla od na ale tak po czy tylko",
+  ces: "je se na ze to do ktery jsou pro by jak ale tak po jako jeho",
+  slk: "je sa na ze to do ktory su pre by ako ale tak po aj jeho",
+  hun: "az es egy hogy nem is meg van de ez mint csak volt mar el",
+  fin: "ja on ei se etta mutta kun niin han oli ovat myos kuin joka tai sen",
+};
+function guessOcrLanguage(text) {
+  const words = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").match(/[a-z]+/g) || [];
+  if (words.length < 30) return null;
+  const score = Object.entries(OCR_STOPWORDS).map(([lang, list]) => {
+    const set = new Set(list.split(" "));
+    return [lang, words.filter((w) => set.has(w)).length / words.length];
+  }).sort((a, b) => b[1] - a[1]);
+  const [best, second] = score;
+  return best[1] >= 0.08 && best[1] >= second[1] * 1.4 ? best[0] : null;
+}
+
 /** The OCR languages in alphabetical order of their names in the interface language. */
 const sortedOcrLangs = () => [...OCR_LANGS].sort((a, b) => t("ocrlang." + a).localeCompare(t("ocrlang." + b), LANG));
 
@@ -16961,10 +17154,10 @@ async function startOcr({ area = null } = {}) {
   }
   if (ocrCancel || !state.doc) return;
   const doc = state.doc, results = {};
-  let worker = null;
   // Cancel stops the recognition at once (a running step fails, which is fine); the pages that
   // are finished are kept.
-  const cancel = () => { ocrCancel = true; if (worker) worker.terminate().catch(() => {}); };
+  const workers = [];
+  const cancel = () => { ocrCancel = true; for (const w of workers) w.terminate().catch(() => {}); };
   try {
     busy(t("ocr.loading"), cancel);
     const libs = await offlineLibs(), stored = libs && libs.ocr; // Tesseract saved for offline use, if any
@@ -16972,21 +17165,28 @@ async function startOcr({ area = null } = {}) {
     if (ocrCancel) return;
     const createWorker = T.createWorker || (T.default && T.default.createWorker);
     // (a language that cannot be fetched is reported; the worker itself would wait for ever)
-    let failLoad = null;
-    const failed = new Promise((_, reject) => { failLoad = reject; });
-    worker = await Promise.race([
-      createWorker(langs.join("+"), 1, { ...ocrWorkerOptions(stored), errorHandler: (e) => failLoad(new Error(`OCR language data could not be loaded (${String((e && e.message) || e).slice(0, 120)})`)) }),
-      failed,
-    ]);
-    if (ocrCancel) return;
-    await worker.setParameters({ tessedit_pageseg_mode: "11" }); // sparse text: table cells and labels too
-    for (const [k, p] of pages.entries()) {
-      if (ocrCancel || state.doc !== doc) break;
-      busy(t("ocr.page", { i: k + 1, n: pages.length }), cancel);
+    const make = () => {
+      let failLoad = null;
+      const failed = new Promise((_, reject) => { failLoad = reject; });
+      return Promise.race([
+        createWorker(langs.join("+"), 1, { ...ocrWorkerOptions(stored), errorHandler: (e) => failLoad(new Error(`OCR language data could not be loaded (${String((e && e.message) || e).slice(0, 120)})`)) }),
+        failed,
+      ]);
+    };
+    // Several pages are read at once: up to three workers, as many as the computer has cores to
+    // spare (one on a device with little memory). The first loads the language data, the others
+    // find it in the browser's cache.
+    const cores = navigator.hardwareConcurrency || 2, memory = navigator.deviceMemory || 8;
+    const count = Math.max(1, Math.min(3, pages.length, Math.floor(cores / 2), memory < 4 ? 1 : 3));
+    workers.push(await make());
+    if (count > 1) for (const w of await Promise.all(Array.from({ length: count - 1 }, () => make().catch(() => null)))) if (w) workers.push(w);
+    if (ocrCancel) { cancel(); return; }
+    for (const w of workers) await w.setParameters({ tessedit_pageseg_mode: "11" }); // sparse text: table cells and labels too
+    const readPage = async (worker, p) => {
       const page = doc.pages[p];
       const zoom = Math.min(3, 3600 / Math.max(page.width, page.height));
-      const buf = await pool.workers[0].call("render", { page: p, zoom, variant: "original" });
-      if (ocrCancel) break;
+      const buf = await pool.leastBusy(null).call("render", { page: p, zoom, variant: "original" });
+      if (ocrCancel) return;
       let blob = new Blob([buf], { type: "image/png" }), whole = null, back = null;
       if (area) {
         // Only the area, pulled straight from its four corners into a rectangle (a slanted block
@@ -17007,7 +17207,7 @@ async function startOcr({ area = null } = {}) {
       await worker.setParameters({ tessedit_pageseg_mode: "7" });
       const data = await Engine.refineOcr(first, async (rectangle) => (await worker.recognize(blob, { rectangle }, { blocks: true })).data);
       await worker.setParameters({ tessedit_pageseg_mode: "11" });
-      if (ocrCancel || state.doc !== doc) break;
+      if (ocrCancel || state.doc !== doc) return;
       if (back) mapOcrData(data, back);
       const img = whole || await imageDataOf(blob);
       const { blocks, seps } = Engine.ocrToBlocks(data, zoom, [page.x0, page.y0], (box) => Engine.sampleColors(img, box));
@@ -17030,10 +17230,20 @@ async function startOcr({ area = null } = {}) {
           return !insidePolygon(area.quad, (Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2);
         });
         results[p] = { segs, seps: ((doc.ocr && doc.ocr[p] && doc.ocr[p].seps) || []).concat(seps), raw: keptRaw.concat(raw), family };
-        continue;
+        return;
       }
       results[p] = { segs, seps, raw, family };
-    }
+    };
+    const queue = pages.slice();
+    let done = 0;
+    busy(t("ocr.page", { i: 1, n: pages.length }), cancel);
+    await Promise.all(workers.map(async (w) => {
+      while (queue.length && !ocrCancel && state.doc === doc) {
+        await readPage(w, queue.shift());
+        done++;
+        if (done < pages.length) busy(t("ocr.page", { i: done + 1, n: pages.length }), cancel);
+      }
+    }));
   } catch (err) {
     if (!ocrCancel) {
       console.error(err);
@@ -17041,7 +17251,7 @@ async function startOcr({ area = null } = {}) {
       return;
     }
   } finally {
-    if (worker) worker.terminate().catch(() => {});
+    for (const w of workers) w.terminate().catch(() => {});
     busy("");
   }
   if (state.doc !== doc) return;
@@ -17049,6 +17259,17 @@ async function startOcr({ area = null } = {}) {
   const found = Object.values(results).reduce((n, r) => n + r.segs.length, 0);
   const added = found ? addOcrResults(results) : 0;
   toast(ocrCancel ? t("ocr.cancelled", { n: added }) : t("ocr.done", { n: added, p: Object.keys(results).length }), "ok");
+  // The text looks like a language that was not chosen: recognising again with it reads it better.
+  const guess = !ocrCancel && guessOcrLanguage(Object.values(results).flatMap((r) => r.segs.map((s) => s.text)).join(" "));
+  if (guess && !langs.includes(guess) && OCR_LANGS.includes(guess)) {
+    const again = Object.keys(results).map((p) => Number(p) + 1);
+    toast(t("ocr.langGuess", { lang: t("ocrlang." + guess) }), "", { label: t("ocr.langRetry", { lang: t("ocrlang." + guess) }), run: () => {
+      openOcrDialog();
+      document.querySelectorAll("#ocrLangs input").forEach((i) => { if (i.value === guess) i.checked = true; });
+      $("#ocrPagesRange").checked = true;
+      $("#ocrRange").value = again.join(", ");
+    } });
+  }
 }
 
 /**
@@ -17060,35 +17281,23 @@ async function startOcr({ area = null } = {}) {
 async function ocrStraighten(pages, { deskew = true, dewarp = false, crop = false, orient = false, split = false, clean = false, turned = 0 } = {}) {
   const doc = state.doc, fixes = new Map();
   const cancel = () => { ocrCancel = true; };
-  for (const [k, p] of pages.entries()) {
-    if (ocrCancel || state.doc !== doc) return 0;
-    busy(t("ocr.preparing", { i: k + 1, n: pages.length }), cancel);
-    try {
-      let tilt = 0, turn = 0;
-      if (orient) { // which way up (a page lying on its side or upside down), and the tilt then
-        const r = await pool.workers[0].call("orientDetect", { page: p });
-        if (r) { turn = r.turn; if (deskew && Math.abs(r.tilt) >= 0.1) tilt = r.tilt; }
-      } else if (deskew) {
-        const r = await pool.workers[0].call("skewDetect", { page: p });
-        if (r && r.confidence >= 0.15 && Math.abs(r.angle) >= 0.1) tilt = r.angle;
-      }
-      let quad = null, tracks = null;
-      let spread = null, dim = false;
-      if (dewarp || crop || split || clean) {
-        // the page as a picture of about 1600 pixels, turned upright and straight, in grey
-        const page = doc.pages[p], zoom = Math.min(4, 1600 / Math.max(page.width, page.height));
-        const buf = await pool.workers[0].call("render", { page: p, zoom, variant: "original" });
-        const img = await imageDataOf(new Blob([buf], { type: "image/png" }));
-        const turned = Engine.warpPixels(img.data, img.width, img.height, 4, { turn, angle: -tilt });
-        const gray = new Uint8Array(turned.width * turned.height);
-        for (let i = 0; i < gray.length; i++) gray[i] = (turned.data[i * 4] * 30 + turned.data[i * 4 + 1] * 59 + turned.data[i * 4 + 2] * 11) / 100;
-        ({ quad, tracks, spread } = Engine.autoPrepare(gray, turned.width, turned.height, { crop, dewarp, split }));
-        // (only paper that is dim, unevenly lit or tinted is made white: a clean scan stays as it is)
-        dim = clean && Engine.needsCleaning(img.data, img.width, img.height, 4);
-      }
-      if (turn || tilt || quad || tracks || spread || dim) fixes.set(p, { rot: turn, skew: tilt, quad, tracks, ...(spread ? { spread } : {}), ...(dim ? { clean: true } : {}) });
-    } catch (err) { console.warn("prepare", err); }
-  }
+  // The pages are measured by the engine's workers, several at once (see preparePage).
+  const opts = { deskew, dewarp, crop, orient, split, clean }, queue = pages.slice();
+  let done = 0;
+  busy(t("ocr.preparing", { i: 1, n: pages.length }), cancel);
+  await Promise.all(pool.workers.map(async (w) => {
+    while (queue.length && !ocrCancel && state.doc === doc) {
+      const p = queue.shift();
+      try {
+        const r = await w.call("preparePage", { page: p, opts });
+        if (r.rot || r.skew || r.quad || r.tracks || r.spread || r.clean) {
+          fixes.set(p, { rot: r.rot, skew: r.skew, quad: r.quad, tracks: r.tracks, ...(r.spread ? { spread: r.spread } : {}), ...(r.clean ? { clean: true } : {}) });
+        }
+      } catch (err) { console.warn("prepare", err); }
+      done++;
+      if (done < pages.length) busy(t("ocr.preparing", { i: done + 1, n: pages.length }), cancel);
+    }
+  }));
   busy("");
   if (ocrCancel || state.doc !== doc) return null;
   if (!fixes.size) {
@@ -17131,6 +17340,7 @@ async function ocrStraighten(pages, { deskew = true, dewarp = false, crop = fals
       }
       const cap = doc.image ? null : pmCaptureTranslations();
       const bytes = await pool.workers[0].call("rearrange", { plan });
+      await keepOrigin(doc, bytes); // ("Restore original" brings the document back as it was)
       const name = doc.image ? doc.name.replace(/\.[^.]+$/, "") + ".pdf" : doc.name;
       await loadBytes(new Uint8Array(bytes), name, true);
       if (!state.doc || state.doc === doc) return null;
@@ -17148,7 +17358,7 @@ async function ocrStraighten(pages, { deskew = true, dewarp = false, crop = fals
   const count = (key) => [...fixes.values()].filter((f) => f[key]).length;
   toast(t("ocr.prepared", { o: count("rot") + turned, s: count("skew"), c: count("quad"), l: count("tracks") })
     + (count("clean") ? " " + t("ocr.cleaned", { n: count("clean") }) : "")
-    + (split2 ? " " + t("ocr.splitDone", { n: split2 }) : ""), "ok");
+    + (split2 ? " " + t("ocr.splitDone", { n: split2 }) : ""), "ok", { label: t("orig.restoreShort"), run: restoreOrigin });
   return { pages: newPages };
 }
 
@@ -18143,16 +18353,44 @@ function picDocumentChanged() {
 
 const picOriginKey = (id) => `picorig:${id}`;
 
+/**
+ * Before a document is replaced by a version made from it (pages straightened, flattened, split
+ * or rearranged; a picture edited): the original is remembered for that version (`bytes`), so
+ * "Restore original" can bring it back – the first original of a line of such changes.
+ */
+async function keepOrigin(doc, bytes) {
+  try {
+    const id = await sha256(bytes);
+    const origin = (await idbGet(picOriginKey(doc.id)).catch(() => null))
+      || (doc.image && doc.image.source ? { bytes: doc.image.source, name: doc.name } : state.doc === doc && state.srcBytes ? { bytes: state.srcBytes.slice(), name: doc.name } : null);
+    if (origin) await idbPut(origin, picOriginKey(id));
+  } catch (err) { console.warn("origin", err); }
+}
+
+/** Whether the open document was made from an original that can be restored. */
+async function hasOrigin() {
+  const doc = state.doc;
+  return Boolean(doc && (await idbGet(picOriginKey(doc.id)).catch(() => null)));
+}
+
+/** The open document replaced by the original it was made from (see keepOrigin). */
+async function restoreOrigin() {
+  const doc = state.doc;
+  if (!doc) return;
+  const origin = await idbGet(picOriginKey(doc.id)).catch(() => null);
+  if (!origin) { toast(t("orig.none"), "error"); return; }
+  if (!window.confirm(t(doc.image ? "pic.restoreConfirm" : "orig.confirm"))) return;
+  if (doc.image) picOpenPanel(false);
+  if ($("#pagesDialog").open) $("#pagesDialog").close();
+  await loadBytes(new Uint8Array(origin.bytes), origin.name, true);
+  toast(t(doc.image ? "pic.restored" : "orig.restored"), "ok");
+}
+
 /** Opens the picture as it was before any edit was applied. */
 async function picRestore() {
-  const doc = state.doc;
-  if (!doc || !doc.image) return;
-  const origin = await idbGet(picOriginKey(doc.id)).catch(() => null);
-  if (!origin) { $("#picRestore").hidden = true; return; }
-  if (!window.confirm(t("pic.restoreConfirm"))) return;
-  picOpenPanel(false);
-  await loadBytes(new Uint8Array(origin.bytes), origin.name, true);
-  toast(t("pic.restored"), "ok");
+  if (!state.doc || !state.doc.image) return;
+  if (!(await hasOrigin())) { $("#picRestore").hidden = true; return; }
+  await restoreOrigin();
 }
 
 /** Brightness, contrast and greyscale on raw pixels (for browsers without canvas filters). */
@@ -18309,7 +18547,7 @@ function initPicture() {
 // from its own browser cache before the network, so language files are written into that cache.
 // ======================================================================
 
-const APP_VERSION = "2.26";
+const APP_VERSION = "2.27";
 // (a change of library version makes a stored set outdated: it is then ignored)
 const OFFLINE_VERSION = `${MUPDF_URL} ${OCR_LIB}`;
 const CORE_SIMD = "tesseract-core-simd-lstm.wasm.js", CORE_PLAIN = "tesseract-core-lstm.wasm.js";
@@ -18644,6 +18882,8 @@ async function openPagesDialog() {
   $("#pagesTitle").textContent = t(pmSlides() ? "pages.titleSlides" : "pages.title");
   $("#pagesText").textContent = t(pmSlides() ? "pages.textSlides" : "pages.text");
   renderPagesGrid();
+  $("#pagesRestore").hidden = true;
+  hasOrigin().then((v) => { $("#pagesRestore").hidden = !v; });
   openModal($("#pagesDialog"));
 }
 
@@ -18968,6 +19208,7 @@ async function applyPages() {
   busy(t("pages.working"));
   try {
     const bytes = await pool.workers[0].call("rearrange", { plan, dropNotes });
+    await keepOrigin(state.doc, bytes); // ("Restore original" brings the document back as it was)
     const cap = pmCaptureTranslations();
     await loadBytes(new Uint8Array(bytes), name, true);
     if (!state.doc || state.doc.kind !== kind) return;
@@ -19049,6 +19290,7 @@ function initPagesManager() {
   $("#pagesSelSave").addEventListener("click", () => pmSave([...pm.sel]));
   $("#pagesSelStraight").addEventListener("click", () => pmStraighten([...pm.sel]));
   $("#pagesSelSplit").addEventListener("click", () => pmSplit([...pm.sel]));
+  $("#pagesRestore").addEventListener("click", restoreOrigin);
   $("#pagesSelHand").addEventListener("click", () => { const it = [...pm.sel][0]; if (pm.sel.size === 1 && it.from >= 0) pmHand(it); });
 
   $("#pagesSkew").addEventListener("keydown", (e) => { // (Enter sets the angle; it must not close the dialog)

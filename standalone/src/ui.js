@@ -1413,12 +1413,12 @@ async function downloadOutput() {
  * and searchable: the recognised text lies invisibly under the picture (untranslated text only,
  * in the translation).
  */
-async function downloadPicturePdf() {
+async function downloadPicturePdf(compact = false) {
   if (!state.doc || !(state.doc.image || state.doc.ocr) || isBook()) return;
   const translated = state.hasOutput && (state.variant === "translated" || (typeof cmp !== "undefined" && cmp.on));
   try {
     busy(t("msg.saving"));
-    const bytes = await pool.workers[0].call("save", { markups: state.markups, rotations: state.rotations, original: !translated, layer: ocrTextLayer(translated) });
+    const bytes = await pool.workers[0].call("save", { markups: state.markups, rotations: state.rotations, original: !translated, layer: ocrTextLayer(translated), compact });
     saveBlob(new Blob([bytes], { type: "application/pdf" }), `${stem()}${translated ? ".translated" : ""}.pdf`);
   } catch (err) {
     toast(t("msg.saveFailed", { err: userError(err) }), "error");
@@ -1788,7 +1788,22 @@ function init() {
   });
 
   $("#btnDownload").addEventListener("click", (e) => { e.preventDefault(); downloadOutput(); });
-  $("#btnPicPdf").addEventListener("click", (e) => { e.preventDefault(); downloadPicturePdf(); });
+  // The PDF of a picture or scan: in full quality or compact (the pictures smaller, see compactImages).
+  $("#btnPicPdf").addEventListener("click", (e) => {
+    e.preventDefault();
+    const translated = state.hasOutput && (state.variant === "translated" || (typeof cmp !== "undefined" && cmp.on));
+    $("#pdfText").textContent = t(translated ? "pdf.textTranslated" : "pdf.text");
+    let last = "full";
+    try { last = localStorage.getItem("pdftr:pdf-size") || "full"; } catch (_) { /* storage blocked */ }
+    openModal($("#pdfDialog"));
+    $(`#pdfDialog button[value="${last}"]`).focus();
+  });
+  $("#pdfDialog").addEventListener("close", () => {
+    const v = $("#pdfDialog").returnValue;
+    if (v !== "full" && v !== "compact") return;
+    try { localStorage.setItem("pdftr:pdf-size", v); } catch (_) { /* storage blocked */ }
+    downloadPicturePdf(v === "compact");
+  });
   $("#btnBuild").addEventListener("click", () => {
     $("#fontUploadRow").hidden = $("#fontMode").value !== "custom";
     openModal($("#buildDialog"));

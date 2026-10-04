@@ -110,16 +110,44 @@ function picDocumentChanged() {
 
 const picOriginKey = (id) => `picorig:${id}`;
 
+/**
+ * Before a document is replaced by a version made from it (pages straightened, flattened, split
+ * or rearranged; a picture edited): the original is remembered for that version (`bytes`), so
+ * "Restore original" can bring it back – the first original of a line of such changes.
+ */
+async function keepOrigin(doc, bytes) {
+  try {
+    const id = await sha256(bytes);
+    const origin = (await idbGet(picOriginKey(doc.id)).catch(() => null))
+      || (doc.image && doc.image.source ? { bytes: doc.image.source, name: doc.name } : state.doc === doc && state.srcBytes ? { bytes: state.srcBytes.slice(), name: doc.name } : null);
+    if (origin) await idbPut(origin, picOriginKey(id));
+  } catch (err) { console.warn("origin", err); }
+}
+
+/** Whether the open document was made from an original that can be restored. */
+async function hasOrigin() {
+  const doc = state.doc;
+  return Boolean(doc && (await idbGet(picOriginKey(doc.id)).catch(() => null)));
+}
+
+/** The open document replaced by the original it was made from (see keepOrigin). */
+async function restoreOrigin() {
+  const doc = state.doc;
+  if (!doc) return;
+  const origin = await idbGet(picOriginKey(doc.id)).catch(() => null);
+  if (!origin) { toast(t("orig.none"), "error"); return; }
+  if (!window.confirm(t(doc.image ? "pic.restoreConfirm" : "orig.confirm"))) return;
+  if (doc.image) picOpenPanel(false);
+  if ($("#pagesDialog").open) $("#pagesDialog").close();
+  await loadBytes(new Uint8Array(origin.bytes), origin.name, true);
+  toast(t(doc.image ? "pic.restored" : "orig.restored"), "ok");
+}
+
 /** Opens the picture as it was before any edit was applied. */
 async function picRestore() {
-  const doc = state.doc;
-  if (!doc || !doc.image) return;
-  const origin = await idbGet(picOriginKey(doc.id)).catch(() => null);
-  if (!origin) { $("#picRestore").hidden = true; return; }
-  if (!window.confirm(t("pic.restoreConfirm"))) return;
-  picOpenPanel(false);
-  await loadBytes(new Uint8Array(origin.bytes), origin.name, true);
-  toast(t("pic.restored"), "ok");
+  if (!state.doc || !state.doc.image) return;
+  if (!(await hasOrigin())) { $("#picRestore").hidden = true; return; }
+  await restoreOrigin();
 }
 
 /** Brightness, contrast and greyscale on raw pixels (for browsers without canvas filters). */
