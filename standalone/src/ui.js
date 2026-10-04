@@ -1817,7 +1817,7 @@ function refreshAiPrompt() {
   $("#aiParts").innerHTML = parts.map((p, i) => {
     const done = dones[i];
     const cls = done ? " done" : aiCopied.has(i) ? " copied" : i === 0 || aiCopied.has(i - 1) || dones[i - 1] ? " primary" : "";
-    return `<button type="button" class="btn${cls}" data-part="${i}" title="${done ? escapeHtml(t("ai.partDone")) : ""}">${done || aiCopied.has(i) ? "✓ " : ""}${escapeHtml(t("ai.partBtn", { k: i + 1, total: parts.length, a: p[0].id, b: p[p.length - 1].id, n: p.length }))}</button>`;
+    return `<button type="button" class="btn${cls}" data-part="${i}" title="${escapeHtml(done ? t("ai.partDone") : t("ai.partTitle"))}">${done || aiCopied.has(i) ? "✓ " : ""}${escapeHtml(t("ai.partBtn", { k: i + 1, total: parts.length, a: p[0].id, b: p[p.length - 1].id, n: p.length }))}</button>`;
   }).join("");
 }
 
@@ -1830,6 +1830,8 @@ function copyAiPart(i) {
   copyText(`${aiPromptText(info)}\n\n${Engine.exportTxt(p)}`, t("ai.partCopied", { k: i + 1, total: parts.length, n: p.length }));
   aiCopied.add(i);
   refreshAiPrompt();
+  const b = $(`#aiParts [data-part="${i}"]`); // the copied flash, every time the part is copied again
+  if (b) { b.classList.remove("flash"); void b.offsetWidth; b.classList.add("flash"); }
 }
 
 async function copyText(text, okMessage) {

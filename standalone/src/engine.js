@@ -567,6 +567,10 @@ function continuesParagraph(prev, next, pageLines, seps, marginsByRot, blockLine
   if (/:\s*$/.test(prev.text)) return false; // a form label ("Prüfer:") is complete
   if (LABEL_START_RE.test(nt)) return false; // next starts with its own label ("Postanschrift: …")
   if (URLISH_RE.test(nt) || URLISH_RE.test(pt)) return false; // web / e-mail addresses stand alone
+  // Table-of-contents entries: a line ending in leader dots and a page number is complete, and
+  // two lines that both start with a section number ("2.1.3 …", "2.1.3.1 …") are two entries.
+  if (LEADER_RE.test(pt) || LEADER_RE.test(nt)) return false;
+  if (NUMBERED_RE.test(pt) && NUMBERED_RE.test(nt)) return false;
   if (!/\p{L}{2}/u.test(pt) && !/\p{L}{2}/u.test(nt)) return false; // rows of numbers, dates, amounts ("4.2 M")
   // Table/form rows: when both lines have text right before them on their own baseline,
   // they belong together only if those left neighbours do too (the left column of a
@@ -634,6 +638,8 @@ function continuesParagraph(prev, next, pageLines, seps, marginsByRot, blockLine
 }
 
 const LABEL_START_RE = /^[^\s:]{1,30}(?:\s[^\s:]{1,20}){0,2}:(?:\s|$)/u;
+const LEADER_RE = /(?:[.·⋅…]\s?){4,}\s*\d{1,4}\s*$/; // "Safety tasks ........ 7"
+const NUMBERED_RE = /^\d{1,3}(?:\.\d{1,3})+\.?\s+\S/; // "2.1.3.1 Separation"
 const URLISH_RE = /^(?:(?:https?:\/\/|www\.)\S+|[^\s@]+@[^\s@]+\.[^\s@]+)$/i;
 
 /**

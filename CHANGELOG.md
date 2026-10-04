@@ -4,6 +4,12 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.00
+
+- PDF: table-of-contents entries are no longer joined into one paragraph. A line that ends in leader dots and a page number is complete, and two lines that both start with a section number are two entries – so the translated contents page keeps one entry per line.
+- Translate with AI: the part buttons lead with the number of segments and name the marker range after it; a tooltip explains why the markers run further than the count (skipped segments keep their numbers). Copying a part again flashes the button again.
+- Flashcards: when the example is hidden or shown as a gap on the front, the back shows the original sentence above its translation.
+
 ## 1.99
 
 - PDF: the tall parentheses and brackets of displayed formulas are recognised too (stretched reference shapes), so they no longer stay as "�".

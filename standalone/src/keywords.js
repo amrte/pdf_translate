@@ -290,7 +290,10 @@ function fcRender() {
   const pair = r._pair || fc.pair, fav = pair ? isFav(pair, r.term) : false;
   const sides = [{ word: r.term, sentence: r.example }, { word: r.translation, sentence: r.exampleTr }];
   const [front, back] = fc.reverse ? sides.reverse() : sides; // reversed: asked from the translation
-  front.sentence = fcFrontSentence(front.sentence, front.word); // (the back keeps its sentence whole)
+  const frontFull = front.sentence;
+  front.sentence = fcFrontSentence(front.sentence, front.word);
+  // The back keeps its own sentence whole and, when the front's was hidden or gapped, shows that one too.
+  const backSentences = [fc.example !== "show" && frontFull !== front.sentence ? frontFull : "", back.sentence].filter(Boolean);
   const n = Number(r.known) || 0;
   const grade = (g, cls, label, next) => `<button type="button" class="btn${cls}" data-fc="${g}" title="${escapeHtml(t(`kw.${g}Title`))}"><span>${label}</span><small>${escapeHtml(fcIntervalLabel(next))}</small></button>`;
   const waiting = fcWaiting();
@@ -300,7 +303,7 @@ function fcRender() {
     <div class="kw-card${fc.flipped ? " flipped" : ""}" tabindex="0" role="button" aria-label="${escapeHtml(t("kw.flip"))}" data-fc="flip">
       <div class="kw-card-inner">
         <div class="kw-face kw-front">${favBtn}<div class="kw-word">${escapeHtml(front.word)}</div>${front.sentence ? `<div class="kw-sentence">${escapeHtml(front.sentence)}</div>` : ""}</div>
-        <div class="kw-face kw-back">${favBtn}<div class="kw-word">${escapeHtml(back.word)}</div>${back.sentence ? `<div class="kw-sentence">${escapeHtml(back.sentence)}</div>` : ""}</div>
+        <div class="kw-face kw-back">${favBtn}<div class="kw-word">${escapeHtml(back.word)}</div>${backSentences.map((x, i) => `<div class="kw-sentence${i === 0 && backSentences.length > 1 ? " kw-sentence-src" : ""}">${escapeHtml(x)}</div>`).join("")}</div>
       </div>
     </div>
     <div class="kw-fc-actions">
