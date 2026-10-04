@@ -2733,7 +2733,7 @@ function cardsPdf(args) {
 
 const Engine = {
   init: initEngine, extract: extractDocument, extractPages, build: buildTranslated, renderPNG,
-  detectKind, imageKindOf, imageToPdf, warpPixels, findTextLines, findPaper, autoPrepare, keywordsPdf, cardsPdf, openBook, saveBook, extractBook, openLaidOut, mapTranslated, openOffice, officePreviewHtml, ocrToBlocks, sampleColors, refineOcr,
+  detectKind, imageKindOf, imageToPdf, warpPixels, quadMap, findTextLines, findPaper, autoPrepare, keywordsPdf, cardsPdf, openBook, saveBook, extractBook, openLaidOut, mapTranslated, openOffice, officePreviewHtml, ocrToBlocks, sampleColors, refineOcr,
   open: (bytes) => M.Document.openDocument(bytes, "application/pdf"),
   exportTxt, exportCsv, exportJson, exportXliff, exportDocx, parseImport, parseMarkedText,
 };
@@ -2976,16 +2976,18 @@ function rotatePages(doc, rotations) {
  * The translated PDF (or the original when nothing is translated) with markups and turned
  * pages. Those go into a copy, so the editable document never accumulates them.
  */
-function savePdf(W, markups, rotations) {
+function savePdf(W, markups, rotations, original = false) {
   const turned = Object.values(rotations).some(Boolean);
+  // (`original`: the document as opened, not the translation – e.g. a picture saved as PDF)
+  if (original && !markups.length && !turned) return W.bytes.slice();
   if (!W.edit && !markups.length && !turned) throw new Error("Nothing to save yet.");
-  let doc = W.edit, temp = null;
+  let doc = original ? null : W.edit, temp = null;
   // Fonts added by page updates (shared by all updated pages, see updatePage) and by text notes
   // are embedded whole; the saved copy gets them subsetted.
   const subset = Boolean(W.editFk) || markups.some((m) => m.type === "text");
-  if (markups.length || turned || !W.edit || subset) {
+  if (markups.length || turned || !doc || subset) {
     let src = W.bytes;
-    if (W.edit) { const b = W.edit.saveToBuffer(""); src = b.asUint8Array().slice(); free(b); }
+    if (doc) { const b = W.edit.saveToBuffer(""); src = b.asUint8Array().slice(); free(b); }
     temp = doc = M.Document.openDocument(src.slice(), "application/pdf");
     addMarkups(doc, markups);
     if (subset) doc.subsetFonts();
@@ -3256,7 +3258,7 @@ function createHandler() {
       return { result: bytes, transfer: [bytes.buffer] };
     }
     if (cmd === "save") {
-      const bytes = savePdf(W, args.markups || [], args.rotations || {});
+      const bytes = savePdf(W, args.markups || [], args.rotations || {}, Boolean(args.original));
       return { result: bytes, transfer: [bytes.buffer] };
     }
     if (cmd === "saveBilingual" && W.kind !== "pdf") {

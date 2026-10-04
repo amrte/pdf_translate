@@ -1347,6 +1347,24 @@ async function downloadOutput() {
 }
 
 /**
+ * An opened picture saved as a PDF: the version shown – the translation (in the translated or
+ * comparison view, once built) or the picture as it is – with markups and turns.
+ */
+async function downloadPicturePdf() {
+  if (!state.doc || !state.doc.image) return;
+  const translated = state.hasOutput && (state.variant === "translated" || (typeof cmp !== "undefined" && cmp.on));
+  try {
+    busy(t("msg.saving"));
+    const bytes = await pool.workers[0].call("save", { markups: state.markups, rotations: state.rotations, original: !translated });
+    saveBlob(new Blob([bytes], { type: "application/pdf" }), `${stem()}${translated ? ".translated" : ""}.pdf`);
+  } catch (err) {
+    toast(t("msg.saveFailed", { err: userError(err) }), "error");
+  } finally {
+    busy("");
+  }
+}
+
+/**
  * Both languages in one file: a PDF with original and translation on one sheet ("side") or on
  * alternating pages ("pages"); an e-book with each paragraph followed by its translation.
  */
@@ -1705,6 +1723,7 @@ function init() {
   });
 
   $("#btnDownload").addEventListener("click", (e) => { e.preventDefault(); downloadOutput(); });
+  $("#btnPicPdf").addEventListener("click", (e) => { e.preventDefault(); downloadPicturePdf(); });
   $("#btnBuild").addEventListener("click", () => {
     $("#fontUploadRow").hidden = $("#fontMode").value !== "custom";
     openModal($("#buildDialog"));

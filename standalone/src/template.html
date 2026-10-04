@@ -203,6 +203,7 @@
       <button type="button" class="btn" id="picRestore" data-i18n="pic.restore" data-i18n-title="pic.restoreTitle" hidden>Restore original</button>
       <div class="pic-actions"><button type="button" class="btn ghost" id="picReset" data-i18n="pic.reset">Reset</button><button type="button" class="btn primary" id="picApply" data-i18n="pic.apply">Apply</button></div>
     </div>
+    <div class="ocr-area-hint" id="ocrAreaHint" role="status" hidden><span id="ocrAreaText"></span><button type="button" class="btn small primary" id="ocrAreaGo" data-i18n="ocr.start" hidden>Recognise</button><button type="button" class="btn small" id="ocrAreaCancel" data-i18n="common.cancel">Cancel</button></div>
     <div class="pages" id="pages"></div>
     <div class="pages translated cmp-pages" id="pagesCmp" hidden></div>
     </div>
@@ -240,6 +241,7 @@
         <span data-i18n="tb.build">Build PDF</span>
       </button>
       <button type="button" class="btn success" id="btnDownload" hidden data-i18n="tb.download" data-i18n-title="tb.downloadTitle">Download</button>
+      <button type="button" class="btn pic-pdf" id="btnPicPdf" hidden data-i18n-title="tb.picPdfTitle"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg><span data-i18n="tb.picPdf">PDF</span></button>
       <button type="button" class="btn success bi-btn" id="btnDownloadBi" hidden data-i18n-title="tb.bilingualTitle"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="8" height="16" rx="1"/><rect x="13" y="4" width="8" height="16" rx="1"/><path d="M5.5 9h3M5.5 12h3M15.5 9h3M15.5 12h3"/></svg></button>
     </div>
     <div class="progress-row">
@@ -752,6 +754,7 @@
       <label class="check"><input type="radio" name="ocrPages" id="ocrPagesAll"> <span data-i18n="ocr.pagesAll"></span></label>
       <label class="check ocr-range"><input type="radio" name="ocrPages" id="ocrPagesRange"> <span data-i18n="ocr.pagesRange"></span>
         <input type="text" id="ocrRange" inputmode="numeric" autocomplete="off" data-i18n-placeholder="ocr.rangeHint" data-i18n-aria="ocr.pagesRange"></label>
+      <label class="check" data-i18n-title="ocr.pagesAreaTitle"><input type="radio" name="ocrPages" id="ocrPagesArea"> <span data-i18n="ocr.pagesArea"></span></label>
     </div>
     <div class="field"><span data-i18n="ocr.prepare">Before recognition</span>
       <label class="check" data-i18n-title="ocr.deskewTitle"><input type="checkbox" id="ocrDeskew" checked> <span data-i18n="ocr.deskew"></span></label>

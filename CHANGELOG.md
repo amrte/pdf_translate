@@ -4,6 +4,11 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.18
+
+- Opened pictures can be saved as a PDF: the new "PDF" button beside the build button saves the version shown – the original picture, or (in the translated or comparison view, once built) the translation – with markups, notes and turns. Bilingual PDFs of pictures were already possible with the two-page button.
+- Text recognition of an area: "Only an area – marked on the page" in the OCR dialog. After "Recognise", drag a rectangle over the text on any page; its four corners can then be moved one by one, so the area can be any four-sided shape (a slanted or photographed block of text). "Recognise" or Enter reads only that part, pulled straight from its corners first – a slanted line is read as one line – and the text found is placed back on the page. Text recognised earlier on the page outside the area stays, with its translations; inside, the new reading replaces it. Dragging anew replaces the area; Esc or "Cancel" leaves.
+
 ## 2.17
 
 - Photos from Android phones open the right way up: phones store a picture taken upright lying on its side and only note how to turn it (Exif orientation); the page now follows that note (all eight orientations, mirrored ones included), without recompressing the photo. This applies to JPEG and TIFF pictures, including Ultra HDR and motion photos, and to pictures added in "Arrange pages".

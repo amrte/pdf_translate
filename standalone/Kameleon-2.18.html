@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="Kameleon 2.17">
+  <meta name="generator" content="Kameleon 2.18">
   <meta name="description" content="Kameleon – Wechselt die Sprache, behält die Form. Changes language, keeps its shape.">
   <title>Kameleon</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2216%22 fill=%22%23287130%22/%3E%3Cg transform=%22translate(2.5 1) scale(0.9)%22 fill=%22%23ffffff%22 stroke=%22%23ffffff%22%3E%3Cpath d=%22M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6%22 fill=%22none%22 stroke-width=%223.8%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M21 43l-1 10M30 44v9M38 43l1 10%22 stroke-width=%223.6%22 stroke-linecap=%22round%22/%3E%3Cellipse cx=%2221%22 cy=%2225%22 rx=%227%22 ry=%227.5%22 stroke=%22none%22/%3E%3Cellipse cx=%2233%22 cy=%2223.5%22 rx=%227.5%22 ry=%228%22 stroke=%22none%22/%3E%3Cpath d=%22M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z%22 stroke=%22none%22/%3E%3Cpath d=%22M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z%22 stroke=%22none%22/%3E%3Cpath d=%22M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z%22 stroke=%22none%22/%3E%3Cpath d=%22M16 37l4-3 4 3 4-3 4 3 4-3 4 3%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%222.1%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3Cpath d=%22M43.5 33.9L57 32.6%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%221.5%22 stroke-linecap=%22round%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%224.4%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%222.7%22 stroke=%22none%22/%3E%3Ccircle cx=%2246.2%22 cy=%2226.7%22 r=%221.3%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Cpath d=%22M4 55.5c15-3 39-3 54 0%22 fill=%22none%22 stroke-width=%222.4%22 stroke-linecap=%22round%22/%3E%3C/g%3E%3C/svg%3E">
@@ -999,6 +999,20 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
 .viewer-pane { min-width: 0; }
 .viewer-pane .pane-toolbar { flex-wrap: wrap; row-gap: 4px; min-width: 0; }
 
+/* OCR of an area: the rectangle drawn over a page, and the hint while drawing */
+.pages.ocr-area-mode .page, .pages.ocr-area-mode .page * { cursor: crosshair !important; }
+.ocr-area-hint {
+  position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 60; display: flex; align-items: center; gap: 10px;
+  max-width: calc(100vw - 32px); padding: 8px 10px 8px 14px; border-radius: 10px; background: var(--text); color: var(--bg); box-shadow: 0 6px 20px rgba(0, 0, 0, .25); font-size: 13px;
+}
+.ocr-area-hint[hidden] { display: none; }
+.ocr-area-hint .btn { flex: none; }
+.ocr-area { position: absolute; inset: 0; z-index: 8; pointer-events: none; }
+.ocr-area svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.ocr-area polygon { fill: color-mix(in srgb, var(--accent) 12%, transparent); stroke: var(--accent); stroke-width: 2px; stroke-dasharray: 6 4; vector-effect: non-scaling-stroke; }
+.ocr-area-handle { position: absolute; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: var(--surface); border: 2px solid var(--accent); box-shadow: 0 1px 4px rgba(0, 0, 0, .3); pointer-events: auto; touch-action: none; }
+.pages.ocr-area-mode .page .ocr-area-handle { cursor: move !important; }
+
   </style>
 </head>
 <body>
@@ -1006,7 +1020,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
   <div class="brand">
     <span class="logo"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#287130"/><g transform="translate(2.5 1) scale(0.9)" fill="#ffffff" stroke="#ffffff"><path d="M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6" fill="none" stroke-width="3.8" stroke-linecap="round"/><path d="M21 43l-1 10M30 44v9M38 43l1 10" stroke-width="3.6" stroke-linecap="round"/><ellipse cx="21" cy="25" rx="7" ry="7.5" stroke="none"/><ellipse cx="33" cy="23.5" rx="7.5" ry="8" stroke="none"/><path d="M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z" stroke="none"/><path d="M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z" stroke="none"/><path d="M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z" stroke="none"/><path d="M16 37l4-3 4 3 4-3 4 3 4-3 4 3" fill="none" stroke="#287130" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M43.5 33.9L57 32.6" fill="none" stroke="#287130" stroke-width="1.5" stroke-linecap="round"/><circle cx="45.5" cy="26.5" r="4.4" fill="#287130" stroke="none"/><circle cx="45.5" cy="26.5" r="2.7" stroke="none"/><circle cx="46.2" cy="26.7" r="1.3" fill="#287130" stroke="none"/><path d="M4 55.5c15-3 39-3 54 0" fill="none" stroke-width="2.4" stroke-linecap="round"/></g></svg></span>
     <span class="brand-name">Kameleon</span>
-    <span class="version" id="appVersion">v2.17</span>
+    <span class="version" id="appVersion">v2.18</span>
   </div>
   <div class="topbar-actions">
     <span class="doc-name" id="docName"></span>
@@ -1193,6 +1207,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
       <button type="button" class="btn" id="picRestore" data-i18n="pic.restore" data-i18n-title="pic.restoreTitle" hidden>Restore original</button>
       <div class="pic-actions"><button type="button" class="btn ghost" id="picReset" data-i18n="pic.reset">Reset</button><button type="button" class="btn primary" id="picApply" data-i18n="pic.apply">Apply</button></div>
     </div>
+    <div class="ocr-area-hint" id="ocrAreaHint" role="status" hidden><span id="ocrAreaText"></span><button type="button" class="btn small primary" id="ocrAreaGo" data-i18n="ocr.start" hidden>Recognise</button><button type="button" class="btn small" id="ocrAreaCancel" data-i18n="common.cancel">Cancel</button></div>
     <div class="pages" id="pages"></div>
     <div class="pages translated cmp-pages" id="pagesCmp" hidden></div>
     </div>
@@ -1230,6 +1245,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
         <span data-i18n="tb.build">Build PDF</span>
       </button>
       <button type="button" class="btn success" id="btnDownload" hidden data-i18n="tb.download" data-i18n-title="tb.downloadTitle">Download</button>
+      <button type="button" class="btn pic-pdf" id="btnPicPdf" hidden data-i18n-title="tb.picPdfTitle"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg><span data-i18n="tb.picPdf">PDF</span></button>
       <button type="button" class="btn success bi-btn" id="btnDownloadBi" hidden data-i18n-title="tb.bilingualTitle"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="8" height="16" rx="1"/><rect x="13" y="4" width="8" height="16" rx="1"/><path d="M5.5 9h3M5.5 12h3M15.5 9h3M15.5 12h3"/></svg></button>
     </div>
     <div class="progress-row">
@@ -1515,7 +1531,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
     </div>
     <input type="file" id="offlineZip" class="visually-hidden" accept=".zip,application/zip" multiple tabindex="-1">
     <input type="file" id="offlineFolder" class="visually-hidden" webkitdirectory multiple tabindex="-1">
-    <p class="muted small help-version help-part">Kameleon v2.17 · <span data-i18n="app.tagline"></span></p>
+    <p class="muted small help-version help-part">Kameleon v2.18 · <span data-i18n="app.tagline"></span></p>
     <div class="modal-actions">
       <button type="button" value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
     </div>
@@ -1742,6 +1758,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
       <label class="check"><input type="radio" name="ocrPages" id="ocrPagesAll"> <span data-i18n="ocr.pagesAll"></span></label>
       <label class="check ocr-range"><input type="radio" name="ocrPages" id="ocrPagesRange"> <span data-i18n="ocr.pagesRange"></span>
         <input type="text" id="ocrRange" inputmode="numeric" autocomplete="off" data-i18n-placeholder="ocr.rangeHint" data-i18n-aria="ocr.pagesRange"></label>
+      <label class="check" data-i18n-title="ocr.pagesAreaTitle"><input type="radio" name="ocrPages" id="ocrPagesArea"> <span data-i18n="ocr.pagesArea"></span></label>
     </div>
     <div class="field"><span data-i18n="ocr.prepare">Before recognition</span>
       <label class="check" data-i18n-title="ocr.deskewTitle"><input type="checkbox" id="ocrDeskew" checked> <span data-i18n="ocr.deskew"></span></label>
@@ -1855,6 +1872,8 @@ const I18N = {
     "tb.importTitle": "Übersetzte Datei laden oder übersetzten Text einfügen",
     "tb.build": "{fmt} erstellen",
     "tb.download": "Download",
+    "tb.picPdf": "PDF",
+    "tb.picPdfTitle": "Bild als PDF speichern – in der gezeigten Fassung: das Originalbild oder, in der Übersetzungs- bzw. Vergleichsansicht (nach dem Erstellen), die Übersetzung; mit Markierungen und Drehungen.",
     "tb.downloadTitle": "Übersetzte {fmt}-Datei herunterladen",
 
     "progress": "{done} / {total} übersetzt",
@@ -1951,7 +1970,7 @@ const I18N = {
     "ocr.straightFailed": "Die Seiten konnten nicht gerade gerichtet werden: {err}",
     "msg.heicLoading": "HEIC-Bildleser wird geladen…",
     "err.rawPhoto": "Dieses RAW-Foto (DNG) enthält kein Vorschaubild. Bitte als JPEG exportieren und dieses öffnen.",
-    "help.deskew": "<b>Gerade richten:</b> Schief gescannte Seiten und schief fotografierte Bilder werden gerade gedreht. Die Neigung wird an den Textzeilen gemessen (bis ±15°). In der Texterkennung (OCR) geschieht das vorher von selbst („Schiefe Seiten gerade richten“, dazu „Gewölbte Textzeilen glätten“ und „Automatisch zuschneiden“); unter „Seiten anordnen“ mit „⟂ Gerade richten“ für die ausgewählten Seiten oder von Hand im Feld daneben; bei einem Bild im Bild-Werkzeug mit „Automatisch“ oder dem Regler. „Von Hand…“ zeigt die Seite groß: drehen wie an einem Drehknopf, eine Linie an einer Textzeile anlegen oder die vier Seitenecken ziehen – eine schräg fotografierte Seite wird so zu einem geraden Rechteck – und „Zeilen glätten“ biegt gewölbte Textzeilen (ein aufgeschlagenes Buch) gerade, automatisch erkannt oder von Hand nachgezogen (dabei wird die Seite als Bild neu gespeichert). Übernommene Bildänderungen verwirft „↺ Original wiederherstellen“ im Bild-Werkzeug auf einmal. Ein Scan in einer PDF wird dabei nicht neu gespeichert, nur gedreht – die Qualität bleibt gleich. Gewölbte Buchseiten werden als Ganzes gedreht, nicht geglättet.",
+    "help.deskew": "<b>Gerade richten:</b> Schief gescannte Seiten und schief fotografierte Bilder werden gerade gedreht. Die Neigung wird an den Textzeilen gemessen (bis ±15°). In der Texterkennung (OCR) geschieht das vorher von selbst („Schiefe Seiten gerade richten“, dazu „Gewölbte Textzeilen glätten“ und „Automatisch zuschneiden“); unter „Seiten anordnen“ mit „⟂ Gerade richten“ für die ausgewählten Seiten oder von Hand im Feld daneben; bei einem Bild im Bild-Werkzeug mit „Automatisch“ oder dem Regler. „Von Hand…“ zeigt die Seite groß: drehen wie an einem Drehknopf, eine Linie an einer Textzeile anlegen oder die vier Seitenecken ziehen – eine schräg fotografierte Seite wird so zu einem geraden Rechteck – und „Zeilen glätten“ biegt gewölbte Textzeilen (ein aufgeschlagenes Buch) gerade, automatisch erkannt oder von Hand nachgezogen (dabei wird die Seite als Bild neu gespeichert). Übernommene Bildänderungen verwirft „↺ Original wiederherstellen“ im Bild-Werkzeug auf einmal. Ein Scan in einer PDF wird dabei nicht neu gespeichert, nur gedreht – die Qualität bleibt gleich. Gewölbte Buchseiten werden als Ganzes gedreht, nicht geglättet. <b>Nur einen Bereich erkennen:</b> im OCR-Fenster „Nur einen Bereich – auf der Seite markieren“, dann ein Rechteck über den Text ziehen und bei Bedarf seine vier Ecken verschieben (auch schräg); „Erkennen“ oder <kbd>Enter</kbd> liest nur diesen Teil.",
     "filter.repeats": "Kopf- & Fußzeilen",
     "rep.header": "Kopfzeile · {n} Seiten",
     "rep.footer": "Fußzeile · {n} Seiten",
@@ -2163,6 +2182,10 @@ const I18N = {
     "ocr.pagesEmpty": "Nur Seiten ohne Text",
     "ocr.pagesAll": "Alle Seiten (auch Text in Bildern)",
     "ocr.pagesRange": "Bestimmte Seiten",
+    "ocr.pagesArea": "Nur einen Bereich – auf der Seite markieren",
+    "ocr.pagesAreaTitle": "Nach „Erkennen“ ein Rechteck über den zu lesenden Text auf einer beliebigen Seite ziehen; seine vier Ecken lassen sich danach einzeln verschieben (auch schräg, als Viereck). Nur dieser Teil wird erkannt, aus seinen Ecken gerade gezogen; früher erkannter Text der Seite außerhalb des Bereichs bleibt.",
+    "ocr.areaHint": "Rechteck über den zu erkennenden Text ziehen · Esc bricht ab",
+    "ocr.areaAdjust": "Ecken bei Bedarf verschieben (auch schräg), dann „Erkennen“ oder Enter · neu ziehen ersetzt den Bereich",
     "ocr.rangeHint": "z. B. 1-3, 7",
     "ocr.badRange": "Ungültige Seitenangabe – zum Beispiel „1-3, 7“ (Seiten 1 bis {n}).",
     "ocr.scanCount": "({n} gefunden)",
@@ -2674,6 +2697,8 @@ const I18N = {
     "tb.importTitle": "Load the translated file or paste translated text",
     "tb.build": "Build {fmt}",
     "tb.download": "Download",
+    "tb.picPdf": "PDF",
+    "tb.picPdfTitle": "Save the picture as a PDF – the version shown: the original picture, or the translation in the translated or comparison view (after building), with markups and turns.",
     "tb.downloadTitle": "Download the translated {fmt}",
 
     "progress": "{done} / {total} translated",
@@ -2769,7 +2794,7 @@ const I18N = {
     "ocr.straightened": "{n} tilted page(s) straightened.",
     "ocr.straightFailed": "The pages could not be straightened: {err}",
     "msg.heicLoading": "Loading the HEIC picture reader…",
-    "help.deskew": "<b>Straighten:</b> Pages scanned askew and pictures photographed at a slant are turned straight. The tilt is measured on the text lines (up to ±15°). Text recognition (OCR) does it first by itself (\"Straighten tilted pages\", also \"Flatten curved text lines\" and \"Crop automatically\"); in \"Arrange pages\" use \"⟂ Straighten\" for the selected pages or the field beside it by hand; for a picture use \"Auto\" or the slider in the picture tools. \"By hand…\" shows the page large: turn it like a dial, draw a line along a text line, or drag the four page corners – a page photographed at a slant becomes a straight rectangle – and \"Flatten lines\" bends curved text lines (a book photographed open) straight, found automatically or traced by hand (the page is then saved anew as a picture). \"↺ Restore original\" in the picture tools discards all applied picture changes at once. A scan in a PDF is not saved anew, only turned – its quality stays the same. Curved book pages are turned as a whole, not flattened.",
+    "help.deskew": "<b>Straighten:</b> Pages scanned askew and pictures photographed at a slant are turned straight. The tilt is measured on the text lines (up to ±15°). Text recognition (OCR) does it first by itself (\"Straighten tilted pages\", also \"Flatten curved text lines\" and \"Crop automatically\"); in \"Arrange pages\" use \"⟂ Straighten\" for the selected pages or the field beside it by hand; for a picture use \"Auto\" or the slider in the picture tools. \"By hand…\" shows the page large: turn it like a dial, draw a line along a text line, or drag the four page corners – a page photographed at a slant becomes a straight rectangle – and \"Flatten lines\" bends curved text lines (a book photographed open) straight, found automatically or traced by hand (the page is then saved anew as a picture). \"↺ Restore original\" in the picture tools discards all applied picture changes at once. A scan in a PDF is not saved anew, only turned – its quality stays the same. Curved book pages are turned as a whole, not flattened. <b>Recognise only an area:</b> in the OCR window choose “Only an area – marked on the page”, then drag a rectangle over the text and move its four corners if needed (also slanted); “Recognise” or <kbd>Enter</kbd> reads only that part.",
     "filter.repeats": "Headers & footers",
     "rep.header": "Header · {n} pages",
     "rep.footer": "Footer · {n} pages",
@@ -2982,6 +3007,10 @@ const I18N = {
     "ocr.pagesEmpty": "Only pages without text",
     "ocr.pagesAll": "All pages (also text in pictures)",
     "ocr.pagesRange": "Specific pages",
+    "ocr.pagesArea": "Only an area – marked on the page",
+    "ocr.pagesAreaTitle": "After “Recognise”, drag a rectangle over the text to read on any page; its four corners can then be moved one by one (also slanted, as any four-sided shape). Only that part is recognised, pulled straight from its corners; text recognised earlier on the page outside the area stays.",
+    "ocr.areaHint": "Drag a rectangle over the text to recognise · Esc cancels",
+    "ocr.areaAdjust": "Move the corners if needed (also slanted), then “Recognise” or Enter · dragging anew replaces the area",
     "ocr.rangeHint": "e.g. 1-3, 7",
     "ocr.badRange": "Invalid page list – for example “1-3, 7” (pages 1 to {n}).",
     "ocr.scanCount": "({n} found)",
@@ -6282,7 +6311,7 @@ function cardsPdf(args) {
 
 const Engine = {
   init: initEngine, extract: extractDocument, extractPages, build: buildTranslated, renderPNG,
-  detectKind, imageKindOf, imageToPdf, warpPixels, findTextLines, findPaper, autoPrepare, keywordsPdf, cardsPdf, openBook, saveBook, extractBook, openLaidOut, mapTranslated, openOffice, officePreviewHtml, ocrToBlocks, sampleColors, refineOcr,
+  detectKind, imageKindOf, imageToPdf, warpPixels, quadMap, findTextLines, findPaper, autoPrepare, keywordsPdf, cardsPdf, openBook, saveBook, extractBook, openLaidOut, mapTranslated, openOffice, officePreviewHtml, ocrToBlocks, sampleColors, refineOcr,
   open: (bytes) => M.Document.openDocument(bytes, "application/pdf"),
   exportTxt, exportCsv, exportJson, exportXliff, exportDocx, parseImport, parseMarkedText,
 };
@@ -6525,16 +6554,18 @@ function rotatePages(doc, rotations) {
  * The translated PDF (or the original when nothing is translated) with markups and turned
  * pages. Those go into a copy, so the editable document never accumulates them.
  */
-function savePdf(W, markups, rotations) {
+function savePdf(W, markups, rotations, original = false) {
   const turned = Object.values(rotations).some(Boolean);
+  // (`original`: the document as opened, not the translation – e.g. a picture saved as PDF)
+  if (original && !markups.length && !turned) return W.bytes.slice();
   if (!W.edit && !markups.length && !turned) throw new Error("Nothing to save yet.");
-  let doc = W.edit, temp = null;
+  let doc = original ? null : W.edit, temp = null;
   // Fonts added by page updates (shared by all updated pages, see updatePage) and by text notes
   // are embedded whole; the saved copy gets them subsetted.
   const subset = Boolean(W.editFk) || markups.some((m) => m.type === "text");
-  if (markups.length || turned || !W.edit || subset) {
+  if (markups.length || turned || !doc || subset) {
     let src = W.bytes;
-    if (W.edit) { const b = W.edit.saveToBuffer(""); src = b.asUint8Array().slice(); free(b); }
+    if (doc) { const b = W.edit.saveToBuffer(""); src = b.asUint8Array().slice(); free(b); }
     temp = doc = M.Document.openDocument(src.slice(), "application/pdf");
     addMarkups(doc, markups);
     if (subset) doc.subsetFonts();
@@ -6805,7 +6836,7 @@ function createHandler() {
       return { result: bytes, transfer: [bytes.buffer] };
     }
     if (cmd === "save") {
-      const bytes = savePdf(W, args.markups || [], args.rotations || {});
+      const bytes = savePdf(W, args.markups || [], args.rotations || {}, Boolean(args.original));
       return { result: bytes, transfer: [bytes.buffer] };
     }
     if (cmd === "saveBilingual" && W.kind !== "pdf") {
@@ -14355,6 +14386,24 @@ async function downloadOutput() {
 }
 
 /**
+ * An opened picture saved as a PDF: the version shown – the translation (in the translated or
+ * comparison view, once built) or the picture as it is – with markups and turns.
+ */
+async function downloadPicturePdf() {
+  if (!state.doc || !state.doc.image) return;
+  const translated = state.hasOutput && (state.variant === "translated" || (typeof cmp !== "undefined" && cmp.on));
+  try {
+    busy(t("msg.saving"));
+    const bytes = await pool.workers[0].call("save", { markups: state.markups, rotations: state.rotations, original: !translated });
+    saveBlob(new Blob([bytes], { type: "application/pdf" }), `${stem()}${translated ? ".translated" : ""}.pdf`);
+  } catch (err) {
+    toast(t("msg.saveFailed", { err: userError(err) }), "error");
+  } finally {
+    busy("");
+  }
+}
+
+/**
  * Both languages in one file: a PDF with original and translation on one sheet ("side") or on
  * alternating pages ("pages"); an e-book with each paragraph followed by its translation.
  */
@@ -14713,6 +14762,7 @@ function init() {
   });
 
   $("#btnDownload").addEventListener("click", (e) => { e.preventDefault(); downloadOutput(); });
+  $("#btnPicPdf").addEventListener("click", (e) => { e.preventDefault(); downloadPicturePdf(); });
   $("#btnBuild").addEventListener("click", () => {
     $("#fontUploadRow").hidden = $("#fontMode").value !== "custom";
     openModal($("#buildDialog"));
@@ -15078,6 +15128,7 @@ function updateDownloadButton() {
   const turned = !isBook() && Object.keys(state.rotations || {}).length > 0;
   $("#btnDownload").hidden = !(state.hasOutput || (state.markups && state.markups.length) || turned);
   $("#btnDownloadBi").hidden = !state.hasOutput;
+  $("#btnPicPdf").hidden = !(state.doc && state.doc.image);
 }
 
 /** Replace all markups (used by undo/redo) and redraw. */
@@ -16280,15 +16331,20 @@ function ocrWorkerOptions(stored) {
   };
 }
 
-async function startOcr() {
+/**
+ * Recognition of the pages chosen in the dialog, or (`area`: {page, quad}, four page points) of
+ * one area marked on a page: then only that part is read, nothing else is straightened, and the
+ * text recognised earlier on the page outside the area stays (with its translations).
+ */
+async function startOcr({ area = null } = {}) {
   const langs = [...document.querySelectorAll("#ocrLangs input:checked")].map((i) => i.value);
   if (!langs.length) { toast(t("ocr.noLang"), "error"); return; }
   const family = $("#ocrFamily").value, deskew = $("#ocrDeskew").checked, dewarp = $("#ocrDewarp").checked, crop = $("#ocrCrop").checked;
   try { localStorage.setItem(LS_OCR, JSON.stringify({ langs, family, deskew, dewarp, crop })); } catch (_) { /* fine */ }
-  const pages = ocrPageChoice() || [];
+  const pages = area ? [area.page] : ocrPageChoice() || [];
   if (!pages.length) { toast(t("ocr.none")); return; }
   ocrCancel = false;
-  if (deskew || dewarp || crop) await ocrStraighten(pages, { deskew, dewarp, crop });
+  if (!area && (deskew || dewarp || crop)) await ocrStraighten(pages, { deskew, dewarp, crop });
   if (ocrCancel || !state.doc) return;
   const doc = state.doc, results = {};
   let worker = null;
@@ -16311,19 +16367,44 @@ async function startOcr() {
       const zoom = Math.min(3, 3600 / Math.max(page.width, page.height));
       const buf = await pool.workers[0].call("render", { page: p, zoom, variant: "original" });
       if (ocrCancel) break;
-      const blob = new Blob([buf], { type: "image/png" });
+      let blob = new Blob([buf], { type: "image/png" }), whole = null, back = null;
+      if (area) {
+        // Only the area, pulled straight from its four corners into a rectangle (a slanted block
+        // reads like a level one), with a white margin: Tesseract reads text at an edge poorly.
+        // What it finds is taken back through the same corners onto the page.
+        whole = await imageDataOf(blob);
+        const q = area.quad.map(([x, y]) => [(x - page.x0) / page.width, (y - page.y0) / page.height]);
+        const res = Engine.warpPixels(whole.data, whole.width, whole.height, 4, { quad: q });
+        const m = 24, c = new OffscreenCanvas(res.width + 2 * m, res.height + 2 * m), cx = c.getContext("2d");
+        cx.fillStyle = "#fff"; cx.fillRect(0, 0, c.width, c.height);
+        cx.putImageData(new ImageData(res.data, res.width, res.height), m, m);
+        blob = await c.convertToBlob({ type: "image/png" });
+        const to = Engine.quadMap(q.map(([x, y]) => [x * whole.width, y * whole.height]));
+        back = (x, y) => to((x - m) / res.width, (y - m) / res.height);
+      }
       const first = (await worker.recognize(blob, {}, { blocks: true })).data;
       // Rows Tesseract was unsure of are read again as single lines.
       await worker.setParameters({ tessedit_pageseg_mode: "7" });
       const data = await Engine.refineOcr(first, async (rectangle) => (await worker.recognize(blob, { rectangle }, { blocks: true })).data);
       await worker.setParameters({ tessedit_pageseg_mode: "11" });
       if (ocrCancel || state.doc !== doc) break;
-      const img = await imageDataOf(blob);
+      if (back) mapOcrData(data, back);
+      const img = whole || await imageDataOf(blob);
       const { blocks, seps } = Engine.ocrToBlocks(data, zoom, [page.x0, page.y0], (box) => Engine.sampleColors(img, box));
       let segs = blocks.length ? await pool.workers[0].call("ocrPage", { page: p, lines: blocks, seps, family }) : [];
       // On a page that has a text layer, only text that is not there yet (e.g. in pictures) is added.
       const text = doc.segments.filter((s) => s.page === p && !s.ocr).map((s) => s.bbox);
       segs = segs.filter((s) => !text.some((b) => overlapShare(s.bbox, b) > 0.3));
+      if (area) {
+        // Text read earlier outside the rectangle stays; inside, the new reading replaces it.
+        const before = doc.ocr && doc.ocr[p] ? doc.segments.filter((s) => s.ocr && s.page === p) : [];
+        const kept = before.filter((s) => !insidePolygon(area.quad, (s.bbox[0] + s.bbox[2]) / 2, (s.bbox[1] + s.bbox[3]) / 2));
+        const top = Math.min(...area.quad.map((q) => q[1]));
+        const at = kept.findIndex((s) => s.bbox[1] >= top);
+        segs = at < 0 ? kept.concat(segs) : [...kept.slice(0, at), ...segs, ...kept.slice(at)];
+        results[p] = { segs, seps: ((doc.ocr && doc.ocr[p] && doc.ocr[p].seps) || []).concat(seps) };
+        continue;
+      }
       results[p] = { segs, seps };
     }
   } catch (err) {
@@ -16431,9 +16512,12 @@ function addOcrResults(results) {
   const doc = state.doc;
   const ocr = { ...(doc.ocr || {}) };
   let added = 0;
+  const current = new Set(doc.segments);
   for (const [p, r] of Object.entries(results)) {
-    ocr[p] = { segs: r.segs.map((s) => ({ ...s, page: Number(p), ocr: true })), seps: r.seps };
-    added += r.segs.length;
+    // (segments already in the document – kept beside a newly read area – stay the same objects,
+    // so their translations follow)
+    ocr[p] = { segs: r.segs.map((s) => (current.has(s) ? s : { ...s, page: Number(p), ocr: true })), seps: r.seps };
+    added += r.segs.filter((s) => !current.has(s)).length;
   }
   const oldId = new Map(doc.segments.map((s) => [s, s.id]));
   const base = doc.segments.filter((s) => !s.ocr);
@@ -16471,6 +16555,127 @@ function addOcrResults(results) {
   setVariant("original");
   updateProgress();
   return added;
+}
+
+/* ---- OCR of an area: four corners on a page */
+
+// A rectangle is dragged over the text; its corners can then be moved one by one (a slanted or
+// photographed block of text), and "Recognise" (or Enter) reads it. The corners are page points:
+// top left, top right, bottom right, bottom left.
+const ocrArea = { active: false, doc: null, page: -1, quad: null };
+
+function ocrAreaBegin() {
+  Object.assign(ocrArea, { active: true, doc: state.doc, page: -1, quad: null });
+  $("#pages").classList.add("ocr-area-mode");
+  $("#ocrAreaHint").hidden = false;
+  ocrAreaSync();
+}
+
+function ocrAreaEnd() {
+  Object.assign(ocrArea, { active: false, page: -1, quad: null });
+  $("#pages").classList.remove("ocr-area-mode");
+  $("#ocrAreaHint").hidden = true;
+  document.querySelectorAll(".ocr-area").forEach((r) => r.remove());
+}
+
+function ocrAreaGo() {
+  if (!ocrArea.active || !ocrArea.quad) return;
+  const area = { page: ocrArea.page, quad: ocrArea.quad.map((q) => q.slice()) };
+  ocrAreaEnd();
+  startOcr({ area });
+}
+
+/** The hint above the pages and the outline with its corner handles (drawn anew when the page was). */
+function ocrAreaSync() {
+  const ready = Boolean(ocrArea.quad);
+  $("#ocrAreaText").textContent = t(ready ? "ocr.areaAdjust" : "ocr.areaHint");
+  $("#ocrAreaGo").hidden = !ready;
+  document.querySelectorAll(".ocr-area").forEach((el) => { if (!ready || Number(el.dataset.page) !== ocrArea.page) el.remove(); });
+  if (!ready) return;
+  const body = document.querySelector(`#pages .page[data-page="${ocrArea.page}"] .page-body`);
+  if (!body) return;
+  const p = viewPages()[ocrArea.page];
+  let box = body.querySelector(".ocr-area");
+  if (!box) {
+    box = document.createElement("div");
+    box.className = "ocr-area";
+    box.dataset.page = ocrArea.page;
+    box.innerHTML = `<svg viewBox="0 0 ${p.width} ${p.height}" preserveAspectRatio="none"><polygon /></svg>` + [0, 1, 2, 3].map((k) => `<span class="ocr-area-handle" data-k="${k}"></span>`).join("");
+    body.append(box);
+  }
+  const rel = ocrArea.quad.map(([x, y]) => [x - p.x0, y - p.y0]);
+  box.querySelector("polygon").setAttribute("points", rel.map((q) => q.join(",")).join(" "));
+  box.querySelectorAll(".ocr-area-handle").forEach((h, k) => { h.style.left = `${(rel[k][0] / p.width) * 100}%`; h.style.top = `${(rel[k][1] / p.height) * 100}%`; });
+}
+
+// (registered on the document in the capture phase, before the markup tools see the pointer)
+function ocrAreaDown(e) {
+  if (!ocrArea.active || e.button !== 0) return;
+  if (state.doc !== ocrArea.doc) { ocrAreaEnd(); return; }
+  const pageEl = e.target.closest && e.target.closest("#pages .page");
+  if (!pageEl || !pageEl.querySelector(".page-body")) return;
+  e.preventDefault(); e.stopPropagation();
+  const i = Number(pageEl.dataset.page), p = viewPages()[i];
+  const clamp = ([x, y]) => [Math.min(p.x0 + p.width, Math.max(p.x0, x)), Math.min(p.y0 + p.height, Math.max(p.y0, y))];
+  const handle = e.target.closest(".ocr-area-handle");
+  let move;
+  if (handle && i === ocrArea.page) { // one corner moved
+    const k = Number(handle.dataset.k);
+    move = (ev) => { ocrArea.quad[k] = clamp(pagePoint(pageEl, ev)); ocrAreaSync(); };
+  } else { // a new rectangle
+    const a = clamp(pagePoint(pageEl, e));
+    ocrArea.page = i;
+    move = (ev) => {
+      const b = clamp(pagePoint(pageEl, ev)), x0 = Math.min(a[0], b[0]), y0 = Math.min(a[1], b[1]), x1 = Math.max(a[0], b[0]), y1 = Math.max(a[1], b[1]);
+      ocrArea.quad = [[x0, y0], [x1, y0], [x1, y1], [x0, y1]];
+      ocrAreaSync();
+    };
+  }
+  const up = (ev) => {
+    document.removeEventListener("pointermove", move, true); document.removeEventListener("pointerup", up, true);
+    move(ev);
+    // a click or a sliver: nothing chosen
+    const q = ocrArea.quad, xs = q ? q.map((c) => c[0]) : [0], ys = q ? q.map((c) => c[1]) : [0];
+    if (!q || Math.max(...xs) - Math.min(...xs) < 6 || Math.max(...ys) - Math.min(...ys) < 6) ocrArea.quad = null;
+    ocrAreaSync();
+  };
+  document.addEventListener("pointermove", move, true); document.addEventListener("pointerup", up, true);
+}
+
+/** Whether point (x, y) lies inside the polygon `poly` ([[x, y], …]). */
+function insidePolygon(poly, x, y) {
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const [xi, yi] = poly[i], [xj, yj] = poly[j];
+    if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+
+/** Tesseract's boxes (blocks down to letters, baselines) taken through `map` (x, y) → [x, y]. */
+function mapOcrData(data, map) {
+  const seen = new Set();
+  const box = (b) => {
+    if (!b || seen.has(b)) return;
+    seen.add(b);
+    // (the mean of opposite corners, not the box around all four: a slanted line keeps its
+    // height, so its font size is measured right)
+    const [tl, tr, br, bl] = [[b.x0, b.y0], [b.x1, b.y0], [b.x1, b.y1], [b.x0, b.y1]].map(([x, y]) => map(x, y));
+    b.x0 = (tl[0] + bl[0]) / 2; b.x1 = (tr[0] + br[0]) / 2;
+    b.y0 = (tl[1] + tr[1]) / 2; b.y1 = (bl[1] + br[1]) / 2;
+  };
+  for (const block of data.blocks || []) {
+    box(block.bbox);
+    for (const para of block.paragraphs || []) {
+      box(para.bbox);
+      for (const line of para.lines || []) {
+        box(line.bbox);
+        const bl = line.baseline;
+        if (bl && !seen.has(bl) && bl.x0 != null) { seen.add(bl); [bl.x0, bl.y0] = map(bl.x0, bl.y0); [bl.x1, bl.y1] = map(bl.x1, bl.y1); }
+        for (const w of line.words || []) { box(w.bbox); for (const c of w.symbols || []) box(c.bbox); }
+      }
+    }
+  }
 }
 
 /** On opening a document: OCR results from an earlier session. */
@@ -16765,8 +16970,23 @@ function initTools() {
     if ($("#ocrPagesRange").checked && !parsePageRange($("#ocrRange").value, state.doc.pages.length)) {
       toast(t("ocr.badRange", { n: state.doc.pages.length }), "error"); $("#ocrRange").focus(); return;
     }
-    $("#ocrDialog").close(); startOcr();
+    $("#ocrDialog").close();
+    if ($("#ocrPagesArea").checked) {
+      if (!document.querySelectorAll("#ocrLangs input:checked").length) { toast(t("ocr.noLang"), "error"); return; }
+      ocrAreaBegin();
+    } else startOcr();
   });
+  $("#ocrAreaCancel").addEventListener("click", ocrAreaEnd);
+  $("#ocrAreaGo").addEventListener("click", ocrAreaGo);
+  document.addEventListener("pointerdown", ocrAreaDown, true);
+  document.addEventListener("keydown", (e) => {
+    if (!ocrArea.active) return;
+    if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); ocrAreaEnd(); }
+    else if (e.key === "Enter" && ocrArea.quad) { e.preventDefault(); e.stopPropagation(); ocrAreaGo(); }
+  }, true);
+  // (the outline is drawn again when its page was, e.g. after zooming)
+  new MutationObserver(() => { if (ocrArea.active && ocrArea.quad && !document.querySelector("#pages .ocr-area")) ocrAreaSync(); })
+    .observe($("#pages"), { childList: true, subtree: true });
   // Typing a page list selects that choice.
   $("#ocrRange").addEventListener("focus", () => { $("#ocrPagesRange").checked = true; });
   $("#ocrRange").addEventListener("input", () => { $("#ocrPagesRange").checked = true; });
@@ -17372,7 +17592,7 @@ function initPicture() {
 // from its own browser cache before the network, so language files are written into that cache.
 // ======================================================================
 
-const APP_VERSION = "2.17";
+const APP_VERSION = "2.18";
 // (a change of library version makes a stored set outdated: it is then ignored)
 const OFFLINE_VERSION = `${MUPDF_URL} ${OCR_LIB}`;
 const CORE_SIMD = "tesseract-core-simd-lstm.wasm.js", CORE_PLAIN = "tesseract-core-lstm.wasm.js";

@@ -466,15 +466,20 @@ function ocrWorkerOptions(stored) {
   };
 }
 
-async function startOcr() {
+/**
+ * Recognition of the pages chosen in the dialog, or (`area`: {page, quad}, four page points) of
+ * one area marked on a page: then only that part is read, nothing else is straightened, and the
+ * text recognised earlier on the page outside the area stays (with its translations).
+ */
+async function startOcr({ area = null } = {}) {
   const langs = [...document.querySelectorAll("#ocrLangs input:checked")].map((i) => i.value);
   if (!langs.length) { toast(t("ocr.noLang"), "error"); return; }
   const family = $("#ocrFamily").value, deskew = $("#ocrDeskew").checked, dewarp = $("#ocrDewarp").checked, crop = $("#ocrCrop").checked;
   try { localStorage.setItem(LS_OCR, JSON.stringify({ langs, family, deskew, dewarp, crop })); } catch (_) { /* fine */ }
-  const pages = ocrPageChoice() || [];
+  const pages = area ? [area.page] : ocrPageChoice() || [];
   if (!pages.length) { toast(t("ocr.none")); return; }
   ocrCancel = false;
-  if (deskew || dewarp || crop) await ocrStraighten(pages, { deskew, dewarp, crop });
+  if (!area && (deskew || dewarp || crop)) await ocrStraighten(pages, { deskew, dewarp, crop });
   if (ocrCancel || !state.doc) return;
   const doc = state.doc, results = {};
   let worker = null;
@@ -497,19 +502,44 @@ async function startOcr() {
       const zoom = Math.min(3, 3600 / Math.max(page.width, page.height));
       const buf = await pool.workers[0].call("render", { page: p, zoom, variant: "original" });
       if (ocrCancel) break;
-      const blob = new Blob([buf], { type: "image/png" });
+      let blob = new Blob([buf], { type: "image/png" }), whole = null, back = null;
+      if (area) {
+        // Only the area, pulled straight from its four corners into a rectangle (a slanted block
+        // reads like a level one), with a white margin: Tesseract reads text at an edge poorly.
+        // What it finds is taken back through the same corners onto the page.
+        whole = await imageDataOf(blob);
+        const q = area.quad.map(([x, y]) => [(x - page.x0) / page.width, (y - page.y0) / page.height]);
+        const res = Engine.warpPixels(whole.data, whole.width, whole.height, 4, { quad: q });
+        const m = 24, c = new OffscreenCanvas(res.width + 2 * m, res.height + 2 * m), cx = c.getContext("2d");
+        cx.fillStyle = "#fff"; cx.fillRect(0, 0, c.width, c.height);
+        cx.putImageData(new ImageData(res.data, res.width, res.height), m, m);
+        blob = await c.convertToBlob({ type: "image/png" });
+        const to = Engine.quadMap(q.map(([x, y]) => [x * whole.width, y * whole.height]));
+        back = (x, y) => to((x - m) / res.width, (y - m) / res.height);
+      }
       const first = (await worker.recognize(blob, {}, { blocks: true })).data;
       // Rows Tesseract was unsure of are read again as single lines.
       await worker.setParameters({ tessedit_pageseg_mode: "7" });
       const data = await Engine.refineOcr(first, async (rectangle) => (await worker.recognize(blob, { rectangle }, { blocks: true })).data);
       await worker.setParameters({ tessedit_pageseg_mode: "11" });
       if (ocrCancel || state.doc !== doc) break;
-      const img = await imageDataOf(blob);
+      if (back) mapOcrData(data, back);
+      const img = whole || await imageDataOf(blob);
       const { blocks, seps } = Engine.ocrToBlocks(data, zoom, [page.x0, page.y0], (box) => Engine.sampleColors(img, box));
       let segs = blocks.length ? await pool.workers[0].call("ocrPage", { page: p, lines: blocks, seps, family }) : [];
       // On a page that has a text layer, only text that is not there yet (e.g. in pictures) is added.
       const text = doc.segments.filter((s) => s.page === p && !s.ocr).map((s) => s.bbox);
       segs = segs.filter((s) => !text.some((b) => overlapShare(s.bbox, b) > 0.3));
+      if (area) {
+        // Text read earlier outside the rectangle stays; inside, the new reading replaces it.
+        const before = doc.ocr && doc.ocr[p] ? doc.segments.filter((s) => s.ocr && s.page === p) : [];
+        const kept = before.filter((s) => !insidePolygon(area.quad, (s.bbox[0] + s.bbox[2]) / 2, (s.bbox[1] + s.bbox[3]) / 2));
+        const top = Math.min(...area.quad.map((q) => q[1]));
+        const at = kept.findIndex((s) => s.bbox[1] >= top);
+        segs = at < 0 ? kept.concat(segs) : [...kept.slice(0, at), ...segs, ...kept.slice(at)];
+        results[p] = { segs, seps: ((doc.ocr && doc.ocr[p] && doc.ocr[p].seps) || []).concat(seps) };
+        continue;
+      }
       results[p] = { segs, seps };
     }
   } catch (err) {
@@ -617,9 +647,12 @@ function addOcrResults(results) {
   const doc = state.doc;
   const ocr = { ...(doc.ocr || {}) };
   let added = 0;
+  const current = new Set(doc.segments);
   for (const [p, r] of Object.entries(results)) {
-    ocr[p] = { segs: r.segs.map((s) => ({ ...s, page: Number(p), ocr: true })), seps: r.seps };
-    added += r.segs.length;
+    // (segments already in the document – kept beside a newly read area – stay the same objects,
+    // so their translations follow)
+    ocr[p] = { segs: r.segs.map((s) => (current.has(s) ? s : { ...s, page: Number(p), ocr: true })), seps: r.seps };
+    added += r.segs.filter((s) => !current.has(s)).length;
   }
   const oldId = new Map(doc.segments.map((s) => [s, s.id]));
   const base = doc.segments.filter((s) => !s.ocr);
@@ -657,6 +690,127 @@ function addOcrResults(results) {
   setVariant("original");
   updateProgress();
   return added;
+}
+
+/* ---- OCR of an area: four corners on a page */
+
+// A rectangle is dragged over the text; its corners can then be moved one by one (a slanted or
+// photographed block of text), and "Recognise" (or Enter) reads it. The corners are page points:
+// top left, top right, bottom right, bottom left.
+const ocrArea = { active: false, doc: null, page: -1, quad: null };
+
+function ocrAreaBegin() {
+  Object.assign(ocrArea, { active: true, doc: state.doc, page: -1, quad: null });
+  $("#pages").classList.add("ocr-area-mode");
+  $("#ocrAreaHint").hidden = false;
+  ocrAreaSync();
+}
+
+function ocrAreaEnd() {
+  Object.assign(ocrArea, { active: false, page: -1, quad: null });
+  $("#pages").classList.remove("ocr-area-mode");
+  $("#ocrAreaHint").hidden = true;
+  document.querySelectorAll(".ocr-area").forEach((r) => r.remove());
+}
+
+function ocrAreaGo() {
+  if (!ocrArea.active || !ocrArea.quad) return;
+  const area = { page: ocrArea.page, quad: ocrArea.quad.map((q) => q.slice()) };
+  ocrAreaEnd();
+  startOcr({ area });
+}
+
+/** The hint above the pages and the outline with its corner handles (drawn anew when the page was). */
+function ocrAreaSync() {
+  const ready = Boolean(ocrArea.quad);
+  $("#ocrAreaText").textContent = t(ready ? "ocr.areaAdjust" : "ocr.areaHint");
+  $("#ocrAreaGo").hidden = !ready;
+  document.querySelectorAll(".ocr-area").forEach((el) => { if (!ready || Number(el.dataset.page) !== ocrArea.page) el.remove(); });
+  if (!ready) return;
+  const body = document.querySelector(`#pages .page[data-page="${ocrArea.page}"] .page-body`);
+  if (!body) return;
+  const p = viewPages()[ocrArea.page];
+  let box = body.querySelector(".ocr-area");
+  if (!box) {
+    box = document.createElement("div");
+    box.className = "ocr-area";
+    box.dataset.page = ocrArea.page;
+    box.innerHTML = `<svg viewBox="0 0 ${p.width} ${p.height}" preserveAspectRatio="none"><polygon /></svg>` + [0, 1, 2, 3].map((k) => `<span class="ocr-area-handle" data-k="${k}"></span>`).join("");
+    body.append(box);
+  }
+  const rel = ocrArea.quad.map(([x, y]) => [x - p.x0, y - p.y0]);
+  box.querySelector("polygon").setAttribute("points", rel.map((q) => q.join(",")).join(" "));
+  box.querySelectorAll(".ocr-area-handle").forEach((h, k) => { h.style.left = `${(rel[k][0] / p.width) * 100}%`; h.style.top = `${(rel[k][1] / p.height) * 100}%`; });
+}
+
+// (registered on the document in the capture phase, before the markup tools see the pointer)
+function ocrAreaDown(e) {
+  if (!ocrArea.active || e.button !== 0) return;
+  if (state.doc !== ocrArea.doc) { ocrAreaEnd(); return; }
+  const pageEl = e.target.closest && e.target.closest("#pages .page");
+  if (!pageEl || !pageEl.querySelector(".page-body")) return;
+  e.preventDefault(); e.stopPropagation();
+  const i = Number(pageEl.dataset.page), p = viewPages()[i];
+  const clamp = ([x, y]) => [Math.min(p.x0 + p.width, Math.max(p.x0, x)), Math.min(p.y0 + p.height, Math.max(p.y0, y))];
+  const handle = e.target.closest(".ocr-area-handle");
+  let move;
+  if (handle && i === ocrArea.page) { // one corner moved
+    const k = Number(handle.dataset.k);
+    move = (ev) => { ocrArea.quad[k] = clamp(pagePoint(pageEl, ev)); ocrAreaSync(); };
+  } else { // a new rectangle
+    const a = clamp(pagePoint(pageEl, e));
+    ocrArea.page = i;
+    move = (ev) => {
+      const b = clamp(pagePoint(pageEl, ev)), x0 = Math.min(a[0], b[0]), y0 = Math.min(a[1], b[1]), x1 = Math.max(a[0], b[0]), y1 = Math.max(a[1], b[1]);
+      ocrArea.quad = [[x0, y0], [x1, y0], [x1, y1], [x0, y1]];
+      ocrAreaSync();
+    };
+  }
+  const up = (ev) => {
+    document.removeEventListener("pointermove", move, true); document.removeEventListener("pointerup", up, true);
+    move(ev);
+    // a click or a sliver: nothing chosen
+    const q = ocrArea.quad, xs = q ? q.map((c) => c[0]) : [0], ys = q ? q.map((c) => c[1]) : [0];
+    if (!q || Math.max(...xs) - Math.min(...xs) < 6 || Math.max(...ys) - Math.min(...ys) < 6) ocrArea.quad = null;
+    ocrAreaSync();
+  };
+  document.addEventListener("pointermove", move, true); document.addEventListener("pointerup", up, true);
+}
+
+/** Whether point (x, y) lies inside the polygon `poly` ([[x, y], …]). */
+function insidePolygon(poly, x, y) {
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const [xi, yi] = poly[i], [xj, yj] = poly[j];
+    if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+
+/** Tesseract's boxes (blocks down to letters, baselines) taken through `map` (x, y) → [x, y]. */
+function mapOcrData(data, map) {
+  const seen = new Set();
+  const box = (b) => {
+    if (!b || seen.has(b)) return;
+    seen.add(b);
+    // (the mean of opposite corners, not the box around all four: a slanted line keeps its
+    // height, so its font size is measured right)
+    const [tl, tr, br, bl] = [[b.x0, b.y0], [b.x1, b.y0], [b.x1, b.y1], [b.x0, b.y1]].map(([x, y]) => map(x, y));
+    b.x0 = (tl[0] + bl[0]) / 2; b.x1 = (tr[0] + br[0]) / 2;
+    b.y0 = (tl[1] + tr[1]) / 2; b.y1 = (bl[1] + br[1]) / 2;
+  };
+  for (const block of data.blocks || []) {
+    box(block.bbox);
+    for (const para of block.paragraphs || []) {
+      box(para.bbox);
+      for (const line of para.lines || []) {
+        box(line.bbox);
+        const bl = line.baseline;
+        if (bl && !seen.has(bl) && bl.x0 != null) { seen.add(bl); [bl.x0, bl.y0] = map(bl.x0, bl.y0); [bl.x1, bl.y1] = map(bl.x1, bl.y1); }
+        for (const w of line.words || []) { box(w.bbox); for (const c of w.symbols || []) box(c.bbox); }
+      }
+    }
+  }
 }
 
 /** On opening a document: OCR results from an earlier session. */
@@ -951,8 +1105,23 @@ function initTools() {
     if ($("#ocrPagesRange").checked && !parsePageRange($("#ocrRange").value, state.doc.pages.length)) {
       toast(t("ocr.badRange", { n: state.doc.pages.length }), "error"); $("#ocrRange").focus(); return;
     }
-    $("#ocrDialog").close(); startOcr();
+    $("#ocrDialog").close();
+    if ($("#ocrPagesArea").checked) {
+      if (!document.querySelectorAll("#ocrLangs input:checked").length) { toast(t("ocr.noLang"), "error"); return; }
+      ocrAreaBegin();
+    } else startOcr();
   });
+  $("#ocrAreaCancel").addEventListener("click", ocrAreaEnd);
+  $("#ocrAreaGo").addEventListener("click", ocrAreaGo);
+  document.addEventListener("pointerdown", ocrAreaDown, true);
+  document.addEventListener("keydown", (e) => {
+    if (!ocrArea.active) return;
+    if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); ocrAreaEnd(); }
+    else if (e.key === "Enter" && ocrArea.quad) { e.preventDefault(); e.stopPropagation(); ocrAreaGo(); }
+  }, true);
+  // (the outline is drawn again when its page was, e.g. after zooming)
+  new MutationObserver(() => { if (ocrArea.active && ocrArea.quad && !document.querySelector("#pages .ocr-area")) ocrAreaSync(); })
+    .observe($("#pages"), { childList: true, subtree: true });
   // Typing a page list selects that choice.
   $("#ocrRange").addEventListener("focus", () => { $("#ocrPagesRange").checked = true; });
   $("#ocrRange").addEventListener("input", () => { $("#ocrPagesRange").checked = true; });

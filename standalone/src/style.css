@@ -988,3 +988,17 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
 .seg-head { flex-wrap: wrap; row-gap: 2px; }
 .viewer-pane { min-width: 0; }
 .viewer-pane .pane-toolbar { flex-wrap: wrap; row-gap: 4px; min-width: 0; }
+
+/* OCR of an area: the rectangle drawn over a page, and the hint while drawing */
+.pages.ocr-area-mode .page, .pages.ocr-area-mode .page * { cursor: crosshair !important; }
+.ocr-area-hint {
+  position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 60; display: flex; align-items: center; gap: 10px;
+  max-width: calc(100vw - 32px); padding: 8px 10px 8px 14px; border-radius: 10px; background: var(--text); color: var(--bg); box-shadow: 0 6px 20px rgba(0, 0, 0, .25); font-size: 13px;
+}
+.ocr-area-hint[hidden] { display: none; }
+.ocr-area-hint .btn { flex: none; }
+.ocr-area { position: absolute; inset: 0; z-index: 8; pointer-events: none; }
+.ocr-area svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.ocr-area polygon { fill: color-mix(in srgb, var(--accent) 12%, transparent); stroke: var(--accent); stroke-width: 2px; stroke-dasharray: 6 4; vector-effect: non-scaling-stroke; }
+.ocr-area-handle { position: absolute; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: var(--surface); border: 2px solid var(--accent); box-shadow: 0 1px 4px rgba(0, 0, 0, .3); pointer-events: auto; touch-action: none; }
+.pages.ocr-area-mode .page .ocr-area-handle { cursor: move !important; }
