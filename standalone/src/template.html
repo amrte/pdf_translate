@@ -196,6 +196,8 @@
       <label class="pic-row"><span data-i18n="pic.contrast">Contrast</span><input type="range" id="picContrast" min="50" max="150" value="100"><output id="picContrastOut">100%</output></label>
       <label class="check"><input type="checkbox" id="picGray"> <span data-i18n="pic.gray">Greyscale</span></label>
       <div class="pic-row"><span data-i18n="pic.rotate">Rotate</span><span class="pic-buttons"><button type="button" class="btn" id="picRotL" data-i18n-title="pic.rotL">⟲ 90°</button><button type="button" class="btn" id="picRotR" data-i18n-title="pic.rotR">⟳ 90°</button></span><output id="picRotOut"></output></div>
+      <div class="pic-row"><span data-i18n="pic.straight">Straighten</span><span class="pic-buttons"><button type="button" class="btn" id="picAuto" data-i18n="pic.auto" data-i18n-title="pic.autoTitle">Auto</button></span><output id="picFineOut"></output></div>
+      <label class="pic-row"><span></span><input type="range" id="picFine" min="-15" max="15" step="0.1" value="0" data-i18n-title="pic.fineTitle" data-i18n-aria="pic.fineTitle"><span></span></label>
       <div class="pic-row"><span data-i18n="pic.cropLabel">Crop</span><span class="pic-buttons"><button type="button" class="btn" id="picCrop" data-i18n="pic.crop">Choose area</button></span><output id="picCropOut"></output></div>
       <p class="muted small" id="picHint" data-i18n="pic.hint"></p>
       <div class="pic-actions"><button type="button" class="btn ghost" id="picReset" data-i18n="pic.reset">Reset</button><button type="button" class="btn primary" id="picApply" data-i18n="pic.apply">Apply</button></div>
@@ -454,6 +456,7 @@
       </ul>
     </section>
     <p class="muted small" data-i18n="help.repeats"></p>
+    <p class="muted small" data-i18n="help.deskew"></p>
     <p class="muted small" data-i18n="help.shortcuts"></p>
     <p class="muted small" data-i18n="help.markup"></p>
     </div>
@@ -680,6 +683,10 @@
       <span class="spacer"></span>
       <button type="button" class="btn small" id="pagesSelLeft" data-i18n="pages.turnLeft" data-i18n-title="pages.turnLeftTitle"></button>
       <button type="button" class="btn small" id="pagesSelRight" data-i18n="pages.turnRight" data-i18n-title="pages.turnRightTitle"></button>
+      <span class="pages-straight" id="pagesStraightWrap">
+        <button type="button" class="btn small" id="pagesSelStraight" data-i18n="pages.straighten" data-i18n-title="pages.straightenTitle"></button>
+        <label class="pages-skew" data-i18n-title="pages.skewTitle"><input type="text" inputmode="decimal" id="pagesSkew" autocomplete="off" data-i18n-aria="pages.skewTitle"><span>°</span></label>
+      </span>
       <button type="button" class="btn small" id="pagesSelRemove" data-i18n="pages.removeSel"></button>
       <button type="button" class="btn small primary" id="pagesSelSave"></button>
     </div>
@@ -708,6 +715,7 @@
       <label class="check ocr-range"><input type="radio" name="ocrPages" id="ocrPagesRange"> <span data-i18n="ocr.pagesRange"></span>
         <input type="text" id="ocrRange" inputmode="numeric" autocomplete="off" data-i18n-placeholder="ocr.rangeHint" data-i18n-aria="ocr.pagesRange"></label>
     </div>
+    <label class="check" data-i18n-title="ocr.deskewTitle"><input type="checkbox" id="ocrDeskew" checked> <span data-i18n="ocr.deskew"></span></label>
     <label class="field"><span data-i18n="ocr.family">Font of the translation</span>
       <select id="ocrFamily"><option value="serif" data-i18n="st.serif"></option><option value="sans-serif" data-i18n="st.sans"></option></select>
     </label>

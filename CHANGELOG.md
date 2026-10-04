@@ -4,6 +4,14 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.10
+
+- Straighten tilted scans and photos. The tilt is measured on the text lines (up to ±15°, to a tenth of a degree); pages without clear text lines are left alone.
+- Text recognition (OCR): "Straighten tilted pages first" (on by default) – tilted pages are turned straight before they are recognised, so the recognition is better and the translation sits straight on the page. Text recognised earlier on other pages and the translations are kept.
+- Arrange pages: "⟂ Straighten" measures and straightens the selected pages; the field beside it turns them by hand (in degrees, + clockwise). The correction is shown on each page's picture ("⟂ +2.5°") and goes into "Apply" and "Save selection as PDF". A scan is only turned, not saved anew – its quality and the file size stay the same.
+- Picture tools: "Straighten" with "Auto" and a slider in tenths of a degree, shown live; the crop area is chosen on the straightened picture.
+- HEIC photos (iPhone) open in all browsers: where the browser cannot read them, a HEIC reader is loaded on first use.
+
 ## 2.09
 
 - Pictures: an opened picture is shown whole – it fits the viewer in width and height (a large photo is reduced, a small picture enlarged up to twice its size) and keeps fitting when the window or the border to the fields changes, until you zoom yourself.

@@ -1,16 +1,17 @@
 // ======================================================================
 // Picture tools. For an opened picture the left rail gets a button that opens a small panel:
-// brightness, contrast and greyscale (shown live in the preview), rotation in steps of 90° and a
-// crop area dragged on the page. "Apply" renders the edited picture and opens it again, which
+// brightness, contrast and greyscale (shown live in the preview), straightening (measured, or
+// turned by hand in tenths of a degree), rotation in steps of 90° and a crop area dragged on the
+// page. "Apply" renders the edited picture and opens it again, which
 // starts the text recognition afresh (the recognised text of the old picture would not fit).
 // ======================================================================
 
-const PIC_DEFAULT = { bright: 100, contrast: 100, gray: false, rotate: 0, crop: null }; // crop: page fractions [x0, y0, x1, y1]
+const PIC_DEFAULT = { bright: 100, contrast: 100, gray: false, rotate: 0, fine: 0, crop: null }; // crop: page fractions [x0, y0, x1, y1]; fine: degrees, clockwise
 const picEdit = { ...PIC_DEFAULT };
 let picCropMode = false;
 
 const picFilter = () => `brightness(${picEdit.bright / 100}) contrast(${picEdit.contrast / 100})${picEdit.gray ? " grayscale(1)" : ""}`;
-const picIsDefault = () => picEdit.bright === 100 && picEdit.contrast === 100 && !picEdit.gray && !picEdit.rotate && !picEdit.crop;
+const picIsDefault = () => picEdit.bright === 100 && picEdit.contrast === 100 && !picEdit.gray && !picEdit.rotate && !picEdit.fine && !picEdit.crop;
 
 /** Show the edit state in the panel and in the preview. */
 function picSync() {
@@ -18,6 +19,10 @@ function picSync() {
   $("#picContrast").value = picEdit.contrast; $("#picContrastOut").textContent = `${picEdit.contrast}%`;
   $("#picGray").checked = picEdit.gray;
   $("#picRotOut").textContent = picEdit.rotate ? `${picEdit.rotate}°` : "";
+  $("#picFine").value = picEdit.fine;
+  $("#picFineOut").textContent = picEdit.fine ? pmDeg(picEdit.fine, true) : "";
+  // (the straightening is shown live: the crop area is chosen on the straightened picture)
+  document.documentElement.style.setProperty("--pic-turn", `${picEdit.fine}deg`);
   $("#picCropOut").textContent = picEdit.crop ? t("pic.cropSet") : "";
   $("#picCrop").classList.toggle("primary", picCropMode);
   $("#picHint").textContent = picCropMode ? t("pic.cropActive") : t("pic.hint");
@@ -108,24 +113,54 @@ function picFilterPixels(data) {
   }
 }
 
+/** Measures the picture's tilt and sets the straightening; true when there was one to set. */
+async function picMeasure() {
+  if (!state.doc || !state.doc.image) return false;
+  busy(t("pic.measuring"));
+  try {
+    const r = await pool.workers[0].call("skewDetect", { page: 0 });
+    if (!r || r.confidence < 0.15) { toast(t("pic.unclear"), "error"); return false; }
+    picEdit.fine = Math.abs(r.angle) < 0.1 ? 0 : -Math.round(r.angle * 10) / 10;
+    picSync();
+    toast(picEdit.fine ? t("pic.measured", { deg: pmDeg(picEdit.fine, true) }) : t("pic.alreadyStraight"), "ok");
+    return Boolean(picEdit.fine);
+  } catch (err) {
+    toast(t("pic.failed", { err: userError(err) }), "error");
+    return false;
+  } finally {
+    busy("");
+  }
+}
+
 /** Render the edited picture and open it as the document (same name, new content). */
-async function picApply() {
+async function picApply(quiet = false) {
   const doc = state.doc, img = doc && doc.image;
   if (!img || picIsDefault()) return;
-  if (doc.segments.length && !window.confirm(t("pic.confirm"))) return;
+  if (!quiet && doc.segments.length && !window.confirm(t("pic.confirm"))) return;
   busy(t("pic.working"));
   try {
     const page = doc.pages[0];
     const png = await pool.workers[0].call("render", { page: 0, zoom: img.width / page.width, variant: "original" });
-    const bmp = await createImageBitmap(new Blob([png], { type: "image/png" }));
+    let bmp = await createImageBitmap(new Blob([png], { type: "image/png" }));
+    let filtered = false;
     try {
+      if (picEdit.fine) {
+        // Straightened first, at the same size (the corners turned in are filled with white).
+        const st = new OffscreenCanvas(bmp.width, bmp.height), sx = st.getContext("2d");
+        sx.fillStyle = "#fff"; sx.fillRect(0, 0, st.width, st.height);
+        if ("filter" in sx) { sx.filter = picFilter(); filtered = true; }
+        sx.translate(st.width / 2, st.height / 2); sx.rotate((picEdit.fine * Math.PI) / 180);
+        sx.drawImage(bmp, -bmp.width / 2, -bmp.height / 2);
+        bmp.close && bmp.close();
+        bmp = st;
+      }
       const c = picEdit.crop || [0, 0, 1, 1];
       const sx = Math.round(c[0] * bmp.width), sy = Math.round(c[1] * bmp.height);
       const sw = Math.max(1, Math.round((c[2] - c[0]) * bmp.width)), sh = Math.max(1, Math.round((c[3] - c[1]) * bmp.height));
       const rot = ((picEdit.rotate % 360) + 360) % 360, swap = rot === 90 || rot === 270;
       const canvas = new OffscreenCanvas(swap ? sh : sw, swap ? sw : sh), ctx = canvas.getContext("2d");
-      const hasFilter = "filter" in ctx;
-      if (hasFilter) ctx.filter = picFilter();
+      const hasFilter = "filter" in ctx || filtered;
+      if (hasFilter && !filtered) ctx.filter = picFilter();
       ctx.translate(canvas.width / 2, canvas.height / 2);
       ctx.rotate((rot * Math.PI) / 180);
       ctx.drawImage(bmp, sx, sy, sw, sh, -sw / 2, -sh / 2, sw, sh);
@@ -153,6 +188,8 @@ function initPicture() {
   $("#picGray").addEventListener("change", (e) => { picEdit.gray = e.target.checked; picSync(); });
   $("#picRotL").addEventListener("click", () => { picEdit.rotate = (picEdit.rotate + 270) % 360; picSync(); });
   $("#picRotR").addEventListener("click", () => { picEdit.rotate = (picEdit.rotate + 90) % 360; picSync(); });
+  $("#picFine").addEventListener("input", (e) => { picEdit.fine = Math.round(Number(e.target.value) * 10) / 10; picSync(); });
+  $("#picAuto").addEventListener("click", picMeasure);
   $("#picCrop").addEventListener("click", () => { picCropMode = !picCropMode; if (picCropMode) picEdit.crop = null; picSync(); });
   $("#picReset").addEventListener("click", picReset);
   $("#picApply").addEventListener("click", picApply);

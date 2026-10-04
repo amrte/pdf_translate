@@ -3139,6 +3139,11 @@ function createHandler() {
       return { result: png.buffer, transfer: [png.buffer] };
     }
     if (cmd === "extraClear") { clearExtras(); return { result: true }; }
+    if (cmd === "skewDetect") { // the tilt of a page of the open file, or of an added one (index ≥ 1)
+      const doc = args.index ? (W.extras[args.index - 1] || {}).doc : W.doc;
+      if (!doc) throw new Error("No document is open.");
+      return { result: detectSkew(doc, args.page) };
+    }
     if (cmd === "pagesInfo") { const deck = W.book && W.book.deck; return { result: { slides: (deck && deck.slidePages) || null, hidden: deck ? deck.slides.map((sl) => Boolean(sl && sl.hidden)) : null, notes: deck ? deck.slides.map((sl) => Boolean(sl && sl.notesFi >= 0)) : null } }; }
     if (cmd === "rearrange") {
       if (!W.bytes) throw new Error("No document is open.");

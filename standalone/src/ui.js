@@ -426,10 +426,35 @@ async function loadBytes(bytes, name, remember, knownId = null) {
   }
 }
 
+/** HEIC/HEIF decoder for browsers that cannot show these photos (all but Safari), loaded on first use. */
+const HEIF_LIB = "https://cdn.jsdelivr.net/npm/libheif-js@1.19.8/libheif-wasm/libheif-bundle.mjs";
+let heifLib = null;
+
+/** An iPhone photo (HEIC) decoded with libheif: an ImageBitmap of its first (main) picture. */
+async function decodeHeif(bytes) {
+  if (!heifLib) {
+    setLoading(t("msg.heicLoading"));
+    const mod = await import(HEIF_LIB);
+    const lib = (mod.default || mod)();
+    if (!lib.HeifDecoder && lib.ready) await lib.ready;
+    heifLib = lib;
+  }
+  const images = new heifLib.HeifDecoder().decode(bytes);
+  if (!images || !images.length) throw new Error("This picture format is not supported.");
+  const img = images[0], w = img.get_width(), h = img.get_height();
+  const data = new ImageData(w, h);
+  await new Promise((resolve, reject) => img.display(data, (out) => (out ? resolve() : reject(new Error("HEIF processing error")))));
+  for (const x of images) x.free && x.free();
+  return createImageBitmap(data);
+}
+
 /** Decode a picture the engine cannot read (WebP, AVIF, HEIC) in the browser and return it as PNG. */
 async function transcodeImage(bytes) {
   let bmp;
-  try { bmp = await createImageBitmap(new Blob([bytes])); } catch (_) { throw new Error("This picture format is not supported."); }
+  try { bmp = await createImageBitmap(new Blob([bytes])); } catch (_) {
+    if (Engine.imageKindOf(bytes) !== "heic") throw new Error("This picture format is not supported.");
+    try { bmp = await decodeHeif(bytes); } catch (err) { console.warn("heic", err); throw new Error("This picture format is not supported."); }
+  }
   try {
     const canvas = new OffscreenCanvas(bmp.width, bmp.height);
     canvas.getContext("2d").drawImage(bmp, 0, 0);

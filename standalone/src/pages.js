@@ -1,6 +1,6 @@
 // ---------------------------------------------------------------------------------------------
 // Rearranging pages. A plan lists the new pages in order: {from: 0, page} is a page of the open
-// file (a PDF page may carry rot: 90, 180, 270 – turned clockwise), {from: k ≥ 1, page} a page of the k-th extra file, {from: -1, w, h} a blank page. A PDF
+// file (a PDF page may carry rot: 90, 180, 270 – turned clockwise – and skew: the tilt in degrees to take out), {from: k ≥ 1, page} a page of the k-th extra file, {from: -1, w, h} a blank page. A PDF
 // is put together from the pages (grafted with their resources); a PPTX gets its slide list
 // rewritten, dropped slides removed, blank slides added and slides of other decks copied in with
 // their layouts, masters, themes and pictures. Runs with the engine.
@@ -41,6 +41,7 @@ function rearrangePdf(bytes, plan, extras) {
           const was = own.isNumber() ? own.asNumber() : 0;
           pobj.put("Rotate", (((was + turn) % 360) + 360) % 360);
         }
+        if (it.skew) deskewPdfPage(out, out.findPage(out.countPages() - 1), Number(it.skew)); // (straightened, see deskew.js)
       }
       n++;
     }

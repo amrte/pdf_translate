@@ -427,6 +427,7 @@ function openOcrDialog() {
   $("#ocrScanCount").textContent = t("ocr.scanCount", { n: scans });
   $("#ocrRange").value = String(currentPageIndex() + 1);
   $("#ocrFamily").value = saved.family || "serif";
+  $("#ocrDeskew").checked = saved.deskew !== false;
   openModal($("#ocrDialog"));
 }
 
@@ -466,11 +467,13 @@ function ocrWorkerOptions(stored) {
 async function startOcr() {
   const langs = [...document.querySelectorAll("#ocrLangs input:checked")].map((i) => i.value);
   if (!langs.length) { toast(t("ocr.noLang"), "error"); return; }
-  const family = $("#ocrFamily").value;
-  try { localStorage.setItem(LS_OCR, JSON.stringify({ langs, family })); } catch (_) { /* fine */ }
+  const family = $("#ocrFamily").value, deskew = $("#ocrDeskew").checked;
+  try { localStorage.setItem(LS_OCR, JSON.stringify({ langs, family, deskew })); } catch (_) { /* fine */ }
   const pages = ocrPageChoice() || [];
   if (!pages.length) { toast(t("ocr.none")); return; }
   ocrCancel = false;
+  if (deskew) await ocrStraighten(pages);
+  if (ocrCancel || !state.doc) return;
   const doc = state.doc, results = {};
   let worker = null;
   // Cancel stops the recognition at once (a running step fails, which is fine); the pages that
@@ -522,6 +525,52 @@ async function startOcr() {
   const found = Object.values(results).reduce((n, r) => n + r.segs.length, 0);
   const added = found ? addOcrResults(results) : 0;
   toast(ocrCancel ? t("ocr.cancelled", { n: added }) : t("ocr.done", { n: added, p: Object.keys(results).length }), "ok");
+}
+
+/**
+ * Straightens the tilted pages among `pages` before they are recognised: a picture is turned and
+ * opened again, a PDF is put together anew with the tilted pages turned straight (see
+ * deskew.js). Text recognised earlier on the other pages and the translations are carried over.
+ */
+async function ocrStraighten(pages) {
+  const doc = state.doc, tilts = new Map();
+  const cancel = () => { ocrCancel = true; };
+  for (const [k, p] of pages.entries()) {
+    if (ocrCancel || state.doc !== doc) return 0;
+    busy(t("ocr.measuring", { i: k + 1, n: pages.length }), cancel);
+    try {
+      const r = await pool.workers[0].call("skewDetect", { page: p });
+      if (r && r.confidence >= 0.15 && Math.abs(r.angle) >= 0.1) tilts.set(p, r.angle);
+    } catch (err) { console.warn("skew", err); }
+  }
+  busy("");
+  if (!tilts.size || ocrCancel || state.doc !== doc) return 0;
+  if (doc.image) {
+    Object.assign(picEdit, PIC_DEFAULT, { fine: -Math.round(tilts.get(0) * 10) / 10 });
+    await picApply(true);
+  } else {
+    busy(t("ocr.straightening", { n: tilts.size }));
+    try {
+      const plan = doc.pages.map((_, i) => ({ from: 0, page: i, rot: 0, skew: tilts.get(i) || 0 }));
+      const kept = {}; // recognised text of the pages that stay as they are
+      for (const [p, r] of Object.entries(doc.ocr || {})) if (!tilts.has(Number(p))) kept[p] = { segs: r.segs.map((x) => ({ ...x })), seps: r.seps };
+      const cap = pmCaptureTranslations();
+      const bytes = await pool.workers[0].call("rearrange", { plan });
+      await loadBytes(new Uint8Array(bytes), doc.name, true);
+      if (!state.doc || state.doc === doc) return 0;
+      if (Object.keys(kept).length) addOcrResults(kept);
+      pmRestoreTranslations(cap, plan);
+    } catch (err) {
+      console.error(err);
+      toast(t("ocr.straightFailed", { err: userError(err) }), "error");
+      return 0;
+    } finally {
+      busy("");
+    }
+  }
+  if ($("#ocrDialog").open) $("#ocrDialog").close(); // (opened again for the new picture or scan)
+  toast(t("ocr.straightened", { n: tilts.size }), "ok");
+  return tilts.size;
 }
 
 /** Share of box a that overlaps box b. */
