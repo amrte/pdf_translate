@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="Kameleon 2.19">
+  <meta name="generator" content="Kameleon 2.20">
   <meta name="description" content="Kameleon – Wechselt die Sprache, behält die Form. Changes language, keeps its shape.">
   <title>Kameleon</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2216%22 fill=%22%23287130%22/%3E%3Cg transform=%22translate(2.5 1) scale(0.9)%22 fill=%22%23ffffff%22 stroke=%22%23ffffff%22%3E%3Cpath d=%22M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6%22 fill=%22none%22 stroke-width=%223.8%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M21 43l-1 10M30 44v9M38 43l1 10%22 stroke-width=%223.6%22 stroke-linecap=%22round%22/%3E%3Cellipse cx=%2221%22 cy=%2225%22 rx=%227%22 ry=%227.5%22 stroke=%22none%22/%3E%3Cellipse cx=%2233%22 cy=%2223.5%22 rx=%227.5%22 ry=%228%22 stroke=%22none%22/%3E%3Cpath d=%22M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z%22 stroke=%22none%22/%3E%3Cpath d=%22M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z%22 stroke=%22none%22/%3E%3Cpath d=%22M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z%22 stroke=%22none%22/%3E%3Cpath d=%22M16 37l4-3 4 3 4-3 4 3 4-3 4 3%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%222.1%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3Cpath d=%22M43.5 33.9L57 32.6%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%221.5%22 stroke-linecap=%22round%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%224.4%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%222.7%22 stroke=%22none%22/%3E%3Ccircle cx=%2246.2%22 cy=%2226.7%22 r=%221.3%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Cpath d=%22M4 55.5c15-3 39-3 54 0%22 fill=%22none%22 stroke-width=%222.4%22 stroke-linecap=%22round%22/%3E%3C/g%3E%3C/svg%3E">
@@ -1013,6 +1013,12 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
 .ocr-area-handle { position: absolute; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: var(--surface); border: 2px solid var(--accent); box-shadow: 0 1px 4px rgba(0, 0, 0, .3); pointer-events: auto; touch-action: none; }
 .pages.ocr-area-mode .page .ocr-area-handle { cursor: move !important; }
 
+/* correcting a recognised segment's text: the place on the page above the text */
+.src-snip { max-height: 260px; overflow: auto; margin-bottom: 10px; border: 1px solid var(--border); border-radius: 8px; background: #fff; }
+.src-snip:has(img[hidden]) { display: none; }
+.src-snip img { display: block; max-width: 100%; height: auto; }
+.src-text { width: 100%; min-height: 120px; resize: vertical; font: inherit; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text); }
+
   </style>
 </head>
 <body>
@@ -1020,7 +1026,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
   <div class="brand">
     <span class="logo"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#287130"/><g transform="translate(2.5 1) scale(0.9)" fill="#ffffff" stroke="#ffffff"><path d="M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6" fill="none" stroke-width="3.8" stroke-linecap="round"/><path d="M21 43l-1 10M30 44v9M38 43l1 10" stroke-width="3.6" stroke-linecap="round"/><ellipse cx="21" cy="25" rx="7" ry="7.5" stroke="none"/><ellipse cx="33" cy="23.5" rx="7.5" ry="8" stroke="none"/><path d="M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z" stroke="none"/><path d="M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z" stroke="none"/><path d="M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z" stroke="none"/><path d="M16 37l4-3 4 3 4-3 4 3 4-3 4 3" fill="none" stroke="#287130" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M43.5 33.9L57 32.6" fill="none" stroke="#287130" stroke-width="1.5" stroke-linecap="round"/><circle cx="45.5" cy="26.5" r="4.4" fill="#287130" stroke="none"/><circle cx="45.5" cy="26.5" r="2.7" stroke="none"/><circle cx="46.2" cy="26.7" r="1.3" fill="#287130" stroke="none"/><path d="M4 55.5c15-3 39-3 54 0" fill="none" stroke-width="2.4" stroke-linecap="round"/></g></svg></span>
     <span class="brand-name">Kameleon</span>
-    <span class="version" id="appVersion">v2.19</span>
+    <span class="version" id="appVersion">v2.20</span>
   </div>
   <div class="topbar-actions">
     <span class="doc-name" id="docName"></span>
@@ -1531,7 +1537,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
     </div>
     <input type="file" id="offlineZip" class="visually-hidden" accept=".zip,application/zip" multiple tabindex="-1">
     <input type="file" id="offlineFolder" class="visually-hidden" webkitdirectory multiple tabindex="-1">
-    <p class="muted small help-version help-part">Kameleon v2.19 · <span data-i18n="app.tagline"></span></p>
+    <p class="muted small help-version help-part">Kameleon v2.20 · <span data-i18n="app.tagline"></span></p>
     <div class="modal-actions">
       <button type="button" value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
     </div>
@@ -1677,6 +1683,19 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
     <div class="split-list" id="splitList"></div>
     <div class="modal-actions">
       <button value="cancel" class="btn ghost" data-i18n="common.cancel">Cancel</button>
+    </div>
+  </form>
+</dialog>
+<dialog id="srcDialog" class="modal" aria-labelledby="srcTitle">
+  <form method="dialog">
+    <h2 id="srcTitle" data-i18n="src.title">Correct the recognised text</h2>
+    <div class="src-snip"><img id="srcSnip" alt="" hidden></div>
+    <textarea id="srcText" class="src-text" rows="6" spellcheck="true" data-i18n-aria="src.title"></textarea>
+    <p class="muted small" data-i18n="src.note"></p>
+    <div class="modal-actions">
+      <button type="button" class="btn ghost" id="srcReset" data-i18n="src.reset" data-i18n-title="src.resetTitle" hidden>Recognised text</button>
+      <button value="cancel" class="btn ghost" data-i18n="common.cancel">Cancel</button>
+      <button value="ok" class="btn primary" id="srcSave" data-i18n="src.save">Save</button>
     </div>
   </form>
 </dialog>
@@ -1970,7 +1989,7 @@ const I18N = {
     "ocr.straightFailed": "Die Seiten konnten nicht gerade gerichtet werden: {err}",
     "msg.heicLoading": "HEIC-Bildleser wird geladen…",
     "err.rawPhoto": "Dieses RAW-Foto (DNG) enthält kein Vorschaubild. Bitte als JPEG exportieren und dieses öffnen.",
-    "help.deskew": "<b>Gerade richten:</b> Schief gescannte Seiten und schief fotografierte Bilder werden gerade gedreht. Die Neigung wird an den Textzeilen gemessen (bis ±15°). In der Texterkennung (OCR) geschieht das vorher von selbst („Schiefe Seiten gerade richten“, dazu „Gewölbte Textzeilen glätten“ und „Automatisch zuschneiden“); unter „Seiten anordnen“ mit „⟂ Gerade richten“ für die ausgewählten Seiten oder von Hand im Feld daneben; bei einem Bild im Bild-Werkzeug mit „Automatisch“ oder dem Regler. „Von Hand…“ zeigt die Seite groß: drehen wie an einem Drehknopf, eine Linie an einer Textzeile anlegen oder die vier Seitenecken ziehen – eine schräg fotografierte Seite wird so zu einem geraden Rechteck – und „Zeilen glätten“ biegt gewölbte Textzeilen (ein aufgeschlagenes Buch) gerade, automatisch erkannt oder von Hand nachgezogen (dabei wird die Seite als Bild neu gespeichert). Übernommene Bildänderungen verwirft „↺ Original wiederherstellen“ im Bild-Werkzeug auf einmal. Ein Scan in einer PDF wird dabei nicht neu gespeichert, nur gedreht – die Qualität bleibt gleich. Gewölbte Buchseiten werden als Ganzes gedreht, nicht geglättet. <b>Nur einen Bereich erkennen:</b> im OCR-Fenster „Nur einen Bereich – auf der Seite markieren“, dann ein Rechteck über den Text ziehen und bei Bedarf seine vier Ecken verschieben (auch schräg); „Erkennen“ oder <kbd>Enter</kbd> liest nur diesen Teil.",
+    "help.deskew": "<b>Gerade richten:</b> Schief gescannte Seiten und schief fotografierte Bilder werden gerade gedreht. Die Neigung wird an den Textzeilen gemessen (bis ±15°). In der Texterkennung (OCR) geschieht das vorher von selbst („Schiefe Seiten gerade richten“, dazu „Gewölbte Textzeilen glätten“ und „Automatisch zuschneiden“); unter „Seiten anordnen“ mit „⟂ Gerade richten“ für die ausgewählten Seiten oder von Hand im Feld daneben; bei einem Bild im Bild-Werkzeug mit „Automatisch“ oder dem Regler. „Von Hand…“ zeigt die Seite groß: drehen wie an einem Drehknopf, eine Linie an einer Textzeile anlegen oder die vier Seitenecken ziehen – eine schräg fotografierte Seite wird so zu einem geraden Rechteck – und „Zeilen glätten“ biegt gewölbte Textzeilen (ein aufgeschlagenes Buch) gerade, automatisch erkannt oder von Hand nachgezogen (dabei wird die Seite als Bild neu gespeichert). Übernommene Bildänderungen verwirft „↺ Original wiederherstellen“ im Bild-Werkzeug auf einmal. Ein Scan in einer PDF wird dabei nicht neu gespeichert, nur gedreht – die Qualität bleibt gleich. Gewölbte Buchseiten werden als Ganzes gedreht, nicht geglättet. <b>Nur einen Bereich erkennen:</b> im OCR-Fenster „Nur einen Bereich – auf der Seite markieren“, dann ein Rechteck über den Text ziehen und bei Bedarf seine vier Ecken verschieben (auch schräg); „Erkennen“ oder <kbd>Enter</kbd> liest nur diesen Teil. <b>Erkannte Segmente bearbeiten:</b> ✂ teilt ein Segment zwischen zwei Zeilen, ⤵ verbindet es mit dem nächsten, ✎ korrigiert den erkannten Text (mit dem Ausschnitt der Seite zum Vergleich; <kbd>Strg</kbd>+<kbd>Z</kbd> nimmt es zurück).",
     "filter.repeats": "Kopf- & Fußzeilen",
     "rep.header": "Kopfzeile · {n} Seiten",
     "rep.footer": "Fußzeile · {n} Seiten",
@@ -2051,6 +2070,16 @@ const I18N = {
     "export.include": "Bereits eingegebene Übersetzungen einschließen",
     "lang.target": "Zielsprache",
     "common.cancel": "Abbrechen",
+    "src.title": "Erkannten Text korrigieren",
+    "src.note": "Oben die Stelle auf der Seite zum Vergleich. Strg+Enter speichert. Die Korrektur wird mit dem Erkennungsergebnis gespeichert; die Übersetzung bleibt, wie sie ist.",
+    "src.save": "Speichern",
+    "src.reset": "Erkannter Text",
+    "src.resetTitle": "Den Text wieder so einsetzen, wie die Texterkennung ihn gelesen hat",
+    "src.hist": "Textkorrektur",
+    "card.editSrcTitle": "Erkannten Text korrigieren",
+    "meta.corrected": "korrigiert",
+    "seg.ocrOld": "Diese Seite wurde mit einer älteren Version erkannt. Bitte die Texterkennung für die Seite erneut ausführen, dann lassen sich ihre Segmente teilen und verbinden.",
+    "seg.editedSplit": "Der Text dieses Segments wurde von Hand korrigiert. Beim Teilen entstehen die Teile aus den erkannten Zeilen; die Korrektur geht dabei verloren. Trotzdem teilen?",
     "common.close": "Schließen",
     "common.download": "Herunterladen",
 
@@ -2794,7 +2823,7 @@ const I18N = {
     "ocr.straightened": "{n} tilted page(s) straightened.",
     "ocr.straightFailed": "The pages could not be straightened: {err}",
     "msg.heicLoading": "Loading the HEIC picture reader…",
-    "help.deskew": "<b>Straighten:</b> Pages scanned askew and pictures photographed at a slant are turned straight. The tilt is measured on the text lines (up to ±15°). Text recognition (OCR) does it first by itself (\"Straighten tilted pages\", also \"Flatten curved text lines\" and \"Crop automatically\"); in \"Arrange pages\" use \"⟂ Straighten\" for the selected pages or the field beside it by hand; for a picture use \"Auto\" or the slider in the picture tools. \"By hand…\" shows the page large: turn it like a dial, draw a line along a text line, or drag the four page corners – a page photographed at a slant becomes a straight rectangle – and \"Flatten lines\" bends curved text lines (a book photographed open) straight, found automatically or traced by hand (the page is then saved anew as a picture). \"↺ Restore original\" in the picture tools discards all applied picture changes at once. A scan in a PDF is not saved anew, only turned – its quality stays the same. Curved book pages are turned as a whole, not flattened. <b>Recognise only an area:</b> in the OCR window choose “Only an area – marked on the page”, then drag a rectangle over the text and move its four corners if needed (also slanted); “Recognise” or <kbd>Enter</kbd> reads only that part.",
+    "help.deskew": "<b>Straighten:</b> Pages scanned askew and pictures photographed at a slant are turned straight. The tilt is measured on the text lines (up to ±15°). Text recognition (OCR) does it first by itself (\"Straighten tilted pages\", also \"Flatten curved text lines\" and \"Crop automatically\"); in \"Arrange pages\" use \"⟂ Straighten\" for the selected pages or the field beside it by hand; for a picture use \"Auto\" or the slider in the picture tools. \"By hand…\" shows the page large: turn it like a dial, draw a line along a text line, or drag the four page corners – a page photographed at a slant becomes a straight rectangle – and \"Flatten lines\" bends curved text lines (a book photographed open) straight, found automatically or traced by hand (the page is then saved anew as a picture). \"↺ Restore original\" in the picture tools discards all applied picture changes at once. A scan in a PDF is not saved anew, only turned – its quality stays the same. Curved book pages are turned as a whole, not flattened. <b>Recognise only an area:</b> in the OCR window choose “Only an area – marked on the page”, then drag a rectangle over the text and move its four corners if needed (also slanted); “Recognise” or <kbd>Enter</kbd> reads only that part. <b>Editing recognised segments:</b> ✂ splits a segment between two lines, ⤵ joins it with the next, ✎ corrects the recognised text (with the cutout of the page for comparison; <kbd>Ctrl</kbd>+<kbd>Z</kbd> takes it back).",
     "filter.repeats": "Headers & footers",
     "rep.header": "Header · {n} pages",
     "rep.footer": "Footer · {n} pages",
@@ -2875,6 +2904,16 @@ const I18N = {
     "export.include": "Include translations already entered",
     "lang.target": "Target language",
     "common.cancel": "Cancel",
+    "src.title": "Correct the recognised text",
+    "src.note": "Above, the place on the page for comparison. Ctrl+Enter saves. The correction is saved with the recognition result; the translation stays as it is.",
+    "src.save": "Save",
+    "src.reset": "Recognised text",
+    "src.resetTitle": "Put the text back as text recognition read it",
+    "src.hist": "Text correction",
+    "card.editSrcTitle": "Correct the recognised text",
+    "meta.corrected": "corrected",
+    "seg.ocrOld": "This page was recognised with an older version. Please run text recognition for the page again; then its segments can be split and joined.",
+    "seg.editedSplit": "The text of this segment was corrected by hand. Splitting makes the parts from the recognised lines, so the correction is lost. Split anyway?",
     "common.close": "Close",
     "common.download": "Download",
 
@@ -6789,6 +6828,26 @@ function createHandler() {
         const bounds = page.getBounds();
         const seps = pageGraphics(page).seps.concat(args.seps || []);
         return { result: segmentPage(ocrBlocks(args.lines, args.family), args.page, bounds, seps, []) };
+      } finally {
+        free(page);
+      }
+    }
+    // Splitting and joining recognised segments: the page's OCR lines (as for ocrPage) listed, and
+    // segments built from groups of them.
+    if (cmd === "ocrLines" || cmd === "ocrResegment") {
+      const page = W.doc.loadPage(args.page);
+      try {
+        const bounds = page.getBounds();
+        const seps = pageGraphics(page).seps.concat(args.seps || []);
+        const { marginsByRot, pageLines } = pageLineSet(ocrBlocks([{ lines: args.raw }], args.family), seps, []);
+        if (cmd === "ocrLines") return { result: pageLines.map((l, i) => ({ i, text: l.text, bbox: l.bbox.map(round2), rotation: l.rotation })) };
+        const out = [];
+        for (const g of args.groups) {
+          const lines = g.map((i) => pageLines[i]).filter(Boolean);
+          const seg = lines.length ? buildSegment(lines, args.page, bounds, 0, marginsByRot, pageLines, false) : null;
+          if (seg) out.push(seg);
+        }
+        return { result: out };
       } finally {
         free(page);
       }
@@ -14098,9 +14157,9 @@ const translatable = () => state.doc.segments.filter((s) => !s.skip && !repHidde
 
 function segMeta(s) {
   const page = t("meta.page", { n: s.page + 1 });
-  if (s.skip) return `${page} · ${t(s.formula ? "meta.formula" : "meta.numbers")}`;
+  if (s.skip) return `${page} · ${t(s.formula ? "meta.formula" : "meta.numbers")}${s.edited ? " · " + t("meta.corrected") : ""}`;
   if (isBook()) return s.hidden ? `${t("meta.notShown")} · ${s.tag}` : `${page} · ${s.notes ? t("meta.notes") : s.tag}`;
-  if (s.ocr) return `${page} · OCR · ${Math.round(s.size * 10) / 10}pt${s.bold ? " " + t("meta.bold") : ""}`;
+  if (s.ocr) return `${page} · OCR · ${Math.round(s.size * 10) / 10}pt${s.bold ? " " + t("meta.bold") : ""}${s.edited ? " · " + t("meta.corrected") : ""}`;
   const style = [s.bold && t("meta.bold"), s.italic && t("meta.italic")].filter(Boolean).join(" ");
   const rot = s.rotation ? ` · ${t("meta.rotated", { deg: s.rotation })}` : "";
   return `${page} · ${Math.round(s.size * 10) / 10}pt${style ? " " + style : ""} · ${t("meta." + s.align)}${rot}`;
@@ -14250,6 +14309,7 @@ function makeCard(id) {
       ${!fieldsEditable() ? "" : `<button type="button" class="mini${state.overrides[id] ? " on" : ""}" data-act="style" title="${escapeHtml(t("card.styleTitle"))}">Aa</button>`}
       ${!kindsEditable() ? "" : `<button type="button" class="mini kind${state.kinds[id] ? " on" : ""}" data-act="kind" title="${escapeHtml(t(s.skip ? "card.asTextTitle" : "card.asFormulaTitle"))}">${t(s.skip ? "card.asText" : "card.asFormula")}</button>`}
       ${!repSupported() || s.skip || repGroup(id) ? "" : `<button type="button" class="mini" data-act="repMake" title="${escapeHtml(t("rep.makeTitle"))}">⧉</button>`}
+      ${!s.ocr || isBook() ? "" : `<button type="button" class="mini" data-act="editSrc" title="${escapeHtml(t("card.editSrcTitle"))}">✎</button>`}
       ${!segEditable(s) ? "" : `${s.lines > 1 ? `<button type="button" class="mini" data-act="split" title="${escapeHtml(t("card.splitTitle"))}">✂</button>` : ""}<button type="button" class="mini" data-act="join" title="${escapeHtml(t("card.joinTitle"))}">⤵</button>`}
       <button type="button" class="mini apply" data-act="apply" title="${escapeHtml(t("card.applyTitle"))}">${t("card.apply")}</button>
     </div>
@@ -14813,6 +14873,8 @@ function init() {
       openSplitDialog(id);
     } else if (act === "join") {
       joinWithNext(id);
+    } else if (act === "editSrc") {
+      openSrcDialog(id);
     } else if (e.target.closest(".seg-src")) { // (also on a highlighted search match)
       setActive(id, { scrollViewer: true, focus: true });
     }
@@ -16497,17 +16559,24 @@ async function startOcr({ area = null } = {}) {
       // On a page that has a text layer, only text that is not there yet (e.g. in pictures) is added.
       const text = doc.segments.filter((s) => s.page === p && !s.ocr).map((s) => s.bbox);
       segs = segs.filter((s) => !text.some((b) => overlapShare(s.bbox, b) > 0.3));
+      // (the recognised lines are kept with the result: segments can be split and joined later)
+      const raw = blocks.length ? blocks[0].lines : [];
       if (area) {
-        // Text read earlier outside the rectangle stays; inside, the new reading replaces it.
+        // Text read earlier outside the area stays; inside, the new reading replaces it.
         const before = doc.ocr && doc.ocr[p] ? doc.segments.filter((s) => s.ocr && s.page === p) : [];
         const kept = before.filter((s) => !insidePolygon(area.quad, (s.bbox[0] + s.bbox[2]) / 2, (s.bbox[1] + s.bbox[3]) / 2));
         const top = Math.min(...area.quad.map((q) => q[1]));
         const at = kept.findIndex((s) => s.bbox[1] >= top);
         segs = at < 0 ? kept.concat(segs) : [...kept.slice(0, at), ...segs, ...kept.slice(at)];
-        results[p] = { segs, seps: ((doc.ocr && doc.ocr[p] && doc.ocr[p].seps) || []).concat(seps) };
+        const prevRaw = (doc.ocr && doc.ocr[p] && doc.ocr[p].raw) || [];
+        const keptRaw = prevRaw.filter((l) => {
+          const xs = l.words.flatMap((w) => [w.bbox[0], w.bbox[2]]), ys = l.words.flatMap((w) => [w.bbox[1], w.bbox[3]]);
+          return !insidePolygon(area.quad, (Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2);
+        });
+        results[p] = { segs, seps: ((doc.ocr && doc.ocr[p] && doc.ocr[p].seps) || []).concat(seps), raw: keptRaw.concat(raw), family };
         continue;
       }
-      results[p] = { segs, seps };
+      results[p] = { segs, seps, raw, family };
     }
   } catch (err) {
     if (!ocrCancel) {
@@ -16569,7 +16638,7 @@ async function ocrStraighten(pages, { deskew = true, dewarp = false, crop = fals
     try {
       const plan = doc.pages.map((_, i) => ({ from: 0, page: i, rot: 0, skew: 0, quad: null, tracks: null, ...(fixes.get(i) || {}) }));
       const kept = {}; // recognised text of the pages that stay as they are
-      for (const [p, r] of Object.entries(doc.ocr || {})) if (!fixes.has(Number(p))) kept[p] = { segs: r.segs.map((x) => ({ ...x })), seps: r.seps };
+      for (const [p, r] of Object.entries(doc.ocr || {})) if (!fixes.has(Number(p))) kept[p] = { segs: r.segs.map((x) => ({ ...x })), seps: r.seps, ...(r.raw ? { raw: r.raw, family: r.family } : {}) };
       const cap = pmCaptureTranslations();
       const bytes = await pool.workers[0].call("rearrange", { plan });
       await loadBytes(new Uint8Array(bytes), doc.name, true);
@@ -16618,7 +16687,7 @@ function addOcrResults(results) {
   for (const [p, r] of Object.entries(results)) {
     // (segments already in the document – kept beside a newly read area – stay the same objects,
     // so their translations follow)
-    ocr[p] = { segs: r.segs.map((s) => (current.has(s) ? s : { ...s, page: Number(p), ocr: true })), seps: r.seps };
+    ocr[p] = { segs: r.segs.map((s) => (current.has(s) ? s : { ...s, page: Number(p), ocr: true })), seps: r.seps, ...(r.raw ? { raw: r.raw, family: r.family } : {}) };
     added += r.segs.filter((s) => !current.has(s)).length;
   }
   const oldId = new Map(doc.segments.map((s) => [s, s.id]));
@@ -17694,7 +17763,7 @@ function initPicture() {
 // from its own browser cache before the network, so language files are written into that cache.
 // ======================================================================
 
-const APP_VERSION = "2.19";
+const APP_VERSION = "2.20";
 // (a change of library version makes a stored set outdated: it is then ignored)
 const OFFLINE_VERSION = `${MUPDF_URL} ${OCR_LIB}`;
 const CORE_SIMD = "tesseract-core-simd-lstm.wasm.js", CORE_PLAIN = "tesseract-core-lstm.wasm.js";
@@ -20294,10 +20363,14 @@ function initReading() {
 // A PDF segment that glues two paragraphs can be split between two of its lines; a paragraph the
 // extraction cut in two can be joined with the segment that follows it. The engine builds the new
 // segments from the page's lines, the numbering is redone, and the operations are remembered with
-// the document and repeated when it opens again.
+// the document and repeated when it opens again. Recognised (OCR) segments are split and joined
+// the same way from the lines OCR found (kept with its result); the changed result itself is saved.
+// The text of a recognised segment can also be corrected by hand.
 
 const segKey = (id) => `pdftr:seg:${id}`;
-const segEditable = (s) => Boolean(state.doc && !isBook() && !state.doc.image && s && !s.ocr);
+const segEditable = (s) => Boolean(state.doc && !isBook() && s && (s.ocr || !state.doc.image));
+/** The stored OCR result of a page, when it has its lines (results from before 2.20 have not). */
+const ocrRecord = (p) => { const r = state.doc && state.doc.ocr && state.doc.ocr[p]; return r && r.raw ? r : null; };
 const sameBox = (a, b) => a && b && a.every((v, i) => Math.abs(v - b[i]) < 0.6);
 
 function loadSegEdits(id) {
@@ -20317,15 +20390,23 @@ function linesInside(lines, s) {
   });
 }
 
-/** The next segment after `s` on the same page that can be joined with it. */
+/** The next segment after `s` on the same page that can be joined with it (recognised with recognised, text with text). */
 function nextJoinable(segments, s) {
   const i = segments.indexOf(s);
   for (let k = i + 1; k < segments.length; k++) {
     const n = segments[k];
     if (n.page !== s.page) return null;
-    if (!n.ocr) return n;
+    // (numbers and dates, not shown in the list, are passed over: the next card is meant)
+    if (Boolean(n.ocr) === Boolean(s.ocr) && (s.skip || !n.skip)) return n;
   }
   return null;
+}
+
+/** The lines of the page a segment is made of: the PDF's text lines, or the lines OCR found. */
+async function pageLinesOf(page, ocr) {
+  if (!ocr) return pool.workers[0].call("pageLines", { page });
+  const r = ocrRecord(page);
+  return r ? pool.workers[0].call("ocrLines", { page, raw: r.raw, seps: r.seps, family: r.family }) : null;
 }
 
 /**
@@ -20333,8 +20414,23 @@ function nextJoinable(segments, s) {
  * boxes: [a, b]}. Returns the new list (ids redone) and the id map, or null if the sources are gone.
  */
 async function applySegEdit(segments, op) {
-  const onPage = segments.filter((s) => s.page === op.page && !s.ocr);
-  const lines = await pool.workers[0].call("pageLines", { page: op.page });
+  const plan = await planSegEdit(segments, op);
+  if (!plan) return null;
+  const { sources, fresh } = plan;
+  const at = segments.indexOf(sources[0]);
+  const list = segments.filter((s) => !sources.includes(s));
+  list.splice(at, 0, ...fresh);
+  const oldId = new Map(segments.map((s) => [s, s.id]));
+  const remap = new Map();
+  list.forEach((s, i) => { if (oldId.has(s)) remap.set(oldId.get(s), i + 1); s.id = i + 1; });
+  return { list, remap, sources, fresh };
+}
+
+/** The segments an operation replaces (`sources`) and the ones built in their place (`fresh`). */
+async function planSegEdit(segments, op) {
+  const onPage = segments.filter((s) => s.page === op.page && Boolean(s.ocr) === Boolean(op.ocr));
+  const lines = await pageLinesOf(op.page, op.ocr);
+  if (!lines) return null;
   let sources, groups;
   if (op.op === "split") {
     const s = onPage.find((x) => sameBox(x.bbox, op.box));
@@ -20351,15 +20447,11 @@ async function applySegEdit(segments, op) {
     sources = [a, b];
     groups = [idx];
   }
-  const fresh = await pool.workers[0].call("resegment", { page: op.page, groups });
-  if (!fresh.length) return null;
-  const at = segments.indexOf(sources[0]);
-  const list = segments.filter((s) => !sources.includes(s));
-  list.splice(at, 0, ...fresh);
-  const oldId = new Map(segments.map((s) => [s, s.id]));
-  const remap = new Map();
-  list.forEach((s, i) => { if (oldId.has(s)) remap.set(oldId.get(s), i + 1); s.id = i + 1; });
-  return { list, remap, sources, fresh };
+  const r = op.ocr ? ocrRecord(op.page) : null;
+  const fresh = r
+    ? await pool.workers[0].call("ocrResegment", { page: op.page, raw: r.raw, seps: r.seps, family: r.family, groups })
+    : await pool.workers[0].call("resegment", { page: op.page, groups });
+  return fresh.length ? { sources, fresh } : null;
 }
 
 /** The remembered operations, repeated on a freshly extracted document (before anything is keyed by id). */
@@ -20380,6 +20472,7 @@ async function replaySegEdits(id, segments) {
 
 /** Carry out an operation on the open document and refresh everything that hangs on the numbering. */
 async function runSegEdit(op) {
+  if (op.ocr) return runOcrSegEdit(op);
   const doc = state.doc;
   busy(t("seg.working"));
   try {
@@ -20426,6 +20519,118 @@ async function runSegEdit(op) {
   }
 }
 
+/* ---- recognised segments: split and joined in the stored OCR result */
+
+const segState = (id) => ({ tr: state.translations[id], ov: state.overrides[id], kind: state.kinds[id] });
+
+/** Translations, field settings and kinds put back onto segments (after their numbers changed). */
+function restoreSegStates(pairs) {
+  for (const [s, v] of pairs) {
+    if (!v) continue;
+    for (const [key, obj] of [["tr", state.translations], ["ov", state.overrides], ["kind", state.kinds]]) {
+      if (v[key] === undefined) delete obj[s.id]; else obj[s.id] = v[key];
+    }
+  }
+  applyKinds(); saveKinds();
+  persist(); saveOverrides();
+  refreshCards();
+}
+
+async function runOcrSegEdit(op) {
+  const doc = state.doc, rec = ocrRecord(op.page);
+  if (!rec) { toast(t("seg.ocrOld"), "error"); return false; }
+  busy(t("seg.working"));
+  try {
+    const plan = await planSegEdit(doc.segments, op);
+    if (!plan || state.doc !== doc) { if (state.doc === doc) toast(t("seg.notFound"), "error"); return false; }
+    const prev = rec.segs.slice(), saved = new Map(prev.map((s) => [s, segState(s.id)]));
+    const at = rec.segs.indexOf(plan.sources[0]);
+    // (a join keeps text corrected by hand, and both translations, one after the other)
+    const fresh = plan.fresh.map((f) => ({ ...f, page: op.page, ocr: true }));
+    if (op.op === "join" && plan.sources.some((x) => x.edited)) Object.assign(fresh[0], { text: plan.sources.map((x) => x.text.trim()).join(" "), edited: true });
+    const joined = op.op === "join" ? plan.sources.map((x) => (state.translations[x.id] || "").trim()).filter(Boolean).join(" ") : "";
+    const segs = rec.segs.filter((x) => !plan.sources.includes(x));
+    segs.splice(at, 0, ...fresh);
+    addOcrResults({ [op.page]: { segs, seps: rec.seps, raw: rec.raw, family: rec.family } });
+    const first = doc.ocr[op.page].segs[at];
+    if (joined) restoreSegStates([[first, { tr: joined }]]);
+    setActive(first.id, { scrollList: true, scrollViewer: true });
+    const undo = () => {
+      if (state.doc !== doc) return;
+      const r = ocrRecord(op.page);
+      addOcrResults({ [op.page]: { segs: prev, seps: r.seps, raw: r.raw, family: r.family } });
+      restoreSegStates(doc.ocr[op.page].segs.map((x, i) => [x, saved.get(prev[i])]));
+    };
+    toast(t(op.op === "split" ? "seg.split" : "seg.joined", { n: fresh.length }), "ok", { label: t("seg.undo"), run: undo });
+    return true;
+  } catch (err) {
+    console.error(err);
+    toast(t("seg.failed", { err: userError(err) }), "error");
+    return false;
+  } finally {
+    busy("");
+  }
+}
+
+/* ---- the text of a recognised segment corrected by hand */
+
+let srcFor = null;
+async function openSrcDialog(id) {
+  const s = segById(id);
+  if (!s || !s.ocr) return;
+  srcFor = { id, seg: s };
+  $("#srcText").value = s.text;
+  $("#srcReset").hidden = !s.edited;
+  const img = $("#srcSnip");
+  img.removeAttribute("src");
+  img.hidden = true;
+  openModal($("#srcDialog"));
+  $("#srcText").focus();
+  // The place on the page, for comparison: the segment's box with a little room around it.
+  try {
+    const page = state.doc.pages[s.page], [x0, y0, x1, y1] = s.bbox, pad = Math.max(4, s.size * 0.6);
+    const zoom = Math.max(1, Math.min(4, 760 / Math.max(20, x1 - x0 + 2 * pad)));
+    const png = await pool.workers[0].call("render", { page: s.page, zoom, variant: "original" });
+    if (!srcFor || srcFor.seg !== s) return;
+    const bmp = await createImageBitmap(new Blob([png], { type: "image/png" }));
+    const sx = Math.max(0, (x0 - pad - page.x0) * zoom), sy = Math.max(0, (y0 - pad - page.y0) * zoom);
+    const sw = Math.min(bmp.width - sx, (x1 - x0 + 2 * pad) * zoom), sh = Math.min(bmp.height - sy, Math.min(y1 - y0 + 2 * pad, 400) * zoom);
+    const c = document.createElement("canvas");
+    c.width = Math.max(1, Math.round(sw)); c.height = Math.max(1, Math.round(sh));
+    c.getContext("2d").drawImage(bmp, sx, sy, sw, sh, 0, 0, c.width, c.height);
+    bmp.close && bmp.close();
+    img.src = c.toDataURL("image/png");
+    img.hidden = false;
+  } catch (err) { console.warn("snippet", err); }
+}
+
+/** A recognised segment gets new text (undoable); it is saved with the OCR result. */
+function setSourceText(s, text, edited) {
+  const doc = state.doc;
+  s.text = text;
+  if (edited) s.edited = true; else { delete s.edited; delete s.recognised; }
+  s.skip = !/\p{L}/u.test(text) || Boolean(s.formula);
+  idbPut(doc.ocr, `ocr:${doc.id}`);
+  refreshCards();
+}
+
+function saveSrcDialog() {
+  if (!srcFor) return;
+  const s = srcFor.seg, text = $("#srcText").value.replace(/\s+$/, "");
+  if (!text.trim() || text === s.text) return;
+  const doc = state.doc, before = { text: s.text, edited: Boolean(s.edited), recognised: s.recognised };
+  const recognised = s.edited ? s.recognised : s.text;
+  // (back to what OCR read: no longer marked as corrected)
+  const after = { text, edited: text !== recognised, recognised };
+  const put = (v) => {
+    if (state.doc !== doc) return;
+    if (v.edited) s.recognised = v.recognised;
+    setSourceText(s, v.text, v.edited);
+  };
+  put(after);
+  pushHistory({ label: t("src.hist"), undo: () => put(before), redo: () => put(after) });
+}
+
 /** The last operation is taken back: the document is read afresh with the remaining ones. */
 async function undoLastSegEdit() {
   if (!state.doc || !(state.segEdits || []).length) return;
@@ -20440,10 +20645,13 @@ let splitFor = null;
 async function openSplitDialog(id) {
   const s = segById(id);
   if (!segEditable(s)) return;
+  if (s.ocr && !ocrRecord(s.page)) { toast(t("seg.ocrOld"), "error"); return; }
+  // (a split is made from the recognised lines: text corrected by hand goes back to them)
+  if (s.ocr && s.edited && !window.confirm(t("seg.editedSplit"))) return;
   let lines;
-  try { lines = linesInside(await pool.workers[0].call("pageLines", { page: s.page }), s); } catch (err) { toast(userError(err), "error"); return; }
+  try { lines = linesInside(await pageLinesOf(s.page, s.ocr), s); } catch (err) { toast(userError(err), "error"); return; }
   if (lines.length < 2) { toast(t("seg.oneLine"), "error"); return; }
-  splitFor = { id, box: s.bbox.slice(), page: s.page };
+  splitFor = { id, box: s.bbox.slice(), page: s.page, ocr: Boolean(s.ocr) };
   $("#splitList").innerHTML = lines.map((l, k) => `${k ? `<button type="button" class="split-cut" data-at="${k}" title="${escapeHtml(t("seg.cutTitle"))}"><span>✂ ${escapeHtml(t("seg.cutHere"))}</span></button>` : ""}<div class="split-line">${escapeHtml(l.text)}</div>`).join("");
   openModal($("#splitDialog"));
 }
@@ -20453,7 +20661,7 @@ async function joinWithNext(id) {
   if (!segEditable(s)) return;
   const n = nextJoinable(state.doc.segments, s);
   if (!n) { toast(t("seg.noNext"), "error"); return; }
-  await runSegEdit({ page: s.page, op: "join", boxes: [s.bbox.slice(), n.bbox.slice()] });
+  await runSegEdit({ page: s.page, op: "join", boxes: [s.bbox.slice(), n.bbox.slice()], ...(s.ocr ? { ocr: true } : {}) });
 }
 
 function initSegEdit() {
@@ -20461,11 +20669,15 @@ function initSegEdit() {
   $("#splitList").addEventListener("click", async (e) => {
     const b = e.target.closest(".split-cut");
     if (!b || !splitFor) return;
-    const op = { page: splitFor.page, op: "split", box: splitFor.box, at: Number(b.dataset.at) };
+    const op = { page: splitFor.page, op: "split", box: splitFor.box, at: Number(b.dataset.at), ...(splitFor.ocr ? { ocr: true } : {}) };
     dlg.close("cut");
     await runSegEdit(op);
   });
   dlg.addEventListener("close", () => { splitFor = null; });
+  $("#srcSave").addEventListener("click", (e) => { e.preventDefault(); saveSrcDialog(); $("#srcDialog").close(); });
+  $("#srcReset").addEventListener("click", () => { if (srcFor && srcFor.seg.recognised !== undefined) $("#srcText").value = srcFor.seg.recognised; });
+  $("#srcText").addEventListener("keydown", (e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); saveSrcDialog(); $("#srcDialog").close(); } });
+  $("#srcDialog").addEventListener("close", () => { srcFor = null; });
 }
 
 /* ------------------------------------------------------------- the vocabulary */

@@ -676,6 +676,19 @@
     </div>
   </form>
 </dialog>
+<dialog id="srcDialog" class="modal" aria-labelledby="srcTitle">
+  <form method="dialog">
+    <h2 id="srcTitle" data-i18n="src.title">Correct the recognised text</h2>
+    <div class="src-snip"><img id="srcSnip" alt="" hidden></div>
+    <textarea id="srcText" class="src-text" rows="6" spellcheck="true" data-i18n-aria="src.title"></textarea>
+    <p class="muted small" data-i18n="src.note"></p>
+    <div class="modal-actions">
+      <button type="button" class="btn ghost" id="srcReset" data-i18n="src.reset" data-i18n-title="src.resetTitle" hidden>Recognised text</button>
+      <button value="cancel" class="btn ghost" data-i18n="common.cancel">Cancel</button>
+      <button value="ok" class="btn primary" id="srcSave" data-i18n="src.save">Save</button>
+    </div>
+  </form>
+</dialog>
 <dialog id="straightDialog" class="modal st-dialog" aria-labelledby="stTitle">
   <form method="dialog">
     <h2 id="stTitle" data-i18n="st2.title">Straighten</h2>

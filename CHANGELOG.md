@@ -4,6 +4,12 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.20
+
+- Recognised (OCR) segments can be split and joined like the segments of a PDF: ✂ splits a segment between two of its lines, ⤵ joins it with the next recognised segment; the toast offers to undo it. A join keeps both translations, one after the other. The lines OCR found are now kept with its result, so pages recognised with an earlier version need to be recognised again first (a message says so).
+- The recognised text can be corrected: ✎ on a recognised segment opens its text together with a cutout of the page at that place, for comparison. Ctrl+Enter or "Save" keeps the correction (saved with the recognition result, also after reopening the file; Ctrl+Z / Ctrl+Y undo and redo it); a corrected segment is marked "corrected", and "Recognised text" puts back what OCR read. Joining keeps corrections; splitting a corrected segment asks first, as the parts are made from the recognised lines.
+- "Join with next" passes over numbers and dates that are not shown in the list: the segment is joined with the next card, as expected (also for PDF segments).
+
 ## 2.19
 
 - Flattened pages come out as a rectangle, not a parallelogram: after the lines are made level, the left and right edges of the text block are found from where the lines start and end (a straight edge through most of them – indented first lines and short last lines don't count) and stood upright, so the line starts line up vertically. This also happens when the lines are straight but the edges lean once the page is pulled straight from its corners. It applies to "Flatten curved text lines" before text recognition, to "Flatten lines" by hand, and in "Arrange pages".

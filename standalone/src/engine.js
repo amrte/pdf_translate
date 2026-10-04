@@ -3215,6 +3215,26 @@ function createHandler() {
         free(page);
       }
     }
+    // Splitting and joining recognised segments: the page's OCR lines (as for ocrPage) listed, and
+    // segments built from groups of them.
+    if (cmd === "ocrLines" || cmd === "ocrResegment") {
+      const page = W.doc.loadPage(args.page);
+      try {
+        const bounds = page.getBounds();
+        const seps = pageGraphics(page).seps.concat(args.seps || []);
+        const { marginsByRot, pageLines } = pageLineSet(ocrBlocks([{ lines: args.raw }], args.family), seps, []);
+        if (cmd === "ocrLines") return { result: pageLines.map((l, i) => ({ i, text: l.text, bbox: l.bbox.map(round2), rotation: l.rotation })) };
+        const out = [];
+        for (const g of args.groups) {
+          const lines = g.map((i) => pageLines[i]).filter(Boolean);
+          const seg = lines.length ? buildSegment(lines, args.page, bounds, 0, marginsByRot, pageLines, false) : null;
+          if (seg) out.push(seg);
+        }
+        return { result: out };
+      } finally {
+        free(page);
+      }
+    }
     if (cmd === "extractBook") {
       // An Office file was parsed for its preview on "open" already: that parse is passed on,
       // so the file is not unzipped and parsed a second time.

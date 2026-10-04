@@ -1002,3 +1002,9 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
 .ocr-area polygon { fill: color-mix(in srgb, var(--accent) 12%, transparent); stroke: var(--accent); stroke-width: 2px; stroke-dasharray: 6 4; vector-effect: non-scaling-stroke; }
 .ocr-area-handle { position: absolute; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: var(--surface); border: 2px solid var(--accent); box-shadow: 0 1px 4px rgba(0, 0, 0, .3); pointer-events: auto; touch-action: none; }
 .pages.ocr-area-mode .page .ocr-area-handle { cursor: move !important; }
+
+/* correcting a recognised segment's text: the place on the page above the text */
+.src-snip { max-height: 260px; overflow: auto; margin-bottom: 10px; border: 1px solid var(--border); border-radius: 8px; background: #fff; }
+.src-snip:has(img[hidden]) { display: none; }
+.src-snip img { display: block; max-width: 100%; height: auto; }
+.src-text { width: 100%; min-height: 120px; resize: vertical; font: inherit; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text); }

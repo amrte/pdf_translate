@@ -957,9 +957,9 @@ const translatable = () => state.doc.segments.filter((s) => !s.skip && !repHidde
 
 function segMeta(s) {
   const page = t("meta.page", { n: s.page + 1 });
-  if (s.skip) return `${page} · ${t(s.formula ? "meta.formula" : "meta.numbers")}`;
+  if (s.skip) return `${page} · ${t(s.formula ? "meta.formula" : "meta.numbers")}${s.edited ? " · " + t("meta.corrected") : ""}`;
   if (isBook()) return s.hidden ? `${t("meta.notShown")} · ${s.tag}` : `${page} · ${s.notes ? t("meta.notes") : s.tag}`;
-  if (s.ocr) return `${page} · OCR · ${Math.round(s.size * 10) / 10}pt${s.bold ? " " + t("meta.bold") : ""}`;
+  if (s.ocr) return `${page} · OCR · ${Math.round(s.size * 10) / 10}pt${s.bold ? " " + t("meta.bold") : ""}${s.edited ? " · " + t("meta.corrected") : ""}`;
   const style = [s.bold && t("meta.bold"), s.italic && t("meta.italic")].filter(Boolean).join(" ");
   const rot = s.rotation ? ` · ${t("meta.rotated", { deg: s.rotation })}` : "";
   return `${page} · ${Math.round(s.size * 10) / 10}pt${style ? " " + style : ""} · ${t("meta." + s.align)}${rot}`;
@@ -1109,6 +1109,7 @@ function makeCard(id) {
       ${!fieldsEditable() ? "" : `<button type="button" class="mini${state.overrides[id] ? " on" : ""}" data-act="style" title="${escapeHtml(t("card.styleTitle"))}">Aa</button>`}
       ${!kindsEditable() ? "" : `<button type="button" class="mini kind${state.kinds[id] ? " on" : ""}" data-act="kind" title="${escapeHtml(t(s.skip ? "card.asTextTitle" : "card.asFormulaTitle"))}">${t(s.skip ? "card.asText" : "card.asFormula")}</button>`}
       ${!repSupported() || s.skip || repGroup(id) ? "" : `<button type="button" class="mini" data-act="repMake" title="${escapeHtml(t("rep.makeTitle"))}">⧉</button>`}
+      ${!s.ocr || isBook() ? "" : `<button type="button" class="mini" data-act="editSrc" title="${escapeHtml(t("card.editSrcTitle"))}">✎</button>`}
       ${!segEditable(s) ? "" : `${s.lines > 1 ? `<button type="button" class="mini" data-act="split" title="${escapeHtml(t("card.splitTitle"))}">✂</button>` : ""}<button type="button" class="mini" data-act="join" title="${escapeHtml(t("card.joinTitle"))}">⤵</button>`}
       <button type="button" class="mini apply" data-act="apply" title="${escapeHtml(t("card.applyTitle"))}">${t("card.apply")}</button>
     </div>
@@ -1672,6 +1673,8 @@ function init() {
       openSplitDialog(id);
     } else if (act === "join") {
       joinWithNext(id);
+    } else if (act === "editSrc") {
+      openSrcDialog(id);
     } else if (e.target.closest(".seg-src")) { // (also on a highlighted search match)
       setActive(id, { scrollViewer: true, focus: true });
     }

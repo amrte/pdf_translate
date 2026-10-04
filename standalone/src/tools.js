@@ -530,17 +530,24 @@ async function startOcr({ area = null } = {}) {
       // On a page that has a text layer, only text that is not there yet (e.g. in pictures) is added.
       const text = doc.segments.filter((s) => s.page === p && !s.ocr).map((s) => s.bbox);
       segs = segs.filter((s) => !text.some((b) => overlapShare(s.bbox, b) > 0.3));
+      // (the recognised lines are kept with the result: segments can be split and joined later)
+      const raw = blocks.length ? blocks[0].lines : [];
       if (area) {
-        // Text read earlier outside the rectangle stays; inside, the new reading replaces it.
+        // Text read earlier outside the area stays; inside, the new reading replaces it.
         const before = doc.ocr && doc.ocr[p] ? doc.segments.filter((s) => s.ocr && s.page === p) : [];
         const kept = before.filter((s) => !insidePolygon(area.quad, (s.bbox[0] + s.bbox[2]) / 2, (s.bbox[1] + s.bbox[3]) / 2));
         const top = Math.min(...area.quad.map((q) => q[1]));
         const at = kept.findIndex((s) => s.bbox[1] >= top);
         segs = at < 0 ? kept.concat(segs) : [...kept.slice(0, at), ...segs, ...kept.slice(at)];
-        results[p] = { segs, seps: ((doc.ocr && doc.ocr[p] && doc.ocr[p].seps) || []).concat(seps) };
+        const prevRaw = (doc.ocr && doc.ocr[p] && doc.ocr[p].raw) || [];
+        const keptRaw = prevRaw.filter((l) => {
+          const xs = l.words.flatMap((w) => [w.bbox[0], w.bbox[2]]), ys = l.words.flatMap((w) => [w.bbox[1], w.bbox[3]]);
+          return !insidePolygon(area.quad, (Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2);
+        });
+        results[p] = { segs, seps: ((doc.ocr && doc.ocr[p] && doc.ocr[p].seps) || []).concat(seps), raw: keptRaw.concat(raw), family };
         continue;
       }
-      results[p] = { segs, seps };
+      results[p] = { segs, seps, raw, family };
     }
   } catch (err) {
     if (!ocrCancel) {
@@ -602,7 +609,7 @@ async function ocrStraighten(pages, { deskew = true, dewarp = false, crop = fals
     try {
       const plan = doc.pages.map((_, i) => ({ from: 0, page: i, rot: 0, skew: 0, quad: null, tracks: null, ...(fixes.get(i) || {}) }));
       const kept = {}; // recognised text of the pages that stay as they are
-      for (const [p, r] of Object.entries(doc.ocr || {})) if (!fixes.has(Number(p))) kept[p] = { segs: r.segs.map((x) => ({ ...x })), seps: r.seps };
+      for (const [p, r] of Object.entries(doc.ocr || {})) if (!fixes.has(Number(p))) kept[p] = { segs: r.segs.map((x) => ({ ...x })), seps: r.seps, ...(r.raw ? { raw: r.raw, family: r.family } : {}) };
       const cap = pmCaptureTranslations();
       const bytes = await pool.workers[0].call("rearrange", { plan });
       await loadBytes(new Uint8Array(bytes), doc.name, true);
@@ -651,7 +658,7 @@ function addOcrResults(results) {
   for (const [p, r] of Object.entries(results)) {
     // (segments already in the document – kept beside a newly read area – stay the same objects,
     // so their translations follow)
-    ocr[p] = { segs: r.segs.map((s) => (current.has(s) ? s : { ...s, page: Number(p), ocr: true })), seps: r.seps };
+    ocr[p] = { segs: r.segs.map((s) => (current.has(s) ? s : { ...s, page: Number(p), ocr: true })), seps: r.seps, ...(r.raw ? { raw: r.raw, family: r.family } : {}) };
     added += r.segs.filter((s) => !current.has(s)).length;
   }
   const oldId = new Map(doc.segments.map((s) => [s, s.id]));
