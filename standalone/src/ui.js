@@ -246,6 +246,7 @@ function storeTranslations() {
   }
 }
 function persist() {
+  repSync(); // (header/footer members follow their lead)
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => { saveTimer = null; storeTranslations(); }, 400);
 }
@@ -501,6 +502,9 @@ function openDocument(doc, bytes) {
     persistedJson = "";
   }
   try { sessionStorage.setItem(SS_DOC, doc.id); } catch (_) { /* no session storage: no restore on reload */ }
+  rep.open.clear();
+  repSetup();
+  repSync();
   $("#uploadView").hidden = true;
   $("#workView").hidden = false;
   $("#btnNew").hidden = false;
@@ -908,7 +912,7 @@ const segIndex = new Map();
 const segById = (id) => segIndex.get(Number(id));
 
 /** Segments that need a translation (not numbers/dates only). */
-const translatable = () => state.doc.segments.filter((s) => !s.skip);
+const translatable = () => state.doc.segments.filter((s) => !s.skip && !repHidden(s.id)); // (a header/footer group once)
 
 function segMeta(s) {
   const page = t("meta.page", { n: s.page + 1 });
@@ -1063,12 +1067,15 @@ function makeCard(id) {
       <button type="button" class="mini" data-act="same" title="${escapeHtml(t("card.keepTitle"))}">${t("card.keep")}</button>
       ${!fieldsEditable() ? "" : `<button type="button" class="mini${state.overrides[id] ? " on" : ""}" data-act="style" title="${escapeHtml(t("card.styleTitle"))}">Aa</button>`}
       ${!kindsEditable() ? "" : `<button type="button" class="mini kind${state.kinds[id] ? " on" : ""}" data-act="kind" title="${escapeHtml(t(s.skip ? "card.asTextTitle" : "card.asFormulaTitle"))}">${t(s.skip ? "card.asText" : "card.asFormula")}</button>`}
+      ${!repSupported() || s.skip || repGroup(id) ? "" : `<button type="button" class="mini" data-act="repMake" title="${escapeHtml(t("rep.makeTitle"))}">⧉</button>`}
       ${!segEditable(s) ? "" : `${s.lines > 1 ? `<button type="button" class="mini" data-act="split" title="${escapeHtml(t("card.splitTitle"))}">✂</button>` : ""}<button type="button" class="mini" data-act="join" title="${escapeHtml(t("card.joinTitle"))}">⤵</button>`}
       <button type="button" class="mini apply" data-act="apply" title="${escapeHtml(t("card.applyTitle"))}">${t("card.apply")}</button>
     </div>
+    ${repCardHtml(id)}
     ${styleOpen.has(id) && !isBook() ? stylePanelHtml(s) : ""}
     <div class="seg-src">${escapeHtml(s.text)}</div>
-    <textarea rows="1" spellcheck="true" placeholder="${escapeHtml(t("card.placeholder"))}" aria-label="${escapeHtml(t("card.aria", { n: id }))}"></textarea>`;
+    <textarea rows="1" spellcheck="true" placeholder="${escapeHtml(t(repLocked(id) ? (repGroup(id).mode === "keep" ? "rep.keepPlaceholder" : "rep.oncePlaceholder") : "card.placeholder", { n: repGroup(id)?.lead }))}" aria-label="${escapeHtml(t("card.aria", { n: id }))}"${repLocked(id) ? " readonly" : ""}></textarea>`;
+  if (repGroup(id)) el.classList.add(repLocked(id) ? "rep-locked" : "rep-lead");
   el.querySelector("textarea").value = state.translations[id] || "";
   if (find.open) requestAnimationFrame(() => decorateCard(el, id)); // (once it has its size)
   return el;
@@ -1088,7 +1095,7 @@ function markDone(id) {
 
 function updateProgress() {
   let total = 0, done = 0;
-  if (state.doc) for (const s of state.doc.segments) if (!s.skip) { total++; if (hasTr(s.id)) done++; }
+  if (state.doc) for (const s of state.doc.segments) if (!s.skip && !repHidden(s.id)) { total++; if (hasTr(s.id)) done++; }
   $("#progressText").textContent = t("progress", { done, total });
   $("#progressBar").style.width = total ? `${(done / total) * 100}%` : "0";
 }
@@ -1105,13 +1112,17 @@ function applyFilter() {
   for (const s of state.doc.segments) {
     if (page !== null && s.page !== page) continue;
     if (status === "numbers" ? !s.skip : s.skip) continue; // numbers-only segments have their own filter
+    if (status !== "numbers" && repHidden(s.id) && repGroup(s.id).lead !== s.id) continue; // (an open group shows them after its lead)
+    if (status === "repeats" && !repGroup(s.id)) continue;
     if ((status === "todo" || status === "done") && (status === "done") !== hasTr(s.id)) continue;
     if (re && !((scope !== "tr" && hit(s.text)) || (scope !== "src" && hit(state.translations[s.id] || "")))) continue;
     ids.push(s.id);
   }
-  $("#segments").classList.toggle("is-empty", !ids.length);
+  const listed = status === "numbers" ? ids : repListIds(ids);
+  $('#filterStatus option[value="repeats"]').hidden = !rep.groups.length;
+  $("#segments").classList.toggle("is-empty", !listed.length);
   $("#segments").dataset.empty = state.doc.segments.length ? t("filter.empty") : t("filter.noText");
-  vl.setIds(ids);
+  vl.setIds(listed);
 }
 
 function setActive(id, { scrollList = false, scrollViewer = false, focus = false } = {}) {
@@ -1121,6 +1132,7 @@ function setActive(id, { scrollList = false, scrollViewer = false, focus = false
   }
   state.activeId = id;
   if (scrollList || focus) {
+    if (!vl.pos.has(id) && repReveal(id)) applyFilter(); // (a header/footer page: its group opens)
     if (!vl.pos.has(id)) {
       $("#search").value = ""; $("#filterStatus").value = segById(id).skip ? "numbers" : "all"; $("#filterPage").value = "all";
       applyFilter();
@@ -1554,6 +1566,7 @@ function init() {
     autoGrow(e.target);
   });
   list.addEventListener("change", (e) => { // fires when a changed translation box is left
+    if (e.target.matches("select[data-rep-mode]")) { repSetMode(Number(e.target.closest(".seg").dataset.id), e.target.value); return; }
     if (e.target.tagName !== "TEXTAREA") return;
     const id = e.target.closest(".seg").dataset.id;
     const before = e.target.dataset.before || "", after = e.target.value;
@@ -1582,6 +1595,15 @@ function init() {
       recordTranslations({ [id]: before }, { [id]: ta.value }, t("hist.translation"));
     } else if (act === "apply") {
       applyField(id);
+      repApplyMembers(id);
+    } else if (act === "repOpen") {
+      repToggleOpen(id);
+    } else if (act === "repAll") {
+      repSetAll(id);
+    } else if (act === "repDrop") {
+      repDrop(id);
+    } else if (act === "repMake") {
+      repMakeGroup(id);
     } else if (act === "style") {
       if (styleOpen.has(id)) styleOpen.delete(id); else styleOpen.add(id);
       refreshStylePanel(id);
@@ -1600,6 +1622,7 @@ function init() {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") { // update this field in the PDF
       e.preventDefault();
       applyField(Number(e.target.closest(".seg").dataset.id));
+      repApplyMembers(Number(e.target.closest(".seg").dataset.id));
       return;
     }
     const down = (e.key === "Enter" && (e.ctrlKey || e.metaKey)) || (e.altKey && e.key === "ArrowDown");
@@ -1770,7 +1793,7 @@ function aiSegments() {
   const n = state.doc.pages.length;
   const from = Math.min(n, Math.max(1, Number($("#aiFrom").value) || 1)) - 1;
   const to = Math.min(n, Math.max(from + 1, Number($("#aiTo").value) || n)) - 1;
-  return state.doc.segments.filter((s) => !s.skip && s.page >= from && s.page <= to && (!$("#aiOnlyTodo").checked || !hasTr(s.id)) && (!s.hiddenSlide || $("#aiHidden").checked) && (!s.notes || $("#aiNotes").checked));
+  return state.doc.segments.filter((s) => !s.skip && !repHidden(s.id) && s.page >= from && s.page <= to && (!$("#aiOnlyTodo").checked || !hasTr(s.id)) && (!s.hiddenSlide || $("#aiHidden").checked) && (!s.notes || $("#aiNotes").checked));
 }
 
 /** The selected segments split into parts of "Fields per part" (numbers stay global). */

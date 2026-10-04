@@ -213,6 +213,16 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); ou
 }
 .seg-head .mini:hover { color: var(--accent); background: var(--accent-soft); }
 .seg-head .mini + .mini { margin-left: 0; }
+/* header/footer groups: the group line under a card's head */
+.seg-rep { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding: 4px 10px 0; font-size: 12px; color: var(--muted); }
+.seg-rep .rep-tag { font-weight: 600; color: var(--accent); }
+.seg-rep.member .rep-tag { font-weight: 500; color: var(--muted); }
+.seg-rep .rep-mode { height: 24px; font: inherit; font-size: 12px; padding: 0 4px; border: 1px solid var(--border); border-radius: 5px; background: var(--surface); color: var(--text); }
+.seg-rep .mini { border: 0; background: transparent; color: var(--muted); font: inherit; font-size: 12px; padding: 2px 6px; border-radius: 4px; cursor: pointer; }
+.seg-rep .mini:hover { color: var(--accent); background: var(--accent-soft); }
+.seg.rep-lead { border-left: 3px solid var(--accent); }
+.seg.rep-locked { opacity: .85; }
+.seg.rep-locked textarea { background: transparent; cursor: default; }
 .seg-src { padding: 5px 10px 7px; white-space: pre-wrap; word-break: break-word; cursor: pointer; }
 .seg textarea {
   display: block; width: 100%; resize: vertical; min-height: 38px; border: 0; border-top: 1px solid var(--border);

@@ -4,6 +4,13 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.06
+
+- PDF: headers and footers are recognised – text that recurs at the top or bottom of the pages (the same on at least 30 % of them, numbers such as page numbers aside). Each one is listed once ("Header · 25 pages") instead of on every page; translated once, every page gets the translation with its own numbers ("Page 5 of 26").
+- Per group: "Translate once" (the default), "Keep original" (company names, document numbers, classification notes stay as they are) or "Each one separately" (as before). "for all" applies the choice to all groups of the document and to new documents.
+- "Show pages" lists the single occurrences under the group; "detach" takes one out (a first page with a different header). ⧉ on any segment makes all segments with the same text one group – also in the body ("Not applicable." ×20).
+- The AI prompt, the copied segments, the progress and the batch count each group once: on a 26-page report 556 instead of 868 segments go to the AI. The filter "Headers & footers" shows only the groups.
+
 ## 2.05
 
 - Arrange pages: pages can be turned – ↻ on a page turns it 90° clockwise; "Apply" saves the turn in the PDF.

@@ -16,7 +16,9 @@ function batchWrite() { try { localStorage.setItem(LS_BATCH, JSON.stringify(bt.l
 function batchTranslations(id) { try { return JSON.parse(localStorage.getItem(lsKey(id)) || "{}"); } catch (_) { return {}; } }
 function batchDoneCount(f, segs) {
   const tr = state.doc && state.doc.id === f.id ? state.translations : batchTranslations(f.id);
-  return segs.filter((s) => (tr[s.id] || "").trim()).length;
+  const kept = new Set(); // (headers and footers kept in the original count as done)
+  for (const g of repBatchGroups(f.id, segs)) if (g.mode === "keep") g.segs.forEach((s) => kept.add(s.id));
+  return segs.filter((s) => kept.has(s.id) || (tr[s.id] || "").trim()).length;
 }
 async function batchSegs(id) {
   if (!bt.segs.has(id)) bt.segs.set(id, (await idbGet(`batchsegs:${id}`)) || []);
@@ -80,23 +82,25 @@ async function batchExtract(entry, bytes) {
   const pageCount = await w.call("open", { bytes, kind });
   let segments;
   if (kind === "pdf") {
-    const raw = [];
+    const raw = [], pageInfo = {};
     const size = 8;
     for (let p = 0; p < pageCount; p += size) {
       const pages = Array.from({ length: Math.min(size, pageCount - p) }, (_, i) => p + i);
       const r = await w.call("extract", { pages });
       raw.push(...r.segments);
+      for (const [k, v] of Object.entries(r.pages || {})) pageInfo[k] = { height: v.height, y0: v.y0 };
       entry.progress = t("batch.reading", { i: Math.min(p + size, pageCount), n: pageCount });
       batchRender();
     }
     raw.sort((a, b) => a.page - b.page || a.id - b.id);
     raw.forEach((s, i) => { s.id = i + 1; });
+    repMarkBatch(raw.filter((s) => !s.skip), pageInfo); // (headers and footers: one prompt line per group)
     segments = raw;
   } else {
     segments = (await w.call("extractBook")).segments;
   }
   entry.pages = pageCount;
-  return segments.filter((s) => !s.skip && !s.hiddenSlide && !s.notes).map((s) => ({ id: s.id, text: s.text }));
+  return segments.filter((s) => !s.skip && !s.hiddenSlide && !s.notes).map((s) => ({ id: s.id, text: s.text, page: s.page, ...(s.rep ? { rep: s.rep } : {}) }));
 }
 
 async function batchRemove(id) {
@@ -143,7 +147,9 @@ async function batchParts() {
   for (const f of bt.list) {
     if (f.state !== "ready") continue;
     const segs = await batchSegs(f.id);
-    const todo = $("#batchOnlyTodo").checked ? (() => { const tr = state.doc && state.doc.id === f.id ? state.translations : batchTranslations(f.id); return segs.filter((s) => !(tr[s.id] || "").trim()); })() : segs;
+    const hidden = state.doc && state.doc.id === f.id ? rep.hidden : repHiddenIds(repBatchGroups(f.id, segs));
+    const own = segs.filter((s) => !hidden.has(s.id));
+    const todo = $("#batchOnlyTodo").checked ? (() => { const tr = state.doc && state.doc.id === f.id ? state.translations : batchTranslations(f.id); return own.filter((s) => !(tr[s.id] || "").trim()); })() : own;
     let cur = null, bucket = -1; // parts follow the marker numbers, as in the AI window
     for (const sg of todo) {
       const k = Math.floor((sg.id - 1) / size);
@@ -199,6 +205,7 @@ async function batchImportText(text) {
     if (state.doc && state.doc.id === f.id) { applied += mergeImported(rows, overwrite) || 0; continue; }
     const tr = batchTranslations(f.id);
     for (const [id, v] of Object.entries(rows)) { if (!overwrite && (tr[id] || "").trim()) continue; tr[id] = v; applied++; }
+    repSyncMap(repBatchGroups(f.id, await batchSegs(f.id)), tr); // (headers and footers: every page)
     try { localStorage.setItem(lsKey(f.id), JSON.stringify(tr)); } catch (_) { toast(t("msg.storageFull"), "error"); }
   }
   let msg = t("batch.imported", { n: applied, files: files.size });

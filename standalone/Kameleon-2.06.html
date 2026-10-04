@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="Kameleon 2.05">
+  <meta name="generator" content="Kameleon 2.06">
   <meta name="description" content="Kameleon – Wechselt die Sprache, behält die Form. Changes language, keeps its shape.">
   <title>Kameleon</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2216%22 fill=%22%23287130%22/%3E%3Cg transform=%22translate(2.5 1) scale(0.9)%22 fill=%22%23ffffff%22 stroke=%22%23ffffff%22%3E%3Cpath d=%22M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6%22 fill=%22none%22 stroke-width=%223.8%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M21 43l-1 10M30 44v9M38 43l1 10%22 stroke-width=%223.6%22 stroke-linecap=%22round%22/%3E%3Cellipse cx=%2221%22 cy=%2225%22 rx=%227%22 ry=%227.5%22 stroke=%22none%22/%3E%3Cellipse cx=%2233%22 cy=%2223.5%22 rx=%227.5%22 ry=%228%22 stroke=%22none%22/%3E%3Cpath d=%22M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z%22 stroke=%22none%22/%3E%3Cpath d=%22M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z%22 stroke=%22none%22/%3E%3Cpath d=%22M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z%22 stroke=%22none%22/%3E%3Cpath d=%22M16 37l4-3 4 3 4-3 4 3 4-3 4 3%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%222.1%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3Cpath d=%22M43.5 33.9L57 32.6%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%221.5%22 stroke-linecap=%22round%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%224.4%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%222.7%22 stroke=%22none%22/%3E%3Ccircle cx=%2246.2%22 cy=%2226.7%22 r=%221.3%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Cpath d=%22M4 55.5c15-3 39-3 54 0%22 fill=%22none%22 stroke-width=%222.4%22 stroke-linecap=%22round%22/%3E%3C/g%3E%3C/svg%3E">
@@ -223,6 +223,16 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); ou
 }
 .seg-head .mini:hover { color: var(--accent); background: var(--accent-soft); }
 .seg-head .mini + .mini { margin-left: 0; }
+/* header/footer groups: the group line under a card's head */
+.seg-rep { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding: 4px 10px 0; font-size: 12px; color: var(--muted); }
+.seg-rep .rep-tag { font-weight: 600; color: var(--accent); }
+.seg-rep.member .rep-tag { font-weight: 500; color: var(--muted); }
+.seg-rep .rep-mode { height: 24px; font: inherit; font-size: 12px; padding: 0 4px; border: 1px solid var(--border); border-radius: 5px; background: var(--surface); color: var(--text); }
+.seg-rep .mini { border: 0; background: transparent; color: var(--muted); font: inherit; font-size: 12px; padding: 2px 6px; border-radius: 4px; cursor: pointer; }
+.seg-rep .mini:hover { color: var(--accent); background: var(--accent-soft); }
+.seg.rep-lead { border-left: 3px solid var(--accent); }
+.seg.rep-locked { opacity: .85; }
+.seg.rep-locked textarea { background: transparent; cursor: default; }
 .seg-src { padding: 5px 10px 7px; white-space: pre-wrap; word-break: break-word; cursor: pointer; }
 .seg textarea {
   display: block; width: 100%; resize: vertical; min-height: 38px; border: 0; border-top: 1px solid var(--border);
@@ -925,7 +935,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
   <div class="brand">
     <span class="logo"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#287130"/><g transform="translate(2.5 1) scale(0.9)" fill="#ffffff" stroke="#ffffff"><path d="M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6" fill="none" stroke-width="3.8" stroke-linecap="round"/><path d="M21 43l-1 10M30 44v9M38 43l1 10" stroke-width="3.6" stroke-linecap="round"/><ellipse cx="21" cy="25" rx="7" ry="7.5" stroke="none"/><ellipse cx="33" cy="23.5" rx="7.5" ry="8" stroke="none"/><path d="M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z" stroke="none"/><path d="M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z" stroke="none"/><path d="M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z" stroke="none"/><path d="M16 37l4-3 4 3 4-3 4 3 4-3 4 3" fill="none" stroke="#287130" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M43.5 33.9L57 32.6" fill="none" stroke="#287130" stroke-width="1.5" stroke-linecap="round"/><circle cx="45.5" cy="26.5" r="4.4" fill="#287130" stroke="none"/><circle cx="45.5" cy="26.5" r="2.7" stroke="none"/><circle cx="46.2" cy="26.7" r="1.3" fill="#287130" stroke="none"/><path d="M4 55.5c15-3 39-3 54 0" fill="none" stroke-width="2.4" stroke-linecap="round"/></g></svg></span>
     <span class="brand-name">Kameleon</span>
-    <span class="version" id="appVersion">v2.05</span>
+    <span class="version" id="appVersion">v2.06</span>
   </div>
   <div class="topbar-actions">
     <span class="doc-name" id="docName"></span>
@@ -1167,6 +1177,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
         <option value="all" data-i18n="filter.all">All</option>
         <option value="todo" data-i18n="filter.todo">Untranslated</option>
         <option value="done" data-i18n="filter.done">Translated</option>
+        <option value="repeats" data-i18n="filter.repeats">Headers &amp; footers</option>
         <option value="numbers" data-i18n="filter.numbers">Numbers only (kept)</option>
       </select>
       <select id="filterPage" data-i18n-aria="filter.pageAria"><option value="all" data-i18n="filter.allPages">All pages</option></select>
@@ -1361,6 +1372,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
         <li data-i18n="help.learnDecks"></li>
       </ul>
     </section>
+    <p class="muted small" data-i18n="help.repeats"></p>
     <p class="muted small" data-i18n="help.shortcuts"></p>
     <p class="muted small" data-i18n="help.markup"></p>
     </div>
@@ -1428,7 +1440,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
     </div>
     <input type="file" id="offlineZip" class="visually-hidden" accept=".zip,application/zip" multiple tabindex="-1">
     <input type="file" id="offlineFolder" class="visually-hidden" webkitdirectory multiple tabindex="-1">
-    <p class="muted small help-version help-part">Kameleon v2.05 · <span data-i18n="app.tagline"></span></p>
+    <p class="muted small help-version help-part">Kameleon v2.06 · <span data-i18n="app.tagline"></span></p>
     <div class="modal-actions">
       <button type="button" value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
     </div>
@@ -1730,6 +1742,31 @@ const I18N = {
     "filter.todo": "Nicht übersetzt",
     "filter.done": "Übersetzt",
     "filter.numbers": "Zahlen & Formeln (bleiben)",
+    "filter.repeats": "Kopf- & Fußzeilen",
+    "rep.header": "Kopfzeile · {n} Seiten",
+    "rep.footer": "Fußzeile · {n} Seiten",
+    "rep.repeated": "Wiederholt · {k}×",
+    "rep.mode_once": "Einmal übersetzen",
+    "rep.mode_keep": "Original behalten",
+    "rep.mode_each": "Jede Stelle einzeln",
+    "rep.modeTitle": "Wie diese Gruppe übersetzt wird: einmal für alle Seiten, gar nicht (das Original bleibt) oder jede Stelle als eigenes Segment",
+    "rep.showPages": "Seiten zeigen ({n})",
+    "rep.hidePages": "Seiten ausblenden",
+    "rep.all": "für alle",
+    "rep.allTitle": "Diese Wahl für alle Kopf- und Fußzeilen dieses Dokuments übernehmen – und als Vorgabe für neue Dokumente",
+    "rep.allDone": "„{mode}“ gilt jetzt für alle {n} Gruppen dieses Dokuments und für neue Dokumente.",
+    "rep.drop": "lösen",
+    "rep.dropTitle": "Diese Stelle aus der Gruppe nehmen: sie wird wieder ein normales Segment",
+    "rep.dropped": "#{n} ist wieder ein eigenes Segment.",
+    "rep.memberOnce": "folgt #{n}",
+    "rep.memberKeep": "Original bleibt (Gruppe #{n})",
+    "rep.oncePlaceholder": "Folgt der Übersetzung von #{n} – dort bearbeiten",
+    "rep.keepPlaceholder": "Das Original bleibt unverändert",
+    "rep.makeTitle": "Als Kopf-/Fußzeile behandeln: alle Segmente mit diesem Text (Zahlen ausgenommen) werden eine Gruppe und einmal übersetzt",
+    "rep.single": "Dieser Text kommt im Dokument nur einmal vor.",
+    "rep.made": "{n} Segmente sind jetzt eine Gruppe.",
+    "hist.repeats": "Kopf-/Fußzeilen",
+    "help.repeats": "<b>Kopf- und Fußzeilen:</b> Text, der oben oder unten auf vielen Seiten gleich wiederkehrt (Zahlen wie Seitennummern ausgenommen), wird zu einer Gruppe zusammengefasst und steht nur einmal in der Liste – „Kopfzeile · 25 Seiten“. Sie übersetzen ihn einmal; jede Seite bekommt die Übersetzung mit ihren eigenen Zahlen („Seite 5 von 26“). Im Auswahlfeld der Gruppe: „Einmal übersetzen“, „Original behalten“ oder „Jede Stelle einzeln“; „für alle“ gilt für alle Gruppen und neue Dokumente. „Seiten zeigen“ listet die einzelnen Stellen, „lösen“ nimmt eine aus der Gruppe. Mit ⧉ an einem Segment wird jeder andere wiederholte Text zur Gruppe. Die KI-Anweisung und der Stapel enthalten jede Gruppe nur einmal; der Filter „Kopf- & Fußzeilen“ zeigt nur die Gruppen.",
     "filter.allPages": "Alle Seiten",
     "filter.empty": "Keine Segmente passen zum Filter.",
     "filter.noText": "In dieser Datei wurden keine Textsegmente gefunden.",
@@ -2435,6 +2472,31 @@ const I18N = {
     "filter.todo": "Untranslated",
     "filter.done": "Translated",
     "filter.numbers": "Numbers & formulas (kept)",
+    "filter.repeats": "Headers & footers",
+    "rep.header": "Header · {n} pages",
+    "rep.footer": "Footer · {n} pages",
+    "rep.repeated": "Repeated · {k}×",
+    "rep.mode_once": "Translate once",
+    "rep.mode_keep": "Keep original",
+    "rep.mode_each": "Each one separately",
+    "rep.modeTitle": "How this group is translated: once for all pages, not at all (the original stays) or every occurrence as a segment of its own",
+    "rep.showPages": "Show pages ({n})",
+    "rep.hidePages": "Hide pages",
+    "rep.all": "for all",
+    "rep.allTitle": "Use this choice for all headers and footers of this document – and as the default for new documents",
+    "rep.allDone": "\"{mode}\" now applies to all {n} groups of this document and to new documents.",
+    "rep.drop": "detach",
+    "rep.dropTitle": "Take this occurrence out of the group: it becomes a normal segment again",
+    "rep.dropped": "#{n} is a segment of its own again.",
+    "rep.memberOnce": "follows #{n}",
+    "rep.memberKeep": "original stays (group #{n})",
+    "rep.oncePlaceholder": "Follows the translation of #{n} – edit it there",
+    "rep.keepPlaceholder": "The original stays as it is",
+    "rep.makeTitle": "Treat as header/footer: all segments with this text (numbers aside) become one group, translated once",
+    "rep.single": "This text occurs only once in the document.",
+    "rep.made": "{n} segments are one group now.",
+    "hist.repeats": "headers/footers",
+    "help.repeats": "<b>Headers and footers:</b> Text that recurs at the top or bottom of many pages (numbers such as page numbers aside) is combined into a group and listed only once – \"Header · 25 pages\". You translate it once; every page gets the translation with its own numbers (\"Page 5 of 26\"). In the group's menu: \"Translate once\", \"Keep original\" or \"Each one separately\"; \"for all\" applies to all groups and new documents. \"Show pages\" lists the single occurrences, \"detach\" takes one out of the group. ⧉ on a segment turns any other repeated text into a group. The AI prompt and the batch contain each group only once; the filter \"Headers & footers\" shows only the groups.",
     "filter.allPages": "All pages",
     "filter.empty": "No segments match the filter.",
     "filter.noText": "No text segments found in this file.",
@@ -12098,6 +12160,7 @@ function storeTranslations() {
   }
 }
 function persist() {
+  repSync(); // (header/footer members follow their lead)
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => { saveTimer = null; storeTranslations(); }, 400);
 }
@@ -12353,6 +12416,9 @@ function openDocument(doc, bytes) {
     persistedJson = "";
   }
   try { sessionStorage.setItem(SS_DOC, doc.id); } catch (_) { /* no session storage: no restore on reload */ }
+  rep.open.clear();
+  repSetup();
+  repSync();
   $("#uploadView").hidden = true;
   $("#workView").hidden = false;
   $("#btnNew").hidden = false;
@@ -12760,7 +12826,7 @@ const segIndex = new Map();
 const segById = (id) => segIndex.get(Number(id));
 
 /** Segments that need a translation (not numbers/dates only). */
-const translatable = () => state.doc.segments.filter((s) => !s.skip);
+const translatable = () => state.doc.segments.filter((s) => !s.skip && !repHidden(s.id)); // (a header/footer group once)
 
 function segMeta(s) {
   const page = t("meta.page", { n: s.page + 1 });
@@ -12915,12 +12981,15 @@ function makeCard(id) {
       <button type="button" class="mini" data-act="same" title="${escapeHtml(t("card.keepTitle"))}">${t("card.keep")}</button>
       ${!fieldsEditable() ? "" : `<button type="button" class="mini${state.overrides[id] ? " on" : ""}" data-act="style" title="${escapeHtml(t("card.styleTitle"))}">Aa</button>`}
       ${!kindsEditable() ? "" : `<button type="button" class="mini kind${state.kinds[id] ? " on" : ""}" data-act="kind" title="${escapeHtml(t(s.skip ? "card.asTextTitle" : "card.asFormulaTitle"))}">${t(s.skip ? "card.asText" : "card.asFormula")}</button>`}
+      ${!repSupported() || s.skip || repGroup(id) ? "" : `<button type="button" class="mini" data-act="repMake" title="${escapeHtml(t("rep.makeTitle"))}">⧉</button>`}
       ${!segEditable(s) ? "" : `${s.lines > 1 ? `<button type="button" class="mini" data-act="split" title="${escapeHtml(t("card.splitTitle"))}">✂</button>` : ""}<button type="button" class="mini" data-act="join" title="${escapeHtml(t("card.joinTitle"))}">⤵</button>`}
       <button type="button" class="mini apply" data-act="apply" title="${escapeHtml(t("card.applyTitle"))}">${t("card.apply")}</button>
     </div>
+    ${repCardHtml(id)}
     ${styleOpen.has(id) && !isBook() ? stylePanelHtml(s) : ""}
     <div class="seg-src">${escapeHtml(s.text)}</div>
-    <textarea rows="1" spellcheck="true" placeholder="${escapeHtml(t("card.placeholder"))}" aria-label="${escapeHtml(t("card.aria", { n: id }))}"></textarea>`;
+    <textarea rows="1" spellcheck="true" placeholder="${escapeHtml(t(repLocked(id) ? (repGroup(id).mode === "keep" ? "rep.keepPlaceholder" : "rep.oncePlaceholder") : "card.placeholder", { n: repGroup(id)?.lead }))}" aria-label="${escapeHtml(t("card.aria", { n: id }))}"${repLocked(id) ? " readonly" : ""}></textarea>`;
+  if (repGroup(id)) el.classList.add(repLocked(id) ? "rep-locked" : "rep-lead");
   el.querySelector("textarea").value = state.translations[id] || "";
   if (find.open) requestAnimationFrame(() => decorateCard(el, id)); // (once it has its size)
   return el;
@@ -12940,7 +13009,7 @@ function markDone(id) {
 
 function updateProgress() {
   let total = 0, done = 0;
-  if (state.doc) for (const s of state.doc.segments) if (!s.skip) { total++; if (hasTr(s.id)) done++; }
+  if (state.doc) for (const s of state.doc.segments) if (!s.skip && !repHidden(s.id)) { total++; if (hasTr(s.id)) done++; }
   $("#progressText").textContent = t("progress", { done, total });
   $("#progressBar").style.width = total ? `${(done / total) * 100}%` : "0";
 }
@@ -12957,13 +13026,17 @@ function applyFilter() {
   for (const s of state.doc.segments) {
     if (page !== null && s.page !== page) continue;
     if (status === "numbers" ? !s.skip : s.skip) continue; // numbers-only segments have their own filter
+    if (status !== "numbers" && repHidden(s.id) && repGroup(s.id).lead !== s.id) continue; // (an open group shows them after its lead)
+    if (status === "repeats" && !repGroup(s.id)) continue;
     if ((status === "todo" || status === "done") && (status === "done") !== hasTr(s.id)) continue;
     if (re && !((scope !== "tr" && hit(s.text)) || (scope !== "src" && hit(state.translations[s.id] || "")))) continue;
     ids.push(s.id);
   }
-  $("#segments").classList.toggle("is-empty", !ids.length);
+  const listed = status === "numbers" ? ids : repListIds(ids);
+  $('#filterStatus option[value="repeats"]').hidden = !rep.groups.length;
+  $("#segments").classList.toggle("is-empty", !listed.length);
   $("#segments").dataset.empty = state.doc.segments.length ? t("filter.empty") : t("filter.noText");
-  vl.setIds(ids);
+  vl.setIds(listed);
 }
 
 function setActive(id, { scrollList = false, scrollViewer = false, focus = false } = {}) {
@@ -12973,6 +13046,7 @@ function setActive(id, { scrollList = false, scrollViewer = false, focus = false
   }
   state.activeId = id;
   if (scrollList || focus) {
+    if (!vl.pos.has(id) && repReveal(id)) applyFilter(); // (a header/footer page: its group opens)
     if (!vl.pos.has(id)) {
       $("#search").value = ""; $("#filterStatus").value = segById(id).skip ? "numbers" : "all"; $("#filterPage").value = "all";
       applyFilter();
@@ -13406,6 +13480,7 @@ function init() {
     autoGrow(e.target);
   });
   list.addEventListener("change", (e) => { // fires when a changed translation box is left
+    if (e.target.matches("select[data-rep-mode]")) { repSetMode(Number(e.target.closest(".seg").dataset.id), e.target.value); return; }
     if (e.target.tagName !== "TEXTAREA") return;
     const id = e.target.closest(".seg").dataset.id;
     const before = e.target.dataset.before || "", after = e.target.value;
@@ -13434,6 +13509,15 @@ function init() {
       recordTranslations({ [id]: before }, { [id]: ta.value }, t("hist.translation"));
     } else if (act === "apply") {
       applyField(id);
+      repApplyMembers(id);
+    } else if (act === "repOpen") {
+      repToggleOpen(id);
+    } else if (act === "repAll") {
+      repSetAll(id);
+    } else if (act === "repDrop") {
+      repDrop(id);
+    } else if (act === "repMake") {
+      repMakeGroup(id);
     } else if (act === "style") {
       if (styleOpen.has(id)) styleOpen.delete(id); else styleOpen.add(id);
       refreshStylePanel(id);
@@ -13452,6 +13536,7 @@ function init() {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") { // update this field in the PDF
       e.preventDefault();
       applyField(Number(e.target.closest(".seg").dataset.id));
+      repApplyMembers(Number(e.target.closest(".seg").dataset.id));
       return;
     }
     const down = (e.key === "Enter" && (e.ctrlKey || e.metaKey)) || (e.altKey && e.key === "ArrowDown");
@@ -13622,7 +13707,7 @@ function aiSegments() {
   const n = state.doc.pages.length;
   const from = Math.min(n, Math.max(1, Number($("#aiFrom").value) || 1)) - 1;
   const to = Math.min(n, Math.max(from + 1, Number($("#aiTo").value) || n)) - 1;
-  return state.doc.segments.filter((s) => !s.skip && s.page >= from && s.page <= to && (!$("#aiOnlyTodo").checked || !hasTr(s.id)) && (!s.hiddenSlide || $("#aiHidden").checked) && (!s.notes || $("#aiNotes").checked));
+  return state.doc.segments.filter((s) => !s.skip && !repHidden(s.id) && s.page >= from && s.page <= to && (!$("#aiOnlyTodo").checked || !hasTr(s.id)) && (!s.hiddenSlide || $("#aiHidden").checked) && (!s.notes || $("#aiNotes").checked));
 }
 
 /** The selected segments split into parts of "Fields per part" (numbers stay global). */
@@ -14891,6 +14976,7 @@ function addOcrResults(results) {
   state.shrunk = new Set();
   segIndex.clear();
   for (const s of doc.segments) segIndex.set(s.id, s);
+  repSetup(); repSync(); // (header/footer groups of the new numbering)
   resetHistory();
   renderPages();
   vl.reset();
@@ -15705,7 +15791,7 @@ function initPicture() {
 // from its own browser cache before the network, so language files are written into that cache.
 // ======================================================================
 
-const APP_VERSION = "2.05";
+const APP_VERSION = "2.06";
 // (a change of library version makes a stored set outdated: it is then ignored)
 const OFFLINE_VERSION = `${MUPDF_URL} ${OCR_LIB}`;
 const CORE_SIMD = "tesseract-core-simd-lstm.wasm.js", CORE_PLAIN = "tesseract-core-lstm.wasm.js";
@@ -16987,7 +17073,9 @@ function batchWrite() { try { localStorage.setItem(LS_BATCH, JSON.stringify(bt.l
 function batchTranslations(id) { try { return JSON.parse(localStorage.getItem(lsKey(id)) || "{}"); } catch (_) { return {}; } }
 function batchDoneCount(f, segs) {
   const tr = state.doc && state.doc.id === f.id ? state.translations : batchTranslations(f.id);
-  return segs.filter((s) => (tr[s.id] || "").trim()).length;
+  const kept = new Set(); // (headers and footers kept in the original count as done)
+  for (const g of repBatchGroups(f.id, segs)) if (g.mode === "keep") g.segs.forEach((s) => kept.add(s.id));
+  return segs.filter((s) => kept.has(s.id) || (tr[s.id] || "").trim()).length;
 }
 async function batchSegs(id) {
   if (!bt.segs.has(id)) bt.segs.set(id, (await idbGet(`batchsegs:${id}`)) || []);
@@ -17051,23 +17139,25 @@ async function batchExtract(entry, bytes) {
   const pageCount = await w.call("open", { bytes, kind });
   let segments;
   if (kind === "pdf") {
-    const raw = [];
+    const raw = [], pageInfo = {};
     const size = 8;
     for (let p = 0; p < pageCount; p += size) {
       const pages = Array.from({ length: Math.min(size, pageCount - p) }, (_, i) => p + i);
       const r = await w.call("extract", { pages });
       raw.push(...r.segments);
+      for (const [k, v] of Object.entries(r.pages || {})) pageInfo[k] = { height: v.height, y0: v.y0 };
       entry.progress = t("batch.reading", { i: Math.min(p + size, pageCount), n: pageCount });
       batchRender();
     }
     raw.sort((a, b) => a.page - b.page || a.id - b.id);
     raw.forEach((s, i) => { s.id = i + 1; });
+    repMarkBatch(raw.filter((s) => !s.skip), pageInfo); // (headers and footers: one prompt line per group)
     segments = raw;
   } else {
     segments = (await w.call("extractBook")).segments;
   }
   entry.pages = pageCount;
-  return segments.filter((s) => !s.skip && !s.hiddenSlide && !s.notes).map((s) => ({ id: s.id, text: s.text }));
+  return segments.filter((s) => !s.skip && !s.hiddenSlide && !s.notes).map((s) => ({ id: s.id, text: s.text, page: s.page, ...(s.rep ? { rep: s.rep } : {}) }));
 }
 
 async function batchRemove(id) {
@@ -17114,7 +17204,9 @@ async function batchParts() {
   for (const f of bt.list) {
     if (f.state !== "ready") continue;
     const segs = await batchSegs(f.id);
-    const todo = $("#batchOnlyTodo").checked ? (() => { const tr = state.doc && state.doc.id === f.id ? state.translations : batchTranslations(f.id); return segs.filter((s) => !(tr[s.id] || "").trim()); })() : segs;
+    const hidden = state.doc && state.doc.id === f.id ? rep.hidden : repHiddenIds(repBatchGroups(f.id, segs));
+    const own = segs.filter((s) => !hidden.has(s.id));
+    const todo = $("#batchOnlyTodo").checked ? (() => { const tr = state.doc && state.doc.id === f.id ? state.translations : batchTranslations(f.id); return own.filter((s) => !(tr[s.id] || "").trim()); })() : own;
     let cur = null, bucket = -1; // parts follow the marker numbers, as in the AI window
     for (const sg of todo) {
       const k = Math.floor((sg.id - 1) / size);
@@ -17170,6 +17262,7 @@ async function batchImportText(text) {
     if (state.doc && state.doc.id === f.id) { applied += mergeImported(rows, overwrite) || 0; continue; }
     const tr = batchTranslations(f.id);
     for (const [id, v] of Object.entries(rows)) { if (!overwrite && (tr[id] || "").trim()) continue; tr[id] = v; applied++; }
+    repSyncMap(repBatchGroups(f.id, await batchSegs(f.id)), tr); // (headers and footers: every page)
     try { localStorage.setItem(lsKey(f.id), JSON.stringify(tr)); } catch (_) { toast(t("msg.storageFull"), "error"); }
   }
   let msg = t("batch.imported", { n: applied, files: files.size });
@@ -17277,6 +17370,312 @@ function initBatch() {
     if (f && !f.done) { f.done = true; batchWrite(); }
   });
   document.addEventListener("kameleon:document", batchRefreshButton);
+}
+
+/* ------------------------------------------------------------- headers and footers (PDF)
+ * Text that repeats in the top or bottom band of the pages ("Systembeskrivning", "Page 5 of 26",
+ * a classification note) forms a group: the same text on at least 30 % of the pages (numbers
+ * aside). A group is translated once – its first segment stands for all, the others follow with
+ * their own numbers –, kept in the original, or left as single segments ("each"). Any other
+ * repeated text can be made a group by hand; single pages can be taken out of a group. The
+ * choices are kept per document; the mode chosen "for all" is the default for new documents.
+ */
+const REP_BAND = 0.12;         // top/bottom share of the page height
+const REP_SHARE = 0.3;         // on at least this share of the pages (and on two)
+const LS_REP_MODE = "pdftr:repmode";
+const repCfgKey = (docId) => `pdftr:rep:${docId}`;
+const repNorm = (text) => text.replace(/\d+/g, "#").replace(/\s+/g, " ").trim();
+const repPlace = (s) => `${s.page}|${s.text}`; // (survives renumbering after a split, join or OCR)
+
+/** Header/footer groups of a PDF's segments: Map key → [segments] (in document order). */
+function repDetect(segments, pages) {
+  const n = pages ? (Array.isArray(pages) ? pages.length : Object.keys(pages).length) : 0;
+  const out = new Map();
+  if (n < 2) return out;
+  const by = new Map();
+  for (const s of segments) {
+    if (s.skip || s.formula || !s.bbox) continue;
+    const p = pages[s.page];
+    if (!p || !p.height) continue;
+    const y0 = p.y0 || 0, h = p.height;
+    const band = s.bbox[3] - y0 <= REP_BAND * h ? "top" : s.bbox[1] - y0 >= (1 - REP_BAND) * h ? "bottom" : null;
+    if (!band) continue;
+    const norm = repNorm(s.text);
+    if (!/\p{L}/u.test(norm)) continue;
+    const key = `${band}|${norm}`;
+    if (!by.has(key)) by.set(key, []);
+    by.get(key).push(s);
+  }
+  const min = Math.max(2, Math.ceil(REP_SHARE * n));
+  for (const [key, list] of by) if (new Set(list.map((s) => s.page)).size >= min) out.set(key, list);
+  return out;
+}
+
+function repDefaultMode() {
+  try { const m = localStorage.getItem(LS_REP_MODE); return ["once", "keep", "each"].includes(m) ? m : "once"; } catch (_) { return "once"; }
+}
+function repLoadCfg(docId) {
+  let c = null;
+  try { c = JSON.parse(localStorage.getItem(repCfgKey(docId)) || "null"); } catch (_) { c = null; }
+  c = c && typeof c === "object" ? c : {};
+  return { modes: c.modes || {}, drop: c.drop || [], man: c.man || [], def: c.def || null };
+}
+
+/**
+ * The groups of a document with the user's choices: [{key, kind: top|bottom|man, segs, lead,
+ * mode}]. `segs` excludes pages taken out of the group; `lead` is the first remaining segment.
+ */
+function repGroupsOf(segments, pages, cfg) {
+  const groups = new Map(repDetect(segments, pages));
+  for (const norm of cfg.man) {
+    const key = `man|${norm}`;
+    if (groups.has(`top|${norm}`) || groups.has(`bottom|${norm}`)) continue;
+    const list = segments.filter((s) => !s.skip && repNorm(s.text) === norm);
+    if (list.length > 1) groups.set(key, list);
+  }
+  const drop = new Set(cfg.drop);
+  const def = cfg.def || repDefaultMode();
+  const out = [];
+  for (const [key, list] of groups) {
+    const segs = list.filter((s) => !drop.has(repPlace(s)));
+    if (segs.length < 2) continue;
+    out.push({ key, kind: key.slice(0, key.indexOf("|")), segs, lead: segs[0].id, mode: cfg.modes[key] || def });
+  }
+  return out;
+}
+
+/** `tr` (the lead's translation) with the lead's numbers replaced by those of `text`. */
+function repNumbers(tr, leadText, text) {
+  const a = leadText.match(/\d+/g) || [], b = text.match(/\d+/g) || [];
+  if (a.length !== b.length || a.join() === b.join()) return tr;
+  const used = new Array(a.length).fill(false);
+  return tr.replace(/\d+/g, (d) => {
+    const k = a.findIndex((v, i) => !used[i] && v === d);
+    if (k < 0) return d;
+    used[k] = true;
+    return b[k];
+  });
+}
+
+/** Brings the group members of a plain {id: text} map in line with their lead; changed ids. */
+function repSyncMap(groups, tr) {
+  const changed = [];
+  const set = (id, v) => {
+    const cur = tr[id] || "";
+    if (cur === v) return;
+    if (v) tr[id] = v; else delete tr[id];
+    changed.push(id);
+  };
+  for (const g of groups) {
+    if (g.mode === "each") continue;
+    if (g.mode === "keep") { for (const s of g.segs) set(s.id, ""); continue; }
+    const lead = g.segs[0], lt = (tr[lead.id] || "").trim() ? tr[lead.id] : "";
+    for (const s of g.segs.slice(1)) set(s.id, lt ? repNumbers(lt, lead.text, s.text) : "");
+  }
+  return changed;
+}
+
+/** Ids a prompt or the progress leaves out: members after the lead, and every kept member. */
+function repHiddenIds(groups) {
+  const out = new Set();
+  for (const g of groups) {
+    if (g.mode === "keep") g.segs.forEach((s) => out.add(s.id));
+    else if (g.mode === "once") g.segs.slice(1).forEach((s) => out.add(s.id));
+  }
+  return out;
+}
+
+/* ---- the open document */
+
+const rep = { groups: [], byId: new Map(), hidden: new Set(), open: new Set(), cfg: null };
+
+const repSupported = () => Boolean(state.doc && (state.doc.kind || "pdf") === "pdf" && !isBook() && !isOffice());
+
+/** Groups found again for the open document (after opening, OCR, a split or a join). */
+function repSetup() {
+  rep.groups = []; rep.byId.clear(); rep.hidden.clear();
+  if (!repSupported()) return;
+  rep.cfg = repLoadCfg(state.doc.id);
+  rep.groups = repGroupsOf(state.doc.segments, state.doc.pages, rep.cfg);
+  for (const g of rep.groups) for (const s of g.segs) rep.byId.set(s.id, g);
+  rep.hidden = repHiddenIds(rep.groups);
+  for (const k of [...rep.open]) if (!rep.groups.some((g) => g.key === k)) rep.open.delete(k);
+}
+
+function repSaveCfg() {
+  if (!state.doc || !rep.cfg) return;
+  try { localStorage.setItem(repCfgKey(state.doc.id), JSON.stringify(rep.cfg)); } catch (_) { /* storage blocked */ }
+}
+
+/** After translations changed: members follow their lead (called by persist). */
+function repSync() {
+  if (!rep.groups.length) return;
+  const changed = repSyncMap(rep.groups, state.translations);
+  for (const id of changed) {
+    vl.heights.delete(id);
+    const ta = vl.rendered.get(id)?.querySelector("textarea");
+    if (ta && document.activeElement !== ta) ta.value = state.translations[id] || "";
+    markDone(id);
+  }
+}
+
+const repHidden = (id) => rep.hidden.has(Number(id));
+const repGroup = (id) => rep.byId.get(Number(id)) || null;
+
+function repLabel(g) {
+  const pages = new Set(g.segs.map((s) => s.page)).size;
+  return t(g.kind === "top" ? "rep.header" : g.kind === "bottom" ? "rep.footer" : "rep.repeated", { n: pages, k: g.segs.length });
+}
+
+/** The group line of a card: what the group is, its mode, and the pages it stands for. */
+function repCardHtml(id) {
+  const g = repGroup(id);
+  if (!g) return "";
+  const lead = g.lead === Number(id);
+  const opt = (v) => `<option value="${v}"${g.mode === v ? " selected" : ""}>${escapeHtml(t(`rep.mode_${v}`))}</option>`;
+  const modeSel = `<select class="rep-mode" data-rep-mode title="${escapeHtml(t("rep.modeTitle"))}" aria-label="${escapeHtml(t("rep.modeTitle"))}">${opt("once")}${opt("keep")}${opt("each")}</select>`;
+  if (g.mode === "each" || lead) {
+    const open = g.mode !== "each" ? `<button type="button" class="mini" data-act="repOpen">${escapeHtml(t(rep.open.has(g.key) ? "rep.hidePages" : "rep.showPages", { n: g.segs.length - 1 }))}</button>` : "";
+    return `<div class="seg-rep"><span class="rep-tag">${escapeHtml(repLabel(g))}</span>${modeSel}${open}<button type="button" class="mini" data-act="repAll" title="${escapeHtml(t("rep.allTitle"))}">${escapeHtml(t("rep.all"))}</button><button type="button" class="mini" data-act="repDrop" title="${escapeHtml(t("rep.dropTitle"))}">${escapeHtml(t("rep.drop"))}</button></div>`;
+  }
+  return `<div class="seg-rep member"><span class="rep-tag">↳ ${escapeHtml(t(g.mode === "keep" ? "rep.memberKeep" : "rep.memberOnce", { n: g.lead }))}</span><button type="button" class="mini" data-act="repDrop" title="${escapeHtml(t("rep.dropTitle"))}">${escapeHtml(t("rep.drop"))}</button></div>`;
+}
+
+/** Whether a card's translation box is read-only (it follows its lead, or the original stays). */
+function repLocked(id) {
+  const g = repGroup(id);
+  return Boolean(g && (g.mode === "keep" || (g.mode === "once" && g.lead !== Number(id))));
+}
+
+/** The list order: an open group's members right after its lead. */
+function repListIds(ids) {
+  if (!rep.groups.length) return ids;
+  const out = [];
+  for (const id of ids) {
+    out.push(id);
+    const g = repGroup(id);
+    if (g && g.lead === id && rep.open.has(g.key) && g.mode !== "each") for (const s of g.segs.slice(1)) out.push(s.id);
+  }
+  return out;
+}
+
+/** Applies a changed group set-up: groups, translations, list, progress. */
+function repChanged(before) {
+  repSetup();
+  repSync();
+  const after = { ...state.translations };
+  const diff = {}, back = {};
+  for (const id of new Set([...Object.keys(before), ...Object.keys(after)])) {
+    if ((before[id] || "") !== (after[id] || "")) { diff[id] = after[id] || ""; back[id] = before[id] || ""; }
+  }
+  persist();
+  if (Object.keys(diff).length) recordTranslations(back, diff, t("hist.repeats"));
+  refreshCards();
+}
+
+function repSetMode(id, mode) {
+  const g = repGroup(id);
+  if (!g || !["once", "keep", "each"].includes(mode)) return;
+  const before = { ...state.translations };
+  // Going to "once" with the lead still empty: a member's translation is taken over.
+  if (mode === "once" && !hasTr(g.lead)) {
+    const done = g.segs.find((s) => hasTr(s.id));
+    if (done) state.translations[g.lead] = done.text === segById(g.lead).text ? state.translations[done.id] : repNumbers(state.translations[done.id], done.text, segById(g.lead).text);
+  }
+  rep.cfg.modes[g.key] = mode;
+  repSaveCfg();
+  repChanged(before);
+}
+
+/** The mode of this group for all groups of the document, and as the default for new ones. */
+function repSetAll(id) {
+  const g = repGroup(id);
+  if (!g) return;
+  const before = { ...state.translations };
+  for (const x of rep.groups) {
+    if (x.mode === "once" || g.mode !== "once" || hasTr(x.lead)) continue;
+    const done = x.segs.find((s) => hasTr(s.id));
+    if (done) state.translations[x.lead] = repNumbers(state.translations[done.id], done.text, segById(x.lead).text);
+  }
+  rep.cfg.modes = {};
+  rep.cfg.def = g.mode;
+  try { localStorage.setItem(LS_REP_MODE, g.mode); } catch (_) { /* storage blocked */ }
+  repSaveCfg();
+  repChanged(before);
+  toast(t("rep.allDone", { mode: t(`rep.mode_${g.mode}`), n: rep.groups.length }), "ok");
+}
+
+/** Takes one segment out of its group; it becomes a normal segment again. */
+function repDrop(id) {
+  const s = segById(id), g = repGroup(id);
+  if (!s || !g) return;
+  const before = { ...state.translations };
+  // (a member that followed its lead keeps the translation it had)
+  rep.cfg.drop = [...new Set([...rep.cfg.drop, repPlace(s)])];
+  repSaveCfg();
+  repChanged(before);
+  toast(t("rep.dropped", { n: id }), "ok");
+}
+
+/** Makes all segments with this text (numbers aside) one group. */
+function repMakeGroup(id) {
+  const s = segById(id);
+  if (!s) return;
+  const norm = repNorm(s.text);
+  const same = state.doc.segments.filter((x) => !x.skip && repNorm(x.text) === norm);
+  if (same.length < 2) { toast(t("rep.single"), "error"); return; }
+  const before = { ...state.translations };
+  rep.cfg.man = [...new Set([...rep.cfg.man, norm])];
+  rep.cfg.drop = rep.cfg.drop.filter((p) => !same.some((x) => repPlace(x) === p));
+  // The segment clicked leads when it has a translation and the first one has none.
+  if (hasTr(id) && !hasTr(same[0].id)) state.translations[same[0].id] = repNumbers(state.translations[id], s.text, same[0].text);
+  repSaveCfg();
+  repChanged(before);
+  toast(t("rep.made", { n: same.length }), "ok");
+}
+
+function repToggleOpen(id) {
+  const g = repGroup(id);
+  if (!g) return;
+  if (rep.open.has(g.key)) rep.open.delete(g.key); else rep.open.add(g.key);
+  refreshCards();
+}
+
+/** A hidden member asked for in the list (a click on its box): its group opens. */
+function repReveal(id) {
+  const g = repGroup(id);
+  if (!g || !repHidden(id) || g.mode !== "once") return false;
+  rep.open.add(g.key);
+  return true;
+}
+
+/** Updating a lead's field in the PDF updates its members' fields too. */
+function repApplyMembers(id) {
+  const g = repGroup(id);
+  if (!g || g.mode !== "once" || g.lead !== Number(id)) return;
+  for (const s of g.segs.slice(1)) applyField(s.id);
+}
+
+/* ---- batch files (not open): their stored segments carry the group key from reading */
+
+/** The groups of a batch file's stored segments with that document's choices. */
+function repBatchGroups(fileId, segs) {
+  if (!segs.some((s) => s.rep)) return [];
+  const cfg = repLoadCfg(fileId), drop = new Set(cfg.drop), def = cfg.def || repDefaultMode();
+  const by = new Map();
+  for (const s of segs) {
+    if (!s.rep || drop.has(repPlace(s))) continue;
+    if (!by.has(s.rep)) by.set(s.rep, []);
+    by.get(s.rep).push(s);
+  }
+  const out = [];
+  for (const [key, list] of by) if (list.length > 1) out.push({ key, kind: key.slice(0, key.indexOf("|")), segs: list, lead: list[0].id, mode: cfg.modes[key] || def });
+  return out;
+}
+
+/** Marks the header/footer group of each segment of a freshly read batch file. */
+function repMarkBatch(segs, pages) {
+  for (const [key, list] of repDetect(segs, pages)) for (const s of list) s.rep = key;
 }
 
 /* ------------------------------------------------------------- the app's colour */
@@ -17673,6 +18072,7 @@ async function runSegEdit(op) {
     state.shrunk = new Set();
     segIndex.clear();
     for (const s of doc.segments) segIndex.set(s.id, s);
+    repSetup(); repSync(); // (header/footer groups of the new numbering)
     resetHistory();
     renderPages();
     vl.reset();

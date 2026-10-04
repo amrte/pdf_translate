@@ -579,6 +579,7 @@ function addOcrResults(results) {
   state.shrunk = new Set();
   segIndex.clear();
   for (const s of doc.segments) segIndex.set(s.id, s);
+  repSetup(); repSync(); // (header/footer groups of the new numbering)
   resetHistory();
   renderPages();
   vl.reset();
