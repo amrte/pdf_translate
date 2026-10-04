@@ -4,6 +4,12 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.35
+
+- Links stay in the translated PDF: table-of-contents entries, "see page …" references, web addresses and e-mail links keep working. Before, the step that removes the original text also deleted every link it touched – usually nearly all of them. Each link keeps its place, so it now covers the translated text set in the same box. Links also survive when a page is translated anew after an edit, and links and bookmarks pointing to that page keep finding it.
+- Bilingual PDF: links work in both layouts. Page by page, a link on an original page leads to the original of its target page and one on a translated page to the translation (before, internal links all led to page 1). Side by side, the links are on both halves and lead to the same half of the target sheet (before, there were none).
+- Bilingual PDF: the bookmarks (outline) of the original come along in both layouts and lead to the original pages.
+
 ## 2.34
 
 - Anki decks with pictures and sounds: importing an .apkg now brings its media along. Each term keeps its picture, the spoken word and the spoken example sentence; the files are stored in the browser (IndexedDB), and the language-pair dialog shows how many files and MB come with the deck, with a tick box to take the words alone.

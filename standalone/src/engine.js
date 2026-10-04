@@ -2244,6 +2244,64 @@ function leadInEnd(seg, laid) {
 }
 
 /** Replace the translated segments of one page (`index` in `doc`; `segs` are all its segments). */
+/**
+ * The page's links taken out of its annotations, and put back: MuPDF's redaction deletes every
+ * link it touches, and the translation is set where the linked text was, so the links stay valid.
+ */
+function detachLinks(doc, pobj) {
+  const annots = pobj.get("Annots"), links = [];
+  if (!annots.isArray()) return links;
+  const rest = doc.newArray();
+  for (let i = 0; i < annots.length; i++) {
+    const a = annots.get(i);
+    if (a.isDictionary() && a.get("Subtype").toString() === "/Link") links.push(a); else rest.push(a);
+  }
+  if (links.length) pobj.put("Annots", rest);
+  return links;
+}
+/**
+ * Destinations that point to the page object `from` are pointed to `to` (a page replaced by a
+ * fresh copy): links on all pages, bookmarks, named destinations.
+ */
+function repointDests(doc, from, to) {
+  const num = from.isIndirect() ? from.asIndirect() : 0;
+  if (!num) return;
+  const fix = (dest) => { if (dest.isArray() && dest.length && dest.get(0).isIndirect() && dest.get(0).asIndirect() === num) dest.put(0, to); };
+  const fixHolder = (o) => { // a link, a bookmark or a named destination: /Dest, /A /D, /D or the array itself
+    if (o.isArray()) { fix(o); return; }
+    if (!o.isDictionary()) return;
+    fix(o.get("Dest")); fix(o.get("D"));
+    const act = o.get("A");
+    if (act.isDictionary()) fix(act.get("D"));
+  };
+  for (let i = 0, n = doc.countPages(); i < n; i++) {
+    const annots = doc.findPage(i).get("Annots");
+    if (annots.isArray()) for (let k = 0; k < annots.length; k++) fixHolder(annots.get(k));
+  }
+  const root = doc.getTrailer().get("Root"), seen = new Set();
+  const walk = (o, depth = 0) => { // the bookmark tree and the name trees, guarded against loops
+    if (depth > 64 || !o.isDictionary()) return;
+    if (o.isIndirect()) { if (seen.has(o.asIndirect())) return; seen.add(o.asIndirect()); }
+    fixHolder(o);
+    const names = o.get("Names");
+    if (names.isArray()) for (let k = 1; k < names.length; k += 2) fixHolder(names.get(k));
+    const kids = o.get("Kids");
+    if (kids.isArray()) for (let k = 0; k < kids.length; k++) walk(kids.get(k), depth + 1);
+    for (let c = o.get("First"), guard = 0; c.isDictionary() && guard < 100000; c = c.get("Next"), guard++) walk(c, depth + 1);
+  };
+  walk(root.get("Outlines"));
+  const nameTree = root.get("Names");
+  if (nameTree.isDictionary()) walk(nameTree.get("Dests"));
+  const dests = root.get("Dests"); // (the old style: a dictionary of names)
+  if (dests.isDictionary()) dests.forEach((v) => fixHolder(v));
+}
+function attachLinks(doc, pobj, links) {
+  if (!links.length) return;
+  let annots = pobj.get("Annots");
+  if (!annots.isArray()) { annots = doc.newArray(); pobj.put("Annots", annots); }
+  for (const l of links) annots.push(l);
+}
+
 function translatePage(doc, index, fk, segs, translations, pageInfo, opts, stats) {
   const todo = [], scaled = [], keep = [...((pageInfo && pageInfo.protect) || [])];
   // An untranslated field with its own size, place or style (numbers, kept text) is set again
@@ -2258,6 +2316,7 @@ function translatePage(doc, index, fk, segs, translations, pageInfo, opts, stats
   stats.untranslated += segs.length - todo.length - scaled.length;
   if (!todo.length && !scaled.length) return;
   const page = doc.loadPage(index);
+  const links = detachLinks(doc, page.getObject()); // (back after the redactions, see finally)
   try {
     const bounds = page.getBounds();
     let obs = null;
@@ -2305,6 +2364,7 @@ function translatePage(doc, index, fk, segs, translations, pageInfo, opts, stats
     appendContent(doc, page, content, used, xobjects);
     stats.replaced += todo.length + scaled.length;
   } finally {
+    attachLinks(doc, page.getObject(), links);
     free(page);
   }
 }
@@ -2439,7 +2499,14 @@ function pageForm(doc, page) {
  */
 function updatePage(out, src, pno, segs, translations, pageInfo, opts, map, fk) {
   map.graftPage(pno, src, pno);
+  // A grafted page comes without its annotations: the links of the page it replaces stay (they
+  // point to out's own pages).
+  const old = out.findPage(pno + 1), links = detachLinks(out, old);
   out.deletePage(pno + 1);
+  const fresh = out.findPage(pno);
+  for (const l of links) l.put("P", fresh);
+  attachLinks(out, fresh, links);
+  repointDests(out, old, fresh); // (links and bookmarks to this page)
   // The copy shares its content streams with the original's later copies: redaction works on
   // the page's own stream.
   const pobj = out.findPage(pno);
@@ -3236,6 +3303,60 @@ function savePdf(W, markups, rotations, original = false, layer = null, compact 
 }
 
 /**
+ * The links of page `index` of `src` made anew on page `outIndex` of `out`: their rectangles
+ * through `place` (page coordinates), internal targets through `target` (a source destination →
+ * one in `out`, or null). Copied link annotations would keep pointing to the source's pages.
+ */
+function copyLinks(src, index, out, outIndex, place, target) {
+  const sp = src.loadPage(index);
+  let op = null;
+  try {
+    const links = sp.getLinks();
+    if (!links.length) return;
+    op = out.loadPage(outIndex);
+    for (const l of links) {
+      let uri = l.getURI();
+      if (!l.isExternal()) {
+        let d = null;
+        try { d = src.resolveLinkDestination(l); } catch (_) { /* a broken destination: left out */ }
+        const t = d && d.page >= 0 ? target(d) : null;
+        if (!t) continue;
+        uri = out.formatLinkURI(t);
+      }
+      if (uri) op.createLink(place(l.getBounds()), uri);
+    }
+  } finally {
+    free(sp); free(op);
+  }
+}
+
+/**
+ * The bookmarks of `src` written into `out` (which has none), their targets through `target`
+ * (as in copyLinks); a bookmark whose target is gone stays, without a target.
+ */
+function copyOutline(src, out, target) {
+  let tree = null;
+  try { tree = src.loadOutline(); } catch (_) { return; }
+  if (!tree || !tree.length) return;
+  const it = out.outlineIterator();
+  const add = (items, depth) => {
+    for (const item of items) {
+      let uri = item.uri || "";
+      if (uri && !/^[a-z][a-z0-9+.-]*:/i.test(uri)) { // an internal destination ("#page=3…", a named one)
+        let d = null;
+        try { d = src.resolveLinkDestination(uri); } catch (_) { /* broken */ }
+        const t = d && d.page >= 0 ? target(d) : null;
+        uri = t ? out.formatLinkURI(t) : "";
+      }
+      it.insert({ title: item.title || "", uri: uri || undefined, open: Boolean(item.open) });
+      // (the iterator stays behind the new item: back to it, into its children, and out again)
+      if (item.down && item.down.length && depth < 32) { it.prev(); it.down(); add(item.down, depth + 1); it.up(); it.next(); }
+    }
+  };
+  try { add(tree, 0); } finally { free(it); }
+}
+
+/**
  * A bilingual PDF: the odd pages are the original, the even pages its translation (page 1
  * original, page 2 translated page 1, page 3 original page 2, …). Fonts and images shared by
  * pages of one document are copied once.
@@ -3248,20 +3369,33 @@ function bilingualPdf(W, markups, rotations) {
   try {
     const fromOriginal = out.newGraftMap(), fromTranslated = out.newGraftMap();
     const n = original.countPages();
-    // Grafting copies a page without its annotations (links, markups): they are copied as well.
+    // Grafting copies a page without its annotations: markups are copied as well, links are
+    // made anew afterwards (their targets are pages of this document).
     const graft = (map, src, i) => {
       const at = out.countPages();
       map.graftPage(at, src, i);
       const annots = src.findPage(i).get("Annots");
       if (!annots.isArray() || !annots.length) return;
-      const page = out.findPage(at), copy = map.graftObject(annots);
-      for (let k = 0; k < copy.length; k++) { const a = copy.get(k); if (a.isDictionary()) a.put("P", page); }
-      page.put("Annots", copy);
+      const page = out.findPage(at), keep = out.newArray();
+      for (let k = 0; k < annots.length; k++) {
+        const a = annots.get(k);
+        if (a.isDictionary() && a.get("Subtype").toString() === "/Link") continue;
+        const c = map.graftObject(a);
+        if (c.isDictionary()) c.put("P", page);
+        keep.push(c);
+      }
+      if (keep.length) page.put("Annots", keep);
     };
     for (let i = 0; i < n; i++) {
       graft(fromOriginal, original, i);
       graft(fromTranslated, translated, i);
     }
+    // a link of the original goes to the original of its target page, one of the translation to the translation
+    for (let i = 0; i < n; i++) {
+      copyLinks(original, i, out, 2 * i, (r) => r, (d) => (d.page < n ? { ...d, page: 2 * d.page } : null));
+      if (i < translated.countPages()) copyLinks(translated, i, out, 2 * i + 1, (r) => r, (d) => (d.page < n ? { ...d, page: 2 * d.page + 1 } : null));
+    }
+    copyOutline(original, out, (d) => (d.page < n ? { ...d, page: 2 * d.page } : null)); // (bookmarks lead to the original pages)
     const buf = out.saveToBuffer("garbage,compress");
     const bytes = buf.asUint8Array().slice();
     free(buf);
@@ -3274,7 +3408,7 @@ function bilingualPdf(W, markups, rotations) {
 /**
  * Original and translation on one sheet, as many pages as the original: portrait pages side by
  * side (original left), landscape pages one above the other (original on top). Markups and other
- * annotations are drawn into the pages; links are not kept.
+ * annotations are drawn into the pages; links are made anew on both halves.
  */
 function sideBySidePdf(W, markups, rotations) {
   const translated = M.Document.openDocument(savePdf(W, markups, rotations), "application/pdf");
@@ -3308,7 +3442,8 @@ function sideBySidePdf(W, markups, rotations) {
       return { form, w, h };
     };
     const num = (v) => String(Math.round(v * 1000) / 1000);
-    for (let i = 0; i < original.countPages(); i++) {
+    const n = original.countPages(), places = [];
+    for (let i = 0; i < n; i++) {
       const a = asForm(fromOriginal, original, i);
       const b = i < translated.countPages() ? asForm(fromTranslated, translated, i) : a;
       const portrait = a.w <= a.h;
@@ -3318,7 +3453,27 @@ function sideBySidePdf(W, markups, rotations) {
       const content = `q 1 0 0 1 ${num(pa[0])} ${num(pa[1])} cm /Orig Do Q\nq 1 0 0 1 ${num(pb[0])} ${num(pb[1])} cm /Tran Do Q\n`;
       const page = out.addPage([0, 0, W2, H2], 0, { XObject: { Orig: a.form, Tran: b.form } }, content);
       out.insertPage(-1, page);
+      // where a point of either half lands on the sheet (page coordinates: y from the top)
+      places.push([[pa[0], H2 - pa[1] - a.h], [pb[0], H2 - pb[1] - b.h]]);
     }
+    // The links on both halves; a target lands on the same half of its sheet.
+    for (let i = 0; i < n; i++) {
+      for (const side of [0, 1]) {
+        if (side && i >= translated.countPages()) continue;
+        const [dx, dy] = places[i][side];
+        const target = (d) => {
+          if (d.page >= n) return null;
+          const [tx, ty] = places[d.page][side];
+          return { ...d, page: d.page, x: Number.isFinite(d.x) ? d.x + tx : d.x, y: Number.isFinite(d.y) ? d.y + ty : d.y };
+        };
+        copyLinks(side ? translated : original, i, out, i, (r) => [r[0] + dx, r[1] + dy, r[2] + dx, r[3] + dy], target);
+      }
+    }
+    copyOutline(original, out, (d) => {
+      if (d.page >= n) return null;
+      const [tx, ty] = places[d.page][0];
+      return { ...d, x: Number.isFinite(d.x) ? d.x + tx : d.x, y: Number.isFinite(d.y) ? d.y + ty : d.y };
+    });
     const buf = out.saveToBuffer("garbage,compress");
     const bytes = buf.asUint8Array().slice();
     free(buf);
