@@ -284,7 +284,7 @@ async function addPagesFromFiles(files, at) {
       let kind = Engine.detectKind(bytes, file.name);
       if (want === "pdf" && kind === "image") {
         const fmt = Engine.imageKindOf(bytes);
-        const src = ["jpeg", "png", "gif", "bmp", "tiff"].includes(fmt) ? bytes : await transcodeImage(bytes);
+        const src = ENGINE_IMAGES.includes(fmt) ? bytes : await transcodeImage(bytes);
         bytes = (await pool.workers[0].call("imageToPdf", { bytes: src })).bytes; kind = "pdf";
       } else if (want === "pptx" && kind === "ppt") {
         const c = await pool.workers[0].call("convert", { bytes, kind }); bytes = c.bytes; kind = c.kind;

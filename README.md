@@ -54,8 +54,9 @@ simple preview of the text (the document as one flow, one page per sheet), not t
 the chosen OCR languages as a ZIP (about 20 MB). Without internet, load that ZIP or its folder on the
 start page; optionally the browser keeps the files so the app starts offline by itself.
 
-**Pictures** (JPG, PNG, GIF, BMP, TIFF, WebP, AVIF, HEIC) open as a one-page document whose text
-is read with OCR; the translation is saved as a picture of the same size and format.
+**Pictures** (JPG, PNG, GIF, BMP, TIFF, WebP, AVIF, HEIC/HEIF, and the JPEG preview of a DNG RAW
+photo) open as a one-page document whose text is read with OCR, turned upright as the camera
+recorded it (Exif orientation); the translation is saved as a picture of the same size and format.
 
 **Older Office files** (`.doc`, `.xls`, `.ppt` of Office 97–2003) are converted to the modern
 format when they are opened: text, tables, headers and footers, footnotes, slide text and speaker

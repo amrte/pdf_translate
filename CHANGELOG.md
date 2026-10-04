@@ -4,6 +4,12 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.17
+
+- Photos from Android phones open the right way up: phones store a picture taken upright lying on its side and only note how to turn it (Exif orientation); the page now follows that note (all eight orientations, mirrored ones included), without recompressing the photo. This applies to JPEG and TIFF pictures, including Ultra HDR and motion photos, and to pictures added in "Arrange pages".
+- RAW photos (DNG, from the Pro/RAW mode of Android cameras) open: the full-size JPEG preview stored inside is shown, upright, and the translation is saved as JPG. A DNG without a preview gets a clear message.
+- HEIF pictures are recognised by all their brands (Samsung, Xiaomi and others write .heic/.heif with different labels), and an AVIF picture labelled as generic HEIF is still read as AVIF. The file dialog now also offers .heif, .hif, .dng and .jfif.
+
 ## 2.16
 
 - Text notes have rounded corners (new notes by default; the ▢ button in the note's bar switches them on or off). The rounding grows with the font size and is kept in the saved PDF.

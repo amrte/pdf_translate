@@ -218,7 +218,7 @@ function saveBlob(blob, filename) {
 const ERROR_KEYS = [
   [/DRM-protected/i, "err.drm"], [/not a valid (zip|\.docx)/i, "err.zip"], [/ZIP64/i, "err.zip64"],
   [/No \.fb2 file/i, "err.noFb2"], [/no package file/i, "err.noOpf"], [/XLIFF file is not valid/i, "err.xliff"],
-  [/No document is open/i, "err.noDoc"], [/is encrypted and cannot be opened/i, "err.encrypted"], [/is too old/i, "err.tooOld"], [/picture format is not supported|unknown image file format/i, "err.image"], [/engine worker|worker stopped/i, "msg.workerStopped"],
+  [/No document is open/i, "err.noDoc"], [/is encrypted and cannot be opened/i, "err.encrypted"], [/is too old/i, "err.tooOld"], [/picture format is not supported|unknown image file format/i, "err.image"], [/RAW photo without a preview/i, "err.rawPhoto"], [/engine worker|worker stopped/i, "msg.workerStopped"],
 ];
 function userError(err) {
   const msg = String((err && err.message) || err || "");
@@ -226,7 +226,7 @@ function userError(err) {
   return hit ? t(hit[1]) : msg;
 }
 
-const stem = () => (state.doc.name || "document.pdf").replace(/\.(pdf|epub|fb2|fbz|fb2\.zip|zip|docx|pptx|xlsx|doc|xls|ppt|srt|vtt|md|markdown|txt|text|png|jpe?g|gif|bmp|tiff?|webp|avif|heic)$/i, "") || "document";
+const stem = () => (state.doc.name || "document.pdf").replace(/\.(pdf|epub|fb2|fbz|fb2\.zip|zip|docx|pptx|xlsx|doc|xls|ppt|srt|vtt|md|markdown|txt|text|png|jpe?g|jfif|gif|bmp|tiff?|dng|webp|avif|heic|heif|hif)$/i, "") || "document";
 const escapeHtml = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 
 async function sha256(bytes) {
@@ -305,7 +305,7 @@ async function idbGet(key = "last") {
 async function openPdf(file, files = null) {
   if (!file) return;
   if (files && files.length > 1) { batchAdd(files); return; } // several files: the batch
-  if (!/\.(pdf|epub|fb2|fbz|zip|docx|pptx|xlsx|doc|xls|ppt|srt|vtt|md|markdown|txt|text|png|jpe?g|gif|bmp|tiff?|webp|avif|heic)$/i.test(file.name) && !/pdf|epub|fictionbook|officedocument|msword|ms-excel|ms-powerpoint|^text\/|^image\//i.test(file.type)) {
+  if (!/\.(pdf|epub|fb2|fbz|zip|docx|pptx|xlsx|doc|xls|ppt|srt|vtt|md|markdown|txt|text|png|jpe?g|jfif|gif|bmp|tiff?|dng|webp|avif|heic|heif|hif)$/i.test(file.name) && !/pdf|epub|fictionbook|officedocument|msword|ms-excel|ms-powerpoint|^text\/|^image\//i.test(file.type)) {
     toast(t("msg.chooseFile"), "error");
     return;
   }
@@ -365,12 +365,13 @@ async function loadBytes(bytes, name, remember, knownId = null) {
     if (kind === "image") { // a picture becomes a one-page PDF; its text is read with OCR
       const fmt = Engine.imageKindOf(bytes);
       setLoading(t("msg.imageToPage"));
-      const src = ["jpeg", "png", "gif", "bmp", "tiff"].includes(fmt) ? bytes : await transcodeImage(bytes);
+      const src = ENGINE_IMAGES.includes(fmt) ? bytes : await transcodeImage(bytes);
       if (stale()) return;
       const r = await pool.workers[0].call("imageToPdf", { bytes: src });
       if (stale()) return;
       bytes = r.bytes; kind = "pdf";
-      image = { format: fmt === "jpeg" ? "jpeg" : "png", label: fmt === "jpeg" ? "JPG" : "PNG", width: r.width, height: r.height, source: original };
+      const jpeg = fmt === "jpeg" || fmt === "dng"; // (a RAW photo is shown, and saved, as its JPEG preview)
+      image = { format: jpeg ? "jpeg" : "png", label: jpeg ? "JPG" : "PNG", width: r.width, height: r.height, source: original };
     }
     if (LEGACY_KINDS.has(kind)) { // Word/Excel/PowerPoint 97–2003: converted to the modern format first
       converted = { from: kind.toUpperCase(), to: LEGACY_TO_MODERN[kind].toUpperCase() };
@@ -425,6 +426,9 @@ async function loadBytes(bytes, name, remember, knownId = null) {
     if (!stale()) setLoading("");
   }
 }
+
+/** Pictures the engine reads itself (orientation, RAW preview included); others are decoded by the browser. */
+const ENGINE_IMAGES = ["jpeg", "png", "gif", "bmp", "tiff", "dng"];
 
 /** HEIC/HEIF decoder for browsers that cannot show these photos (all but Safari), loaded on first use. */
 const HEIF_LIB = "https://cdn.jsdelivr.net/npm/libheif-js@1.19.8/libheif-wasm/libheif-bundle.mjs";

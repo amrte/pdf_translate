@@ -2515,22 +2515,40 @@ function renderPNG(doc, index, zoom) {
  * when the file does not say), so OCR and the translated output keep the pixel dimensions.
  */
 function imageToPdf(bytes) {
+  // A RAW photo shows its JPEG preview; a photo stored on its side (most phone photos taken
+  // upright) is set upright on the page by the drawing matrix, the picture itself unchanged.
+  let orient = exifOrientation(bytes);
+  if (imageKindOf(bytes) === "dng") {
+    const p = dngPreview(bytes);
+    if (!p) throw new Error("RAW photo without a preview");
+    bytes = p.bytes; orient = p.orientation;
+  }
   const img = new M.Image(bytes);
   try {
     const w = img.getWidth(), h = img.getHeight();
     const ok = (r) => (r >= 50 && r <= 1200 ? r : 0);
     const dpiX = ok(img.getXResolution()) || 96, dpiY = ok(img.getYResolution()) || dpiX;
-    const pw = (w * 72) / dpiX, ph = (h * 72) / dpiY;
+    const iw = (w * 72) / dpiX, ih = (h * 72) / dpiY, side = orient >= 5;
+    const pw = side ? ih : iw, ph = side ? iw : ih;
+    // where a point (u, v) of the stored picture (fractions, v downwards) is shown (y downwards)
+    const shown = {
+      1: (u, v) => [u * iw, v * ih], 2: (u, v) => [(1 - u) * iw, v * ih], 3: (u, v) => [(1 - u) * iw, (1 - v) * ih], 4: (u, v) => [u * iw, (1 - v) * ih],
+      5: (u, v) => [v * ih, u * iw], 6: (u, v) => [(1 - v) * ih, u * iw], 7: (u, v) => [(1 - v) * ih, (1 - u) * iw], 8: (u, v) => [v * ih, (1 - u) * iw],
+    }[orient];
+    // the image's unit square (s, t upwards; its top row at t = 1) on the page (y upwards)
+    const at = (s2, t2) => { const [x, y] = shown(s2, 1 - t2); return [x, ph - y]; };
+    const [e, f] = at(0, 0), [a1, b1] = at(1, 0), [c1, d1] = at(0, 1);
+    const cm = [a1 - e, b1 - f, c1 - e, d1 - f, e, f].map((x) => (Math.abs(x) < 1e-9 ? 0 : x).toFixed(4)).join(" ");
     const doc = new M.PDFDocument();
     try {
       const ref = doc.addImage(img);
       const res = doc.newDictionary(), xo = doc.newDictionary();
       xo.put("Im0", ref);
       res.put("XObject", xo);
-      const page = doc.addPage([0, 0, pw, ph], 0, res, `q ${pw.toFixed(4)} 0 0 ${ph.toFixed(4)} 0 0 cm /Im0 Do Q`);
+      const page = doc.addPage([0, 0, pw, ph], 0, res, `q ${cm} cm /Im0 Do Q`);
       doc.insertPage(-1, page);
       free(page);
-      return { bytes: doc.saveToBuffer("compress").asUint8Array().slice(), width: w, height: h };
+      return { bytes: doc.saveToBuffer("compress").asUint8Array().slice(), width: side ? h : w, height: side ? w : h };
     } finally {
       free(doc);
     }

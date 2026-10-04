@@ -10,21 +10,117 @@ const BOOK_LAYOUT = [420, 595, 11];
 const BOOK_MIME = { epub: "application/epub+zip", fb2: "application/x-fictionbook" };
 
 /** "pdf", "epub", "fb2", "docx", "pptx" or "xlsx" from the file's bytes (and its name as a hint). */
-/** "jpeg", "png", "gif", "bmp", "tiff", "webp", "avif" or "heic" for a picture file, else null. */
+/**
+ * "jpeg", "png", "gif", "bmp", "tiff", "dng" (a camera's RAW photo), "webp", "avif" or "heic" for
+ * a picture file, else null.
+ */
 function imageKindOf(bytes) {
   const b = bytes, at = (i, ...v) => v.every((x, k) => b[i + k] === x);
   if (at(0, 0xff, 0xd8, 0xff)) return "jpeg";
   if (at(0, 0x89, 0x50, 0x4e, 0x47)) return "png";
   if (at(0, 0x47, 0x49, 0x46, 0x38)) return "gif";
   if (at(0, 0x42, 0x4d) && b.length > 26) return "bmp";
-  if (at(0, 0x49, 0x49, 0x2a, 0x00) || at(0, 0x4d, 0x4d, 0x00, 0x2a)) return "tiff";
+  if (at(0, 0x49, 0x49, 0x2a, 0x00) || at(0, 0x4d, 0x4d, 0x00, 0x2a)) {
+    const t = tiffReader(b);
+    return t && t.ifd(t.first).has(0xc612) ? "dng" : "tiff"; // (DNGVersion)
+  }
   if (at(0, 0x52, 0x49, 0x46, 0x46) && at(8, 0x57, 0x45, 0x42, 0x50)) return "webp";
-  if (at(4, 0x66, 0x74, 0x79, 0x70)) { // ISO media box: avif / heic
-    const brand = String.fromCharCode(...b.subarray(8, 12));
-    if (/avif|avis/i.test(brand)) return "avif";
-    if (/heic|heix|hevc|mif1|msf1/i.test(brand)) return "heic";
+  if (at(4, 0x66, 0x74, 0x79, 0x70)) { // ISO media box: avif / heic, by its brands (main and compatible)
+    const end = Math.min(b.length, Math.max(16, (b[0] << 24 | b[1] << 16 | b[2] << 8 | b[3]) >>> 0), 256);
+    const brands = [8, ...Array.from({ length: Math.max(0, (end - 16) >> 2) }, (_, i) => 16 + 4 * i)].map((o) => String.fromCharCode(...b.subarray(o, o + 4)));
+    if (brands.some((x) => /^(avif|avis)$/i.test(x))) return "avif";
+    if (brands.some((x) => /^(heic|heix|heim|heis|hevc|hevx|hevm|hevs|mif1|mif2|msf1)$/i.test(x))) return "heic";
   }
   return null;
+}
+
+/**
+ * A small TIFF reader (also for the Exif block of a JPEG and a DNG): `ifd(offset)` gives a
+ * directory as a Map of tag → {type, count, at} (`at`: where its values are), `values(entry)` its
+ * numbers, `first` the offset of the first directory. Null when the header is not TIFF.
+ */
+function tiffReader(b, base = 0) {
+  if (b.length < base + 8) return null;
+  const le = b[base] === 0x49 && b[base + 1] === 0x49;
+  if (!le && !(b[base] === 0x4d && b[base + 1] === 0x4d)) return null;
+  const u16 = (o) => (o + 2 > b.length ? 0 : le ? b[o] | (b[o + 1] << 8) : (b[o] << 8) | b[o + 1]);
+  const u32 = (o) => (o + 4 > b.length ? 0 : le ? (b[o] | (b[o + 1] << 8) | (b[o + 2] << 16)) + b[o + 3] * 0x1000000 : b[o] * 0x1000000 + ((b[o + 1] << 16) | (b[o + 2] << 8) | b[o + 3]));
+  const size = { 1: 1, 3: 2, 4: 4, 7: 1, 13: 4 };
+  const ifd = (off) => {
+    const map = new Map(), o = base + off, n = off ? u16(o) : 0;
+    if (!off || o + 2 + n * 12 > b.length) return map;
+    for (let i = 0; i < n; i++) {
+      const e = o + 2 + i * 12, type = u16(e + 2), count = u32(e + 4), bytes = (size[type] || 1) * count;
+      map.set(u16(e), { type, count, at: bytes <= 4 ? e + 8 : base + u32(e + 8) });
+    }
+    map.next = u32(o + 2 + n * 12);
+    return map;
+  };
+  const values = (en) => {
+    if (!en) return [];
+    const out = [];
+    for (let i = 0; i < Math.min(en.count, 64); i++) out.push(en.type === 3 ? u16(en.at + 2 * i) : en.type === 4 || en.type === 13 ? u32(en.at + 4 * i) : b[en.at + i]);
+    return out;
+  };
+  return { ifd, values, first: u32(base + 4) };
+}
+
+/**
+ * How a photo is to be turned for showing (its Exif orientation, 1–8; 1 when it says nothing):
+ * phones store a picture taken upright as the sensor saw it, lying on its side, and say so here.
+ */
+function exifOrientation(bytes) {
+  const b = bytes;
+  let t = null;
+  if (b[0] === 0xff && b[1] === 0xd8) { // JPEG: the Exif block (APP1)
+    for (let o = 2; o + 4 < b.length && b[o] === 0xff;) {
+      const marker = b[o + 1], len = (b[o + 2] << 8) | b[o + 3];
+      if (marker === 0xda || marker === 0xd9) break; // (image data follows: no Exif)
+      if (marker === 0xe1 && b[o + 4] === 0x45 && b[o + 5] === 0x78 && b[o + 6] === 0x69 && b[o + 7] === 0x66) { t = tiffReader(b, o + 10); break; }
+      o += 2 + len;
+    }
+  } else t = tiffReader(b);
+  if (!t) return 1;
+  const v = t.values(t.ifd(t.first).get(0x0112))[0];
+  return v >= 1 && v <= 8 ? v : 1;
+}
+
+/**
+ * The picture to show for a camera's RAW photo (DNG): the largest JPEG preview stored inside it
+ * (the raw sensor data itself is not developed here), with the photo's orientation. Null when
+ * there is none.
+ */
+function dngPreview(bytes) {
+  const t = tiffReader(bytes);
+  if (!t) return null;
+  const found = [], seen = new Set(), todo = [t.first];
+  while (todo.length && seen.size < 32) {
+    const off = todo.shift();
+    if (!off || seen.has(off)) continue;
+    seen.add(off);
+    const d = t.ifd(off);
+    for (const sub of t.values(d.get(0x014a))) todo.push(sub); // SubIFDs
+    if (d.next) todo.push(d.next);
+    const comp = t.values(d.get(0x0103))[0];
+    let start = 0, len = 0;
+    if (d.has(0x0201)) { start = t.values(d.get(0x0201))[0]; len = t.values(d.get(0x0202))[0]; } // JPEGInterchangeFormat
+    else if ((comp === 6 || comp === 7) && d.has(0x0111)) {
+      const offs = t.values(d.get(0x0111)), lens = t.values(d.get(0x0117));
+      if (offs.length === 1) { start = offs[0]; len = lens[0]; }
+    }
+    if (!len || start + len > bytes.length || bytes[start] !== 0xff || bytes[start + 1] !== 0xd8) continue;
+    // (a baseline or progressive JPEG: lossless JPEG holds the raw sensor data)
+    const jpg = bytes.subarray(start, start + len);
+    for (let o = 2; o + 9 < jpg.length && jpg[o] === 0xff;) {
+      const m = jpg[o + 1];
+      if (m === 0xc0 || m === 0xc1 || m === 0xc2) { found.push({ jpg, px: ((jpg[o + 5] << 8) | jpg[o + 6]) * ((jpg[o + 7] << 8) | jpg[o + 8]) }); break; }
+      if ((m >= 0xc3 && m <= 0xcf && m !== 0xc4 && m !== 0xc8 && m !== 0xcc) || m === 0xda) break;
+      o += 2 + ((jpg[o + 2] << 8) | jpg[o + 3]);
+    }
+  }
+  if (!found.length) return null;
+  found.sort((p, q) => q.px - p.px);
+  return { bytes: found[0].jpg.slice(), orientation: exifOrientation(bytes) };
 }
 
 function detectKind(bytes, name = "") {
