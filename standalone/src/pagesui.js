@@ -68,8 +68,8 @@ function renderPagesGrid() {
     const sel = pm.sel.has(it);
     const turn = pmSlides() ? "" : btn("rotate", "pages.rotate", "↻");
     return `<div class="pg-card${pm.swapFrom === i ? " swap" : ""}${pmHiddenItem(it) ? " hidden-slide" : ""}${sel ? " selected" : ""}" draggable="true" data-i="${i}">
-      <div class="pg-thumb" style="aspect-ratio: ${size.width} / ${size.height}" title="${t("pages.selectHint")}">${it.from < 0 ? `<span>${t("pages.blankLabel")}</span>` : '<img alt="">'}</div>
-      <div class="pg-label"><input type="checkbox" class="pg-sel"${sel ? " checked" : ""} title="${t("pages.selectHint")}" aria-label="${t("pages.selectHint")}"><b>${i + 1}</b><span class="pg-badge" title="${badge.replace(/"/g, "&quot;")}">${badge}</span></div>
+      <div class="pg-thumb" style="aspect-ratio: ${size.width} / ${size.height}" title="${t("pages.selectHint")}" role="checkbox" aria-checked="${sel}" aria-label="${t("pages.selectHint")}" tabindex="0">${it.from < 0 ? `<span>${t("pages.blankLabel")}</span>` : '<img alt="">'}</div>
+      <div class="pg-label"><b>${i + 1}</b><span class="pg-badge" title="${badge.replace(/"/g, "&quot;")}">${badge}</span></div>
       <div class="pg-btns">${btn("left", "pages.left", "‹")}${btn("right", "pages.right", "›")}${btn("swap", "pages.swap", "⇄")}${turn}${btn("blank", "pages.insertBlank", "+")}${btn("file", "pages.insertFile", "+⎙")}${btn("save", pmSlides() ? "pages.saveOneSlide" : "pages.saveOne", "⤓", { fmt: pmFormat() })}${btn("remove", "pages.remove", "✕")}</div>
     </div>`;
   }).join("");
@@ -290,9 +290,8 @@ function initPagesManager() {
     const b = e.target.closest("button[data-act]"), card = e.target.closest(".pg-card");
     if (!card) return;
     if (!b) {
-      // a click on the picture or the box selects (Shift+click: the pages in between too)
-      if (e.target.closest(".pg-sel")) { e.preventDefault(); pmToggle(Number(card.dataset.i), e.shiftKey); }
-      else if (e.target.closest(".pg-thumb")) pmToggle(Number(card.dataset.i), e.shiftKey);
+      // a click on the picture selects (Shift+click: the pages in between too)
+      if (e.target.closest(".pg-thumb")) pmToggle(Number(card.dataset.i), e.shiftKey);
       return;
     }
     const i = Number(card.dataset.i), act = b.dataset.act;
@@ -312,6 +311,14 @@ function initPagesManager() {
     } else if (act === "file") { pm.insertAt = i + 1; $("#pagesFile").click(); }
     else if (act === "rotate") { pmTurn(pm.items[i], 90); renderPagesGrid(); }
     else if (act === "save") pmSave([pm.items[i]]);
+  });
+  grid.addEventListener("keydown", (e) => { // (the picture is focusable: Space or Enter selects it)
+    const th = e.target.closest(".pg-thumb");
+    if (!th || (e.key !== " " && e.key !== "Enter")) return;
+    e.preventDefault();
+    const i = Number(th.closest(".pg-card").dataset.i);
+    pmToggle(i, e.shiftKey);
+    grid.querySelector(`.pg-card[data-i="${i}"] .pg-thumb`)?.focus();
   });
   $("#pagesSelAll").addEventListener("click", () => {
     const shown = pm.items.filter(pmShown);
