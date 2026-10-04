@@ -119,7 +119,11 @@ function quadMap(q) {
   const g = (dx3 * dy2 - dx2 * dy3) / den, h = (dx1 * dy3 - dx3 * dy1) / den;
   const a = x1 - x0 + g * x1, b = x3 - x0 + h * x3, c = x0;
   const d = y1 - y0 + g * y1, e = y3 - y0 + h * y3, f = y0;
-  return (s, t) => { const w = g * s + h * t + 1; return [(a * s + b * t + c) / w, (d * s + e * t + f) / w]; };
+  const fwd = (s, t) => { const w = g * s + h * t + 1; return [(a * s + b * t + c) / w, (d * s + e * t + f) / w]; };
+  // the way back, (x, y) → (s, t): the inverse of the matrix [[a b c] [d e f] [g h 1]]
+  const A = e - f * h, B = c * h - b, C = b * f - c * e, D = f * g - d, E = a - c * g, F = c * d - a * f, G = d * h - e * g, Hh = b * g - a * h, I = a * e - b * d;
+  fwd.inverse = (x, y) => { const w = G * x + Hh * y + I || 1e-12; return [(A * x + B * y + C) / w, (D * x + E * y + F) / w]; };
+  return fwd;
 }
 
 /** Width and height of the rectangle a page outlined by `q` (pixels) becomes: its longer edges. */
@@ -134,27 +138,32 @@ function quadSize(q) {
  * `angle` degrees clockwise about its middle (same size, corners filled with `bg`); `quad`
  * (fractions of that straightened picture: top left, top right, bottom right, bottom left) is
  * then stretched to a rectangle; `tracks` (text lines traced on the straightened picture, as
- * fractions) are bent straight before that. Returns {data, width, height}.
+ * fractions) are bent straight in that rectangle. Returns {data, width, height}.
  */
 function warpPixels(src, sw, sh, n, { turn = 0, angle = 0, quad = null, tracks = null, bg = 255 } = {}) {
   const tr = ((turn % 360) + 360) % 360, dw = tr % 180 ? sh : sw, dh = tr % 180 ? sw : sh;
-  // curved lines bent straight (tracks: fractions of the straightened picture, see dewarpMap)
-  const bend = tracks && tracks.length ? dewarpMap(tracks.map((t) => t.map(([x, y]) => [x * dw, y * dh])), dw, dh) : null;
-  let W = dw, H = dh, map = null;
+  let W = dw, H = dh, map = null, back = (x, y) => [x, y];
   if (quad) {
     const q = quad.map(([x, y]) => [x * dw, y * dh]);
     [W, H] = quadSize(q);
     const m = quadMap(q);
     map = (u, v) => m((u + 0.5) / W, (v + 0.5) / H);
+    back = (x, y) => { const [s2, t2] = m.inverse(x, y); return [s2 * W - 0.5, t2 * H - 0.5]; };
   }
+  // Curved lines bent straight (tracks: fractions of the straightened picture, see dewarpMap).
+  // The bend is worked out where the page is already flat (after the corners), so the lines end
+  // up level there, not level in the photo and then tilted again by the corners.
+  const bend = tracks && tracks.length
+    ? dewarpMap(tracks.map((t) => t.map(([x, y]) => back(x * dw, y * dh))).map((t) => t.filter(([x, y]) => x > -W && x < 2 * W && y > -H && y < 2 * H)), W, H)
+    : null;
   const a = (angle * Math.PI) / 180, c = Math.cos(a), s = Math.sin(a), cx = dw / 2, cy = dh / 2;
   const out = new Uint8ClampedArray(W * H * n);
   if (n === 4) for (let i = 3; i < out.length; i += 4) out[i] = 255;
   for (let v = 0; v < H; v++) {
     for (let u = 0; u < W; u++) {
-      let X, Y;
-      if (map) [X, Y] = map(u, v); else { X = u + 0.5; Y = v + 0.5; }
-      if (bend) Y = bend(X, Y);
+      let X, Y, uu = u, vv = v;
+      if (bend) vv = bend(u + 0.5, v + 0.5) - 0.5;
+      if (map) [X, Y] = map(uu, vv); else { X = uu + 0.5; Y = vv + 0.5; }
       // undo the straightening turn, then the quarter turns
       const dx = X - cx, dy = Y - cy;
       const Xs = cx + c * dx + s * dy, Ys = cy - s * dx + c * dy;
@@ -455,4 +464,182 @@ function dewarpMap(tracks, w, h) {
     const g00 = grid[r * cols + c], g01 = grid[r * cols + c + 1], g10 = grid[(r + 1) * cols + c], g11 = grid[(r + 1) * cols + c + 1];
     return y + (g00 * (1 - ax) + g01 * ax) * (1 - ay) + (g10 * (1 - ax) + g11 * ax) * ay;
   };
+}
+
+/* ---- the paper in a photo: found for cropping */
+
+/**
+ * The sheet of paper in a photographed page: its four corners (fractions: top left, top right,
+ * bottom right, bottom left), or null when the picture shows nothing but the page (a scan). The
+ * paper is the largest bright area (brighter than Otsu's threshold). A book photographed open shows
+ * two pages: they are parted at the spine, a darker valley between them, and the page with more
+ * text lines (`lines`: tracks in pixels, see findTextLines) is kept.
+ */
+function findPaper(px, w, h, lines = null) {
+  // a small copy (about 400 pixels across) is enough for the outline
+  const k = Math.max(1, Math.round(Math.max(w, h) / 400)), sw = Math.floor(w / k), sh = Math.floor(h / k);
+  const g = new Uint8Array(sw * sh);
+  for (let y = 0; y < sh; y++) for (let x = 0; x < sw; x++) {
+    let s = 0;
+    for (let j = 0; j < k; j++) for (let i = 0; i < k; i++) s += px[(y * k + j) * w + x * k + i];
+    g[y * sw + x] = s / (k * k);
+  }
+  const hist = new Float64Array(256);
+  for (const v of g) hist[v]++;
+  let sum = 0; for (let i = 0; i < 256; i++) sum += i * hist[i];
+  let wB = 0, sB = 0, best = 0, thr = 128;
+  for (let i = 0; i < 256; i++) {
+    wB += hist[i]; if (!wB) continue;
+    const wF = g.length - wB; if (!wF) break;
+    sB += i * hist[i];
+    const mB = sB / wB, mF = (sum - sB) / wF, v = wB * wF * (mB - mF) ** 2;
+    if (v > best) { best = v; thr = i; }
+  }
+  // Text is dark too: the bright mask is closed over small dark spots (letters) first.
+  const bright = new Uint8Array(sw * sh);
+  for (let i = 0; i < g.length; i++) bright[i] = g[i] > thr ? 1 : 0;
+  const r = Math.max(1, Math.round(Math.min(sw, sh) / 80));
+  const dil = new Uint8Array(sw * sh), clo = new Uint8Array(sw * sh);
+  for (let y = 0; y < sh; y++) for (let x = 0; x < sw; x++) {
+    let on = 0;
+    for (let j = -r; j <= r && !on; j++) for (let i = -r; i <= r; i++) { const xx = x + i, yy = y + j; if (xx >= 0 && yy >= 0 && xx < sw && yy < sh && bright[yy * sw + xx]) { on = 1; break; } }
+    dil[y * sw + x] = on;
+  }
+  for (let y = 0; y < sh; y++) for (let x = 0; x < sw; x++) {
+    let all = 1;
+    for (let j = -r; j <= r && all; j++) for (let i = -r; i <= r; i++) { const xx = x + i, yy = y + j; if (xx >= 0 && yy >= 0 && xx < sw && yy < sh && !dil[yy * sw + xx]) { all = 0; break; } }
+    clo[y * sw + x] = all;
+  }
+  // the largest bright area
+  const lab = new Int32Array(sw * sh).fill(-1), stack = [];
+  let bestLab = -1, bestN = 0, n = 0;
+  for (let i = 0; i < clo.length; i++) {
+    if (!clo[i] || lab[i] >= 0) continue;
+    let cnt = 0; stack.push(i); lab[i] = n;
+    while (stack.length) {
+      const p = stack.pop(); cnt++;
+      const x = p % sw, y = (p - x) / sw;
+      for (const q of [x > 0 ? p - 1 : -1, x < sw - 1 ? p + 1 : -1, y > 0 ? p - sw : -1, y < sh - 1 ? p + sw : -1]) if (q >= 0 && clo[q] && lab[q] < 0) { lab[q] = n; stack.push(q); }
+    }
+    if (cnt > bestN) { bestN = cnt; bestLab = n; }
+    n++;
+  }
+  if (bestLab < 0 || bestN < 0.2 * sw * sh) return null;
+  let bx0 = sw, by0 = sh, bx1 = 0, by1 = 0;
+  for (let i = 0; i < lab.length; i++) if (lab[i] === bestLab) { const x = i % sw, y = (i - x) / sw; bx0 = Math.min(bx0, x); bx1 = Math.max(bx1, x); by0 = Math.min(by0, y); by1 = Math.max(by1, y); }
+  // Only the page: nothing to cut away (a scan, a page already cropped).
+  if (bx1 - bx0 >= 0.97 * sw && by1 - by0 >= 0.97 * sh && bestN >= 0.85 * sw * sh) return null;
+  // A book photographed open: two pages, the spine a darker valley between them (a shadow). It
+  // is looked for in eight bands from top to bottom; where it is clear in most, a line is fitted
+  // through it, and the page with more text lines is kept.
+  let keep = () => true;
+  {
+    const valleys = [], bands = 8, bh = (by1 - by0) / bands;
+    for (let b = 0; b < bands; b++) {
+      const y0 = Math.round(by0 + b * bh), y1 = Math.round(by0 + (b + 1) * bh);
+      const prof = [];
+      // (the paper's own brightness: a high percentile of the column, so text does not darken it)
+      for (let x = bx0; x <= bx1; x++) {
+        const vals = [];
+        for (let y = y0; y < y1; y++) if (lab[y * sw + x] === bestLab) vals.push(g[y * sw + x]);
+        if (vals.length > (y1 - y0) * 0.5) { vals.sort((p, q) => p - q); prof.push(vals[Math.floor(vals.length * 0.85)]); } else prof.push(NaN);
+      }
+      const sm = prof.map((v, i) => { const a = prof.slice(Math.max(0, i - 3), i + 4).filter((q) => !Number.isNaN(q)); return a.length ? a.reduce((p, q) => p + q, 0) / a.length : NaN; });
+      const n2 = sm.length, edge = Math.round(n2 * 0.1), win = Math.round(n2 * 0.15);
+      let best2 = null;
+      for (let i = edge; i < n2 - edge; i++) {
+        const v = sm[i];
+        if (Number.isNaN(v)) continue;
+        const left = Math.max(...sm.slice(Math.max(0, i - win), i).filter((q) => !Number.isNaN(q)), -1);
+        const right = Math.max(...sm.slice(i + 1, i + 1 + win).filter((q) => !Number.isNaN(q)), -1);
+        const depth = Math.min(left, right) / Math.max(1, v) - 1;
+        if (depth > 0.07 && (!best2 || depth > best2.depth)) best2 = { x: bx0 + i, depth };
+      }
+      if (best2) valleys.push([best2.x, (y0 + y1) / 2]);
+    }
+    if (valleys.length >= bands / 2) {
+      const n3 = valleys.length, my = valleys.reduce((p, q) => p + q[1], 0) / n3, mx = valleys.reduce((p, q) => p + q[0], 0) / n3;
+      let sxy = 0, syy = 0;
+      for (const [x, y] of valleys) { sxy += (y - my) * (x - mx); syy += (y - my) ** 2; }
+      const bb = syy ? sxy / syy : 0, aa = mx - bb * my, spine = (y) => aa + bb * y;
+      const off = Math.sqrt(valleys.reduce((p, [x, y]) => p + (x - spine(y)) ** 2, 0) / n3);
+      if (off < sw * 0.04) {
+        let leftInk = 0, rightInk = 0;
+        for (const t of lines || []) for (const [x, y] of t) { if (x / k < spine(y / k)) leftInk++; else rightInk++; }
+        if (!lines || !lines.length) {
+          for (let i = 0; i < lab.length; i++) if (lab[i] === bestLab) { const x = i % sw, y = (i - x) / sw; if (x < spine(y)) leftInk++; else rightInk++; }
+        }
+        // The shadow beside the spine may lie over the first letters: the cut moves out until it
+        // clears the lines that start (or end) near it, with a small margin.
+        const right2 = rightInk >= leftInk, margin = sw * 0.02;
+        // (the lines' usual start: a low quantile, as indented lines start further in and a line
+        // traced on into the neighbouring page further out)
+        const ds = [];
+        for (const t of lines || []) {
+          const [x, y] = right2 ? t[0] : t[t.length - 1], sx = x / k, sp = spine(y / k);
+          const d = right2 ? sx - sp : sp - sx; // how far inside the kept page the line starts
+          if (d > -sw * 0.06 && d < sw * 0.1) ds.push(d);
+        }
+        ds.sort((p, q) => p - q);
+        const shift = ds.length ? Math.max(0, margin - ds[Math.floor(ds.length * 0.3)]) : 0;
+        const cutAt = (y) => spine(y) + (right2 ? -shift : shift);
+        keep = right2 ? (x, y) => x >= cutAt(y) : (x, y) => x <= cutAt(y);
+      }
+    }
+  }
+  // corners: the area's points furthest out in the four diagonal directions
+  let tl = null, tr = null, br = null, bl = null;
+  for (let i = 0; i < lab.length; i++) {
+    if (lab[i] !== bestLab) continue;
+    const x = i % sw, y = (i - x) / sw;
+    if (!keep(x, y)) continue;
+    if (!tl || x + y < tl[0] + tl[1]) tl = [x, y];
+    if (!br || x + y > br[0] + br[1]) br = [x, y];
+    if (!tr || x - y > tr[0] - tr[1]) tr = [x, y];
+    if (!bl || x - y < bl[0] - bl[1]) bl = [x, y];
+  }
+  if (!tl) return null;
+  const quad = [tl, tr, br, bl].map(([x, y]) => [Math.min(1, Math.max(0, Math.round(((x + 0.5) / sw) * 1e4) / 1e4)), Math.min(1, Math.max(0, Math.round(((y + 0.5) / sh) * 1e4) / 1e4))]);
+  // Nothing around the page (a scan, a cropped photo): no crop.
+  const inner = quad.every(([x, y]) => x < 0.03 || x > 0.97 || y < 0.03 || y > 0.97);
+  const area = Math.abs(quad.reduce((a, p, i) => { const q = quad[(i + 1) % 4]; return a + p[0] * q[1] - q[0] * p[1]; }, 0)) / 2;
+  if (inner || area > 0.93) return null;
+  return quad;
+}
+
+/** Whether traced lines are clearly curved (worth bending straight), not just straight lines. */
+function linesAreCurved(tracks, h) {
+  if (!tracks || tracks.length < 3) return false;
+  let curved = 0;
+  for (const t of tracks) {
+    if (t.length < 4) continue;
+    const n = t.length, mx = t.reduce((p, q) => p + q[0], 0) / n, my = t.reduce((p, q) => p + q[1], 0) / n;
+    let sxy = 0, sxx = 0;
+    for (const [x, y] of t) { sxy += (x - mx) * (y - my); sxx += (x - mx) ** 2; }
+    const b = sxx ? sxy / sxx : 0;
+    const dev = Math.max(...t.map(([x, y]) => Math.abs(y - (my + b * (x - mx)))));
+    if (dev > h * 0.004) curved++;
+  }
+  return curved >= Math.max(2, tracks.length * 0.2);
+}
+
+/**
+ * Everything automatic for one page as a grey picture (already turned straight): the paper's
+ * corners (when there is background around it; `crop`) and the curved text lines to bend
+ * straight (`dewarp`; only when they are clearly curved). Fractions, as used by warpPixels.
+ */
+function autoPrepare(gray, w, h, { crop = true, dewarp = true } = {}) {
+  const lines = findTextLines(gray, w, h);
+  const quad = crop ? findPaper(gray, w, h, lines) : null;
+  let tracks = null;
+  if (dewarp) {
+    let region = null;
+    if (quad) {
+      const xs = quad.map((p) => p[0] * w), ys = quad.map((p) => p[1] * h);
+      region = [Math.max(0, Math.min(...xs)), Math.max(0, Math.min(...ys)), Math.min(w, Math.max(...xs)), Math.min(h, Math.max(...ys))];
+    }
+    const found = region ? findTextLines(gray, w, h, region) : lines;
+    if (linesAreCurved(found, h)) tracks = found.map((t) => t.map(([x, y]) => [Math.round((x / w) * 1e4) / 1e4, Math.round((y / h) * 1e4) / 1e4]));
+  }
+  return { quad, tracks };
 }

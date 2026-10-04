@@ -68,6 +68,7 @@ function stSync() {
   $("#stPreview").hidden = !showBent;
   if (showBent) stQueuePreview();
   $("#stLinesTools").hidden = st.mode !== "lines";
+  $("#stFindPage").hidden = st.mode !== "corners";
   $("#stPreviewOn").checked = st.preview;
   $("#stLinesCount").textContent = st.tracks.length ? t("st2.linesCount", { n: st.tracks.length }) : "";
   for (const m of ST_MODES) {
@@ -227,6 +228,23 @@ async function stFindLines() {
   }
 }
 
+/** Finds the paper in the picture and puts the four corners on it. */
+async function stFindPage() {
+  if (!st.src) { toast(t("pic.preparing")); return; }
+  busy(t("st2.findingPage"));
+  await new Promise((res) => setTimeout(res, 30));
+  try {
+    const { gray, w, h } = stTurnedGray();
+    const quad = Engine.findPaper(gray, w, h, Engine.findTextLines(gray, w, h));
+    if (!quad) { toast(t("st2.noPage"), "error"); return; }
+    st.quad = quad;
+    stSync();
+    toast(t("st2.pageFound"), "ok");
+  } finally {
+    busy("");
+  }
+}
+
 /** The bent picture, shown instead of the original (computed shortly after a change). */
 function stQueuePreview() {
   clearTimeout(st.previewTimer);
@@ -273,6 +291,7 @@ function initStraighten() {
   $("#stPlus").addEventListener("click", () => { st.angle = stRound(st.angle + 0.1); stSync(); });
   $("#stAuto").addEventListener("click", stAuto);
   $("#stFindLines").addEventListener("click", stFindLines);
+  $("#stFindPage").addEventListener("click", stFindPage);
   $("#stClearLines").addEventListener("click", () => { st.tracks = []; st.preview = false; stSync(); });
   $("#stPreviewOn").addEventListener("change", (e) => { st.preview = e.target.checked && st.tracks.length > 0; stSync(); });
   for (const m of ST_MODES) $(`#stMode_${m}`).addEventListener("click", () => {

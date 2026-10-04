@@ -684,6 +684,7 @@
         <button type="button" class="btn small" id="stMode_corners" data-i18n="st2.mode_corners" data-i18n-title="st2.hint_corners"></button>
         <button type="button" class="btn small" id="stMode_lines" data-i18n="st2.mode_lines" data-i18n-title="st2.hint_lines"></button>
       </span>
+      <button type="button" class="btn small" id="stFindPage" data-i18n="st2.findPage" data-i18n-title="st2.findPageTitle" hidden></button>
       <span class="st-lines-tools" id="stLinesTools" hidden>
         <button type="button" class="btn small" id="stFindLines" data-i18n="st2.findLines" data-i18n-title="st2.findLinesTitle"></button>
         <button type="button" class="btn small" id="stClearLines" data-i18n="st2.clearLines"></button>
@@ -752,7 +753,11 @@
       <label class="check ocr-range"><input type="radio" name="ocrPages" id="ocrPagesRange"> <span data-i18n="ocr.pagesRange"></span>
         <input type="text" id="ocrRange" inputmode="numeric" autocomplete="off" data-i18n-placeholder="ocr.rangeHint" data-i18n-aria="ocr.pagesRange"></label>
     </div>
-    <label class="check" data-i18n-title="ocr.deskewTitle"><input type="checkbox" id="ocrDeskew" checked> <span data-i18n="ocr.deskew"></span></label>
+    <div class="field"><span data-i18n="ocr.prepare">Before recognition</span>
+      <label class="check" data-i18n-title="ocr.deskewTitle"><input type="checkbox" id="ocrDeskew" checked> <span data-i18n="ocr.deskew"></span></label>
+      <label class="check" data-i18n-title="ocr.dewarpTitle"><input type="checkbox" id="ocrDewarp" checked> <span data-i18n="ocr.dewarp"></span></label>
+      <label class="check" data-i18n-title="ocr.cropTitle"><input type="checkbox" id="ocrCrop" checked> <span data-i18n="ocr.crop"></span></label>
+    </div>
     <label class="field"><span data-i18n="ocr.family">Font of the translation</span>
       <select id="ocrFamily"><option value="serif" data-i18n="st.serif"></option><option value="sans-serif" data-i18n="st.sans"></option></select>
     </label>

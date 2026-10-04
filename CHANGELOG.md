@@ -4,6 +4,17 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.15
+
+- Text recognition: three new options under "Before recognition", all on by default and remembered:
+  - **Straighten tilted pages** – as before, each page's tilt is measured and turned away.
+  - **Flatten curved text lines** – the lines of each page are traced; where they are clearly curved (a book photographed open), the page is bent so they lie straight. Straight pages stay as they are.
+  - **Crop automatically (find the page)** – the paper is found in the picture, the background (table, dark edges, the neighbouring page of an open book) is cut away and the page is pulled straight from its corners. A scan without a border stays as it is.
+  
+  A picture is replaced by the prepared one ("↺ Restore original" in the picture tools brings the photo back); in a PDF only the pages that needed it are drawn anew, the recognised text and translations of the others are kept. A message tells how many pages were straightened, cropped and flattened.
+- Straighten by hand → Page borders: "Find page" puts the four corners on the paper automatically, ready to be adjusted.
+- Fixed: page borders and flattened lines together left the lines tilted (they were levelled in the photo and then tilted again by the corners); they are now levelled on the flattened page, which also makes the text recognition of such photos much better.
+
 ## 2.14
 
 - Pictures: "↺ Restore original" in the picture tools discards all applied changes at once (crop, turns, straightening, page borders, flattened lines, brightness …) and opens the picture as it was loaded – also after several edits and after reloading the app. (Before applying, "Reset" and "Cancel" discard the changes not yet applied.)

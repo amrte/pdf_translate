@@ -20,7 +20,7 @@
   `text.js` (SRT/VTT subtitles, Markdown, plain text: cues or paragraphs as segments, written back in place, laid out as a simple page; runs with the engine),
   `slides.js` (PPTX preview: the slides drawn as PDF pages – background, shapes, pictures, tables, text in place; runs with the engine),
   `pages.js` (page manager, engine side: a PDF or PPTX put together anew from reordered, removed, blank and copied pages/slides),
-  `deskew.js` (straightening: the tilt of a scanned page or photo measured on its text lines, a PDF page's content turned straight, perspective and curved-line correction of pictures; runs with the engine),
+  `deskew.js` (straightening: the tilt of a scanned page or photo measured on its text lines, a PDF page's content turned straight, perspective and curved-line correction of pictures, the paper found in a photo for cropping – used by OCR to prepare pages; runs with the engine),
   `legacy.js` (OLE compound file reader; converts .doc/.xls/.ppt to the modern format on open),
   `doc.js`, `xls.js`, `ppt.js` (the three converters: Word 97–2003 → DOCX, BIFF8 → XLSX, PowerPoint 97–2003 → PPTX),
   `icon.svg` (app icon; the template embeds it as favicon and logo), `egg.jpg` (the easter-egg picture, embedded by the build as a data URI), `ui.js` (interface), `markup.js` (markup tools, page navigation, undo/redo), `tools.js`
