@@ -218,7 +218,7 @@ function saveBlob(blob, filename) {
 const ERROR_KEYS = [
   [/DRM-protected/i, "err.drm"], [/not a valid (zip|\.docx)/i, "err.zip"], [/ZIP64/i, "err.zip64"],
   [/No \.fb2 file/i, "err.noFb2"], [/no package file/i, "err.noOpf"], [/XLIFF file is not valid/i, "err.xliff"],
-  [/No document is open/i, "err.noDoc"], [/is encrypted and cannot be opened/i, "err.encrypted"], [/is too old/i, "err.tooOld"], [/picture format is not supported|unknown image file format/i, "err.image"], [/RAW photo without a preview/i, "err.rawPhoto"], [/engine worker|worker stopped/i, "msg.workerStopped"],
+  [/No document is open/i, "err.noDoc"], [/is encrypted and cannot be opened/i, "err.encrypted"], [/is too old/i, "err.tooOld"], [/picture format is not supported|unknown image file format/i, "err.image"], [/RAW photo without a preview/i, "err.rawPhoto"], [/OCR language data could not be loaded/i, "err.ocrLang"], [/engine worker|worker stopped/i, "msg.workerStopped"],
 ];
 function userError(err) {
   const msg = String((err && err.message) || err || "");
@@ -302,9 +302,46 @@ async function idbGet(key = "last") {
 
 /* ------------------------------------------------------------- loading */
 
+const isPictureFile = (f) => /\.(png|jpe?g|jfif|gif|bmp|tiff?|dng|webp|avif|heic|heif|hif)$/i.test(f.name) || /^image\//i.test(f.type);
+
+/**
+ * Several pictures (photos of a book's pages, say) opened as one PDF, a page for each, in the
+ * order of their names (phones number their photos); its text is then read with OCR.
+ */
+async function openPictures(files) {
+  if (building) { toast(t("msg.waitBuild"), "error"); return; }
+  const sorted = files.slice().sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: "base" }));
+  setLoading(t("msg.picturesToPdf", { n: sorted.length }));
+  try {
+    await pool.start();
+    const list = [];
+    for (const [k, f] of sorted.entries()) {
+      setLoading(t("msg.picturesReading", { i: k + 1, n: sorted.length }));
+      const bytes = new Uint8Array(await f.arrayBuffer()), fmt = Engine.imageKindOf(bytes);
+      if (!fmt) throw new Error("This picture format is not supported.");
+      list.push(ENGINE_IMAGES.includes(fmt) ? bytes : await transcodeImage(bytes));
+    }
+    setLoading(t("msg.picturesToPdf", { n: sorted.length }));
+    const r = await pool.workers[0].call("imagesToPdf", { list });
+    const name = `${sorted[0].name.replace(/\.[^.]+$/, "")}${sorted.length > 1 ? ` (+${sorted.length - 1})` : ""}.pdf`;
+    if (state.doc) closeFind();
+    await loadBytes(new Uint8Array(r.bytes), name, true);
+    if (state.doc && state.doc.name === name) { toast(t("msg.picturesOpened", { n: sorted.length })); openOcrDialog(); }
+  } catch (err) {
+    setLoading("");
+    toast(t("msg.openFailed", { err: userError(err) }), "error");
+  } finally {
+    $("#fileInput").value = "";
+  }
+}
+
 async function openPdf(file, files = null) {
   if (!file) return;
-  if (files && files.length > 1) { batchAdd(files); return; } // several files: the batch
+  if (files && files.length > 1) {
+    // several pictures: one document, a page for each; other files: the batch
+    if ([...files].every(isPictureFile)) openPictures([...files]); else batchAdd(files);
+    return;
+  }
   if (!/\.(pdf|epub|fb2|fbz|zip|docx|pptx|xlsx|doc|xls|ppt|srt|vtt|md|markdown|txt|text|png|jpe?g|jfif|gif|bmp|tiff?|dng|webp|avif|heic|heif|hif)$/i.test(file.name) && !/pdf|epub|fictionbook|officedocument|msword|ms-excel|ms-powerpoint|^text\/|^image\//i.test(file.type)) {
     toast(t("msg.chooseFile"), "error");
     return;

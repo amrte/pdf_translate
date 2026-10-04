@@ -2556,6 +2556,28 @@ function renderPNG(doc, index, zoom) {
  * when the file does not say), so OCR and the translated output keep the pixel dimensions.
  */
 function imageToPdf(bytes) {
+  const doc = new M.PDFDocument();
+  try {
+    const { width, height } = addImagePage(doc, bytes);
+    return { bytes: doc.saveToBuffer("compress").asUint8Array().slice(), width, height };
+  } finally {
+    free(doc);
+  }
+}
+
+/** Several pictures as one PDF, a page for each (see addImagePage), in the order given. */
+function imagesToPdf(list) {
+  const doc = new M.PDFDocument();
+  try {
+    for (const bytes of list) addImagePage(doc, bytes);
+    return { bytes: doc.saveToBuffer("compress").asUint8Array().slice(), pages: list.length };
+  } finally {
+    free(doc);
+  }
+}
+
+/** A picture added to `doc` as a page of its own size; returns its size in pixels as shown. */
+function addImagePage(doc, bytes) {
   // A RAW photo shows its JPEG preview; a photo stored on its side (most phone photos taken
   // upright) is set upright on the page by the drawing matrix, the picture itself unchanged.
   let orient = exifOrientation(bytes);
@@ -2597,19 +2619,14 @@ function imageToPdf(bytes) {
     const at = (s2, t2) => { const [x, y] = shown(s2, 1 - t2); return [x, ph - y]; };
     const [e, f] = at(0, 0), [a1, b1] = at(1, 0), [c1, d1] = at(0, 1);
     const cm = [a1 - e, b1 - f, c1 - e, d1 - f, e, f].map((x) => (Math.abs(x) < 1e-9 ? 0 : x).toFixed(4)).join(" ");
-    const doc = new M.PDFDocument();
-    try {
-      const ref = doc.addImage(img);
-      const res = doc.newDictionary(), xo = doc.newDictionary();
-      xo.put("Im0", ref);
-      res.put("XObject", xo);
-      const page = doc.addPage([0, 0, pw, ph], 0, res, `q ${cm} cm /Im0 Do Q`);
-      doc.insertPage(-1, page);
-      free(page);
-      return { bytes: doc.saveToBuffer("compress").asUint8Array().slice(), width: side ? h : w, height: side ? w : h };
-    } finally {
-      free(doc);
-    }
+    const ref = doc.addImage(img);
+    const res = doc.newDictionary(), xo = doc.newDictionary();
+    xo.put("Im0", ref);
+    res.put("XObject", xo);
+    const page = doc.addPage([0, 0, pw, ph], 0, res, `q ${cm} cm /Im0 Do Q`);
+    doc.insertPage(-1, page);
+    free(page);
+    return { width: side ? h : w, height: side ? w : h };
   } finally {
     free(img);
   }
@@ -3224,6 +3241,7 @@ function createHandler() {
     if (cmd === "unlock") return { result: unlockPdf(args.bytes, args.password) };
     if (cmd === "convert") return { result: await convertLegacy(args.bytes, args.kind) }; // .doc/.xls/.ppt → .docx/.xlsx/.pptx
     if (cmd === "imageToPdf") { const r = imageToPdf(args.bytes); return { result: r, transfer: [r.bytes.buffer] }; }
+    if (cmd === "imagesToPdf") { const r = imagesToPdf(args.list); return { result: r, transfer: [r.bytes.buffer] }; }
     // --- the page manager: extra files held here for thumbnails, then the file put together anew
     if (cmd === "extraOpen") {
       let doc;
@@ -3251,6 +3269,11 @@ function createHandler() {
       const doc = args.index ? (W.extras[args.index - 1] || {}).doc : W.doc;
       if (!doc) throw new Error("No document is open.");
       return { result: detectSkew(doc, args.page) };
+    }
+    if (cmd === "splitPage") { // a page showing an open book, as its two pages (see splitPage)
+      const doc = args.index ? (W.extras[args.index - 1] || {}).doc : W.doc;
+      if (!doc) throw new Error("No document is open.");
+      return { result: splitPage(doc, args.page, args.rot || 0, args.skew || 0) };
     }
     if (cmd === "orientDetect") { // which way up a page is (quarter turns) and its tilt then
       const doc = args.index ? (W.extras[args.index - 1] || {}).doc : W.doc;

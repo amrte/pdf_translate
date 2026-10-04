@@ -147,6 +147,19 @@ function detectPageOrientation(doc, pno) {
   return detectOrientation(px, w, h);
 }
 
+/**
+ * Page `pno` of `doc` split into the two pages of an open book (see findSpread), as shown: turned
+ * by `rot` and straightened by `skew` degrees. [{quad, tracks}, {quad, tracks}] and whether the
+ * spine was found; without one, the page is parted in the middle.
+ */
+function splitPage(doc, pno, rot = 0, skew = 0) {
+  const g = grayOfPage(doc, pno), t = warpPixels(g.px, g.w, g.h, 1, { turn: rot, angle: -skew });
+  const lines = findTextLines(t.data, t.width, t.height);
+  const found = findSpread(t.data, t.width, t.height, lines);
+  const halves = found || [[[0, 0], [0.5, 0], [0.5, 1], [0, 1]], [[0.5, 0], [1, 0], [1, 1], [0.5, 1]]];
+  return { found: Boolean(found), halves: halves.map((quad) => ({ quad, tracks: tracksFor(t.data, t.width, t.height, quad) })) };
+}
+
 /** The tilt of page `pno` of `doc` (see skewOfGray). */
 function detectSkew(doc, pno) {
   const page = doc.loadPage(pno);
@@ -651,7 +664,7 @@ function dewarpMap(tracks, w, h) {
  * two pages: they are parted at the spine, a darker valley between them, and the page with more
  * text lines (`lines`: tracks in pixels, see findTextLines) is kept.
  */
-function findPaper(px, w, h, lines = null) {
+function findPaper(px, w, h, lines = null, { side = null, info = null } = {}) {
   // a small copy (about 400 pixels across) is enough for the outline
   const k = Math.max(1, Math.round(Math.max(w, h) / 400)), sw = Math.floor(w / k), sh = Math.floor(h / k);
   const g = new Uint8Array(sw * sh);
@@ -704,7 +717,8 @@ function findPaper(px, w, h, lines = null) {
   let bx0 = sw, by0 = sh, bx1 = 0, by1 = 0;
   for (let i = 0; i < lab.length; i++) if (lab[i] === bestLab) { const x = i % sw, y = (i - x) / sw; bx0 = Math.min(bx0, x); bx1 = Math.max(bx1, x); by0 = Math.min(by0, y); by1 = Math.max(by1, y); }
   // Only the page: nothing to cut away (a scan, a page already cropped).
-  if (bx1 - bx0 >= 0.97 * sw && by1 - by0 >= 0.97 * sh && bestN >= 0.85 * sw * sh) return null;
+  if (info) Object.assign(info, { box: [bx0 / sw, by0 / sh, (bx1 + 1) / sw, (by1 + 1) / sh] });
+  if (bx1 - bx0 >= 0.97 * sw && by1 - by0 >= 0.97 * sh && bestN >= 0.85 * sw * sh) { if (info) info.full = true; return null; }
   // A book photographed open: two pages, the spine a darker valley between them (a shadow). It
   // is looked for in eight bands from top to bottom; where it is clear in most, a line is fitted
   // through it, and the page with more text lines is kept.
@@ -746,8 +760,13 @@ function findPaper(px, w, h, lines = null) {
           for (let i = 0; i < lab.length; i++) if (lab[i] === bestLab) { const x = i % sw, y = (i - x) / sw; if (x < spine(y)) leftInk++; else rightInk++; }
         }
         // The shadow beside the spine may lie over the first letters: the cut moves out until it
-        // clears the lines that start (or end) near it, with a small margin.
-        const right2 = rightInk >= leftInk, margin = sw * 0.02;
+        // clears the lines that start (or end) near it, with a small margin. (`side`: the page
+        // wanted, for a book split into its two pages – see findSpread)
+        const right2 = side ? side === "right" : rightInk >= leftInk, margin = sw * 0.02;
+        if (info) {
+          const ym = (by0 + by1) / 2;
+          Object.assign(info, { spine: [k * aa, bb], left: (spine(ym) - bx0) / (bx1 - bx0 + 1), right: (bx1 - spine(ym)) / (bx1 - bx0 + 1) });
+        }
         // (the lines' usual start: a low quantile, as indented lines start further in and a line
         // traced on into the neighbouring page further out)
         const ds = [];
@@ -783,6 +802,51 @@ function findPaper(px, w, h, lines = null) {
   return quad;
 }
 
+/**
+ * The two pages of a book photographed or scanned open, each as the corners of a page (see
+ * findPaper): [left, right], or null when the picture does not clearly show two pages. A photo
+ * counts when its paper is wider than tall, parted at the spine, and both sides carry a fair share
+ * of the text and of the width; a scan without background around the paper when it is wider than
+ * tall and its text lines fall into two blocks with an empty gutter between them (a page in two
+ * columns, upright, is never split).
+ */
+function findSpread(px, w, h, lines = null) {
+  const info = {};
+  findPaper(px, w, h, lines, { info });
+  if (!info.box) return null;
+  // (without a spine found – a scan, the paper filling the picture or parted by the shadow of
+  // the spine – the whole picture is looked at)
+  const [bx0, by0, bx1, by1] = info.spine ? info.box.map((v, i) => Math.round(v * (i % 2 ? h : w))) : [0, 0, w, h];
+  if (bx1 - bx0 < (by1 - by0) * (info.spine ? 1 : 1.1)) return null; // (two pages side by side are wider than tall)
+  // The text on either side: the dark strokes in each column of the paper.
+  const ink = inkMask(px, w, h), col = new Float64Array(w);
+  for (let y = by0; y < by1; y++) for (let x = bx0; x < bx1; x++) col[x] += ink[y * w + x];
+  const total = col.reduce((a, b) => a + b, 0);
+  if (total < 500) return null;
+  const sideInk = (x) => { let l = 0; for (let i = bx0; i < Math.min(bx1, x); i++) l += col[i]; return [l, total - l]; };
+  if (info.spine) {
+    const [a0, b0] = info.spine, xm = a0 + b0 * ((by0 + by1) / 2), [l, r] = sideInk(Math.round(xm));
+    if (Math.min(info.left, info.right) < 0.35 || Math.min(l, r) < total * 0.25) return null;
+    const left = findPaper(px, w, h, lines, { side: "left" }), right = findPaper(px, w, h, lines, { side: "right" });
+    return left && right ? [left, right] : null;
+  }
+  // A scan: the gutter is the widest band across the middle with (almost) no ink.
+  const quiet = (by1 - by0) * 0.002, x0 = Math.round(bx0 + (bx1 - bx0) * 0.35), x1 = Math.round(bx0 + (bx1 - bx0) * 0.65);
+  let best = null;
+  for (let x = x0; x <= x1; x++) {
+    if (col[x] > quiet) continue;
+    let a = x; while (a > bx0 && col[a - 1] <= quiet) a--;
+    let b = x; while (b < bx1 - 1 && col[b + 1] <= quiet) b++;
+    if (!best || b - a > best[1] - best[0]) best = [a, b];
+    x = b;
+  }
+  if (!best || best[1] - best[0] < (bx1 - bx0) * 0.015) return null;
+  const cut = (best[0] + best[1]) / 2, [l, r] = sideInk(Math.round(cut));
+  if (Math.min(l, r) < total * 0.25) return null;
+  const c = Math.round((cut / w) * 1e4) / 1e4;
+  return [[[0, 0], [c, 0], [c, 1], [0, 1]], [[c, 0], [1, 0], [1, 1], [c, 1]]];
+}
+
 /** Whether traced lines are clearly curved (worth bending straight), not just straight lines. */
 function linesAreCurved(tracks, h) {
   if (!tracks || tracks.length < 3) return false;
@@ -804,26 +868,33 @@ function linesAreCurved(tracks, h) {
  * corners (when there is background around it; `crop`) and the curved text lines to bend
  * straight (`dewarp`; only when they are clearly curved). Fractions, as used by warpPixels.
  */
-function autoPrepare(gray, w, h, { crop = true, dewarp = true } = {}) {
+function autoPrepare(gray, w, h, { crop = true, dewarp = true, split = false } = {}) {
   const lines = findTextLines(gray, w, h);
+  // An open book: both pages, each cut out, straightened and flattened on its own.
+  const spread = split ? findSpread(gray, w, h, lines) : null;
+  if (spread) return { spread: spread.map((quad) => ({ quad, tracks: dewarp ? tracksFor(gray, w, h, quad) : null })) };
   const quad = crop ? findPaper(gray, w, h, lines) : null;
-  let tracks = null;
-  if (dewarp) {
-    let region = null;
-    if (quad) {
-      const xs = quad.map((p) => p[0] * w), ys = quad.map((p) => p[1] * h);
-      region = [Math.max(0, Math.min(...xs)), Math.max(0, Math.min(...ys)), Math.min(w, Math.max(...xs)), Math.min(h, Math.max(...ys))];
-    }
-    const found = region ? findTextLines(gray, w, h, region) : lines;
-    // (lines that are straight are kept too when the text block leans once the page is pulled
-    // straight from its corners: its edges are then stood upright, see marginMap)
-    let keep = linesAreCurved(found, h);
-    if (!keep && quad && found.length >= 5) {
-      const q = quad.map(([x, y]) => [x * w, y * h]), [W, H] = quadSize(q), m = quadMap(q);
-      const flat = found.map((t) => t.map(([x, y]) => { const [s2, t2] = m.inverse(x, y); return [s2 * W, t2 * H]; }));
-      keep = Boolean(marginMap(flat, W, H));
-    }
-    if (keep) tracks = found.map((t) => t.map(([x, y]) => [Math.round((x / w) * 1e4) / 1e4, Math.round((y / h) * 1e4) / 1e4]));
+  return { quad, tracks: dewarp ? tracksFor(gray, w, h, quad, lines) : null };
+}
+
+/**
+ * The text lines of the page within `quad` (or of the whole picture) to bend straight, as
+ * fractions; null when they are straight and the text block does not lean.
+ */
+function tracksFor(gray, w, h, quad, lines = null) {
+  let region = null;
+  if (quad) {
+    const xs = quad.map((p) => p[0] * w), ys = quad.map((p) => p[1] * h);
+    region = [Math.max(0, Math.min(...xs)), Math.max(0, Math.min(...ys)), Math.min(w, Math.max(...xs)), Math.min(h, Math.max(...ys))];
   }
-  return { quad, tracks };
+  const found = region || !lines ? findTextLines(gray, w, h, region) : lines;
+  // (lines that are straight are kept too when the text block leans once the page is pulled
+  // straight from its corners: its edges are then stood upright, see marginMap)
+  let keep = linesAreCurved(found, h);
+  if (!keep && quad && found.length >= 5) {
+    const q = quad.map(([x, y]) => [x * w, y * h]), [W, H] = quadSize(q), m = quadMap(q);
+    const flat = found.map((t) => t.map(([x, y]) => { const [s2, t2] = m.inverse(x, y); return [s2 * W, t2 * H]; }));
+    keep = Boolean(marginMap(flat, W, H));
+  }
+  return keep ? found.map((t) => t.map(([x, y]) => [Math.round((x / w) * 1e4) / 1e4, Math.round((y / h) * 1e4) / 1e4])) : null;
 }

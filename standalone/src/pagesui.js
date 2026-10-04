@@ -93,6 +93,7 @@ function pmSelectionBar() {
   for (const id of ["pagesSelLeft", "pagesSelRight", "pagesSelRemove", "pagesSelSave"]) $(`#${id}`).disabled = !n;
   $("#pagesSelLeft").hidden = $("#pagesSelRight").hidden = $("#pagesStraightWrap").hidden = pmSlides();
   $("#pagesSelStraight").disabled = $("#pagesSkew").disabled = !n;
+  $("#pagesSelSplit").disabled = !n || [...pm.sel].some((it) => it.from < 0);
   $("#pagesSelHand").disabled = n !== 1 || [...pm.sel][0].from < 0;
   // The tilt of the selection: shown when all selected pages share it.
   const tilts = [...new Set([...pm.sel].map((it) => Math.round((it.skew || 0) * 10) / 10))];
@@ -127,6 +128,33 @@ async function pmStraighten(items) {
   busy("");
   renderPagesGrid();
   toast(t("pages.straightened", { n: fixed, s: straight, u: unclear, o: turned }), fixed || turned ? "ok" : undefined);
+}
+
+/**
+ * Pages showing an open book split into their two pages: each gets the corners of one page (at
+ * the spine when it is found, else in the middle) and its lines to flatten; they can be adjusted
+ * by hand afterwards ("By hand…").
+ */
+async function pmSplit(items) {
+  const todo = items.filter((it) => it.from >= 0 && pm.items.includes(it));
+  let found = 0, middle = 0;
+  for (const [k, it] of todo.entries()) {
+    busy(t("pages.splitting", { i: k + 1, n: todo.length }));
+    try {
+      const r = await pool.workers[0].call("splitPage", { page: pmSlides() ? pm.slides[it.page] : it.page, index: it.from, rot: it.rot || 0, skew: it.skew || 0 });
+      const halves = r.halves.map((h) => ({ ...it, quad: h.quad, tracks: h.tracks }));
+      const at = pm.items.indexOf(it);
+      pm.items.splice(at, 1, ...halves);
+      pm.sel.delete(it);
+      for (const h of halves) pm.sel.add(h);
+      if (r.found) found++; else middle++;
+    } catch (err) {
+      console.warn("split", err);
+    }
+  }
+  busy("");
+  renderPagesGrid();
+  toast(t("pages.splitDone", { n: found, m: middle }), found + middle ? "ok" : undefined);
 }
 
 /** One page shown large, to be turned or flattened by hand (see straighten.js). */
@@ -424,6 +452,7 @@ function initPagesManager() {
   });
   $("#pagesSelSave").addEventListener("click", () => pmSave([...pm.sel]));
   $("#pagesSelStraight").addEventListener("click", () => pmStraighten([...pm.sel]));
+  $("#pagesSelSplit").addEventListener("click", () => pmSplit([...pm.sel]));
   $("#pagesSelHand").addEventListener("click", () => { const it = [...pm.sel][0]; if (pm.sel.size === 1 && it.from >= 0) pmHand(it); });
 
   $("#pagesSkew").addEventListener("keydown", (e) => { // (Enter sets the angle; it must not close the dialog)
