@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.32
+
+- Tables of contents keep their shape in the translation: an entry of the original (title, leader dots, page number) is recognised, and its translation is laid out the same way – the title where the original title starts, the page number right-aligned exactly where the original's ends, and dot leaders between them, set so that the dots of all entries stand in columns. Whatever leader the translation itself brings (dots, an ellipsis, spaces, none) is replaced; a translation without the page number gets the original's. Long titles wrap or shrink only as far as needed – the dots no longer take their room.
+
 ## 2.31
 
 - Start page: "DROP A DOCUMENT HERE OR CHOOSE A FILE" sits midway between the chameleon and the format tags.

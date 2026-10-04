@@ -1913,7 +1913,108 @@ function expandedSpan(seg, bounds, obs, gap = 0.4 * seg.size) {
 const fmt = (v) => (Math.abs(v) < 1e-6 ? "0" : String(Math.round(v * 1000) / 1000));
 
 /** Lay out one translation and return PDF content-stream operators (in page space). */
+/* ---- table-of-contents entries: title, leader dots, page number on the right */
+
+// The original: a title, at least four leader dots (or an ellipsis run) and a page number at the end.
+const TOC_SRC_RE = /^(.*?\S)\s*(?:(?:[.·⋅_]\s?|…\s?){4,}|(?:…\s?){2,})\s*(\d{1,4}|[ivxlcdm]{1,7})\s*$/i;
+// The translation: whatever the AI made of the leader (dots, an ellipsis, a tab or wide space).
+const TOC_TR_RE = /^(.*?\S)\s*(?:(?:[.·⋅…_]\s?){2,}|\t|\s{3,})\s*(\d{1,4}|[ivxlcdm]{1,7})\s*$/i;
+
+/**
+ * A table-of-contents entry's translation as {title, num}: its own leader and page number taken off
+ * (the original's number when the translation has none); null for any other segment.
+ */
+function tocParts(seg, text) {
+  if (seg.fixed || seg.formula || !(seg.align === "left" || seg.align === "justify")) return null;
+  const m = TOC_SRC_RE.exec(seg.text.replace(/\s+/g, " ").trim());
+  if (!m || !/\p{L}/u.test(m[1])) return null;
+  const t = text.replace(/[ \u00a0]+/g, " ").trim();
+  if (!t) return null;
+  const tidy = (x) => x.replace(/[\s.·⋅…_]+$/u, "").trim();
+  const own = TOC_TR_RE.exec(t);
+  if (own && tidy(own[1])) return { title: tidy(own[1]), num: own[2] };
+  // no leader: a page number at the end that is the original's is taken off too
+  const esc = m[2].replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const e = new RegExp(`^(.*?\\S)[\\s.·⋅…_]*${esc}$`, "iu").exec(t);
+  return { title: tidy(e ? e[1] : t) || t, num: m[2] };
+}
+
+/**
+ * A table-of-contents entry laid out as in the original: the title from the entry's left edge
+ * (wrapping when it is long), the page number ending at its right edge, and leader dots between
+ * them, set on a common grid so that the dots of all entries stand in columns.
+ */
+function layoutTocEntry(seg, toc, fk, opts, used, stats, lineEnds) {
+  const d = DIRS[seg.rotation], n = [-d[1], d[0]], u = [d[1], -d[0]];
+  const corners = [[seg.bbox[0], seg.bbox[1]], [seg.bbox[2], seg.bbox[1]], [seg.bbox[0], seg.bbox[3]], [seg.bbox[2], seg.bbox[3]]];
+  const along = corners.map(([x, y]) => x * d[0] + y * d[1]), across = corners.map(([x, y]) => x * n[0] + y * n[1]);
+  const a0 = Math.min(...along), a1 = Math.max(...along), b1 = Math.max(...across);
+  const ob = seg.origin[0] * n[0] + seg.origin[1] * n[1];
+  const s0 = seg.size, L0 = lineHeight(seg), top = ob - 0.85 * s0;
+  const H = Math.max(b1, ob + 0.2 * s0) + 0.15 * s0 - top, W = a1 - a0;
+  const chain = fk.chain(seg, toc.title + toc.num);
+  const tok = tokenize(toc.title, fk, chain);
+  const numGlyphs = [...toc.num].map((ch) => fk.glyph(chain, ch.codePointAt(0)));
+  const numW = numGlyphs.reduce((w, g) => w + g.adv, 0), dot = fk.glyph(chain, 46);
+  // (room for the number and a few dots is kept on every line: a wrapped title stays clear of it)
+  const fits = (k) => {
+    const lines = wrap(tok, W / (s0 * k) - numW - 4 * dot.adv);
+    return lines.length && (lines.length - 1) * L0 * k + 1.05 * s0 * k <= H + 0.01 ? lines : null;
+  };
+  let k = 1, lines = fits(1);
+  if (!lines) {
+    let lo = Math.max(opts.minScale || 0, 0.3), hi = 1;
+    lines = fits(lo);
+    if (!lines) { lo = 0.3; lines = fits(lo) || wrap(tok, W / (s0 * lo) - numW - 4 * dot.adv); }
+    k = lo;
+    for (let i = 0; i < 10; i++) { const mid = (lo + hi) / 2, ok = fits(mid); if (ok) { lines = ok; k = lo = mid; } else hi = mid; }
+  }
+  if (k < 1) stats.shrunk.push({ id: seg.id, scale: Math.round(k * 100) / 100 });
+  const s = s0 * k, L = L0 * k;
+  const base1 = seg.lines === 1 && lines.length === 1 ? ob - (s0 - s) * 0.3 : top + 0.85 * s;
+  const ops = [`BT ${rg(seg.color)}`];
+  let curFont = null;
+  const draw = (glyphs, a, b) => { // glyphs set from `a` along the line at baseline `b`; returns the end
+    let run = null;
+    const flush = () => {
+      if (!run) return;
+      if (curFont !== run.e) { ops.push(`/${run.e.res} 1 Tf`); curFont = run.e; }
+      const px = run.a * d[0] + b * n[0], py = run.a * d[1] + b * n[1];
+      ops.push(`${fmt(d[0] * s)} ${fmt(d[1] * s)} ${fmt(u[0] * s)} ${fmt(u[1] * s)} ${fmt(px)} ${fmt(py)} Tm <${run.hex}> Tj`);
+      run = null;
+    };
+    for (const g of glyphs) {
+      if (!run || run.e !== g.e) { flush(); run = { e: g.e, a, hex: "" }; fk.ref(g.e); used.add(g.e); }
+      run.hex += g.gid.toString(16).padStart(4, "0");
+      a += g.adv * s;
+    }
+    flush();
+    return a;
+  };
+  lines.forEach((line, i) => {
+    const b = base1 + i * L;
+    let a = a0;
+    line.tokens.forEach((t, j) => { if (j > 0 && t.sp) a += tok.spaceAdv * s; a = draw(t.glyphs, a, b); });
+    const end = a;
+    if (i === lines.length - 1) {
+      // the number ends at the entry's right edge; the dots fill the gap on a grid of their own width
+      const numStart = a1 - numW * s, step = dot.adv * s;
+      let x = Math.ceil((end + 0.35 * s) / step) * step;
+      const dots = [];
+      for (; x + step <= numStart - 0.2 * s; x += step) dots.push(x);
+      for (const dx of dots) draw([dot], dx, b);
+      draw(numGlyphs, numStart, b);
+      if (lineEnds) lineEnds.push([a1, b, a0]);
+    } else if (lineEnds) lineEnds.push([end, b, a0]);
+  });
+  ops.push("ET");
+  return ops.join("\n");
+}
+
 function layoutSegment(seg, text, fk, bounds, obs, opts, used, stats, leadEnd = null, lineEnds = null) {
+  // A table-of-contents entry: page number on the right, leader dots up to it.
+  const toc = tocParts(seg, text);
+  if (toc) return layoutTocEntry(seg, toc, fk, opts, used, stats, lineEnds);
   const d = DIRS[seg.rotation], n = [-d[1], d[0]], u = [d[1], -d[0]];
   const corners = [[seg.bbox[0], seg.bbox[1]], [seg.bbox[2], seg.bbox[1]], [seg.bbox[0], seg.bbox[3]], [seg.bbox[2], seg.bbox[3]]];
   const along = corners.map(([x, y]) => x * d[0] + y * d[1]), across = corners.map(([x, y]) => x * n[0] + y * n[1]);
