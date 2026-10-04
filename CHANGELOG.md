@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.29
+
+- "CHOOSE A FILE" (German "DATEI AUSWÄHLEN") on the start page and in the import fields is written in capital letters.
+
 ## 2.28
 
 - Start page and import fields: "Choose a file" is capitalised and no longer underlined (still in the accent colour, still clickable).

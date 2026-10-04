@@ -112,7 +112,7 @@ svg [fill="#287130"] { fill: var(--accent); } svg [stroke="#287130"] { stroke: v
 .dz-icon { color: var(--accent); }
 .dz-title { font-size: 17px; font-weight: 600; }
 .dropzone.small .dz-title { font-size: 15px; }
-.dz-title u { color: var(--accent); text-decoration: none; }
+.dz-title u { color: var(--accent); text-decoration: none; text-transform: uppercase; letter-spacing: .02em; }
 .dz-progress { display: flex; gap: 10px; align-items: center; color: var(--accent); font-weight: 600; margin-top: 10px; }
 
 /* ---------- workspace ---------- */
@@ -582,7 +582,7 @@ body.splitting .pages, body.splitting iframe { pointer-events: none; }
 .wf .btn.bi-btn { padding: 0 9px; }
 .wf-drop { border: 2px dashed var(--border); border-radius: 10px; padding: 10px; display: grid; justify-items: center; gap: 3px; font-size: 12.5px; font-weight: 600; color: var(--text); }
 .wf-drop svg { color: var(--accent); }
-.wf-drop u { color: var(--accent); text-decoration: none; }
+.wf-drop u { color: var(--accent); text-decoration: none; text-transform: uppercase; letter-spacing: .02em; }
 .wf-sample { margin: 0; font: 12px/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: var(--accent-soft); color: var(--text); border-radius: 8px; padding: 7px 10px; white-space: pre; overflow-x: auto; }
 .wf-sample .m { color: var(--accent); }
 .wf-toggle { display: inline-flex; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 2px; }
