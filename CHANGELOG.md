@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.28
+
+- Start page and import fields: "Choose a file" is capitalised and no longer underlined (still in the accent colour, still clickable).
+
 ## 2.27
 
 - Faster text recognition: several pages are read at once (up to three at a time, as many as the computer has cores to spare), and the preparation (turning upright, straightening, cropping, flattening, white paper) runs beside the interface instead of in it. A 5-page scan took 11 instead of 19 seconds on a 4-core computer, with the same result.

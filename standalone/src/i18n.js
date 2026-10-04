@@ -898,7 +898,7 @@ const I18N = {
     "wf.foldTitle": "Show or hide the workflow",
     "wf.1.title": "Open the document",
     "wf.1.text": "Every paragraph, label and table cell becomes a numbered segment. Scanned pages: <b>OCR</b>.",
-    "wf.1.drop": "Drop a file here or <u>choose a file</u>",
+    "wf.1.drop": "Drop a file here or <u>Choose a file</u>",
     "wf.2.title": "Send it out",
     "wf.2.text": "<b>Export</b> a file, <b>Copy</b> the text, or <b>AI</b> for a ready prompt for ChatGPT, Claude, Gemini or Copilot. Keep the markers.",
     "wf.2.sample": "<span class=\"m\">[[12]]</span>\nExecutive summary",
@@ -914,7 +914,7 @@ const I18N = {
     "wf.6.one": "The <b>translated file</b>, in the same format as the original.",
     "wf.6.both": "<b>Both languages</b>: side by side, on alternating pages, or paragraph by paragraph.",
 
-    "upload.title": "Drop a document here or <u>choose a file</u>",
+    "upload.title": "Drop a document here or <u>Choose a file</u>",
     "recent.title": "Recently opened:",
     "batch.short": "Batch",
     "batch.button": "Batch: translate several files with one prompt – the answers are sorted back into the files",
@@ -1206,7 +1206,7 @@ const I18N = {
     "common.download": "Download",
 
     "import.title": "Import translation",
-    "import.drop": "Drop the translated file here or <u>choose a file</u>",
+    "import.drop": "Drop the translated file here or <u>Choose a file</u>",
     "import.or": "or paste the translated text, including its <code>[[n]]</code> markers",
     "import.placeholder": "[[1]]\nTranslated text of segment 1\n\n[[2]]\nTranslated text of segment 2",
     "import.overwrite": "Replace translations already entered",
