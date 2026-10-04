@@ -256,9 +256,10 @@ async function batchRender() {
   $("#batchSummary").textContent = bt.list.length ? t("batch.summary", { files: bt.list.length, done: totalDone, n: totalSegs }) : "";
   const parts = await batchParts();
   $("#batchParts").innerHTML = parts.map((p, i) => {
-    const a = p.segs[0].id + p.offset, b = p.segs[p.segs.length - 1].id + p.offset;
+    const size = Math.max(20, Number($("#batchPartSize").value) || 500), bucket = Math.floor((p.segs[0].id - 1) / size);
+    const a = bucket * size + 1 + p.offset, b = Math.min((bucket + 1) * size, p.file.maxId || 0) + p.offset; // the part's marker range, whole
     const cls = bt.copied.has(i) ? " copied" : i === 0 || bt.copied.has(i - 1) ? " primary" : "";
-    return `<button type="button" class="btn${cls}" data-part="${i}">${bt.copied.has(i) ? "✓ " : ""}${escapeHtml(t("batch.partBtn", { k: i + 1, total: parts.length, file: p.file.name, a, b, n: p.segs.length }))}</button>`;
+    return `<button type="button" class="btn${cls}" data-part="${i}">${bt.copied.has(i) ? "✓ " : ""}${escapeHtml(t("batch.partBtn", { k: i + 1, total: parts.length, file: p.file.name, a, b }))}</button>`;
   }).join("") || `<p class="muted small">${escapeHtml(t("batch.noParts"))}</p>`;
   $("#batchImportStatus").textContent = bt.status;
   $("#batchClear").disabled = !bt.list.length;

@@ -1821,10 +1821,13 @@ function refreshAiPrompt() {
   $("#aiStats").textContent = msg;
   // A part is "done" once every one of its segments has a translation (its answer was imported).
   const dones = parts.map((p) => p.every((s) => hasTr(s.id)));
+  const lastId = state.doc.segments.length ? state.doc.segments[state.doc.segments.length - 1].id : 0;
   $("#aiParts").innerHTML = parts.map((p, i) => {
     const done = dones[i];
     const cls = done ? " done" : aiCopied.has(i) ? " copied" : i === 0 || aiCopied.has(i - 1) || dones[i - 1] ? " primary" : "";
-    return `<button type="button" class="btn${cls}" data-part="${i}" title="${escapeHtml(done ? t("ai.partDone") : t("ai.partTitle"))}">${done || aiCopied.has(i) ? "✓ " : ""}${escapeHtml(t("ai.partBtn", { k: i + 1, total: parts.length, a: p[0].id, b: p[p.length - 1].id, n: p.length }))}</button>`;
+    const size = Math.max(20, Number($("#aiPartSize").value) || 1000), bucket = Math.floor((p[0].id - 1) / size);
+    const a = bucket * size + 1, b = Math.min((bucket + 1) * size, lastId); // the part's marker range, whole
+    return `<button type="button" class="btn${cls}" data-part="${i}" title="${escapeHtml(t("ai.partCount", { n: p.length }) + " " + (done ? t("ai.partDone") : t("ai.partTitle")))}">${done || aiCopied.has(i) ? "✓ " : ""}${escapeHtml(t("ai.partBtn", { k: i + 1, total: parts.length, a, b }))}</button>`;
   }).join("");
 }
 
