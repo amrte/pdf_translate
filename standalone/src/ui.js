@@ -531,7 +531,7 @@ function openDocument(doc, bytes) {
   $("#filterStatus").value = "all";
 
   state.zoom = fitZoom();
-  state.fitMode = true;
+  state.fitMode = doc.image ? "page" : true; // (a picture stays whole when the view is resized)
   initMarkupsForDocument();
   renderPages();
   vl.reset();
@@ -666,10 +666,22 @@ function closeDocument() {
 const PAGE_SIDE = 12;
 
 function fitZoom() {
+  if (state.doc.image) return fitPictureZoom();
   const avail = $("#pages").clientWidth - PAGE_SIDE;
   const widest = Math.max(...state.doc.pages.map((p, i) => (state.rotations[i] % 180 ? p.height : p.width)));
   const z = Math.floor((avail / (widest * 1.25)) * 10) / 10;
   return Math.min(1.5, Math.max(0.4, z || 1));
+}
+
+/**
+ * A picture is shown whole: as large as fits the viewer in width and height (small pictures are
+ * enlarged up to twice their size, large ones reduced as far as needed).
+ */
+function fitPictureZoom() {
+  const box = $("#pages"), p = state.doc.pages[0];
+  const [w, h] = state.rotations[0] % 180 ? [p.height, p.width] : [p.width, p.height];
+  const z = Math.min((box.clientWidth - PAGE_SIDE) / (w * 1.25), (box.clientHeight - 44) / (h * 1.25));
+  return z > 0 ? Math.max(0.02, Math.min(2, Math.floor(z * 1000) / 1000)) : 1;
 }
 
 const pageCssWidth = (page) => Math.round(page.width * 1.25 * state.zoom);

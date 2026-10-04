@@ -1129,7 +1129,10 @@ function initCompare() {
     lastWidth = w;
     if (!cmp.on && !state.fitMode && !splitDrag) return;
     clearTimeout(fitTimer);
-    fitTimer = setTimeout(() => { if (cmp.on || state.fitMode || splitDrag) { fitWidth(); syncCmp("main"); } }, splitDrag ? 0 : 100);
+    fitTimer = setTimeout(() => {
+      if (!cmp.on && state.fitMode === "page" && state.doc && state.doc.image) { setZoom(fitPictureZoom()); state.fitMode = "page"; return; }
+      if (cmp.on || state.fitMode || splitDrag) { fitWidth(); syncCmp("main"); }
+    }, splitDrag ? 0 : 100);
   }).observe($("#pages"));
   // The other side follows in the same scroll event, so both move together.
   for (const [id, side] of [["#pages", "main"], ["#pagesCmp", "cmp"]]) {

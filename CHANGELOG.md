@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.09
+
+- Pictures: an opened picture is shown whole – it fits the viewer in width and height (a large photo is reduced, a small picture enlarged up to twice its size) and keeps fitting when the window or the border to the fields changes, until you zoom yourself.
+
 ## 2.08
 
 - Arrange pages: a page card is more compact – the page number sits beside two rows of buttons, and notes on the page ("was 3", "↻90°", the file it came from) are shown on its picture.
