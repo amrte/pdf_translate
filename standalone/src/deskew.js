@@ -65,6 +65,88 @@ function skewOfGray(px, w, h) {
   return { angle: Math.round(best * 100) / 100, confidence: Math.round((bestScore / median - 1) * 1000) / 1000 };
 }
 
+/**
+ * Which way up a grey picture of a text page is: {turn, tilt, confidence} – `turn` the quarter
+ * turns (0, 90, 180, 270 degrees clockwise) that set it upright, `tilt` the remaining tilt of its
+ * lines once turned (see skewOfGray). Lines running down the page (a page lying on its side) give
+ * sharp stripes only when the picture is turned by 90°. Upside down is told by the shape of the
+ * lines: in Latin, Greek and Cyrillic text the ascenders and capitals above the small letters
+ * carry clearly more ink than the descenders below them; turned over, it is the other way round.
+ * Scripts without that difference are left as they are.
+ */
+function detectOrientation(px, w, h) {
+  const s0 = skewOfGray(px, w, h);
+  const r90 = warpPixels(px, w, h, 1, { turn: 90 }), s90 = skewOfGray(r90.data, r90.width, r90.height);
+  const side = s90.confidence > Math.max(0.15, 2 * s0.confidence);
+  const s = side ? s90 : s0;
+  if (s.confidence < 0.15) return { turn: 0, tilt: 0, confidence: 0 };
+  const up = warpPixels(px, w, h, 1, { turn: side ? 90 : 0, angle: -s.angle });
+  const { ratio, lines } = inkAboveBelow(up.data, up.width, up.height);
+  const over = lines >= 6 && ratio < 0.75;
+  return { turn: (side ? 90 : 0) + (over ? 180 : 0), tilt: s.angle, confidence: Math.round(Math.abs(Math.log(Math.max(1e-3, ratio))) * 100) / 100, ratio: Math.round(ratio * 100) / 100, lines };
+}
+
+/**
+ * The ink above the core of the text lines (ascenders, capitals) against the ink below it
+ * (descenders), over the lines of a level picture; the page is cut into vertical strips, so that
+ * columns side by side are measured line by line. `lines`: how many lines were measured.
+ */
+function inkAboveBelow(px, w, h) {
+  const ink = inkMask(px, w, h);
+  const strips = 5, sw = Math.floor(w / strips);
+  let above = 0, below = 0, lines = 0;
+  for (let k = 0; k < strips; k++) {
+    const x0 = k * sw, x1 = k === strips - 1 ? w : x0 + sw, prof = new Float64Array(h);
+    for (let y = 0; y < h; y++) { let n = 0; for (let x = x0; x < x1; x++) n += ink[y * w + x]; prof[y] = n; }
+    const runs = [], floor = Math.max(1, (x1 - x0) * 0.01);
+    for (let y = 0; y < h;) {
+      if (prof[y] <= floor) { y++; continue; }
+      const a = y;
+      while (y < h && prof[y] > floor) y++;
+      if (y - a >= 4) runs.push([a, y - 1]);
+    }
+    if (!runs.length) continue;
+    const hs = runs.map(([a, b]) => b - a + 1).sort((p, q) => p - q), typical = hs[hs.length >> 1];
+    for (const [a, b] of runs) {
+      if (b - a + 1 > 2.2 * typical || b - a + 1 < 0.5 * typical) continue; // (lines run together, specks)
+      let m = 0; for (let y = a; y <= b; y++) m = Math.max(m, prof[y]);
+      let c0 = a, c1 = b;
+      while (c0 < b && prof[c0] < 0.5 * m) c0++;
+      while (c1 > a && prof[c1] < 0.5 * m) c1--;
+      for (let y = a; y < c0; y++) above += prof[y];
+      for (let y = c1 + 1; y <= b; y++) below += prof[y];
+      lines++;
+    }
+  }
+  return { ratio: (above + 1) / (below + 1), lines };
+}
+
+/** Page `pno` of `doc` as a grey picture of about SKEW_SIDE pixels: {px, w, h}. */
+function grayOfPage(doc, pno) {
+  const page = doc.loadPage(pno);
+  try {
+    const b = page.getBounds();
+    const zoom = Math.min(4, SKEW_SIDE / Math.max(1, b[2] - b[0], b[3] - b[1]));
+    const pix = page.toPixmap(M.Matrix.scale(zoom, zoom), M.ColorSpace.DeviceGray, false);
+    try {
+      const w = pix.getWidth(), h = pix.getHeight(), n = pix.getNumberOfComponents(), raw = pix.getPixels();
+      const px = new Uint8Array(w * h);
+      for (let i = 0; i < w * h; i++) px[i] = raw[i * n];
+      return { px, w, h };
+    } finally {
+      free(pix);
+    }
+  } finally {
+    free(page);
+  }
+}
+
+/** Which way up page `pno` of `doc` is, and its tilt once turned (see detectOrientation). */
+function detectPageOrientation(doc, pno) {
+  const { px, w, h } = grayOfPage(doc, pno);
+  return detectOrientation(px, w, h);
+}
+
 /** The tilt of page `pno` of `doc` (see skewOfGray). */
 function detectSkew(doc, pno) {
   const page = doc.loadPage(pno);

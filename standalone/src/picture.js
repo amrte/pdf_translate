@@ -137,12 +137,15 @@ async function picMeasure() {
   if (!state.doc || !state.doc.image) return false;
   busy(t("pic.measuring"));
   try {
-    const r = await pool.workers[0].call("skewDetect", { page: 0 });
-    if (!r || r.confidence < 0.15) { toast(t("pic.unclear"), "error"); return false; }
-    picEdit.fine = Math.abs(r.angle) < 0.1 ? 0 : -Math.round(r.angle * 10) / 10;
+    // which way up (on its side, upside down) and the tilt then; a turn and the tilt add up in any order
+    const r = await pool.workers[0].call("orientDetect", { page: 0 });
+    if (!r || (!r.confidence && !r.turn && !r.tilt)) { toast(t("pic.unclear"), "error"); return false; }
+    picEdit.fine = Math.abs(r.tilt) < 0.1 ? 0 : -Math.round(r.tilt * 10) / 10;
+    const turned = r.turn !== picEdit.rotate;
+    picEdit.rotate = r.turn;
     picSync();
-    toast(picEdit.fine ? t("pic.measured", { deg: pmDeg(picEdit.fine, true) }) : t("pic.alreadyStraight"), "ok");
-    return Boolean(picEdit.fine);
+    toast(picEdit.fine || turned ? t("pic.measured", { deg: pmDeg(picEdit.fine, true) }) + (r.turn ? " " + t("pic.turnedUp", { deg: r.turn }) : "") : t("pic.alreadyStraight"), "ok");
+    return Boolean(picEdit.fine || turned);
   } catch (err) {
     toast(t("pic.failed", { err: userError(err) }), "error");
     return false;

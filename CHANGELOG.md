@@ -4,6 +4,12 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.23
+
+- Pages lying on their side or upside down are turned upright: new option "Turn pages upright (sideways or upside down)" before text recognition (on by default). Which way up the text is, is found on the page itself – lines running down the page mean it lies on its side; upside down is told by the letters (ascenders and capitals above the small letters carry more ink than the descenders below). In a PDF the page is turned without re-encoding it; a picture is turned first, then straightened and cropped as usual.
+- "⟂ Straighten" in "Arrange pages" and "Auto" in the picture tools turn pages and pictures upright too.
+- Scripts without ascenders and descenders (such as Chinese) are only turned when they lie on their side.
+
 ## 2.22
 
 - Searchable PDFs: a scan or photo whose text was recognised is saved with that text lying invisibly under the picture – the PDF can be searched, its text selected and copied, while it looks exactly as before. Each word sits where it is in the picture; text corrected by hand goes in corrected.

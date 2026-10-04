@@ -109,22 +109,24 @@ const SKEW_LIMIT = 15;
 async function pmStraighten(items) {
   const todo = items.filter((it) => it.from >= 0);
   if (!todo.length) return;
-  let fixed = 0, straight = 0, unclear = 0;
+  let fixed = 0, straight = 0, unclear = 0, turned = 0;
   for (const [k, it] of todo.entries()) {
     if (it.quad || it.tracks) { straight++; continue; } // (corners and lines traced by hand keep their own angle)
     busy(t("pages.measuring", { i: k + 1, n: todo.length }));
     try {
-      const r = await pool.workers[0].call("skewDetect", { page: pmSlides() ? pm.slides[it.page] : it.page, index: it.from });
-      if (!r || r.confidence < 0.15) { unclear++; continue; }
-      if (Math.abs(r.angle) < 0.1) { it.skew = 0; straight++; continue; }
-      it.skew = r.angle; fixed++;
+      // (which way up too: a page lying on its side or upside down gets its quarter turn)
+      const r = await pool.workers[0].call("orientDetect", { page: pmSlides() ? pm.slides[it.page] : it.page, index: it.from });
+      if (!r || !r.confidence && !r.turn && !r.tilt) { unclear++; continue; }
+      if ((it.rot || 0) !== r.turn) { it.rot = r.turn; turned++; }
+      if (Math.abs(r.tilt) < 0.1) { it.skew = 0; straight++; continue; }
+      it.skew = r.tilt; fixed++;
     } catch (err) {
       console.warn("skew", err); unclear++;
     }
   }
   busy("");
   renderPagesGrid();
-  toast(t("pages.straightened", { n: fixed, s: straight, u: unclear }), fixed ? "ok" : undefined);
+  toast(t("pages.straightened", { n: fixed, s: straight, u: unclear, o: turned }), fixed || turned ? "ok" : undefined);
 }
 
 /** One page shown large, to be turned or flattened by hand (see straighten.js). */

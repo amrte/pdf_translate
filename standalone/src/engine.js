@@ -2791,7 +2791,7 @@ function cardsPdf(args) {
 
 const Engine = {
   init: initEngine, extract: extractDocument, extractPages, build: buildTranslated, renderPNG,
-  detectKind, imageKindOf, imageToPdf, warpPixels, quadMap, findTextLines, findPaper, autoPrepare, keywordsPdf, cardsPdf, openBook, saveBook, extractBook, openLaidOut, mapTranslated, openOffice, officePreviewHtml, ocrToBlocks, sampleColors, refineOcr,
+  detectKind, imageKindOf, imageToPdf, warpPixels, quadMap, detectOrientation, findTextLines, findPaper, autoPrepare, keywordsPdf, cardsPdf, openBook, saveBook, extractBook, openLaidOut, mapTranslated, openOffice, officePreviewHtml, ocrToBlocks, sampleColors, refineOcr,
   open: (bytes) => M.Document.openDocument(bytes, "application/pdf"),
   exportTxt, exportCsv, exportJson, exportXliff, exportDocx, parseImport, parseMarkedText,
 };
@@ -3251,6 +3251,11 @@ function createHandler() {
       const doc = args.index ? (W.extras[args.index - 1] || {}).doc : W.doc;
       if (!doc) throw new Error("No document is open.");
       return { result: detectSkew(doc, args.page) };
+    }
+    if (cmd === "orientDetect") { // which way up a page is (quarter turns) and its tilt then
+      const doc = args.index ? (W.extras[args.index - 1] || {}).doc : W.doc;
+      if (!doc) throw new Error("No document is open.");
+      return { result: detectPageOrientation(doc, args.page) };
     }
     if (cmd === "pagesInfo") { const deck = W.book && W.book.deck; return { result: { slides: (deck && deck.slidePages) || null, hidden: deck ? deck.slides.map((sl) => Boolean(sl && sl.hidden)) : null, notes: deck ? deck.slides.map((sl) => Boolean(sl && sl.notesFi >= 0)) : null } }; }
     if (cmd === "rearrange") {

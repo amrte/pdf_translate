@@ -428,6 +428,7 @@ function openOcrDialog() {
   $("#ocrRange").value = String(currentPageIndex() + 1);
   $("#ocrFamily").value = saved.family || "serif";
   $("#ocrDeskew").checked = saved.deskew !== false;
+  $("#ocrOrient").checked = saved.orient !== false;
   $("#ocrDewarp").checked = saved.dewarp !== false;
   $("#ocrCrop").checked = saved.crop !== false;
   openModal($("#ocrDialog"));
@@ -474,12 +475,12 @@ function ocrWorkerOptions(stored) {
 async function startOcr({ area = null } = {}) {
   const langs = [...document.querySelectorAll("#ocrLangs input:checked")].map((i) => i.value);
   if (!langs.length) { toast(t("ocr.noLang"), "error"); return; }
-  const family = $("#ocrFamily").value, deskew = $("#ocrDeskew").checked, dewarp = $("#ocrDewarp").checked, crop = $("#ocrCrop").checked;
-  try { localStorage.setItem(LS_OCR, JSON.stringify({ langs, family, deskew, dewarp, crop })); } catch (_) { /* fine */ }
+  const family = $("#ocrFamily").value, deskew = $("#ocrDeskew").checked, dewarp = $("#ocrDewarp").checked, crop = $("#ocrCrop").checked, orient = $("#ocrOrient").checked;
+  try { localStorage.setItem(LS_OCR, JSON.stringify({ langs, family, deskew, dewarp, crop, orient })); } catch (_) { /* fine */ }
   const pages = area ? [area.page] : ocrPageChoice() || [];
   if (!pages.length) { toast(t("ocr.none")); return; }
   ocrCancel = false;
-  if (!area && (deskew || dewarp || crop)) await ocrStraighten(pages, { deskew, dewarp, crop });
+  if (!area && (deskew || dewarp || crop || orient)) await ocrStraighten(pages, { deskew, dewarp, crop, orient });
   if (ocrCancel || !state.doc) return;
   const doc = state.doc, results = {};
   let worker = null;
@@ -572,36 +573,55 @@ async function startOcr({ area = null } = {}) {
  * see deskew.js). A picture is edited and opened again (its original stays restorable), a PDF is
  * put together anew; text recognised earlier on the other pages and the translations are kept.
  */
-async function ocrStraighten(pages, { deskew = true, dewarp = false, crop = false } = {}) {
+async function ocrStraighten(pages, { deskew = true, dewarp = false, crop = false, orient = false, turned = 0 } = {}) {
   const doc = state.doc, fixes = new Map();
   const cancel = () => { ocrCancel = true; };
   for (const [k, p] of pages.entries()) {
     if (ocrCancel || state.doc !== doc) return 0;
     busy(t("ocr.preparing", { i: k + 1, n: pages.length }), cancel);
     try {
-      let tilt = 0;
-      if (deskew) {
+      let tilt = 0, turn = 0;
+      if (orient) { // which way up (a page lying on its side or upside down), and the tilt then
+        const r = await pool.workers[0].call("orientDetect", { page: p });
+        if (r) { turn = r.turn; if (deskew && Math.abs(r.tilt) >= 0.1) tilt = r.tilt; }
+      } else if (deskew) {
         const r = await pool.workers[0].call("skewDetect", { page: p });
         if (r && r.confidence >= 0.15 && Math.abs(r.angle) >= 0.1) tilt = r.angle;
       }
       let quad = null, tracks = null;
       if (dewarp || crop) {
-        // the page as a picture of about 1600 pixels, turned straight, in grey
+        // the page as a picture of about 1600 pixels, turned upright and straight, in grey
         const page = doc.pages[p], zoom = Math.min(4, 1600 / Math.max(page.width, page.height));
         const buf = await pool.workers[0].call("render", { page: p, zoom, variant: "original" });
         const img = await imageDataOf(new Blob([buf], { type: "image/png" }));
-        const turned = Engine.warpPixels(img.data, img.width, img.height, 4, { angle: -tilt });
+        const turned = Engine.warpPixels(img.data, img.width, img.height, 4, { turn, angle: -tilt });
         const gray = new Uint8Array(turned.width * turned.height);
         for (let i = 0; i < gray.length; i++) gray[i] = (turned.data[i * 4] * 30 + turned.data[i * 4 + 1] * 59 + turned.data[i * 4 + 2] * 11) / 100;
         ({ quad, tracks } = Engine.autoPrepare(gray, turned.width, turned.height, { crop, dewarp }));
       }
-      if (tilt || quad || tracks) fixes.set(p, { skew: tilt, quad, tracks });
+      if (turn || tilt || quad || tracks) fixes.set(p, { rot: turn, skew: tilt, quad, tracks });
     } catch (err) { console.warn("prepare", err); }
   }
   busy("");
-  if (!fixes.size || ocrCancel || state.doc !== doc) return 0;
+  if (ocrCancel || state.doc !== doc) return 0;
+  if (!fixes.size) {
+    // (a picture only turned upright, in the step before)
+    if (turned) {
+      if ($("#ocrDialog").open) $("#ocrDialog").close();
+      toast(t("ocr.prepared", { o: turned, s: 0, c: 0, l: 0 }), "ok");
+    }
+    return turned;
+  }
   if (doc.image) {
     const f = fixes.get(0);
+    if (f.rot) {
+      // A picture is first turned upright; corners and lines are then found on the upright one.
+      Object.assign(picEdit, PIC_DEFAULT, { rotate: f.rot });
+      await picApply(true);
+      if (state.doc === doc || ocrCancel) return 0;
+      if ($("#ocrDialog").open) $("#ocrDialog").close(); // (opened again for the new picture)
+      return ocrStraighten(pages, { deskew, dewarp, crop, orient: false, turned: turned + 1 });
+    }
     Object.assign(picEdit, PIC_DEFAULT, { fine: f.skew ? -Math.round(f.skew * 10) / 10 : 0, quad: f.quad, tracks: f.tracks });
     await picApply(true);
   } else {
@@ -625,8 +645,8 @@ async function ocrStraighten(pages, { deskew = true, dewarp = false, crop = fals
     }
   }
   if ($("#ocrDialog").open) $("#ocrDialog").close(); // (opened again for the new picture or scan)
-  const count = (key) => [...fixes.values()].filter((f) => key === "skew" ? f.skew : f[key]).length;
-  toast(t("ocr.prepared", { s: count("skew"), c: count("quad"), l: count("tracks") }), "ok");
+  const count = (key) => [...fixes.values()].filter((f) => f[key]).length;
+  toast(t("ocr.prepared", { o: count("rot") + turned, s: count("skew"), c: count("quad"), l: count("tracks") }), "ok");
   return fixes.size;
 }
 
