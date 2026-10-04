@@ -2687,7 +2687,7 @@ function cardsPdf(args) {
 
 const Engine = {
   init: initEngine, extract: extractDocument, extractPages, build: buildTranslated, renderPNG,
-  detectKind, imageKindOf, imageToPdf, keywordsPdf, cardsPdf, openBook, saveBook, extractBook, openLaidOut, mapTranslated, openOffice, officePreviewHtml, ocrToBlocks, sampleColors, refineOcr,
+  detectKind, imageKindOf, imageToPdf, warpPixels, keywordsPdf, cardsPdf, openBook, saveBook, extractBook, openLaidOut, mapTranslated, openOffice, officePreviewHtml, ocrToBlocks, sampleColors, refineOcr,
   open: (bytes) => M.Document.openDocument(bytes, "application/pdf"),
   exportTxt, exportCsv, exportJson, exportXliff, exportDocx, parseImport, parseMarkedText,
 };

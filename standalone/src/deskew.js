@@ -106,3 +106,104 @@ function deskewPdfPage(doc, pobj, tilt) {
   arr.push(doc.addStream("\nQ\n", {}));
   pobj.put("Contents", arr);
 }
+
+/**
+ * The square (0,0)–(1,1) mapped onto the quadrilateral q = [top left, top right, bottom right,
+ * bottom left] (each [x, y]): a function (s, t) → [x, y]. A perspective (projective) mapping.
+ */
+function quadMap(q) {
+  const [[x0, y0], [x1, y1], [x2, y2], [x3, y3]] = q;
+  const dx1 = x1 - x2, dx2 = x3 - x2, dx3 = x0 - x1 + x2 - x3;
+  const dy1 = y1 - y2, dy2 = y3 - y2, dy3 = y0 - y1 + y2 - y3;
+  const den = dx1 * dy2 - dx2 * dy1 || 1e-12;
+  const g = (dx3 * dy2 - dx2 * dy3) / den, h = (dx1 * dy3 - dx3 * dy1) / den;
+  const a = x1 - x0 + g * x1, b = x3 - x0 + h * x3, c = x0;
+  const d = y1 - y0 + g * y1, e = y3 - y0 + h * y3, f = y0;
+  return (s, t) => { const w = g * s + h * t + 1; return [(a * s + b * t + c) / w, (d * s + e * t + f) / w]; };
+}
+
+/** Width and height of the rectangle a page outlined by `q` (pixels) becomes: its longer edges. */
+function quadSize(q) {
+  const len = (p, r) => Math.hypot(r[0] - p[0], r[1] - p[1]);
+  return [Math.max(1, Math.round(Math.max(len(q[0], q[1]), len(q[3], q[2])))), Math.max(1, Math.round(Math.max(len(q[0], q[3]), len(q[1], q[2]))))];
+}
+
+/**
+ * A picture turned, straightened and flattened in one pass. `src` has `n` bytes per pixel (3 or
+ * 4) and is `sw`×`sh`. As shown it is first turned by `turn` (0/90/180/270, clockwise), then by
+ * `angle` degrees clockwise about its middle (same size, corners filled with `bg`); `quad`
+ * (fractions of that straightened picture: top left, top right, bottom right, bottom left) is
+ * then stretched to a rectangle. Returns {data, width, height}.
+ */
+function warpPixels(src, sw, sh, n, { turn = 0, angle = 0, quad = null, bg = 255 } = {}) {
+  const tr = ((turn % 360) + 360) % 360, dw = tr % 180 ? sh : sw, dh = tr % 180 ? sw : sh;
+  let W = dw, H = dh, map = null;
+  if (quad) {
+    const q = quad.map(([x, y]) => [x * dw, y * dh]);
+    [W, H] = quadSize(q);
+    const m = quadMap(q);
+    map = (u, v) => m((u + 0.5) / W, (v + 0.5) / H);
+  }
+  const a = (angle * Math.PI) / 180, c = Math.cos(a), s = Math.sin(a), cx = dw / 2, cy = dh / 2;
+  const out = new Uint8ClampedArray(W * H * n);
+  if (n === 4) for (let i = 3; i < out.length; i += 4) out[i] = 255;
+  for (let v = 0; v < H; v++) {
+    for (let u = 0; u < W; u++) {
+      let X, Y;
+      if (map) [X, Y] = map(u, v); else { X = u + 0.5; Y = v + 0.5; }
+      // undo the straightening turn, then the quarter turns
+      const dx = X - cx, dy = Y - cy;
+      const Xs = cx + c * dx + s * dy, Ys = cy - s * dx + c * dy;
+      let xs, ys;
+      if (tr === 0) { xs = Xs; ys = Ys; } else if (tr === 90) { xs = Ys; ys = sh - Xs; } else if (tr === 180) { xs = sw - Xs; ys = sh - Ys; } else { xs = sw - Ys; ys = Xs; }
+      xs -= 0.5; ys -= 0.5;
+      const o = (v * W + u) * n;
+      const x0 = Math.floor(xs), y0 = Math.floor(ys);
+      if (x0 < -1 || y0 < -1 || x0 >= sw || y0 >= sh) { for (let k = 0; k < Math.min(3, n); k++) out[o + k] = bg; continue; }
+      const fx = xs - x0, fy = ys - y0;
+      const x1 = Math.min(sw - 1, x0 + 1), y1 = Math.min(sh - 1, y0 + 1), xa = Math.max(0, x0), ya = Math.max(0, y0);
+      const p00 = (ya * sw + xa) * n, p10 = (ya * sw + x1) * n, p01 = (y1 * sw + xa) * n, p11 = (y1 * sw + x1) * n;
+      for (let k = 0; k < Math.min(3, n); k++) {
+        out[o + k] = (src[p00 + k] * (1 - fx) + src[p10 + k] * fx) * (1 - fy) + (src[p01 + k] * (1 - fx) + src[p11 + k] * fx) * fy;
+      }
+    }
+  }
+  return { data: out, width: W, height: H };
+}
+
+/**
+ * A page drawn anew as a picture: turned, straightened and flattened (see warpPixels) at about
+ * the resolution of a scan. Its text layer is gone; the picture can be recognised (OCR) again.
+ * Adds the page to the end of `out`.
+ */
+function warpedPdfPage(out, doc, pno, it) {
+  const page = doc.loadPage(pno);
+  try {
+    const b = page.getBounds();
+    const zoom = Math.min(4, 3000 / Math.max(1, b[2] - b[0], b[3] - b[1]));
+    const pix = page.toPixmap(M.Matrix.scale(zoom, zoom), M.ColorSpace.DeviceRGB, false);
+    let res;
+    try {
+      res = warpPixels(pix.getPixels(), pix.getWidth(), pix.getHeight(), pix.getNumberOfComponents(), { turn: it.rot || 0, angle: -(Number(it.skew) || 0), quad: it.quad || null });
+    } finally {
+      free(pix);
+    }
+    const img = new M.Pixmap(M.ColorSpace.DeviceRGB, [0, 0, res.width, res.height], false);
+    img.getPixels().set(res.data);
+    const jpeg = img.asJPEG(88);
+    free(img);
+    const image = new M.Image(jpeg);
+    const ref = out.addImage(image);
+    free(image);
+    const pw = res.width / zoom, ph = res.height / zoom;
+    const resources = out.newDictionary(), xo = out.newDictionary();
+    xo.put("Im0", ref);
+    resources.put("XObject", xo);
+    const fmt2 = (x) => Math.round(x * 1000) / 1000;
+    const p = out.addPage([0, 0, fmt2(pw), fmt2(ph)], 0, resources, `q ${fmt2(pw)} 0 0 ${fmt2(ph)} 0 0 cm /Im0 Do Q`);
+    out.insertPage(-1, p);
+    free(p);
+  } finally {
+    free(page);
+  }
+}

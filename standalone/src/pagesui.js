@@ -64,7 +64,8 @@ function renderPagesGrid() {
     else badge = badge.replace(/ · $/, "");
     if (pmNotesItem(it)) badge = badge ? `${badge} · ${t("pages.notesLabel")}` : t("pages.notesLabel");
     if (it.rot) badge = badge ? `${badge} · ↻${it.rot}°` : `↻${it.rot}°`;
-    if (it.skew) badge = badge ? `${badge} · ⟂ ${pmDeg(-it.skew, true)}` : `⟂ ${pmDeg(-it.skew, true)}`; // (the correction: + clockwise)
+    const fix = `${it.quad ? "▱" : "⟂"}${it.skew ? ` ${pmDeg(-it.skew, true)}` : ""}`; // (the correction: + clockwise)
+    if (it.skew || it.quad) badge = badge ? `${badge} · ${fix}` : fix;
     const btn = (act, key, label, vars) => `<button type="button" data-act="${act}" title="${t(key, vars)}" aria-label="${t(key, vars)}">${label}</button>`;
     const sel = pm.sel.has(it);
     const turn = pmSlides() ? "" : btn("rotate", "pages.rotate", "↻");
@@ -92,6 +93,7 @@ function pmSelectionBar() {
   for (const id of ["pagesSelLeft", "pagesSelRight", "pagesSelRemove", "pagesSelSave"]) $(`#${id}`).disabled = !n;
   $("#pagesSelLeft").hidden = $("#pagesSelRight").hidden = $("#pagesStraightWrap").hidden = pmSlides();
   $("#pagesSelStraight").disabled = $("#pagesSkew").disabled = !n;
+  $("#pagesSelHand").disabled = n !== 1 || [...pm.sel][0].from < 0;
   // The tilt of the selection: shown when all selected pages share it.
   const tilts = [...new Set([...pm.sel].map((it) => Math.round((it.skew || 0) * 10) / 10))];
   if (document.activeElement !== $("#pagesSkew")) $("#pagesSkew").value = n && tilts.length === 1 ? (0 - tilts[0] || 0).toLocaleString(LANG === "de" ? "de-DE" : "en-GB") : "";
@@ -109,6 +111,7 @@ async function pmStraighten(items) {
   if (!todo.length) return;
   let fixed = 0, straight = 0, unclear = 0;
   for (const [k, it] of todo.entries()) {
+    if (it.quad) { straight++; continue; } // (corners drawn by hand keep their own angle)
     busy(t("pages.measuring", { i: k + 1, n: todo.length }));
     try {
       const r = await pool.workers[0].call("skewDetect", { page: pmSlides() ? pm.slides[it.page] : it.page, index: it.from });
@@ -122,6 +125,40 @@ async function pmStraighten(items) {
   busy("");
   renderPagesGrid();
   toast(t("pages.straightened", { n: fixed, s: straight, u: unclear }), fixed ? "ok" : undefined);
+}
+
+/** One page shown large, to be turned or flattened by hand (see straighten.js). */
+async function pmHand(it) {
+  busy(t("pic.preparing"));
+  try {
+    const base = pmBaseSize(it), zoom = Math.min(4, 1800 / Math.max(base.width, base.height));
+    const page = it.from === 0 && pmSlides() ? pm.slides[it.page] : it.page;
+    const buf = it.from === 0
+      ? await pool.leastBusy(null).call("render", { page, zoom, variant: "original" })
+      : await pool.workers[0].call("extraRender", { index: it.from, page, zoom });
+    // As the page is shown: with its quarter turn.
+    const bmp = await createImageBitmap(new Blob([buf], { type: "image/png" }));
+    const side = (it.rot || 0) % 180 !== 0;
+    const c = document.createElement("canvas");
+    c.width = side ? bmp.height : bmp.width; c.height = side ? bmp.width : bmp.height;
+    const g = c.getContext("2d");
+    g.translate(c.width / 2, c.height / 2); g.rotate(((it.rot || 0) * Math.PI) / 180); g.drawImage(bmp, -bmp.width / 2, -bmp.height / 2);
+    bmp.close && bmp.close();
+    const blob = await new Promise((res) => c.toBlob(res, "image/png"));
+    const size = pmPageSize(it);
+    busy("");
+    await openStraighten({
+      image: blob, width: size.width, height: size.height, angle: -(it.skew || 0), quad: it.quad || null,
+      title: t("pages.handTitleShort", { n: pm.items.indexOf(it) + 1 }),
+      measure: () => pool.workers[0].call("skewDetect", { page, index: it.from }),
+      onApply: (angle, quad) => { it.skew = angle ? -angle : 0; it.quad = quad; renderPagesGrid(); },
+    });
+  } catch (err) {
+    console.error(err);
+    toast(t("pages.saveFailed", { err: userError(err) }), "error");
+  } finally {
+    busy("");
+  }
 }
 
 /** Turns an item by `deg` (a blank page swaps its sides instead). */
@@ -157,7 +194,7 @@ function pmRanges(nums) {
 /** Saves the given items, in the order of the grid, as a file of their own. */
 async function pmSave(items) {
   if (!items.length) return;
-  const plan = pm.items.filter((it) => items.includes(it)).map((it) => ({ from: it.from, page: it.page, w: it.w, h: it.h, rot: it.rot || 0, skew: pmSlides() ? 0 : it.skew || 0 }));
+  const plan = pm.items.filter((it) => items.includes(it)).map((it) => ({ from: it.from, page: it.page, w: it.w, h: it.h, rot: it.rot || 0, skew: pmSlides() ? 0 : it.skew || 0, quad: pmSlides() ? null : it.quad || null }));
   const ext = pmSlides() ? "pptx" : "pdf";
   const base = state.doc.name.replace(/\.[^.]+$/, "");
   // Numbered by the open file's own pages when all come from it, else by their place in the grid.
@@ -185,15 +222,15 @@ function loadThumb(img) {
   const card = img.closest(".pg-card"), it = pm.items[Number(card.dataset.i)];
   if (!it || it.from < 0) return;
   const key = `${it.from}:${it.page}`;
-  const rot = it.rot || 0, skew = it.skew || 0;
-  const turned = pm.thumbs.get(`${key}@${rot}@${skew}`);
-  if ((rot || skew) && turned) { img.src = turned; return; }
+  const rot = it.rot || 0, skew = it.skew || 0, quad = it.quad || null;
+  const turned = pm.thumbs.get(`${key}@${rot}@${skew}@${quad}`);
+  if ((rot || skew || quad) && turned) { img.src = turned; return; }
   const show = (url) => {
     const cur = $("#pagesGrid").querySelector(`.pg-card[data-i="${pm.items.indexOf(it)}"] img`);
     if (cur) cur.src = url;
   };
   const cached = pm.thumbs.get(key);
-  if (cached) { pmTurnedThumb(key, cached, rot, skew).then(show); return; }
+  if (cached) { pmTurnedThumb(key, cached, rot, skew, quad).then(show); return; }
   const size = pmBaseSize(it), zoom = Math.max(0.15, Math.min(1.5, 170 / Math.max(size.width, size.height) * 1.3));
   const req = it.from === 0
     ? pool.leastBusy(null).call("render", { page: pmSlides() ? pm.slides[it.page] : it.page, zoom, variant: "original" })
@@ -201,24 +238,28 @@ function loadThumb(img) {
   req.then((buf) => {
     const url = URL.createObjectURL(new Blob([buf], { type: "image/png" }));
     pm.thumbs.set(key, url);
-    return pmTurnedThumb(key, url, it.rot || 0, it.skew || 0).then(show);
+    return pmTurnedThumb(key, url, it.rot || 0, it.skew || 0, it.quad || null).then(show);
   }).catch((err) => console.warn("thumbnail failed", err));
 }
 
-/** The thumbnail `url` turned clockwise by `rot` degrees and straightened by `skew` (cached). */
-function pmTurnedThumb(key, url, rot, skew = 0) {
-  if (!rot && !skew) return Promise.resolve(url);
-  const done = pm.thumbs.get(`${key}@${rot}@${skew}`);
+/** The thumbnail `url` turned clockwise by `rot` degrees, straightened and flattened (cached). */
+function pmTurnedThumb(key, url, rot, skew = 0, quad = null) {
+  if (!rot && !skew && !quad) return Promise.resolve(url);
+  const id = `${key}@${rot}@${skew}@${quad}`, done = pm.thumbs.get(id);
   if (done) return Promise.resolve(done);
   return new Promise((resolve) => {
     const im = new Image();
     im.onload = () => {
-      const c = document.createElement("canvas"), side = rot % 180 !== 0;
-      c.width = side ? im.height : im.width; c.height = side ? im.width : im.height;
-      const g = c.getContext("2d");
-      g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height);
-      g.translate(c.width / 2, c.height / 2); g.rotate(((rot - skew) * Math.PI) / 180); g.drawImage(im, -im.width / 2, -im.height / 2);
-      c.toBlob((b) => { const u = b ? URL.createObjectURL(b) : url; if (b) pm.thumbs.set(`${key}@${rot}@${skew}`, u); resolve(u); }, "image/png");
+      const a = document.createElement("canvas");
+      a.width = im.width; a.height = im.height;
+      const ga = a.getContext("2d", { willReadFrequently: true });
+      ga.drawImage(im, 0, 0);
+      const px = ga.getImageData(0, 0, a.width, a.height);
+      const res = Engine.warpPixels(px.data, a.width, a.height, 4, { turn: rot, angle: -skew, quad });
+      const c = document.createElement("canvas");
+      c.width = res.width; c.height = res.height;
+      c.getContext("2d").putImageData(new ImageData(res.data, res.width, res.height), 0, 0);
+      c.toBlob((b) => { const u = b ? URL.createObjectURL(b) : url; if (b) pm.thumbs.set(id, u); resolve(u); }, "image/png");
     };
     im.onerror = () => resolve(url);
     im.src = url;
@@ -292,10 +333,10 @@ function pmRestoreTranslations(cap, plan) {
 }
 
 async function applyPages() {
-  const plan = pm.items.map((it) => ({ from: it.from, page: it.page, w: it.w, h: it.h, rot: it.rot || 0, skew: pmSlides() ? 0 : it.skew || 0 }));
+  const plan = pm.items.map((it) => ({ from: it.from, page: it.page, w: it.w, h: it.h, rot: it.rot || 0, skew: pmSlides() ? 0 : it.skew || 0, quad: pmSlides() ? null : it.quad || null }));
   const n = pmSlides() ? pm.slides.length : state.doc.pages.length;
   const dropNotes = pmSlides() && !$("#pagesNotesWrap").hidden && $("#pagesDropNotes").checked;
-  if (!dropNotes && plan.length === n && plan.every((p, i) => p.from === 0 && p.page === i && !p.rot && !p.skew)) { toast(t("pages.unchanged")); return; }
+  if (!dropNotes && plan.length === n && plan.every((p, i) => p.from === 0 && p.page === i && !p.rot && !p.skew && !p.quad)) { toast(t("pages.unchanged")); return; }
   const name = state.doc.name.replace(/\.ppt$/i, ".pptx");
   const kind = state.doc.kind;
   busy(t("pages.working"));
@@ -323,8 +364,20 @@ function initPagesManager() {
     const b = e.target.closest("button[data-act]"), card = e.target.closest(".pg-card");
     if (!card) return;
     if (!b) {
-      // a click on the picture selects (Shift+click: the pages in between too)
-      if (e.target.closest(".pg-thumb")) pmToggle(Number(card.dataset.i), e.shiftKey);
+      // a click on the picture selects (Shift+click: the pages in between too); a double click
+      // opens it for straightening by hand (the grid is drawn anew on each click, so the browser's
+      // own dblclick never arrives)
+      if (e.target.closest(".pg-thumb")) {
+        const i = Number(card.dataset.i), now = Date.now(), it = pm.items[i];
+        if (pm.lastClick && pm.lastClick.it === it && now - pm.lastClick.t < 450 && !e.shiftKey) {
+          pm.lastClick = null;
+          if (!pm.sel.has(it)) pmToggle(i, false);
+          if (it.from >= 0 && !pmSlides()) pmHand(it);
+          return;
+        }
+        pm.lastClick = { it, t: now };
+        pmToggle(i, e.shiftKey);
+      }
       return;
     }
     const i = Number(card.dataset.i), act = b.dataset.act;
@@ -353,6 +406,8 @@ function initPagesManager() {
     pmToggle(i, e.shiftKey);
     grid.querySelector(`.pg-card[data-i="${i}"] .pg-thumb`)?.focus();
   });
+  // (a click anywhere else in between: the next click on a page is a single one again)
+  dlg.addEventListener("click", (e) => { if (!e.target.closest(".pg-thumb")) pm.lastClick = null; }, true);
   $("#pagesSelAll").addEventListener("click", () => {
     const shown = pm.items.filter(pmShown);
     if (pm.sel.size >= shown.length) pm.sel.clear(); else shown.forEach((it) => pm.sel.add(it));
@@ -367,6 +422,8 @@ function initPagesManager() {
   });
   $("#pagesSelSave").addEventListener("click", () => pmSave([...pm.sel]));
   $("#pagesSelStraight").addEventListener("click", () => pmStraighten([...pm.sel]));
+  $("#pagesSelHand").addEventListener("click", () => { const it = [...pm.sel][0]; if (pm.sel.size === 1 && it.from >= 0) pmHand(it); });
+
   $("#pagesSkew").addEventListener("keydown", (e) => { // (Enter sets the angle; it must not close the dialog)
     if (e.key !== "Enter") return;
     e.preventDefault();

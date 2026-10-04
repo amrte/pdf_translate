@@ -681,19 +681,21 @@ body.splitting .pages, body.splitting iframe { pointer-events: none; }
 body.is-image .tool.pic-only { display: grid !important; }
 body.is-image .rail-sep.pic-only { display: block !important; }
 body.is-image .page img { filter: var(--pic-filter, none); transform: rotate(var(--pic-turn, 0deg)); }
+/* (a column beside the picture, not over it: the crop area stays in view) */
 .pic-panel {
-  position: absolute; left: 48px; top: 50px; z-index: 6; width: 280px; padding: 12px 14px; display: grid; gap: 10px;
-  background: var(--surface); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--page-shadow);
+  flex: none; width: 300px; box-sizing: border-box; padding: 12px 14px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; align-content: start; overflow-y: auto; overflow-x: hidden;
+  background: var(--surface); border-right: 1px solid var(--border);
 }
+.pic-panel[hidden] { display: none; }
 .pic-head { display: flex; align-items: center; justify-content: space-between; }
 .pic-head b { font-size: 14px; }
 .pic-x { position: static; width: 26px; height: 26px; }
-.pic-row { display: grid; grid-template-columns: 78px 1fr 46px; align-items: center; gap: 8px; font-size: 13px; }
-.pic-row input[type=range] { width: 100%; margin: 0; accent-color: var(--accent); }
+.pic-row { display: grid; grid-template-columns: 74px minmax(0, 1fr) 46px; align-items: center; gap: 8px; font-size: 13px; }
+.pic-row input[type=range] { width: 100%; min-width: 0; margin: 0; accent-color: var(--accent); }
 .pic-row output { text-align: right; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
 .pic-row .btn { height: 28px; padding: 0 9px; font-size: 12.5px; }
 .pic-buttons { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-.pic-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.pic-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; }
 .pic-crop-layer { position: absolute; inset: 0; z-index: 5; }
 .pic-crop-layer.active { cursor: crosshair; }
 .pic-crop-rect { position: absolute; border: 2px dashed var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); box-shadow: 0 0 0 9999px rgba(0, 0, 0, .25); pointer-events: none; }
@@ -923,3 +925,26 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
 .decks-row.added { opacity: .8; }
 .decks-name { min-width: 0; display: grid; gap: 3px; }
 .decks-sample { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* straightening by hand */
+.st-dialog { width: min(1100px, 96vw); }
+.st-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.st-tools .spacer { flex: 1; }
+.st-modes { display: inline-flex; gap: 4px; }
+.st-angle { display: inline-flex; align-items: center; gap: 4px; }
+.st-angle input[type=range] { width: 200px; accent-color: var(--accent); }
+.st-angle output { min-width: 52px; text-align: right; font-variant-numeric: tabular-nums; color: var(--muted); font-size: 13px; }
+.st-tools .btn.small, .st-modes .btn { height: 30px; padding: 0 10px; font-size: 13px; }
+.st-hint { margin: 6px 0; min-height: 1.4em; }
+.linkish { border: 0; background: none; color: var(--accent); font: inherit; cursor: pointer; padding: 0; text-decoration: underline; }
+.st-area { height: min(64vh, 760px); display: flex; align-items: center; justify-content: center; background: var(--surface-2); border-radius: 8px; overflow: hidden; }
+.st-stage { position: relative; background: #fff; overflow: hidden; touch-action: none; cursor: grab; box-shadow: var(--page-shadow); }
+.st-stage:active { cursor: grabbing; }
+.st-dialog.mode-line .st-stage, .st-dialog.mode-corners .st-stage { cursor: crosshair; }
+#stImg { position: absolute; inset: 0; width: 100%; height: 100%; transform-origin: 50% 50%; user-select: none; pointer-events: none; }
+#stSvg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+#stSvg .st-guide { stroke: rgba(30, 102, 245, .45); stroke-width: 1; stroke-dasharray: 4 4; }
+#stSvg .st-line { stroke: #e53935; stroke-width: 2.5; }
+#stSvg .st-quad { fill: none; stroke: var(--accent); stroke-width: 2; }
+#stSvg .st-shade { fill: rgba(0, 0, 0, .35); }
+#stSvg .st-handle { fill: #fff; stroke: var(--accent); stroke-width: 3; cursor: move; }

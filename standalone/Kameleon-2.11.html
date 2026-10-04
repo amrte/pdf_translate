@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="Kameleon 2.10">
+  <meta name="generator" content="Kameleon 2.11">
   <meta name="description" content="Kameleon – Wechselt die Sprache, behält die Form. Changes language, keeps its shape.">
   <title>Kameleon</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2216%22 fill=%22%23287130%22/%3E%3Cg transform=%22translate(2.5 1) scale(0.9)%22 fill=%22%23ffffff%22 stroke=%22%23ffffff%22%3E%3Cpath d=%22M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6%22 fill=%22none%22 stroke-width=%223.8%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M21 43l-1 10M30 44v9M38 43l1 10%22 stroke-width=%223.6%22 stroke-linecap=%22round%22/%3E%3Cellipse cx=%2221%22 cy=%2225%22 rx=%227%22 ry=%227.5%22 stroke=%22none%22/%3E%3Cellipse cx=%2233%22 cy=%2223.5%22 rx=%227.5%22 ry=%228%22 stroke=%22none%22/%3E%3Cpath d=%22M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z%22 stroke=%22none%22/%3E%3Cpath d=%22M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z%22 stroke=%22none%22/%3E%3Cpath d=%22M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z%22 stroke=%22none%22/%3E%3Cpath d=%22M16 37l4-3 4 3 4-3 4 3 4-3 4 3%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%222.1%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3Cpath d=%22M43.5 33.9L57 32.6%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%221.5%22 stroke-linecap=%22round%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%224.4%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%222.7%22 stroke=%22none%22/%3E%3Ccircle cx=%2246.2%22 cy=%2226.7%22 r=%221.3%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Cpath d=%22M4 55.5c15-3 39-3 54 0%22 fill=%22none%22 stroke-width=%222.4%22 stroke-linecap=%22round%22/%3E%3C/g%3E%3C/svg%3E">
@@ -691,19 +691,21 @@ body.splitting .pages, body.splitting iframe { pointer-events: none; }
 body.is-image .tool.pic-only { display: grid !important; }
 body.is-image .rail-sep.pic-only { display: block !important; }
 body.is-image .page img { filter: var(--pic-filter, none); transform: rotate(var(--pic-turn, 0deg)); }
+/* (a column beside the picture, not over it: the crop area stays in view) */
 .pic-panel {
-  position: absolute; left: 48px; top: 50px; z-index: 6; width: 280px; padding: 12px 14px; display: grid; gap: 10px;
-  background: var(--surface); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--page-shadow);
+  flex: none; width: 300px; box-sizing: border-box; padding: 12px 14px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; align-content: start; overflow-y: auto; overflow-x: hidden;
+  background: var(--surface); border-right: 1px solid var(--border);
 }
+.pic-panel[hidden] { display: none; }
 .pic-head { display: flex; align-items: center; justify-content: space-between; }
 .pic-head b { font-size: 14px; }
 .pic-x { position: static; width: 26px; height: 26px; }
-.pic-row { display: grid; grid-template-columns: 78px 1fr 46px; align-items: center; gap: 8px; font-size: 13px; }
-.pic-row input[type=range] { width: 100%; margin: 0; accent-color: var(--accent); }
+.pic-row { display: grid; grid-template-columns: 74px minmax(0, 1fr) 46px; align-items: center; gap: 8px; font-size: 13px; }
+.pic-row input[type=range] { width: 100%; min-width: 0; margin: 0; accent-color: var(--accent); }
 .pic-row output { text-align: right; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
 .pic-row .btn { height: 28px; padding: 0 9px; font-size: 12.5px; }
 .pic-buttons { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-.pic-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.pic-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; }
 .pic-crop-layer { position: absolute; inset: 0; z-index: 5; }
 .pic-crop-layer.active { cursor: crosshair; }
 .pic-crop-rect { position: absolute; border: 2px dashed var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); box-shadow: 0 0 0 9999px rgba(0, 0, 0, .25); pointer-events: none; }
@@ -934,6 +936,29 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
 .decks-name { min-width: 0; display: grid; gap: 3px; }
 .decks-sample { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+/* straightening by hand */
+.st-dialog { width: min(1100px, 96vw); }
+.st-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.st-tools .spacer { flex: 1; }
+.st-modes { display: inline-flex; gap: 4px; }
+.st-angle { display: inline-flex; align-items: center; gap: 4px; }
+.st-angle input[type=range] { width: 200px; accent-color: var(--accent); }
+.st-angle output { min-width: 52px; text-align: right; font-variant-numeric: tabular-nums; color: var(--muted); font-size: 13px; }
+.st-tools .btn.small, .st-modes .btn { height: 30px; padding: 0 10px; font-size: 13px; }
+.st-hint { margin: 6px 0; min-height: 1.4em; }
+.linkish { border: 0; background: none; color: var(--accent); font: inherit; cursor: pointer; padding: 0; text-decoration: underline; }
+.st-area { height: min(64vh, 760px); display: flex; align-items: center; justify-content: center; background: var(--surface-2); border-radius: 8px; overflow: hidden; }
+.st-stage { position: relative; background: #fff; overflow: hidden; touch-action: none; cursor: grab; box-shadow: var(--page-shadow); }
+.st-stage:active { cursor: grabbing; }
+.st-dialog.mode-line .st-stage, .st-dialog.mode-corners .st-stage { cursor: crosshair; }
+#stImg { position: absolute; inset: 0; width: 100%; height: 100%; transform-origin: 50% 50%; user-select: none; pointer-events: none; }
+#stSvg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+#stSvg .st-guide { stroke: rgba(30, 102, 245, .45); stroke-width: 1; stroke-dasharray: 4 4; }
+#stSvg .st-line { stroke: #e53935; stroke-width: 2.5; }
+#stSvg .st-quad { fill: none; stroke: var(--accent); stroke-width: 2; }
+#stSvg .st-shade { fill: rgba(0, 0, 0, .35); }
+#stSvg .st-handle { fill: #fff; stroke: var(--accent); stroke-width: 3; cursor: move; }
+
   </style>
 </head>
 <body>
@@ -941,7 +966,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
   <div class="brand">
     <span class="logo"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#287130"/><g transform="translate(2.5 1) scale(0.9)" fill="#ffffff" stroke="#ffffff"><path d="M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6" fill="none" stroke-width="3.8" stroke-linecap="round"/><path d="M21 43l-1 10M30 44v9M38 43l1 10" stroke-width="3.6" stroke-linecap="round"/><ellipse cx="21" cy="25" rx="7" ry="7.5" stroke="none"/><ellipse cx="33" cy="23.5" rx="7.5" ry="8" stroke="none"/><path d="M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z" stroke="none"/><path d="M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z" stroke="none"/><path d="M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z" stroke="none"/><path d="M16 37l4-3 4 3 4-3 4 3 4-3 4 3" fill="none" stroke="#287130" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M43.5 33.9L57 32.6" fill="none" stroke="#287130" stroke-width="1.5" stroke-linecap="round"/><circle cx="45.5" cy="26.5" r="4.4" fill="#287130" stroke="none"/><circle cx="45.5" cy="26.5" r="2.7" stroke="none"/><circle cx="46.2" cy="26.7" r="1.3" fill="#287130" stroke="none"/><path d="M4 55.5c15-3 39-3 54 0" fill="none" stroke-width="2.4" stroke-linecap="round"/></g></svg></span>
     <span class="brand-name">Kameleon</span>
-    <span class="version" id="appVersion">v2.10</span>
+    <span class="version" id="appVersion">v2.11</span>
   </div>
   <div class="topbar-actions">
     <span class="doc-name" id="docName"></span>
@@ -1121,7 +1146,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
       <label class="pic-row"><span data-i18n="pic.contrast">Contrast</span><input type="range" id="picContrast" min="50" max="150" value="100"><output id="picContrastOut">100%</output></label>
       <label class="check"><input type="checkbox" id="picGray"> <span data-i18n="pic.gray">Greyscale</span></label>
       <div class="pic-row"><span data-i18n="pic.rotate">Rotate</span><span class="pic-buttons"><button type="button" class="btn" id="picRotL" data-i18n-title="pic.rotL">⟲ 90°</button><button type="button" class="btn" id="picRotR" data-i18n-title="pic.rotR">⟳ 90°</button></span><output id="picRotOut"></output></div>
-      <div class="pic-row"><span data-i18n="pic.straight">Straighten</span><span class="pic-buttons"><button type="button" class="btn" id="picAuto" data-i18n="pic.auto" data-i18n-title="pic.autoTitle">Auto</button></span><output id="picFineOut"></output></div>
+      <div class="pic-row"><span data-i18n="pic.straight">Straighten</span><span class="pic-buttons"><button type="button" class="btn" id="picAuto" data-i18n="pic.auto" data-i18n-title="pic.autoTitle">Auto</button><button type="button" class="btn" id="picHand" data-i18n="pic.hand" data-i18n-title="pic.handTitle">By hand…</button></span><output id="picFineOut"></output></div>
       <label class="pic-row"><span></span><input type="range" id="picFine" min="-15" max="15" step="0.1" value="0" data-i18n-title="pic.fineTitle" data-i18n-aria="pic.fineTitle"><span></span></label>
       <div class="pic-row"><span data-i18n="pic.cropLabel">Crop</span><span class="pic-buttons"><button type="button" class="btn" id="picCrop" data-i18n="pic.crop">Choose area</button></span><output id="picCropOut"></output></div>
       <p class="muted small" id="picHint" data-i18n="pic.hint"></p>
@@ -1449,7 +1474,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
     </div>
     <input type="file" id="offlineZip" class="visually-hidden" accept=".zip,application/zip" multiple tabindex="-1">
     <input type="file" id="offlineFolder" class="visually-hidden" webkitdirectory multiple tabindex="-1">
-    <p class="muted small help-version help-part">Kameleon v2.10 · <span data-i18n="app.tagline"></span></p>
+    <p class="muted small help-version help-part">Kameleon v2.11 · <span data-i18n="app.tagline"></span></p>
     <div class="modal-actions">
       <button type="button" value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
     </div>
@@ -1598,6 +1623,34 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
     </div>
   </form>
 </dialog>
+<dialog id="straightDialog" class="modal st-dialog" aria-labelledby="stTitle">
+  <form method="dialog">
+    <h2 id="stTitle" data-i18n="st2.title">Straighten</h2>
+    <div class="st-tools">
+      <span class="st-modes">
+        <button type="button" class="btn small" id="stMode_turn" data-i18n="st2.mode_turn" data-i18n-title="st2.hint_turn"></button>
+        <button type="button" class="btn small" id="stMode_line" data-i18n="st2.mode_line" data-i18n-title="st2.hint_line"></button>
+        <button type="button" class="btn small" id="stMode_corners" data-i18n="st2.mode_corners" data-i18n-title="st2.hint_corners"></button>
+      </span>
+      <span class="spacer"></span>
+      <button type="button" class="btn small" id="stAuto" data-i18n="pic.auto" data-i18n-title="pic.autoTitle"></button>
+      <span class="st-angle">
+        <button type="button" class="btn small" id="stMinus" data-i18n-title="st2.minus">−</button>
+        <input type="range" id="stAngle" min="-15" max="15" step="0.1" value="0" data-i18n-title="pic.fineTitle" data-i18n-aria="pic.fineTitle">
+        <button type="button" class="btn small" id="stPlus" data-i18n-title="st2.plus">+</button>
+        <output id="stAngleOut"></output>
+      </span>
+    </div>
+    <p class="muted small st-hint"><span id="stHint"></span> <button type="button" class="linkish" id="stCornersReset" data-i18n="st2.cornersOff" hidden></button></p>
+    <div class="st-area" id="stArea"><div class="st-stage" id="stStage"><img id="stImg" alt="" draggable="false"><svg id="stSvg" xmlns="http://www.w3.org/2000/svg"></svg></div></div>
+    <div class="modal-actions">
+      <button type="button" class="btn ghost" id="stReset" data-i18n="pic.reset">Reset</button>
+      <span class="spacer"></span>
+      <button value="cancel" class="btn ghost" data-i18n="common.cancel">Cancel</button>
+      <button value="ok" class="btn primary" id="stApply" data-i18n="pic.apply">Apply</button>
+    </div>
+  </form>
+</dialog>
 <dialog id="pagesDialog" class="modal" aria-labelledby="pagesTitle">
   <form method="dialog">
     <h2 id="pagesTitle" data-i18n="pages.title">Arrange pages</h2>
@@ -1610,6 +1663,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
       <button type="button" class="btn small" id="pagesSelRight" data-i18n="pages.turnRight" data-i18n-title="pages.turnRightTitle"></button>
       <span class="pages-straight" id="pagesStraightWrap">
         <button type="button" class="btn small" id="pagesSelStraight" data-i18n="pages.straighten" data-i18n-title="pages.straightenTitle"></button>
+        <button type="button" class="btn small" id="pagesSelHand" data-i18n="pages.hand" data-i18n-title="pages.handTitle"></button>
         <label class="pages-skew" data-i18n-title="pages.skewTitle"><input type="text" inputmode="decimal" id="pagesSkew" autocomplete="off" data-i18n-aria="pages.skewTitle"><span>°</span></label>
       </span>
       <button type="button" class="btn small" id="pagesSelRemove" data-i18n="pages.removeSel"></button>
@@ -1756,6 +1810,25 @@ const I18N = {
     "filter.todo": "Nicht übersetzt",
     "filter.done": "Übersetzt",
     "filter.numbers": "Zahlen & Formeln (bleiben)",
+    "st2.title": "Gerade richten",
+    "st2.mode_turn": "↻ Drehen",
+    "st2.mode_line": "╱ Linie anlegen",
+    "st2.mode_corners": "▱ Seitenränder",
+    "st2.hint_turn": "Ziehen Sie die Seite wie an einem Drehknopf, bis die Textzeilen parallel zu den Hilfslinien liegen. Pfeiltasten: 0,1° (mit Umschalt 1°).",
+    "st2.hint_line": "Ziehen Sie eine Linie an einer Textzeile oder einem Seitenrand entlang – die Seite wird so gedreht, dass diese Linie waagerecht (oder senkrecht) liegt.",
+    "st2.hint_corners": "Ziehen Sie die vier Ecken auf die Ecken der Seite. Die Seite wird daraus zu einem geraden Rechteck – für schräg fotografierte Seiten; der Rest des Bildes fällt weg.",
+    "st2.cornersOff": "Ecken entfernen",
+    "st2.minus": "0,1° gegen den Uhrzeigersinn",
+    "st2.plus": "0,1° im Uhrzeigersinn",
+    "st2.measured": "Gemessen: um {deg} drehen.",
+    "st2.tooSteep": "Diese Linie liegt zu schräg (mehr als 15°).",
+    "pic.hand": "Von Hand…",
+    "pic.handTitle": "Das Bild groß zeigen: drehen, an einer Linie ausrichten oder aus den vier Seitenecken gerade ziehen",
+    "pic.handTitleShort": "Bild gerade richten",
+    "pic.preparing": "Die Seite wird vorbereitet…",
+    "pages.hand": "Von Hand…",
+    "pages.handTitle": "Die ausgewählte Seite groß zeigen: drehen, an einer Linie ausrichten oder aus den vier Seitenecken gerade ziehen (auch mit Doppelklick auf eine Seite)",
+    "pages.handTitleShort": "Seite {n} gerade richten",
     "pages.straighten": "⟂ Gerade richten",
     "pages.straightenTitle": "Die Neigung der ausgewählten Seiten messen und sie gerade richten (für gescannte Seiten)",
     "pages.skewTitle": "Drehung in Grad (+ im Uhrzeigersinn), von Hand für die ausgewählten Seiten",
@@ -1776,7 +1849,7 @@ const I18N = {
     "ocr.straightened": "{n} schiefe Seite(n) gerade gerichtet.",
     "ocr.straightFailed": "Die Seiten konnten nicht gerade gerichtet werden: {err}",
     "msg.heicLoading": "HEIC-Bildleser wird geladen…",
-    "help.deskew": "<b>Gerade richten:</b> Schief gescannte Seiten und schief fotografierte Bilder werden gerade gedreht. Die Neigung wird an den Textzeilen gemessen (bis ±15°). In der Texterkennung (OCR) geschieht das vorher von selbst („Schiefe Seiten vorher gerade richten“); unter „Seiten anordnen“ mit „⟂ Gerade richten“ für die ausgewählten Seiten oder von Hand im Feld daneben; bei einem Bild im Bild-Werkzeug mit „Automatisch“ oder dem Regler. Ein Scan in einer PDF wird dabei nicht neu gespeichert, nur gedreht – die Qualität bleibt gleich. Gewölbte Buchseiten werden als Ganzes gedreht, nicht geglättet.",
+    "help.deskew": "<b>Gerade richten:</b> Schief gescannte Seiten und schief fotografierte Bilder werden gerade gedreht. Die Neigung wird an den Textzeilen gemessen (bis ±15°). In der Texterkennung (OCR) geschieht das vorher von selbst („Schiefe Seiten vorher gerade richten“); unter „Seiten anordnen“ mit „⟂ Gerade richten“ für die ausgewählten Seiten oder von Hand im Feld daneben; bei einem Bild im Bild-Werkzeug mit „Automatisch“ oder dem Regler. „Von Hand…“ zeigt die Seite groß: drehen wie an einem Drehknopf, eine Linie an einer Textzeile anlegen oder die vier Seitenecken ziehen – eine schräg fotografierte Seite wird so zu einem geraden Rechteck (dabei wird sie als Bild neu gespeichert). Ein Scan in einer PDF wird dabei nicht neu gespeichert, nur gedreht – die Qualität bleibt gleich. Gewölbte Buchseiten werden als Ganzes gedreht, nicht geglättet.",
     "filter.repeats": "Kopf- & Fußzeilen",
     "rep.header": "Kopfzeile · {n} Seiten",
     "rep.footer": "Fußzeile · {n} Seiten",
@@ -2507,6 +2580,25 @@ const I18N = {
     "filter.todo": "Untranslated",
     "filter.done": "Translated",
     "filter.numbers": "Numbers & formulas (kept)",
+    "st2.title": "Straighten",
+    "st2.mode_turn": "↻ Turn",
+    "st2.mode_line": "╱ Draw a line",
+    "st2.mode_corners": "▱ Page borders",
+    "st2.hint_turn": "Drag the page like a dial until the text lines run parallel to the guides. Arrow keys: 0.1° (with Shift 1°).",
+    "st2.hint_line": "Draw a line along a text line or an edge of the page – the page is turned so that this line is level (or upright).",
+    "st2.hint_corners": "Drag the four corners onto the corners of the page. The page becomes a straight rectangle – for pages photographed at a slant; the rest of the picture is cut away.",
+    "st2.cornersOff": "Remove corners",
+    "st2.minus": "0.1° anticlockwise",
+    "st2.plus": "0.1° clockwise",
+    "st2.measured": "Measured: turn by {deg}.",
+    "st2.tooSteep": "This line is too steep (more than 15°).",
+    "pic.hand": "By hand…",
+    "pic.handTitle": "Show the picture large: turn it, align it to a line or pull it straight from the page's four corners",
+    "pic.handTitleShort": "Straighten the picture",
+    "pic.preparing": "Preparing the page…",
+    "pages.hand": "By hand…",
+    "pages.handTitle": "Show the selected page large: turn it, align it to a line or pull it straight from the page's four corners (also with a double click on a page)",
+    "pages.handTitleShort": "Straighten page {n}",
     "pages.straighten": "⟂ Straighten",
     "pages.straightenTitle": "Measure the tilt of the selected pages and turn them straight (for scanned pages)",
     "pages.skewTitle": "Turn in degrees (+ clockwise), by hand for the selected pages",
@@ -2527,7 +2619,7 @@ const I18N = {
     "ocr.straightened": "{n} tilted page(s) straightened.",
     "ocr.straightFailed": "The pages could not be straightened: {err}",
     "msg.heicLoading": "Loading the HEIC picture reader…",
-    "help.deskew": "<b>Straighten:</b> Pages scanned askew and pictures photographed at a slant are turned straight. The tilt is measured on the text lines (up to ±15°). Text recognition (OCR) does it first by itself (\"Straighten tilted pages first\"); in \"Arrange pages\" use \"⟂ Straighten\" for the selected pages or the field beside it by hand; for a picture use \"Auto\" or the slider in the picture tools. A scan in a PDF is not saved anew, only turned – its quality stays the same. Curved book pages are turned as a whole, not flattened.",
+    "help.deskew": "<b>Straighten:</b> Pages scanned askew and pictures photographed at a slant are turned straight. The tilt is measured on the text lines (up to ±15°). Text recognition (OCR) does it first by itself (\"Straighten tilted pages first\"); in \"Arrange pages\" use \"⟂ Straighten\" for the selected pages or the field beside it by hand; for a picture use \"Auto\" or the slider in the picture tools. \"By hand…\" shows the page large: turn it like a dial, draw a line along a text line, or drag the four page corners – a page photographed at a slant becomes a straight rectangle (it is then saved anew as a picture). A scan in a PDF is not saved anew, only turned – its quality stays the same. Curved book pages are turned as a whole, not flattened.",
     "filter.repeats": "Headers & footers",
     "rep.header": "Header · {n} pages",
     "rep.footer": "Footer · {n} pages",
@@ -5993,7 +6085,7 @@ function cardsPdf(args) {
 
 const Engine = {
   init: initEngine, extract: extractDocument, extractPages, build: buildTranslated, renderPNG,
-  detectKind, imageKindOf, imageToPdf, keywordsPdf, cardsPdf, openBook, saveBook, extractBook, openLaidOut, mapTranslated, openOffice, officePreviewHtml, ocrToBlocks, sampleColors, refineOcr,
+  detectKind, imageKindOf, imageToPdf, warpPixels, keywordsPdf, cardsPdf, openBook, saveBook, extractBook, openLaidOut, mapTranslated, openOffice, officePreviewHtml, ocrToBlocks, sampleColors, refineOcr,
   open: (bytes) => M.Document.openDocument(bytes, "application/pdf"),
   exportTxt, exportCsv, exportJson, exportXliff, exportDocx, parseImport, parseMarkedText,
 };
@@ -9594,7 +9686,7 @@ function slideShapeEdits(book, segments, edits) {
 
 // ---------------------------------------------------------------------------------------------
 // Rearranging pages. A plan lists the new pages in order: {from: 0, page} is a page of the open
-// file (a PDF page may carry rot: 90, 180, 270 – turned clockwise – and skew: the tilt in degrees to take out), {from: k ≥ 1, page} a page of the k-th extra file, {from: -1, w, h} a blank page. A PDF
+// file (a PDF page may carry rot: 90, 180, 270 – turned clockwise – and skew: the tilt in degrees to take out, and quad: the page's corners, to be flattened), {from: k ≥ 1, page} a page of the k-th extra file, {from: -1, w, h} a blank page. A PDF
 // is put together from the pages (grafted with their resources); a PPTX gets its slide list
 // rewritten, dropped slides removed, blank slides added and slides of other decks copied in with
 // their layouts, masters, themes and pictures. Runs with the engine.
@@ -9627,6 +9719,7 @@ function rearrangePdf(bytes, plan, extras) {
       } else {
         const d = docs[it.from];
         if (!d || it.page < 0 || it.page >= d.countPages()) continue;
+        if (it.quad) { warpedPdfPage(out, d, it.page, it); n++; continue; } // (page borders drawn: the page as a flattened picture)
         out.graftPage(out.countPages(), d, it.page);
         if (turn) {
           // turned on top of the page's own /Rotate (which the graft copies onto the page)
@@ -9995,6 +10088,107 @@ function deskewPdfPage(doc, pobj, tilt) {
   else if (!contents.isNull()) arr.push(contents);
   arr.push(doc.addStream("\nQ\n", {}));
   pobj.put("Contents", arr);
+}
+
+/**
+ * The square (0,0)–(1,1) mapped onto the quadrilateral q = [top left, top right, bottom right,
+ * bottom left] (each [x, y]): a function (s, t) → [x, y]. A perspective (projective) mapping.
+ */
+function quadMap(q) {
+  const [[x0, y0], [x1, y1], [x2, y2], [x3, y3]] = q;
+  const dx1 = x1 - x2, dx2 = x3 - x2, dx3 = x0 - x1 + x2 - x3;
+  const dy1 = y1 - y2, dy2 = y3 - y2, dy3 = y0 - y1 + y2 - y3;
+  const den = dx1 * dy2 - dx2 * dy1 || 1e-12;
+  const g = (dx3 * dy2 - dx2 * dy3) / den, h = (dx1 * dy3 - dx3 * dy1) / den;
+  const a = x1 - x0 + g * x1, b = x3 - x0 + h * x3, c = x0;
+  const d = y1 - y0 + g * y1, e = y3 - y0 + h * y3, f = y0;
+  return (s, t) => { const w = g * s + h * t + 1; return [(a * s + b * t + c) / w, (d * s + e * t + f) / w]; };
+}
+
+/** Width and height of the rectangle a page outlined by `q` (pixels) becomes: its longer edges. */
+function quadSize(q) {
+  const len = (p, r) => Math.hypot(r[0] - p[0], r[1] - p[1]);
+  return [Math.max(1, Math.round(Math.max(len(q[0], q[1]), len(q[3], q[2])))), Math.max(1, Math.round(Math.max(len(q[0], q[3]), len(q[1], q[2]))))];
+}
+
+/**
+ * A picture turned, straightened and flattened in one pass. `src` has `n` bytes per pixel (3 or
+ * 4) and is `sw`×`sh`. As shown it is first turned by `turn` (0/90/180/270, clockwise), then by
+ * `angle` degrees clockwise about its middle (same size, corners filled with `bg`); `quad`
+ * (fractions of that straightened picture: top left, top right, bottom right, bottom left) is
+ * then stretched to a rectangle. Returns {data, width, height}.
+ */
+function warpPixels(src, sw, sh, n, { turn = 0, angle = 0, quad = null, bg = 255 } = {}) {
+  const tr = ((turn % 360) + 360) % 360, dw = tr % 180 ? sh : sw, dh = tr % 180 ? sw : sh;
+  let W = dw, H = dh, map = null;
+  if (quad) {
+    const q = quad.map(([x, y]) => [x * dw, y * dh]);
+    [W, H] = quadSize(q);
+    const m = quadMap(q);
+    map = (u, v) => m((u + 0.5) / W, (v + 0.5) / H);
+  }
+  const a = (angle * Math.PI) / 180, c = Math.cos(a), s = Math.sin(a), cx = dw / 2, cy = dh / 2;
+  const out = new Uint8ClampedArray(W * H * n);
+  if (n === 4) for (let i = 3; i < out.length; i += 4) out[i] = 255;
+  for (let v = 0; v < H; v++) {
+    for (let u = 0; u < W; u++) {
+      let X, Y;
+      if (map) [X, Y] = map(u, v); else { X = u + 0.5; Y = v + 0.5; }
+      // undo the straightening turn, then the quarter turns
+      const dx = X - cx, dy = Y - cy;
+      const Xs = cx + c * dx + s * dy, Ys = cy - s * dx + c * dy;
+      let xs, ys;
+      if (tr === 0) { xs = Xs; ys = Ys; } else if (tr === 90) { xs = Ys; ys = sh - Xs; } else if (tr === 180) { xs = sw - Xs; ys = sh - Ys; } else { xs = sw - Ys; ys = Xs; }
+      xs -= 0.5; ys -= 0.5;
+      const o = (v * W + u) * n;
+      const x0 = Math.floor(xs), y0 = Math.floor(ys);
+      if (x0 < -1 || y0 < -1 || x0 >= sw || y0 >= sh) { for (let k = 0; k < Math.min(3, n); k++) out[o + k] = bg; continue; }
+      const fx = xs - x0, fy = ys - y0;
+      const x1 = Math.min(sw - 1, x0 + 1), y1 = Math.min(sh - 1, y0 + 1), xa = Math.max(0, x0), ya = Math.max(0, y0);
+      const p00 = (ya * sw + xa) * n, p10 = (ya * sw + x1) * n, p01 = (y1 * sw + xa) * n, p11 = (y1 * sw + x1) * n;
+      for (let k = 0; k < Math.min(3, n); k++) {
+        out[o + k] = (src[p00 + k] * (1 - fx) + src[p10 + k] * fx) * (1 - fy) + (src[p01 + k] * (1 - fx) + src[p11 + k] * fx) * fy;
+      }
+    }
+  }
+  return { data: out, width: W, height: H };
+}
+
+/**
+ * A page drawn anew as a picture: turned, straightened and flattened (see warpPixels) at about
+ * the resolution of a scan. Its text layer is gone; the picture can be recognised (OCR) again.
+ * Adds the page to the end of `out`.
+ */
+function warpedPdfPage(out, doc, pno, it) {
+  const page = doc.loadPage(pno);
+  try {
+    const b = page.getBounds();
+    const zoom = Math.min(4, 3000 / Math.max(1, b[2] - b[0], b[3] - b[1]));
+    const pix = page.toPixmap(M.Matrix.scale(zoom, zoom), M.ColorSpace.DeviceRGB, false);
+    let res;
+    try {
+      res = warpPixels(pix.getPixels(), pix.getWidth(), pix.getHeight(), pix.getNumberOfComponents(), { turn: it.rot || 0, angle: -(Number(it.skew) || 0), quad: it.quad || null });
+    } finally {
+      free(pix);
+    }
+    const img = new M.Pixmap(M.ColorSpace.DeviceRGB, [0, 0, res.width, res.height], false);
+    img.getPixels().set(res.data);
+    const jpeg = img.asJPEG(88);
+    free(img);
+    const image = new M.Image(jpeg);
+    const ref = out.addImage(image);
+    free(image);
+    const pw = res.width / zoom, ph = res.height / zoom;
+    const resources = out.newDictionary(), xo = out.newDictionary();
+    xo.put("Im0", ref);
+    resources.put("XObject", xo);
+    const fmt2 = (x) => Math.round(x * 1000) / 1000;
+    const p = out.addPage([0, 0, fmt2(pw), fmt2(ph)], 0, resources, `q ${fmt2(pw)} 0 0 ${fmt2(ph)} 0 0 cm /Im0 Do Q`);
+    out.insertPage(-1, p);
+    free(p);
+  } finally {
+    free(page);
+  }
 }
 
 // ======================================================================
@@ -15882,12 +16076,12 @@ function initLayout() {
 // starts the text recognition afresh (the recognised text of the old picture would not fit).
 // ======================================================================
 
-const PIC_DEFAULT = { bright: 100, contrast: 100, gray: false, rotate: 0, fine: 0, crop: null }; // crop: page fractions [x0, y0, x1, y1]; fine: degrees, clockwise
+const PIC_DEFAULT = { bright: 100, contrast: 100, gray: false, rotate: 0, fine: 0, quad: null, crop: null }; // crop: page fractions [x0, y0, x1, y1]; fine: degrees, clockwise; quad: the page's corners (see straighten.js)
 const picEdit = { ...PIC_DEFAULT };
 let picCropMode = false;
 
 const picFilter = () => `brightness(${picEdit.bright / 100}) contrast(${picEdit.contrast / 100})${picEdit.gray ? " grayscale(1)" : ""}`;
-const picIsDefault = () => picEdit.bright === 100 && picEdit.contrast === 100 && !picEdit.gray && !picEdit.rotate && !picEdit.fine && !picEdit.crop;
+const picIsDefault = () => picEdit.bright === 100 && picEdit.contrast === 100 && !picEdit.gray && !picEdit.rotate && !picEdit.fine && !picEdit.quad && !picEdit.crop;
 
 /** Show the edit state in the panel and in the preview. */
 function picSync() {
@@ -15896,7 +16090,7 @@ function picSync() {
   $("#picGray").checked = picEdit.gray;
   $("#picRotOut").textContent = picEdit.rotate ? `${picEdit.rotate}°` : "";
   $("#picFine").value = picEdit.fine;
-  $("#picFineOut").textContent = picEdit.fine ? pmDeg(picEdit.fine, true) : "";
+  $("#picFineOut").textContent = (picEdit.quad ? "▱ " : "") + (picEdit.fine ? pmDeg(picEdit.fine, true) : "");
   // (the straightening is shown live: the crop area is chosen on the straightened picture)
   document.documentElement.style.setProperty("--pic-turn", `${picEdit.fine}deg`);
   $("#picCropOut").textContent = picEdit.crop ? t("pic.cropSet") : "";
@@ -16008,6 +16202,33 @@ async function picMeasure() {
   }
 }
 
+/** The picture shown large: turned by hand, along a drawn line, or flattened from its corners. */
+async function picHand() {
+  const doc = state.doc;
+  if (!doc || !doc.image) return;
+  busy(t("pic.preparing"));
+  try {
+    const page = doc.pages[0], zoom = Math.min(4, 1800 / Math.max(page.width, page.height));
+    const png = await pool.workers[0].call("render", { page: 0, zoom, variant: "original" });
+    busy("");
+    await openStraighten({
+      image: new Blob([png], { type: "image/png" }), width: page.width, height: page.height,
+      angle: picEdit.fine, quad: picEdit.quad, title: t("pic.handTitleShort"),
+      measure: () => pool.workers[0].call("skewDetect", { page: 0 }),
+      onApply: (angle, quad) => {
+        picEdit.fine = angle; picEdit.quad = quad;
+        if (quad) picEdit.crop = null; // (the corners take the place of a crop)
+        picSync();
+        if (!picIsDefault()) picApply();
+      },
+    });
+  } catch (err) {
+    toast(t("pic.failed", { err: userError(err) }), "error");
+  } finally {
+    busy("");
+  }
+}
+
 /** Render the edited picture and open it as the document (same name, new content). */
 async function picApply(quiet = false) {
   const doc = state.doc, img = doc && doc.image;
@@ -16018,25 +16239,26 @@ async function picApply(quiet = false) {
     const page = doc.pages[0];
     const png = await pool.workers[0].call("render", { page: 0, zoom: img.width / page.width, variant: "original" });
     let bmp = await createImageBitmap(new Blob([png], { type: "image/png" }));
-    let filtered = false;
     try {
-      if (picEdit.fine) {
-        // Straightened first, at the same size (the corners turned in are filled with white).
-        const st = new OffscreenCanvas(bmp.width, bmp.height), sx = st.getContext("2d");
-        sx.fillStyle = "#fff"; sx.fillRect(0, 0, st.width, st.height);
-        if ("filter" in sx) { sx.filter = picFilter(); filtered = true; }
-        sx.translate(st.width / 2, st.height / 2); sx.rotate((picEdit.fine * Math.PI) / 180);
-        sx.drawImage(bmp, -bmp.width / 2, -bmp.height / 2);
+      if (picEdit.fine || picEdit.quad) {
+        // Straightened (and flattened from its corners) first; a turn keeps the size, the corners
+        // turned in are white.
+        const src = new OffscreenCanvas(bmp.width, bmp.height), sx = src.getContext("2d", { willReadFrequently: true });
+        sx.drawImage(bmp, 0, 0);
+        const px = sx.getImageData(0, 0, bmp.width, bmp.height);
+        const res = Engine.warpPixels(px.data, bmp.width, bmp.height, 4, { angle: picEdit.fine, quad: picEdit.quad });
+        const st2 = new OffscreenCanvas(res.width, res.height);
+        st2.getContext("2d").putImageData(new ImageData(res.data, res.width, res.height), 0, 0);
         bmp.close && bmp.close();
-        bmp = st;
+        bmp = st2;
       }
-      const c = picEdit.crop || [0, 0, 1, 1];
+      const c = (!picEdit.quad && picEdit.crop) || [0, 0, 1, 1];
       const sx = Math.round(c[0] * bmp.width), sy = Math.round(c[1] * bmp.height);
       const sw = Math.max(1, Math.round((c[2] - c[0]) * bmp.width)), sh = Math.max(1, Math.round((c[3] - c[1]) * bmp.height));
       const rot = ((picEdit.rotate % 360) + 360) % 360, swap = rot === 90 || rot === 270;
       const canvas = new OffscreenCanvas(swap ? sh : sw, swap ? sw : sh), ctx = canvas.getContext("2d");
-      const hasFilter = "filter" in ctx || filtered;
-      if (hasFilter && !filtered) ctx.filter = picFilter();
+      const hasFilter = "filter" in ctx;
+      if (hasFilter) ctx.filter = picFilter();
       ctx.translate(canvas.width / 2, canvas.height / 2);
       ctx.rotate((rot * Math.PI) / 180);
       ctx.drawImage(bmp, sx, sy, sw, sh, -sw / 2, -sh / 2, sw, sh);
@@ -16066,6 +16288,7 @@ function initPicture() {
   $("#picRotR").addEventListener("click", () => { picEdit.rotate = (picEdit.rotate + 90) % 360; picSync(); });
   $("#picFine").addEventListener("input", (e) => { picEdit.fine = Math.round(Number(e.target.value) * 10) / 10; picSync(); });
   $("#picAuto").addEventListener("click", picMeasure);
+  $("#picHand").addEventListener("click", picHand);
   $("#picCrop").addEventListener("click", () => { picCropMode = !picCropMode; if (picCropMode) picEdit.crop = null; picSync(); });
   $("#picReset").addEventListener("click", picReset);
   $("#picApply").addEventListener("click", picApply);
@@ -16088,7 +16311,7 @@ function initPicture() {
 // from its own browser cache before the network, so language files are written into that cache.
 // ======================================================================
 
-const APP_VERSION = "2.10";
+const APP_VERSION = "2.11";
 // (a change of library version makes a stored set outdated: it is then ignored)
 const OFFLINE_VERSION = `${MUPDF_URL} ${OCR_LIB}`;
 const CORE_SIMD = "tesseract-core-simd-lstm.wasm.js", CORE_PLAIN = "tesseract-core-lstm.wasm.js";
@@ -16439,7 +16662,8 @@ function renderPagesGrid() {
     else badge = badge.replace(/ · $/, "");
     if (pmNotesItem(it)) badge = badge ? `${badge} · ${t("pages.notesLabel")}` : t("pages.notesLabel");
     if (it.rot) badge = badge ? `${badge} · ↻${it.rot}°` : `↻${it.rot}°`;
-    if (it.skew) badge = badge ? `${badge} · ⟂ ${pmDeg(-it.skew, true)}` : `⟂ ${pmDeg(-it.skew, true)}`; // (the correction: + clockwise)
+    const fix = `${it.quad ? "▱" : "⟂"}${it.skew ? ` ${pmDeg(-it.skew, true)}` : ""}`; // (the correction: + clockwise)
+    if (it.skew || it.quad) badge = badge ? `${badge} · ${fix}` : fix;
     const btn = (act, key, label, vars) => `<button type="button" data-act="${act}" title="${t(key, vars)}" aria-label="${t(key, vars)}">${label}</button>`;
     const sel = pm.sel.has(it);
     const turn = pmSlides() ? "" : btn("rotate", "pages.rotate", "↻");
@@ -16467,6 +16691,7 @@ function pmSelectionBar() {
   for (const id of ["pagesSelLeft", "pagesSelRight", "pagesSelRemove", "pagesSelSave"]) $(`#${id}`).disabled = !n;
   $("#pagesSelLeft").hidden = $("#pagesSelRight").hidden = $("#pagesStraightWrap").hidden = pmSlides();
   $("#pagesSelStraight").disabled = $("#pagesSkew").disabled = !n;
+  $("#pagesSelHand").disabled = n !== 1 || [...pm.sel][0].from < 0;
   // The tilt of the selection: shown when all selected pages share it.
   const tilts = [...new Set([...pm.sel].map((it) => Math.round((it.skew || 0) * 10) / 10))];
   if (document.activeElement !== $("#pagesSkew")) $("#pagesSkew").value = n && tilts.length === 1 ? (0 - tilts[0] || 0).toLocaleString(LANG === "de" ? "de-DE" : "en-GB") : "";
@@ -16484,6 +16709,7 @@ async function pmStraighten(items) {
   if (!todo.length) return;
   let fixed = 0, straight = 0, unclear = 0;
   for (const [k, it] of todo.entries()) {
+    if (it.quad) { straight++; continue; } // (corners drawn by hand keep their own angle)
     busy(t("pages.measuring", { i: k + 1, n: todo.length }));
     try {
       const r = await pool.workers[0].call("skewDetect", { page: pmSlides() ? pm.slides[it.page] : it.page, index: it.from });
@@ -16497,6 +16723,40 @@ async function pmStraighten(items) {
   busy("");
   renderPagesGrid();
   toast(t("pages.straightened", { n: fixed, s: straight, u: unclear }), fixed ? "ok" : undefined);
+}
+
+/** One page shown large, to be turned or flattened by hand (see straighten.js). */
+async function pmHand(it) {
+  busy(t("pic.preparing"));
+  try {
+    const base = pmBaseSize(it), zoom = Math.min(4, 1800 / Math.max(base.width, base.height));
+    const page = it.from === 0 && pmSlides() ? pm.slides[it.page] : it.page;
+    const buf = it.from === 0
+      ? await pool.leastBusy(null).call("render", { page, zoom, variant: "original" })
+      : await pool.workers[0].call("extraRender", { index: it.from, page, zoom });
+    // As the page is shown: with its quarter turn.
+    const bmp = await createImageBitmap(new Blob([buf], { type: "image/png" }));
+    const side = (it.rot || 0) % 180 !== 0;
+    const c = document.createElement("canvas");
+    c.width = side ? bmp.height : bmp.width; c.height = side ? bmp.width : bmp.height;
+    const g = c.getContext("2d");
+    g.translate(c.width / 2, c.height / 2); g.rotate(((it.rot || 0) * Math.PI) / 180); g.drawImage(bmp, -bmp.width / 2, -bmp.height / 2);
+    bmp.close && bmp.close();
+    const blob = await new Promise((res) => c.toBlob(res, "image/png"));
+    const size = pmPageSize(it);
+    busy("");
+    await openStraighten({
+      image: blob, width: size.width, height: size.height, angle: -(it.skew || 0), quad: it.quad || null,
+      title: t("pages.handTitleShort", { n: pm.items.indexOf(it) + 1 }),
+      measure: () => pool.workers[0].call("skewDetect", { page, index: it.from }),
+      onApply: (angle, quad) => { it.skew = angle ? -angle : 0; it.quad = quad; renderPagesGrid(); },
+    });
+  } catch (err) {
+    console.error(err);
+    toast(t("pages.saveFailed", { err: userError(err) }), "error");
+  } finally {
+    busy("");
+  }
 }
 
 /** Turns an item by `deg` (a blank page swaps its sides instead). */
@@ -16532,7 +16792,7 @@ function pmRanges(nums) {
 /** Saves the given items, in the order of the grid, as a file of their own. */
 async function pmSave(items) {
   if (!items.length) return;
-  const plan = pm.items.filter((it) => items.includes(it)).map((it) => ({ from: it.from, page: it.page, w: it.w, h: it.h, rot: it.rot || 0, skew: pmSlides() ? 0 : it.skew || 0 }));
+  const plan = pm.items.filter((it) => items.includes(it)).map((it) => ({ from: it.from, page: it.page, w: it.w, h: it.h, rot: it.rot || 0, skew: pmSlides() ? 0 : it.skew || 0, quad: pmSlides() ? null : it.quad || null }));
   const ext = pmSlides() ? "pptx" : "pdf";
   const base = state.doc.name.replace(/\.[^.]+$/, "");
   // Numbered by the open file's own pages when all come from it, else by their place in the grid.
@@ -16560,15 +16820,15 @@ function loadThumb(img) {
   const card = img.closest(".pg-card"), it = pm.items[Number(card.dataset.i)];
   if (!it || it.from < 0) return;
   const key = `${it.from}:${it.page}`;
-  const rot = it.rot || 0, skew = it.skew || 0;
-  const turned = pm.thumbs.get(`${key}@${rot}@${skew}`);
-  if ((rot || skew) && turned) { img.src = turned; return; }
+  const rot = it.rot || 0, skew = it.skew || 0, quad = it.quad || null;
+  const turned = pm.thumbs.get(`${key}@${rot}@${skew}@${quad}`);
+  if ((rot || skew || quad) && turned) { img.src = turned; return; }
   const show = (url) => {
     const cur = $("#pagesGrid").querySelector(`.pg-card[data-i="${pm.items.indexOf(it)}"] img`);
     if (cur) cur.src = url;
   };
   const cached = pm.thumbs.get(key);
-  if (cached) { pmTurnedThumb(key, cached, rot, skew).then(show); return; }
+  if (cached) { pmTurnedThumb(key, cached, rot, skew, quad).then(show); return; }
   const size = pmBaseSize(it), zoom = Math.max(0.15, Math.min(1.5, 170 / Math.max(size.width, size.height) * 1.3));
   const req = it.from === 0
     ? pool.leastBusy(null).call("render", { page: pmSlides() ? pm.slides[it.page] : it.page, zoom, variant: "original" })
@@ -16576,24 +16836,28 @@ function loadThumb(img) {
   req.then((buf) => {
     const url = URL.createObjectURL(new Blob([buf], { type: "image/png" }));
     pm.thumbs.set(key, url);
-    return pmTurnedThumb(key, url, it.rot || 0, it.skew || 0).then(show);
+    return pmTurnedThumb(key, url, it.rot || 0, it.skew || 0, it.quad || null).then(show);
   }).catch((err) => console.warn("thumbnail failed", err));
 }
 
-/** The thumbnail `url` turned clockwise by `rot` degrees and straightened by `skew` (cached). */
-function pmTurnedThumb(key, url, rot, skew = 0) {
-  if (!rot && !skew) return Promise.resolve(url);
-  const done = pm.thumbs.get(`${key}@${rot}@${skew}`);
+/** The thumbnail `url` turned clockwise by `rot` degrees, straightened and flattened (cached). */
+function pmTurnedThumb(key, url, rot, skew = 0, quad = null) {
+  if (!rot && !skew && !quad) return Promise.resolve(url);
+  const id = `${key}@${rot}@${skew}@${quad}`, done = pm.thumbs.get(id);
   if (done) return Promise.resolve(done);
   return new Promise((resolve) => {
     const im = new Image();
     im.onload = () => {
-      const c = document.createElement("canvas"), side = rot % 180 !== 0;
-      c.width = side ? im.height : im.width; c.height = side ? im.width : im.height;
-      const g = c.getContext("2d");
-      g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height);
-      g.translate(c.width / 2, c.height / 2); g.rotate(((rot - skew) * Math.PI) / 180); g.drawImage(im, -im.width / 2, -im.height / 2);
-      c.toBlob((b) => { const u = b ? URL.createObjectURL(b) : url; if (b) pm.thumbs.set(`${key}@${rot}@${skew}`, u); resolve(u); }, "image/png");
+      const a = document.createElement("canvas");
+      a.width = im.width; a.height = im.height;
+      const ga = a.getContext("2d", { willReadFrequently: true });
+      ga.drawImage(im, 0, 0);
+      const px = ga.getImageData(0, 0, a.width, a.height);
+      const res = Engine.warpPixels(px.data, a.width, a.height, 4, { turn: rot, angle: -skew, quad });
+      const c = document.createElement("canvas");
+      c.width = res.width; c.height = res.height;
+      c.getContext("2d").putImageData(new ImageData(res.data, res.width, res.height), 0, 0);
+      c.toBlob((b) => { const u = b ? URL.createObjectURL(b) : url; if (b) pm.thumbs.set(id, u); resolve(u); }, "image/png");
     };
     im.onerror = () => resolve(url);
     im.src = url;
@@ -16667,10 +16931,10 @@ function pmRestoreTranslations(cap, plan) {
 }
 
 async function applyPages() {
-  const plan = pm.items.map((it) => ({ from: it.from, page: it.page, w: it.w, h: it.h, rot: it.rot || 0, skew: pmSlides() ? 0 : it.skew || 0 }));
+  const plan = pm.items.map((it) => ({ from: it.from, page: it.page, w: it.w, h: it.h, rot: it.rot || 0, skew: pmSlides() ? 0 : it.skew || 0, quad: pmSlides() ? null : it.quad || null }));
   const n = pmSlides() ? pm.slides.length : state.doc.pages.length;
   const dropNotes = pmSlides() && !$("#pagesNotesWrap").hidden && $("#pagesDropNotes").checked;
-  if (!dropNotes && plan.length === n && plan.every((p, i) => p.from === 0 && p.page === i && !p.rot && !p.skew)) { toast(t("pages.unchanged")); return; }
+  if (!dropNotes && plan.length === n && plan.every((p, i) => p.from === 0 && p.page === i && !p.rot && !p.skew && !p.quad)) { toast(t("pages.unchanged")); return; }
   const name = state.doc.name.replace(/\.ppt$/i, ".pptx");
   const kind = state.doc.kind;
   busy(t("pages.working"));
@@ -16698,8 +16962,20 @@ function initPagesManager() {
     const b = e.target.closest("button[data-act]"), card = e.target.closest(".pg-card");
     if (!card) return;
     if (!b) {
-      // a click on the picture selects (Shift+click: the pages in between too)
-      if (e.target.closest(".pg-thumb")) pmToggle(Number(card.dataset.i), e.shiftKey);
+      // a click on the picture selects (Shift+click: the pages in between too); a double click
+      // opens it for straightening by hand (the grid is drawn anew on each click, so the browser's
+      // own dblclick never arrives)
+      if (e.target.closest(".pg-thumb")) {
+        const i = Number(card.dataset.i), now = Date.now(), it = pm.items[i];
+        if (pm.lastClick && pm.lastClick.it === it && now - pm.lastClick.t < 450 && !e.shiftKey) {
+          pm.lastClick = null;
+          if (!pm.sel.has(it)) pmToggle(i, false);
+          if (it.from >= 0 && !pmSlides()) pmHand(it);
+          return;
+        }
+        pm.lastClick = { it, t: now };
+        pmToggle(i, e.shiftKey);
+      }
       return;
     }
     const i = Number(card.dataset.i), act = b.dataset.act;
@@ -16728,6 +17004,8 @@ function initPagesManager() {
     pmToggle(i, e.shiftKey);
     grid.querySelector(`.pg-card[data-i="${i}"] .pg-thumb`)?.focus();
   });
+  // (a click anywhere else in between: the next click on a page is a single one again)
+  dlg.addEventListener("click", (e) => { if (!e.target.closest(".pg-thumb")) pm.lastClick = null; }, true);
   $("#pagesSelAll").addEventListener("click", () => {
     const shown = pm.items.filter(pmShown);
     if (pm.sel.size >= shown.length) pm.sel.clear(); else shown.forEach((it) => pm.sel.add(it));
@@ -16742,6 +17020,8 @@ function initPagesManager() {
   });
   $("#pagesSelSave").addEventListener("click", () => pmSave([...pm.sel]));
   $("#pagesSelStraight").addEventListener("click", () => pmStraighten([...pm.sel]));
+  $("#pagesSelHand").addEventListener("click", () => { const it = [...pm.sel][0]; if (pm.sel.size === 1 && it.from >= 0) pmHand(it); });
+
   $("#pagesSkew").addEventListener("keydown", (e) => { // (Enter sets the angle; it must not close the dialog)
     if (e.key !== "Enter") return;
     e.preventDefault();
@@ -16771,6 +17051,193 @@ function initPagesManager() {
   grid.addEventListener("dragend", () => { dragFrom = null; grid.querySelectorAll(".dragging, .over").forEach((c) => c.classList.remove("dragging", "over")); });
   grid.addEventListener("dragover", (e) => { const c = e.target.closest(".pg-card"); if (!c || dragFrom === null) return; e.preventDefault(); e.dataTransfer.dropEffect = "move"; grid.querySelectorAll(".over").forEach((x) => x.classList.remove("over")); c.classList.add("over"); });
   grid.addEventListener("drop", (e) => { const c = e.target.closest(".pg-card"); if (!c || dragFrom === null) return; e.preventDefault(); pmMove(dragFrom, Number(c.dataset.i)); dragFrom = null; });
+}
+
+/* ---------------------------------------------------------------- straightening by hand
+ * One editor for an opened picture (from the picture tools) and for a PDF page (from "Arrange
+ * pages"): the page is shown large and can be turned by dragging it like a dial, turned so that a
+ * line drawn along a text line or an edge becomes level (or upright), measured automatically, or
+ * flattened from its four corners dragged onto the page's corners (a photographed page seen at a
+ * slant). The angle is in degrees, clockwise; the corners are fractions of the straightened page.
+ */
+const st = { open: false, angle: 0, quad: null, mode: "turn", ratio: 1, onApply: null, measure: null, drag: null, line: null };
+
+const ST_DEFAULT_QUAD = () => [[0.06, 0.06], [0.94, 0.06], [0.94, 0.94], [0.06, 0.94]];
+const stRound = (a) => Math.round(Math.max(-SKEW_LIMIT, Math.min(SKEW_LIMIT, a)) * 10) / 10;
+
+/**
+ * Opens the editor. `image`: the page as a picture (Blob) and its size; `angle`/`quad`: the
+ * current setting; `measure()`: the measured tilt ({angle, confidence}); `onApply(angle, quad)`.
+ */
+async function openStraighten({ image, width, height, angle = 0, quad = null, measure, onApply, title }) {
+  st.angle = stRound(angle || 0);
+  st.quad = quad ? quad.map((p) => p.slice()) : null;
+  st.mode = st.quad ? "corners" : "turn";
+  st.ratio = width / height;
+  st.onApply = onApply;
+  st.measure = measure;
+  st.line = null;
+  const img = $("#stImg");
+  if (img.src) URL.revokeObjectURL(img.src);
+  img.src = URL.createObjectURL(image);
+  $("#stTitle").textContent = title || t("st2.title");
+  openModal($("#straightDialog"));
+  st.open = true;
+  stLayout();
+  stSync();
+}
+
+/** The stage as large as the dialog allows, in the page's proportions. */
+function stLayout() {
+  const box = $("#stArea"), stage = $("#stStage");
+  const aw = box.clientWidth - 4, ah = Math.max(200, box.clientHeight - 4);
+  let w = aw, h = w / st.ratio;
+  if (h > ah) { h = ah; w = h * st.ratio; }
+  stage.style.width = `${Math.round(w)}px`;
+  stage.style.height = `${Math.round(h)}px`;
+  $("#stSvg").setAttribute("viewBox", `0 0 ${Math.round(w)} ${Math.round(h)}`);
+  stDraw();
+}
+
+function stSync() {
+  $("#stAngle").value = String(st.angle);
+  $("#stAngleOut").textContent = pmDeg(st.angle, true);
+  $("#stImg").style.transform = `rotate(${st.angle}deg)`;
+  for (const m of ["turn", "line", "corners"]) {
+    $(`#stMode_${m}`).classList.toggle("primary", st.mode === m);
+    $("#straightDialog").classList.toggle(`mode-${m}`, st.mode === m);
+  }
+  $("#stHint").textContent = t(`st2.hint_${st.mode}`);
+  $("#stCornersReset").hidden = !st.quad;
+  stDraw();
+}
+
+/** Guides, the drawn line, and the page outline with its four handles. */
+function stDraw() {
+  const svg = $("#stSvg"), stage = $("#stStage");
+  const w = stage.clientWidth, h = stage.clientHeight;
+  if (!w || !h) return;
+  let html = "";
+  if (st.mode !== "corners") for (let k = 1; k < 10; k++) html += `<line class="st-guide" x1="0" y1="${(k * h) / 10}" x2="${w}" y2="${(k * h) / 10}"/>`;
+  if (st.mode !== "corners") for (let k = 1; k < 6; k++) html += `<line class="st-guide" x1="${(k * w) / 6}" y1="0" x2="${(k * w) / 6}" y2="${h}"/>`;
+  if (st.line) html += `<line class="st-line" x1="${st.line[0]}" y1="${st.line[1]}" x2="${st.line[2]}" y2="${st.line[3]}"/>`;
+  if (st.quad) {
+    const pts = st.quad.map(([x, y]) => [x * w, y * h]);
+    const poly = pts.map((p) => p.join(",")).join(" ");
+    html += `<path class="st-shade" fill-rule="evenodd" d="M0,0H${w}V${h}H0Z M${pts.map((p) => p.join(",")).join(" L")} Z"/>`;
+    html += `<polygon class="st-quad" points="${poly}"/>`;
+    if (st.mode === "corners") pts.forEach(([x, y], i) => { html += `<circle class="st-handle" data-k="${i}" cx="${x}" cy="${y}" r="9"/>`; });
+  }
+  svg.innerHTML = html;
+}
+
+/** The pointer in stage pixels. */
+function stPoint(e) {
+  const r = $("#stStage").getBoundingClientRect();
+  return [e.clientX - r.left, e.clientY - r.top];
+}
+
+function stPointerDown(e) {
+  if (!st.open || e.button !== 0) return;
+  const stage = $("#stStage"), [x, y] = stPoint(e), w = stage.clientWidth, h = stage.clientHeight;
+  e.preventDefault();
+  stage.setPointerCapture(e.pointerId);
+  if (st.mode === "corners") {
+    if (!st.quad) st.quad = ST_DEFAULT_QUAD();
+    // the nearest corner follows the pointer
+    let k = 0, best = Infinity;
+    st.quad.forEach(([qx, qy], i) => { const d = Math.hypot(qx * w - x, qy * h - y); if (d < best) { best = d; k = i; } });
+    st.drag = { kind: "corner", k };
+    st.quad[k] = [Math.min(1, Math.max(0, x / w)), Math.min(1, Math.max(0, y / h))];
+  } else if (st.mode === "line") {
+    st.drag = { kind: "line" };
+    st.line = [x, y, x, y];
+  } else {
+    st.drag = { kind: "turn", from: Math.atan2(y - h / 2, x - w / 2), angle: st.angle };
+  }
+  stSync();
+}
+
+function stPointerMove(e) {
+  if (!st.drag) return;
+  const stage = $("#stStage"), [x, y] = stPoint(e), w = stage.clientWidth, h = stage.clientHeight;
+  if (st.drag.kind === "corner") st.quad[st.drag.k] = [Math.min(1, Math.max(0, x / w)), Math.min(1, Math.max(0, y / h))];
+  else if (st.drag.kind === "line") { st.line[2] = x; st.line[3] = y; } else {
+    // like a dial: the page follows the pointer's angle around its middle
+    const now = Math.atan2(y - h / 2, x - w / 2);
+    let d = ((now - st.drag.from) * 180) / Math.PI;
+    if (d > 180) d -= 360; if (d < -180) d += 360;
+    st.angle = stRound(st.drag.angle + d);
+  }
+  stSync();
+}
+
+function stPointerUp() {
+  if (!st.drag) return;
+  if (st.drag.kind === "line" && st.line) {
+    const [x0, y0, x1, y1] = st.line;
+    if (Math.hypot(x1 - x0, y1 - y0) > 12) {
+      // The line drawn on the page as shown (already turned by st.angle) becomes level or upright.
+      let a = (Math.atan2(y1 - y0, x1 - x0) * 180) / Math.PI;
+      while (a > 45) a -= 90;
+      while (a < -45) a += 90;
+      if (Math.abs(st.angle - a) > SKEW_LIMIT) toast(t("st2.tooSteep"), "error");
+      else st.angle = stRound(st.angle - a);
+    }
+    st.line = null;
+  }
+  st.drag = null;
+  stSync();
+}
+
+async function stAuto() {
+  if (!st.measure) return;
+  busy(t("pic.measuring"));
+  try {
+    const r = await st.measure();
+    if (!r || r.confidence < 0.15) { toast(t("pic.unclear"), "error"); return; }
+    st.angle = Math.abs(r.angle) < 0.1 ? 0 : stRound(-r.angle);
+    toast(st.angle ? t("st2.measured", { deg: pmDeg(st.angle, true) }) : t("pic.alreadyStraight"), "ok");
+    stSync();
+  } catch (err) {
+    toast(t("pic.failed", { err: userError(err) }), "error");
+  } finally {
+    busy("");
+  }
+}
+
+function initStraighten() {
+  const stage = $("#stStage");
+  stage.addEventListener("pointerdown", stPointerDown);
+  stage.addEventListener("pointermove", stPointerMove);
+  stage.addEventListener("pointerup", stPointerUp);
+  stage.addEventListener("pointercancel", stPointerUp);
+  $("#stAngle").addEventListener("input", (e) => { st.angle = stRound(Number(e.target.value)); stSync(); });
+  $("#stMinus").addEventListener("click", () => { st.angle = stRound(st.angle - 0.1); stSync(); });
+  $("#stPlus").addEventListener("click", () => { st.angle = stRound(st.angle + 0.1); stSync(); });
+  $("#stAuto").addEventListener("click", stAuto);
+  for (const m of ["turn", "line", "corners"]) $(`#stMode_${m}`).addEventListener("click", () => {
+    st.mode = m;
+    if (m === "corners" && !st.quad) st.quad = ST_DEFAULT_QUAD();
+    stSync();
+  });
+  $("#stCornersReset").addEventListener("click", () => { st.quad = null; if (st.mode === "corners") st.mode = "turn"; stSync(); });
+  $("#stReset").addEventListener("click", () => { st.angle = 0; st.quad = null; st.mode = "turn"; stSync(); });
+  $("#stApply").addEventListener("click", (e) => {
+    e.preventDefault();
+    const done = st.onApply;
+    $("#straightDialog").close("ok");
+    if (done) done(st.angle, st.quad);
+  });
+  $("#straightDialog").addEventListener("close", () => { st.open = false; st.drag = null; });
+  window.addEventListener("resize", () => { if (st.open) stLayout(); });
+  // Arrow keys turn by a tenth of a degree (Shift: a whole degree).
+  $("#straightDialog").addEventListener("keydown", (e) => {
+    if (e.target.tagName === "INPUT" || (e.key !== "ArrowLeft" && e.key !== "ArrowRight")) return;
+    e.preventDefault();
+    st.angle = stRound(st.angle + (e.key === "ArrowRight" ? 1 : -1) * (e.shiftKey ? 1 : 0.1));
+    stSync();
+  });
 }
 
 /* ------------------------------------------------------------- keywords (glossary) */
@@ -19343,6 +19810,7 @@ document.addEventListener("languagechange", onLanguageChange);
 initMarkup();
 initTools();
 initPicture();
+initStraighten();
 initReading();
 initSegEdit();
 initVocab();

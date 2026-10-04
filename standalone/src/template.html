@@ -196,7 +196,7 @@
       <label class="pic-row"><span data-i18n="pic.contrast">Contrast</span><input type="range" id="picContrast" min="50" max="150" value="100"><output id="picContrastOut">100%</output></label>
       <label class="check"><input type="checkbox" id="picGray"> <span data-i18n="pic.gray">Greyscale</span></label>
       <div class="pic-row"><span data-i18n="pic.rotate">Rotate</span><span class="pic-buttons"><button type="button" class="btn" id="picRotL" data-i18n-title="pic.rotL">⟲ 90°</button><button type="button" class="btn" id="picRotR" data-i18n-title="pic.rotR">⟳ 90°</button></span><output id="picRotOut"></output></div>
-      <div class="pic-row"><span data-i18n="pic.straight">Straighten</span><span class="pic-buttons"><button type="button" class="btn" id="picAuto" data-i18n="pic.auto" data-i18n-title="pic.autoTitle">Auto</button></span><output id="picFineOut"></output></div>
+      <div class="pic-row"><span data-i18n="pic.straight">Straighten</span><span class="pic-buttons"><button type="button" class="btn" id="picAuto" data-i18n="pic.auto" data-i18n-title="pic.autoTitle">Auto</button><button type="button" class="btn" id="picHand" data-i18n="pic.hand" data-i18n-title="pic.handTitle">By hand…</button></span><output id="picFineOut"></output></div>
       <label class="pic-row"><span></span><input type="range" id="picFine" min="-15" max="15" step="0.1" value="0" data-i18n-title="pic.fineTitle" data-i18n-aria="pic.fineTitle"><span></span></label>
       <div class="pic-row"><span data-i18n="pic.cropLabel">Crop</span><span class="pic-buttons"><button type="button" class="btn" id="picCrop" data-i18n="pic.crop">Choose area</button></span><output id="picCropOut"></output></div>
       <p class="muted small" id="picHint" data-i18n="pic.hint"></p>
@@ -673,6 +673,34 @@
     </div>
   </form>
 </dialog>
+<dialog id="straightDialog" class="modal st-dialog" aria-labelledby="stTitle">
+  <form method="dialog">
+    <h2 id="stTitle" data-i18n="st2.title">Straighten</h2>
+    <div class="st-tools">
+      <span class="st-modes">
+        <button type="button" class="btn small" id="stMode_turn" data-i18n="st2.mode_turn" data-i18n-title="st2.hint_turn"></button>
+        <button type="button" class="btn small" id="stMode_line" data-i18n="st2.mode_line" data-i18n-title="st2.hint_line"></button>
+        <button type="button" class="btn small" id="stMode_corners" data-i18n="st2.mode_corners" data-i18n-title="st2.hint_corners"></button>
+      </span>
+      <span class="spacer"></span>
+      <button type="button" class="btn small" id="stAuto" data-i18n="pic.auto" data-i18n-title="pic.autoTitle"></button>
+      <span class="st-angle">
+        <button type="button" class="btn small" id="stMinus" data-i18n-title="st2.minus">−</button>
+        <input type="range" id="stAngle" min="-15" max="15" step="0.1" value="0" data-i18n-title="pic.fineTitle" data-i18n-aria="pic.fineTitle">
+        <button type="button" class="btn small" id="stPlus" data-i18n-title="st2.plus">+</button>
+        <output id="stAngleOut"></output>
+      </span>
+    </div>
+    <p class="muted small st-hint"><span id="stHint"></span> <button type="button" class="linkish" id="stCornersReset" data-i18n="st2.cornersOff" hidden></button></p>
+    <div class="st-area" id="stArea"><div class="st-stage" id="stStage"><img id="stImg" alt="" draggable="false"><svg id="stSvg" xmlns="http://www.w3.org/2000/svg"></svg></div></div>
+    <div class="modal-actions">
+      <button type="button" class="btn ghost" id="stReset" data-i18n="pic.reset">Reset</button>
+      <span class="spacer"></span>
+      <button value="cancel" class="btn ghost" data-i18n="common.cancel">Cancel</button>
+      <button value="ok" class="btn primary" id="stApply" data-i18n="pic.apply">Apply</button>
+    </div>
+  </form>
+</dialog>
 <dialog id="pagesDialog" class="modal" aria-labelledby="pagesTitle">
   <form method="dialog">
     <h2 id="pagesTitle" data-i18n="pages.title">Arrange pages</h2>
@@ -685,6 +713,7 @@
       <button type="button" class="btn small" id="pagesSelRight" data-i18n="pages.turnRight" data-i18n-title="pages.turnRightTitle"></button>
       <span class="pages-straight" id="pagesStraightWrap">
         <button type="button" class="btn small" id="pagesSelStraight" data-i18n="pages.straighten" data-i18n-title="pages.straightenTitle"></button>
+        <button type="button" class="btn small" id="pagesSelHand" data-i18n="pages.hand" data-i18n-title="pages.handTitle"></button>
         <label class="pages-skew" data-i18n-title="pages.skewTitle"><input type="text" inputmode="decimal" id="pagesSkew" autocomplete="off" data-i18n-aria="pages.skewTitle"><span>°</span></label>
       </span>
       <button type="button" class="btn small" id="pagesSelRemove" data-i18n="pages.removeSel"></button>

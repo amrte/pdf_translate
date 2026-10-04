@@ -1,6 +1,6 @@
 // ---------------------------------------------------------------------------------------------
 // Rearranging pages. A plan lists the new pages in order: {from: 0, page} is a page of the open
-// file (a PDF page may carry rot: 90, 180, 270 – turned clockwise – and skew: the tilt in degrees to take out), {from: k ≥ 1, page} a page of the k-th extra file, {from: -1, w, h} a blank page. A PDF
+// file (a PDF page may carry rot: 90, 180, 270 – turned clockwise – and skew: the tilt in degrees to take out, and quad: the page's corners, to be flattened), {from: k ≥ 1, page} a page of the k-th extra file, {from: -1, w, h} a blank page. A PDF
 // is put together from the pages (grafted with their resources); a PPTX gets its slide list
 // rewritten, dropped slides removed, blank slides added and slides of other decks copied in with
 // their layouts, masters, themes and pictures. Runs with the engine.
@@ -33,6 +33,7 @@ function rearrangePdf(bytes, plan, extras) {
       } else {
         const d = docs[it.from];
         if (!d || it.page < 0 || it.page >= d.countPages()) continue;
+        if (it.quad) { warpedPdfPage(out, d, it.page, it); n++; continue; } // (page borders drawn: the page as a flattened picture)
         out.graftPage(out.countPages(), d, it.page);
         if (turn) {
           // turned on top of the page's own /Rotate (which the graft copies onto the page)

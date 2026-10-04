@@ -4,6 +4,14 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.11
+
+- Straighten by hand: "By hand…" in the picture tools, and in "Arrange pages" for the selected page (or a double click on a page), shows the page large with three ways to straighten it:
+  - **Turn** – drag the page like a dial until the text lines run along the guides; the arrow keys turn by 0.1° (with Shift 1°), the slider and −/+ too, "Auto" measures.
+  - **Draw a line** – along a text line or an edge of the page; the page turns so that this line is level (or upright).
+  - **Page borders** – drag four corners onto the page's corners; a page photographed at a slant becomes a straight rectangle, the rest of the picture (the neighbouring page, the table) is cut away. A PDF page flattened this way is saved anew as a picture (and can be recognised again); a page that is only turned stays as it is.
+- Picture tools: the panel is now a column beside the picture instead of lying over it, so the whole picture stays in view while choosing the crop area.
+
 ## 2.10
 
 - Straighten tilted scans and photos. The tilt is measured on the text lines (up to ±15°, to a tenth of a degree); pages without clear text lines are left alone.
