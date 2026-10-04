@@ -370,7 +370,7 @@ async function loadBytes(bytes, name, remember, knownId = null) {
       const r = await pool.workers[0].call("imageToPdf", { bytes: src });
       if (stale()) return;
       bytes = r.bytes; kind = "pdf";
-      image = { format: fmt === "jpeg" ? "jpeg" : "png", label: fmt === "jpeg" ? "JPG" : "PNG", width: r.width, height: r.height };
+      image = { format: fmt === "jpeg" ? "jpeg" : "png", label: fmt === "jpeg" ? "JPG" : "PNG", width: r.width, height: r.height, source: original };
     }
     if (LEGACY_KINDS.has(kind)) { // Word/Excel/PowerPoint 97–2003: converted to the modern format first
       converted = { from: kind.toUpperCase(), to: LEGACY_TO_MODERN[kind].toUpperCase() };

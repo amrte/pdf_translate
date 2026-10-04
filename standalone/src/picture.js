@@ -100,6 +100,25 @@ function picDocumentChanged() {
   picCropMode = false;
   const panel = $("#picPanel");
   if (panel) { panel.hidden = true; picSync(); }
+  // An edited picture remembers the picture it was made from (see picApply).
+  const btn = $("#picRestore"), doc = state.doc;
+  if (!btn) return;
+  btn.hidden = true;
+  if (doc && doc.image) idbGet(picOriginKey(doc.id)).then((o) => { if (o && state.doc === doc) btn.hidden = false; }).catch(() => {});
+}
+
+const picOriginKey = (id) => `picorig:${id}`;
+
+/** Opens the picture as it was before any edit was applied. */
+async function picRestore() {
+  const doc = state.doc;
+  if (!doc || !doc.image) return;
+  const origin = await idbGet(picOriginKey(doc.id)).catch(() => null);
+  if (!origin) { $("#picRestore").hidden = true; return; }
+  if (!window.confirm(t("pic.restoreConfirm"))) return;
+  picOpenPanel(false);
+  await loadBytes(new Uint8Array(origin.bytes), origin.name, true);
+  toast(t("pic.restored"), "ok");
 }
 
 /** Brightness, contrast and greyscale on raw pixels (for browsers without canvas filters). */
@@ -196,7 +215,11 @@ async function picApply(quiet = false) {
       const blob = await canvas.convertToBlob(img.format === "jpeg" ? { type: "image/jpeg", quality: 0.95 } : { type: "image/png" });
       const bytes = new Uint8Array(await blob.arrayBuffer());
       picOpenPanel(false);
-      await loadBytes(bytes, doc.name, true);
+      // The first picture of a line of edits is kept, so all of them can be undone at once.
+      const id = await sha256(bytes);
+      const origin = (await idbGet(picOriginKey(doc.id)).catch(() => null)) || (img.source ? { bytes: img.source, name: doc.name } : null);
+      if (origin) await idbPut(origin, picOriginKey(id)).catch(() => {});
+      await loadBytes(bytes, doc.name, true, id);
     } finally {
       bmp.close && bmp.close();
     }
@@ -221,7 +244,8 @@ function initPicture() {
   $("#picHand").addEventListener("click", picHand);
   $("#picCrop").addEventListener("click", () => { picCropMode = !picCropMode; if (picCropMode) picEdit.crop = null; picSync(); });
   $("#picReset").addEventListener("click", picReset);
-  $("#picApply").addEventListener("click", picApply);
+  $("#picApply").addEventListener("click", () => picApply());
+  $("#picRestore").addEventListener("click", picRestore);
   document.addEventListener("pointerdown", picCropStart, true);
   // Zooming redraws the pages: put the crop layer back when it is needed.
   new MutationObserver(() => { if (document.body.classList.contains("is-image") && (picCropMode || picEdit.crop) && !picLayer(false)) picDrawCrop(); })

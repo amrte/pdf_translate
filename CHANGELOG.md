@@ -4,6 +4,11 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.14
+
+- Pictures: "↺ Restore original" in the picture tools discards all applied changes at once (crop, turns, straightening, page borders, flattened lines, brightness …) and opens the picture as it was loaded – also after several edits and after reloading the app. (Before applying, "Reset" and "Cancel" discard the changes not yet applied.)
+- Fixed: "Apply" in the picture tools did not ask before replacing a picture whose text had been recognised already.
+
 ## 2.13
 
 - Straighten by hand → **Flatten lines** (for a book page photographed open, its lines curved near the spine): "Find lines" traces the course of the text lines (within the page borders when they are set); drag along a curved line to add one, click a line to remove it; "Show result" shows the page bent straight. The bend is one smooth surface fitted to all lines plus the fine curl of each line, so single words are not dented; two lines traced by hand (the top and the bottom one) are enough to bend everything between them. Works for opened pictures and, in "Arrange pages", for PDF pages (the page is then saved anew as a picture).
