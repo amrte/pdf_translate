@@ -266,6 +266,7 @@
         <option value="done" data-i18n="filter.done">Translated</option>
         <option value="repeats" data-i18n="filter.repeats">Headers &amp; footers</option>
         <option value="numbers" data-i18n="filter.numbers">Numbers only (kept)</option>
+        <option value="unsure" data-i18n="filter.unsure">Uncertain OCR words</option>
       </select>
       <select id="filterPage" data-i18n-aria="filter.pageAria"><option value="all" data-i18n="filter.allPages">All pages</option></select>
     </div>
@@ -681,6 +682,7 @@
   <form method="dialog">
     <h2 id="srcTitle" data-i18n="src.title">Correct the recognised text</h2>
     <div class="src-snip"><img id="srcSnip" alt="" hidden></div>
+    <p class="small src-unsure" id="srcUnsure" hidden></p>
     <textarea id="srcText" class="src-text" rows="6" spellcheck="true" data-i18n-aria="src.title"></textarea>
     <p class="muted small" data-i18n="src.note"></p>
     <div class="modal-actions">

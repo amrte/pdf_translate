@@ -211,6 +211,42 @@ async function runOcrSegEdit(op) {
   }
 }
 
+/* ---- words OCR was unsure of: marked for checking */
+
+const UNSURE = 70; // (Tesseract's confidence below which a word is marked)
+const unsureCache = new WeakMap();
+
+/** The words of a recognised segment OCR was unsure of ([{text, conf, bbox}]); none once corrected. */
+function unsureWords(s) {
+  if (!s || !s.ocr || s.edited) return [];
+  if (unsureCache.has(s)) return unsureCache.get(s);
+  const r = ocrRecord(s.page), out = [];
+  if (r) {
+    const [x0, y0, x1, y1] = s.bbox;
+    for (const l of r.raw) for (const w of l.words) {
+      if (w.conf == null || w.conf >= UNSURE || !/[\p{L}\p{N}]/u.test(w.text)) continue;
+      const cx = (w.bbox[0] + w.bbox[2]) / 2, cy = (w.bbox[1] + w.bbox[3]) / 2;
+      if (cx >= x0 - 1 && cx <= x1 + 1 && cy >= y0 - 1 && cy <= y1 + 1) out.push(w);
+    }
+  }
+  unsureCache.set(s, out);
+  return out;
+}
+
+/** A segment's text as HTML, the words OCR was unsure of marked (in reading order). */
+function srcHtml(s) {
+  const words = unsureWords(s);
+  if (!words.length) return escapeHtml(s.text);
+  let html = "", pos = 0;
+  for (const w of words) {
+    const i = s.text.indexOf(w.text, pos);
+    if (i < 0) continue; // (a word joined across a line break, say)
+    html += `${escapeHtml(s.text.slice(pos, i))}<span class="unsure" title="${escapeHtml(t("ocr.unsureWord", { n: w.conf }))}">${escapeHtml(w.text)}</span>`;
+    pos = i + w.text.length;
+  }
+  return html + escapeHtml(s.text.slice(pos));
+}
+
 /* ---- the text of a recognised segment corrected by hand */
 
 let srcFor = null;
@@ -220,6 +256,9 @@ async function openSrcDialog(id) {
   srcFor = { id, seg: s };
   $("#srcText").value = s.text;
   $("#srcReset").hidden = !s.edited;
+  const unsure = unsureWords(s);
+  $("#srcUnsure").hidden = !unsure.length;
+  $("#srcUnsure").textContent = unsure.length ? t("src.unsure", { words: unsure.map((w) => w.text).join(", ") }) : "";
   const img = $("#srcSnip");
   img.removeAttribute("src");
   img.hidden = true;
@@ -236,8 +275,16 @@ async function openSrcDialog(id) {
     const sw = Math.min(bmp.width - sx, (x1 - x0 + 2 * pad) * zoom), sh = Math.min(bmp.height - sy, Math.min(y1 - y0 + 2 * pad, 400) * zoom);
     const c = document.createElement("canvas");
     c.width = Math.max(1, Math.round(sw)); c.height = Math.max(1, Math.round(sh));
-    c.getContext("2d").drawImage(bmp, sx, sy, sw, sh, 0, 0, c.width, c.height);
+    const cx = c.getContext("2d");
+    cx.drawImage(bmp, sx, sy, sw, sh, 0, 0, c.width, c.height);
     bmp.close && bmp.close();
+    // the words OCR was unsure of, outlined
+    cx.strokeStyle = "rgba(217, 119, 6, 0.95)"; cx.lineWidth = 2; cx.fillStyle = "rgba(245, 158, 11, 0.18)";
+    for (const w of unsureWords(s)) {
+      const rx = (w.bbox[0] - page.x0) * zoom - sx - 2, ry = (w.bbox[1] - page.y0) * zoom - sy - 2;
+      const rw = (w.bbox[2] - w.bbox[0]) * zoom + 4, rh = (w.bbox[3] - w.bbox[1]) * zoom + 4;
+      cx.fillRect(rx, ry, rw, rh); cx.strokeRect(rx, ry, rw, rh);
+    }
     img.src = c.toDataURL("image/png");
     img.hidden = false;
   } catch (err) { console.warn("snippet", err); }

@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.26
+
+- Words OCR was unsure of are marked: in the segment list they are highlighted (a tooltip says how sure the recognition was), the card says "n uncertain", and the new list filter "Uncertain OCR words" shows just the segments with such words – a quick way to check a recognised document. In the correction dialog (✎) they are outlined on the cutout of the page and listed. A corrected segment is no longer marked. (Pages recognised before this version have no marks; recognise them again to get them.)
+
 ## 2.25
 
 - White paper: new option "Make the paper white (remove shadows and colour cast)" before text recognition (on by default). Where the paper of a photo or scan is grey, unevenly lit (the shadow at a book's spine, a lamp) or tinted, it becomes white and the text a little stronger; text shining through from the back of the page disappears too. Recognition gets clearly better (the test photo: whole paragraphs, umlauts right), the page is nicer to read and the PDF smaller (the test photo 2.0 → 1.2 MB). Clean scans and pages made on a computer are left as they are.

@@ -3008,7 +3008,8 @@ function ocrToBlocks(data, zoom, origin, colors) {
         ink /= wsum || 1;
         lines.push({
           size: round2(Math.max(4, Math.min(rowH, 1.6 * h)) / zoom), base: pt(bl, origin[1]), color: snap(fg, 48), bg: snap(bg, 18), ink,
-          words: words.map((w) => ({ text: w.text, bbox: [pt(w.bbox.x0, origin[0]), pt(w.bbox.y0, origin[1]), pt(w.bbox.x1, origin[0]), pt(w.bbox.y1, origin[1])] })),
+          // (conf: how sure Tesseract was of the word, 0–100; unsure words are marked for checking)
+          words: words.map((w) => ({ text: w.text, conf: Math.round(w.confidence != null ? w.confidence : 99), bbox: [pt(w.bbox.x0, origin[0]), pt(w.bbox.y0, origin[1]), pt(w.bbox.x1, origin[0]), pt(w.bbox.y1, origin[1])] })),
         });
       }
     }

@@ -1013,7 +1013,10 @@ function segMeta(s) {
   const page = t("meta.page", { n: s.page + 1 });
   if (s.skip) return `${page} · ${t(s.formula ? "meta.formula" : "meta.numbers")}${s.edited ? " · " + t("meta.corrected") : ""}`;
   if (isBook()) return s.hidden ? `${t("meta.notShown")} · ${s.tag}` : `${page} · ${s.notes ? t("meta.notes") : s.tag}`;
-  if (s.ocr) return `${page} · OCR · ${Math.round(s.size * 10) / 10}pt${s.bold ? " " + t("meta.bold") : ""}${s.edited ? " · " + t("meta.corrected") : ""}`;
+  if (s.ocr) {
+    const unsure = unsureWords(s).length;
+    return `${page} · OCR · ${Math.round(s.size * 10) / 10}pt${s.bold ? " " + t("meta.bold") : ""}${s.edited ? " · " + t("meta.corrected") : ""}${unsure ? " · " + t("meta.unsure", { n: unsure }) : ""}`;
+  }
   const style = [s.bold && t("meta.bold"), s.italic && t("meta.italic")].filter(Boolean).join(" ");
   const rot = s.rotation ? ` · ${t("meta.rotated", { deg: s.rotation })}` : "";
   return `${page} · ${Math.round(s.size * 10) / 10}pt${style ? " " + style : ""} · ${t("meta." + s.align)}${rot}`;
@@ -1169,7 +1172,7 @@ function makeCard(id) {
     </div>
     ${repCardHtml(id)}
     ${styleOpen.has(id) && !isBook() ? stylePanelHtml(s) : ""}
-    <div class="seg-src">${escapeHtml(s.text)}</div>
+    <div class="seg-src">${srcHtml(s)}</div>
     <textarea rows="1" spellcheck="true" placeholder="${escapeHtml(t(repLocked(id) ? (repGroup(id).mode === "keep" ? "rep.keepPlaceholder" : "rep.oncePlaceholder") : "card.placeholder", { n: repGroup(id)?.lead }))}" aria-label="${escapeHtml(t("card.aria", { n: id }))}"${repLocked(id) ? " readonly" : ""}></textarea>`;
   if (repGroup(id)) el.classList.add(repLocked(id) ? "rep-locked" : "rep-lead");
   el.querySelector("textarea").value = state.translations[id] || "";
@@ -1210,12 +1213,14 @@ function applyFilter() {
     if (status === "numbers" ? !s.skip : s.skip) continue; // numbers-only segments have their own filter
     if (status !== "numbers" && repHidden(s.id) && repGroup(s.id).lead !== s.id) continue; // (an open group shows them after its lead)
     if (status === "repeats" && !repGroup(s.id)) continue;
+    if (status === "unsure" && !unsureWords(s).length) continue;
     if ((status === "todo" || status === "done") && (status === "done") !== hasTr(s.id)) continue;
     if (re && !((scope !== "tr" && hit(s.text)) || (scope !== "src" && hit(state.translations[s.id] || "")))) continue;
     ids.push(s.id);
   }
   const listed = status === "numbers" ? ids : repListIds(ids);
   $('#filterStatus option[value="repeats"]').hidden = !rep.groups.length;
+  $('#filterStatus option[value="unsure"]').hidden = !state.doc.ocr;
   $("#segments").classList.toggle("is-empty", !listed.length);
   $("#segments").dataset.empty = state.doc.segments.length ? t("filter.empty") : t("filter.noText");
   vl.setIds(listed);

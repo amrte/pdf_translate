@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="Kameleon 2.25">
+  <meta name="generator" content="Kameleon 2.26">
   <meta name="description" content="Kameleon – Wechselt die Sprache, behält die Form. Changes language, keeps its shape.">
   <title>Kameleon</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2216%22 fill=%22%23287130%22/%3E%3Cg transform=%22translate(2.5 1) scale(0.9)%22 fill=%22%23ffffff%22 stroke=%22%23ffffff%22%3E%3Cpath d=%22M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6%22 fill=%22none%22 stroke-width=%223.8%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M21 43l-1 10M30 44v9M38 43l1 10%22 stroke-width=%223.6%22 stroke-linecap=%22round%22/%3E%3Cellipse cx=%2221%22 cy=%2225%22 rx=%227%22 ry=%227.5%22 stroke=%22none%22/%3E%3Cellipse cx=%2233%22 cy=%2223.5%22 rx=%227.5%22 ry=%228%22 stroke=%22none%22/%3E%3Cpath d=%22M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z%22 stroke=%22none%22/%3E%3Cpath d=%22M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z%22 stroke=%22none%22/%3E%3Cpath d=%22M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z%22 stroke=%22none%22/%3E%3Cpath d=%22M16 37l4-3 4 3 4-3 4 3 4-3 4 3%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%222.1%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3Cpath d=%22M43.5 33.9L57 32.6%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%221.5%22 stroke-linecap=%22round%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%224.4%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%222.7%22 stroke=%22none%22/%3E%3Ccircle cx=%2246.2%22 cy=%2226.7%22 r=%221.3%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Cpath d=%22M4 55.5c15-3 39-3 54 0%22 fill=%22none%22 stroke-width=%222.4%22 stroke-linecap=%22round%22/%3E%3C/g%3E%3C/svg%3E">
@@ -1018,6 +1018,9 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
 .src-snip:has(img[hidden]) { display: none; }
 .src-snip img { display: block; max-width: 100%; height: auto; }
 .src-text { width: 100%; min-height: 120px; resize: vertical; font: inherit; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text); }
+/* words OCR was unsure of */
+.seg-src .unsure { background: color-mix(in srgb, #f59e0b 26%, transparent); border-bottom: 2px dotted #d97706; border-radius: 2px; }
+.src-unsure { margin: 0 0 8px; color: #b45309; }
 
   </style>
 </head>
@@ -1026,7 +1029,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
   <div class="brand">
     <span class="logo"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#287130"/><g transform="translate(2.5 1) scale(0.9)" fill="#ffffff" stroke="#ffffff"><path d="M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6" fill="none" stroke-width="3.8" stroke-linecap="round"/><path d="M21 43l-1 10M30 44v9M38 43l1 10" stroke-width="3.6" stroke-linecap="round"/><ellipse cx="21" cy="25" rx="7" ry="7.5" stroke="none"/><ellipse cx="33" cy="23.5" rx="7.5" ry="8" stroke="none"/><path d="M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z" stroke="none"/><path d="M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z" stroke="none"/><path d="M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z" stroke="none"/><path d="M16 37l4-3 4 3 4-3 4 3 4-3 4 3" fill="none" stroke="#287130" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M43.5 33.9L57 32.6" fill="none" stroke="#287130" stroke-width="1.5" stroke-linecap="round"/><circle cx="45.5" cy="26.5" r="4.4" fill="#287130" stroke="none"/><circle cx="45.5" cy="26.5" r="2.7" stroke="none"/><circle cx="46.2" cy="26.7" r="1.3" fill="#287130" stroke="none"/><path d="M4 55.5c15-3 39-3 54 0" fill="none" stroke-width="2.4" stroke-linecap="round"/></g></svg></span>
     <span class="brand-name">Kameleon</span>
-    <span class="version" id="appVersion">v2.25</span>
+    <span class="version" id="appVersion">v2.26</span>
   </div>
   <div class="topbar-actions">
     <span class="doc-name" id="docName"></span>
@@ -1276,6 +1279,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
         <option value="done" data-i18n="filter.done">Translated</option>
         <option value="repeats" data-i18n="filter.repeats">Headers &amp; footers</option>
         <option value="numbers" data-i18n="filter.numbers">Numbers only (kept)</option>
+        <option value="unsure" data-i18n="filter.unsure">Uncertain OCR words</option>
       </select>
       <select id="filterPage" data-i18n-aria="filter.pageAria"><option value="all" data-i18n="filter.allPages">All pages</option></select>
     </div>
@@ -1538,7 +1542,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
     </div>
     <input type="file" id="offlineZip" class="visually-hidden" accept=".zip,application/zip" multiple tabindex="-1">
     <input type="file" id="offlineFolder" class="visually-hidden" webkitdirectory multiple tabindex="-1">
-    <p class="muted small help-version help-part">Kameleon v2.25 · <span data-i18n="app.tagline"></span></p>
+    <p class="muted small help-version help-part">Kameleon v2.26 · <span data-i18n="app.tagline"></span></p>
     <div class="modal-actions">
       <button type="button" value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
     </div>
@@ -1691,6 +1695,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
   <form method="dialog">
     <h2 id="srcTitle" data-i18n="src.title">Correct the recognised text</h2>
     <div class="src-snip"><img id="srcSnip" alt="" hidden></div>
+    <p class="small src-unsure" id="srcUnsure" hidden></p>
     <textarea id="srcText" class="src-text" rows="6" spellcheck="true" data-i18n-aria="src.title"></textarea>
     <p class="muted small" data-i18n="src.note"></p>
     <div class="modal-actions">
@@ -2094,6 +2099,10 @@ const I18N = {
     "lang.target": "Zielsprache",
     "common.cancel": "Abbrechen",
     "src.title": "Erkannten Text korrigieren",
+    "src.unsure": "Unsicher gelesen (oben markiert): {words}",
+    "ocr.unsureWord": "Unsicher gelesen ({n} % sicher) – bitte prüfen; ✎ korrigiert",
+    "meta.unsure": "{n} unsicher",
+    "filter.unsure": "Unsichere OCR-Wörter",
     "src.note": "Oben die Stelle auf der Seite zum Vergleich. Strg+Enter speichert. Die Korrektur wird mit dem Erkennungsergebnis gespeichert; die Übersetzung bleibt, wie sie ist.",
     "src.save": "Speichern",
     "src.reset": "Erkannter Text",
@@ -2947,6 +2956,10 @@ const I18N = {
     "lang.target": "Target language",
     "common.cancel": "Cancel",
     "src.title": "Correct the recognised text",
+    "src.unsure": "Read with doubt (marked above): {words}",
+    "ocr.unsureWord": "Read with doubt ({n} % sure) – please check; ✎ corrects it",
+    "meta.unsure": "{n} uncertain",
+    "filter.unsure": "Uncertain OCR words",
     "src.note": "Above, the place on the page for comparison. Ctrl+Enter saves. The correction is saved with the recognition result; the translation stays as it is.",
     "src.save": "Save",
     "src.reset": "Recognised text",
@@ -6668,7 +6681,8 @@ function ocrToBlocks(data, zoom, origin, colors) {
         ink /= wsum || 1;
         lines.push({
           size: round2(Math.max(4, Math.min(rowH, 1.6 * h)) / zoom), base: pt(bl, origin[1]), color: snap(fg, 48), bg: snap(bg, 18), ink,
-          words: words.map((w) => ({ text: w.text, bbox: [pt(w.bbox.x0, origin[0]), pt(w.bbox.y0, origin[1]), pt(w.bbox.x1, origin[0]), pt(w.bbox.y1, origin[1])] })),
+          // (conf: how sure Tesseract was of the word, 0–100; unsure words are marked for checking)
+          words: words.map((w) => ({ text: w.text, conf: Math.round(w.confidence != null ? w.confidence : 99), bbox: [pt(w.bbox.x0, origin[0]), pt(w.bbox.y0, origin[1]), pt(w.bbox.x1, origin[0]), pt(w.bbox.y1, origin[1])] })),
         });
       }
     }
@@ -14581,7 +14595,10 @@ function segMeta(s) {
   const page = t("meta.page", { n: s.page + 1 });
   if (s.skip) return `${page} · ${t(s.formula ? "meta.formula" : "meta.numbers")}${s.edited ? " · " + t("meta.corrected") : ""}`;
   if (isBook()) return s.hidden ? `${t("meta.notShown")} · ${s.tag}` : `${page} · ${s.notes ? t("meta.notes") : s.tag}`;
-  if (s.ocr) return `${page} · OCR · ${Math.round(s.size * 10) / 10}pt${s.bold ? " " + t("meta.bold") : ""}${s.edited ? " · " + t("meta.corrected") : ""}`;
+  if (s.ocr) {
+    const unsure = unsureWords(s).length;
+    return `${page} · OCR · ${Math.round(s.size * 10) / 10}pt${s.bold ? " " + t("meta.bold") : ""}${s.edited ? " · " + t("meta.corrected") : ""}${unsure ? " · " + t("meta.unsure", { n: unsure }) : ""}`;
+  }
   const style = [s.bold && t("meta.bold"), s.italic && t("meta.italic")].filter(Boolean).join(" ");
   const rot = s.rotation ? ` · ${t("meta.rotated", { deg: s.rotation })}` : "";
   return `${page} · ${Math.round(s.size * 10) / 10}pt${style ? " " + style : ""} · ${t("meta." + s.align)}${rot}`;
@@ -14737,7 +14754,7 @@ function makeCard(id) {
     </div>
     ${repCardHtml(id)}
     ${styleOpen.has(id) && !isBook() ? stylePanelHtml(s) : ""}
-    <div class="seg-src">${escapeHtml(s.text)}</div>
+    <div class="seg-src">${srcHtml(s)}</div>
     <textarea rows="1" spellcheck="true" placeholder="${escapeHtml(t(repLocked(id) ? (repGroup(id).mode === "keep" ? "rep.keepPlaceholder" : "rep.oncePlaceholder") : "card.placeholder", { n: repGroup(id)?.lead }))}" aria-label="${escapeHtml(t("card.aria", { n: id }))}"${repLocked(id) ? " readonly" : ""}></textarea>`;
   if (repGroup(id)) el.classList.add(repLocked(id) ? "rep-locked" : "rep-lead");
   el.querySelector("textarea").value = state.translations[id] || "";
@@ -14778,12 +14795,14 @@ function applyFilter() {
     if (status === "numbers" ? !s.skip : s.skip) continue; // numbers-only segments have their own filter
     if (status !== "numbers" && repHidden(s.id) && repGroup(s.id).lead !== s.id) continue; // (an open group shows them after its lead)
     if (status === "repeats" && !repGroup(s.id)) continue;
+    if (status === "unsure" && !unsureWords(s).length) continue;
     if ((status === "todo" || status === "done") && (status === "done") !== hasTr(s.id)) continue;
     if (re && !((scope !== "tr" && hit(s.text)) || (scope !== "src" && hit(state.translations[s.id] || "")))) continue;
     ids.push(s.id);
   }
   const listed = status === "numbers" ? ids : repListIds(ids);
   $('#filterStatus option[value="repeats"]').hidden = !rep.groups.length;
+  $('#filterStatus option[value="unsure"]').hidden = !state.doc.ocr;
   $("#segments").classList.toggle("is-empty", !listed.length);
   $("#segments").dataset.empty = state.doc.segments.length ? t("filter.empty") : t("filter.noText");
   vl.setIds(listed);
@@ -18290,7 +18309,7 @@ function initPicture() {
 // from its own browser cache before the network, so language files are written into that cache.
 // ======================================================================
 
-const APP_VERSION = "2.25";
+const APP_VERSION = "2.26";
 // (a change of library version makes a stored set outdated: it is then ignored)
 const OFFLINE_VERSION = `${MUPDF_URL} ${OCR_LIB}`;
 const CORE_SIMD = "tesseract-core-simd-lstm.wasm.js", CORE_PLAIN = "tesseract-core-lstm.wasm.js";
@@ -21130,6 +21149,42 @@ async function runOcrSegEdit(op) {
   }
 }
 
+/* ---- words OCR was unsure of: marked for checking */
+
+const UNSURE = 70; // (Tesseract's confidence below which a word is marked)
+const unsureCache = new WeakMap();
+
+/** The words of a recognised segment OCR was unsure of ([{text, conf, bbox}]); none once corrected. */
+function unsureWords(s) {
+  if (!s || !s.ocr || s.edited) return [];
+  if (unsureCache.has(s)) return unsureCache.get(s);
+  const r = ocrRecord(s.page), out = [];
+  if (r) {
+    const [x0, y0, x1, y1] = s.bbox;
+    for (const l of r.raw) for (const w of l.words) {
+      if (w.conf == null || w.conf >= UNSURE || !/[\p{L}\p{N}]/u.test(w.text)) continue;
+      const cx = (w.bbox[0] + w.bbox[2]) / 2, cy = (w.bbox[1] + w.bbox[3]) / 2;
+      if (cx >= x0 - 1 && cx <= x1 + 1 && cy >= y0 - 1 && cy <= y1 + 1) out.push(w);
+    }
+  }
+  unsureCache.set(s, out);
+  return out;
+}
+
+/** A segment's text as HTML, the words OCR was unsure of marked (in reading order). */
+function srcHtml(s) {
+  const words = unsureWords(s);
+  if (!words.length) return escapeHtml(s.text);
+  let html = "", pos = 0;
+  for (const w of words) {
+    const i = s.text.indexOf(w.text, pos);
+    if (i < 0) continue; // (a word joined across a line break, say)
+    html += `${escapeHtml(s.text.slice(pos, i))}<span class="unsure" title="${escapeHtml(t("ocr.unsureWord", { n: w.conf }))}">${escapeHtml(w.text)}</span>`;
+    pos = i + w.text.length;
+  }
+  return html + escapeHtml(s.text.slice(pos));
+}
+
 /* ---- the text of a recognised segment corrected by hand */
 
 let srcFor = null;
@@ -21139,6 +21194,9 @@ async function openSrcDialog(id) {
   srcFor = { id, seg: s };
   $("#srcText").value = s.text;
   $("#srcReset").hidden = !s.edited;
+  const unsure = unsureWords(s);
+  $("#srcUnsure").hidden = !unsure.length;
+  $("#srcUnsure").textContent = unsure.length ? t("src.unsure", { words: unsure.map((w) => w.text).join(", ") }) : "";
   const img = $("#srcSnip");
   img.removeAttribute("src");
   img.hidden = true;
@@ -21155,8 +21213,16 @@ async function openSrcDialog(id) {
     const sw = Math.min(bmp.width - sx, (x1 - x0 + 2 * pad) * zoom), sh = Math.min(bmp.height - sy, Math.min(y1 - y0 + 2 * pad, 400) * zoom);
     const c = document.createElement("canvas");
     c.width = Math.max(1, Math.round(sw)); c.height = Math.max(1, Math.round(sh));
-    c.getContext("2d").drawImage(bmp, sx, sy, sw, sh, 0, 0, c.width, c.height);
+    const cx = c.getContext("2d");
+    cx.drawImage(bmp, sx, sy, sw, sh, 0, 0, c.width, c.height);
     bmp.close && bmp.close();
+    // the words OCR was unsure of, outlined
+    cx.strokeStyle = "rgba(217, 119, 6, 0.95)"; cx.lineWidth = 2; cx.fillStyle = "rgba(245, 158, 11, 0.18)";
+    for (const w of unsureWords(s)) {
+      const rx = (w.bbox[0] - page.x0) * zoom - sx - 2, ry = (w.bbox[1] - page.y0) * zoom - sy - 2;
+      const rw = (w.bbox[2] - w.bbox[0]) * zoom + 4, rh = (w.bbox[3] - w.bbox[1]) * zoom + 4;
+      cx.fillRect(rx, ry, rw, rh); cx.strokeRect(rx, ry, rw, rh);
+    }
     img.src = c.toDataURL("image/png");
     img.hidden = false;
   } catch (err) { console.warn("snippet", err); }

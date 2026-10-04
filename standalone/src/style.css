@@ -1008,3 +1008,6 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
 .src-snip:has(img[hidden]) { display: none; }
 .src-snip img { display: block; max-width: 100%; height: auto; }
 .src-text { width: 100%; min-height: 120px; resize: vertical; font: inherit; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text); }
+/* words OCR was unsure of */
+.seg-src .unsure { background: color-mix(in srgb, #f59e0b 26%, transparent); border-bottom: 2px dotted #d97706; border-radius: 2px; }
+.src-unsure { margin: 0 0 8px; color: #b45309; }
