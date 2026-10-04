@@ -4,6 +4,11 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.19
+
+- Flattened pages come out as a rectangle, not a parallelogram: after the lines are made level, the left and right edges of the text block are found from where the lines start and end (a straight edge through most of them – indented first lines and short last lines don't count) and stood upright, so the line starts line up vertically. This also happens when the lines are straight but the edges lean once the page is pulled straight from its corners. It applies to "Flatten curved text lines" before text recognition, to "Flatten lines" by hand, and in "Arrange pages".
+- The traced lines now reach to their first and last letter (before, they ended up to a line height short), so the lines are bent straight right to their ends, and the cut at the spine of an open book keeps clear of the neighbouring page more reliably.
+
 ## 2.18
 
 - Opened pictures can be saved as a PDF: the new "PDF" button beside the build button saves the version shown – the original picture, or (in the translated or comparison view, once built) the translation – with markups, notes and turns. Bilingual PDFs of pictures were already possible with the two-page button.

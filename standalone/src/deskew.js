@@ -153,17 +153,21 @@ function warpPixels(src, sw, sh, n, { turn = 0, angle = 0, quad = null, tracks =
   // Curved lines bent straight (tracks: fractions of the straightened picture, see dewarpMap).
   // The bend is worked out where the page is already flat (after the corners), so the lines end
   // up level there, not level in the photo and then tilted again by the corners.
-  const bend = tracks && tracks.length
-    ? dewarpMap(tracks.map((t) => t.map(([x, y]) => back(x * dw, y * dh))).map((t) => t.filter(([x, y]) => x > -W && x < 2 * W && y > -H && y < 2 * H)), W, H)
+  // The text block's leaning edges are then stood upright (see marginMap).
+  const flat = tracks && tracks.length
+    ? tracks.map((t) => t.map(([x, y]) => back(x * dw, y * dh))).map((t) => t.filter(([x, y]) => x > -W && x < 2 * W && y > -H && y < 2 * H))
     : null;
+  const bend = flat ? dewarpMap(flat, W, H) : null;
+  const upright = flat ? marginMap(flat, W, H) : null;
   const a = (angle * Math.PI) / 180, c = Math.cos(a), s = Math.sin(a), cx = dw / 2, cy = dh / 2;
   const out = new Uint8ClampedArray(W * H * n);
   if (n === 4) for (let i = 3; i < out.length; i += 4) out[i] = 255;
   for (let v = 0; v < H; v++) {
     for (let u = 0; u < W; u++) {
-      let X, Y, uu = u, vv = v;
-      if (bend) vv = bend(u + 0.5, v + 0.5) - 0.5;
-      if (map) [X, Y] = map(uu, vv); else { X = uu + 0.5; Y = vv + 0.5; }
+      let X, Y, px = u + 0.5, py = v + 0.5;
+      if (upright) px = upright(px, py);
+      if (bend) py = bend(px, py);
+      if (map) [X, Y] = map(px - 0.5, py - 0.5); else { X = px; Y = py; }
       // undo the straightening turn, then the quarter turns
       const dx = X - cx, dy = Y - cy;
       const Xs = cx + c * dx + s * dy, Ys = cy - s * dx + c * dy;
@@ -358,11 +362,101 @@ function findTextLines(px, w, h, region = null) {
     return inside >= t.pts.length * 0.6;
   }).map((t) => t.pts.filter(([x]) => x >= bx0 - sw * 0.5 && x <= bx1 + sw * 0.5)).filter((pts) => pts.length >= 3);
   // Smoothed a little (a peak may sit on an ascender or descender).
-  return long.map((pts) => pts.map(([x, y], i) => {
+  const smooth = long.map((pts) => pts.map(([x, y], i) => {
     const lo = Math.max(0, i - 1), hi = Math.min(pts.length - 1, i + 1);
     let s = 0; for (let j = lo; j <= hi; j++) s += pts[j][1];
     return [Math.round(x * 10) / 10, Math.round((s / (hi - lo + 1)) * 10) / 10];
-  })).sort((p, q) => p[0][1] - q[0][1]);
+  }));
+  // Each line taken out to its first and last letter: a track ends in the middle of a strip,
+  // the ink along the line says where the text really starts and ends (the margins are measured
+  // on these ends, see textMargins).
+  const band = Math.max(2, Math.round(pitch * 0.22)), maxGap = Math.max(4, Math.round(pitch * 0.8));
+  const inkAt = (x, y) => { let n = 0; for (let yy = Math.max(0, y - band); yy <= Math.min(h - 1, y + band); yy++) n += ink[yy * w + x]; return n >= 2; };
+  const reach = (x, y, dir, limit) => {
+    let last = null, gap = 0;
+    for (let xx = x; dir < 0 ? xx >= limit : xx <= limit; xx += dir) {
+      if (inkAt(xx, y)) { last = xx; gap = 0; } else if (last !== null && ++gap > maxGap) break; else if (last === null && Math.abs(xx - x) > sw) break;
+    }
+    return last;
+  };
+  for (const pts of smooth) {
+    const [sx, sy] = pts[0], [ex, ey] = pts[pts.length - 1];
+    const y0 = Math.round(sy), y1 = Math.round(ey);
+    const lim0 = Math.max(0, Math.round(bx0 - sw)), lim1 = Math.min(w - 1, Math.round(bx1 + sw));
+    // (from the middle of the first strip out; when that is still margin, in to the first letter)
+    let a = reach(Math.round(sx), y0, -1, lim0);
+    if (a === null) a = reach(Math.round(sx), y0, 1, Math.min(lim1, Math.round(sx + sw)));
+    let b = reach(Math.round(ex), y1, 1, lim1);
+    if (b === null) b = reach(Math.round(ex), y1, -1, Math.max(lim0, Math.round(ex - sw)));
+    if (a !== null && a < sx - 0.5) pts.unshift([a, sy]); else if (a !== null && a > sx + 0.5) pts[0] = [a, sy];
+    if (b !== null && b > ex + 0.5) pts.push([b, ey]); else if (b !== null && b < ex - 0.5) pts[pts.length - 1] = [b, ey];
+  }
+  return smooth.sort((p, q) => p[0][1] - q[0][1]);
+}
+
+/**
+ * The text block's left and right edges, from traced lines (pixels; their first and last points):
+ * each a straight line x = a + b·y through the most lines that agree within a few pixels, so that
+ * indented first lines, short last lines and stray traces are left out. Null for an edge without
+ * a clear majority (ragged text). Also the heights the lines span.
+ */
+function textMargins(tracks, w) {
+  const rows = tracks.filter((t) => t.length >= 2).map((t) => {
+    const ys = t.map((p) => p[1]).sort((a, b) => a - b);
+    return { y: ys[ys.length >> 1], x0: Math.min(...t.map((p) => p[0])), x1: Math.max(...t.map((p) => p[0])) };
+  });
+  const tol = Math.max(3, w * 0.006);
+  const fit = (pts) => {
+    const n = pts.length;
+    if (n < 6) return null;
+    let best = null;
+    for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) {
+      const [ya, xa] = pts[i], [yb, xb] = pts[j];
+      if (Math.abs(yb - ya) < 1) continue;
+      const b = (xb - xa) / (yb - ya), a = xa - b * ya;
+      if (Math.abs(b) > 0.25) continue;
+      let cnt = 0, err = 0;
+      for (const [y, x] of pts) { const d = Math.abs(x - (a + b * y)); if (d <= tol) { cnt++; err += d; } }
+      if (!best || cnt > best.cnt || (cnt === best.cnt && err < best.err)) best = { cnt, err, a, b };
+    }
+    // (at least half of the lines, spread over at least half of the text's height)
+    if (!best || best.cnt < Math.max(6, n * 0.5)) return null;
+    const inl = pts.filter(([y, x]) => Math.abs(x - (best.a + best.b * y)) <= tol);
+    const span = Math.max(...pts.map((q) => q[0])) - Math.min(...pts.map((q) => q[0]));
+    if (Math.max(...inl.map((q) => q[0])) - Math.min(...inl.map((q) => q[0])) < span * 0.5) return null;
+    // least squares on the lines that agree
+    const my = inl.reduce((p, q) => p + q[0], 0) / inl.length, mx = inl.reduce((p, q) => p + q[1], 0) / inl.length;
+    let sxy = 0, syy = 0;
+    for (const [y, x] of inl) { sxy += (y - my) * (x - mx); syy += (y - my) ** 2; }
+    const b = syy ? sxy / syy : 0;
+    return { a: mx - b * my, b, n: inl.length };
+  };
+  const ys = rows.map((r) => r.y);
+  return { rows: rows.length, left: fit(rows.map((r) => [r.y, r.x0])), right: fit(rows.map((r) => [r.y, r.x1])), y0: Math.min(...ys), y1: Math.max(...ys) };
+}
+
+/**
+ * Where a point of the finished picture comes from across, so that the text block's edges stand
+ * upright (a page whose lines are level but whose margins lean, as a parallelogram): (x, y) →
+ * x. Each row is stretched between the leaning edges (one edge alone: shifted along it). Null
+ * when the edges are not clear or already upright.
+ */
+function marginMap(tracks, w, h) {
+  const m = textMargins(tracks, w);
+  const ym = (m.y0 + m.y1) / 2, at = (f, y) => f.a + f.b * y;
+  const { left: L, right: R } = m;
+  let map = null;
+  if (L && R && at(R, ym) - at(L, ym) > w * 0.2) {
+    const l0 = at(L, ym), r0 = at(R, ym);
+    map = (x, y) => { const l = at(L, y), r = at(R, y); return l + ((x - l0) * (r - l)) / (r0 - l0); };
+  } else if ((L || R) && (L || R).n >= m.rows * 0.6) { // (one edge alone: a clearer majority)
+    const f = L || R, f0 = at(f, ym);
+    map = (x, y) => x + at(f, y) - f0;
+  }
+  if (!map) return null;
+  // (hardly leaning: left as it is)
+  const most = Math.max(...[0, h].flatMap((y) => [0, w].map((x) => Math.abs(map(x, y) - x))));
+  return most < 1.5 ? null : map;
 }
 
 /**
@@ -639,7 +733,15 @@ function autoPrepare(gray, w, h, { crop = true, dewarp = true } = {}) {
       region = [Math.max(0, Math.min(...xs)), Math.max(0, Math.min(...ys)), Math.min(w, Math.max(...xs)), Math.min(h, Math.max(...ys))];
     }
     const found = region ? findTextLines(gray, w, h, region) : lines;
-    if (linesAreCurved(found, h)) tracks = found.map((t) => t.map(([x, y]) => [Math.round((x / w) * 1e4) / 1e4, Math.round((y / h) * 1e4) / 1e4]));
+    // (lines that are straight are kept too when the text block leans once the page is pulled
+    // straight from its corners: its edges are then stood upright, see marginMap)
+    let keep = linesAreCurved(found, h);
+    if (!keep && quad && found.length >= 5) {
+      const q = quad.map(([x, y]) => [x * w, y * h]), [W, H] = quadSize(q), m = quadMap(q);
+      const flat = found.map((t) => t.map(([x, y]) => { const [s2, t2] = m.inverse(x, y); return [s2 * W, t2 * H]; }));
+      keep = Boolean(marginMap(flat, W, H));
+    }
+    if (keep) tracks = found.map((t) => t.map(([x, y]) => [Math.round((x / w) * 1e4) / 1e4, Math.round((y / h) * 1e4) / 1e4]));
   }
   return { quad, tracks };
 }
