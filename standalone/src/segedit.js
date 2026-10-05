@@ -160,8 +160,11 @@ async function replaySegEdits(id, segments) {
   return list;
 }
 
-/** Carry out an operation on the open document and refresh everything that hangs on the numbering. */
-async function runSegEdit(op) {
+/**
+ * Carry out an operation on the open document and refresh everything that hangs on the numbering.
+ * `quiet`: no message, and the page is not scrolled (a formula frame drawn where the user looks).
+ */
+async function runSegEdit(op, quiet = false) {
   if (op.ocr) return runOcrSegEdit(op);
   const doc = state.doc;
   busy(t("seg.working"));
@@ -173,9 +176,9 @@ async function runSegEdit(op) {
     saveSegEdits();
     relistSegments(doc, r, () => { if (joined) state.translations[r.fresh[0].id] = joined; }); // a join keeps both translations, one after the other
     const first = r.fresh[0].id;
-    setActive(first, { scrollList: true, scrollViewer: true });
+    setActive(first, { scrollList: true, scrollViewer: !quiet });
     const key = { split: "seg.split", move: "seg.moved", frame: "fx.frameAdded" }[op.op] || "seg.joined";
-    toast(t(key, { n: op.op === "move" || op.op === "frame" ? first : r.fresh.length }), "ok", { label: t("seg.undo"), run: undoLastSegEdit });
+    if (!quiet) toast(t(key, { n: op.op === "move" || op.op === "frame" ? first : r.fresh.length }), "ok", { label: t("seg.undo"), run: undoLastSegEdit });
     return true;
   } catch (err) {
     console.error(err);

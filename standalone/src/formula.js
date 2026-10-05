@@ -413,7 +413,7 @@ let fxReader = null, fxIdle = 0; // (the reading model stays loaded a minute aft
  * at the scale pix2tex reads best (from the page's usual text size) and given to the model; kept
  * when the model was sure. The model's files are fetched the first time.
  */
-async function readLatexFor(ids) {
+async function readLatexFor(ids, quiet = false) {
   const doc = state.doc, { byId } = formulaGroups();
   const todo = [...new Set(ids.map((id) => byId.get(id)).filter(Boolean))];
   if (!todo.length) return;
@@ -462,7 +462,7 @@ async function readLatexFor(ids) {
   saveLatex();
   refreshCards();
   segBarRefresh(); // (the toolbar on the page: "TeX" now copies)
-  toast(unsure ? t("fx.doneUnsure", { n: read, u: unsure }) : t("fx.done", { n: read }), read ? "ok" : "");
+  if (!quiet || unsure) toast(unsure ? t("fx.doneUnsure", { n: read, u: unsure }) : t("fx.done", { n: read }), read ? "ok" : ""); // (quiet: only when a formula could not be read)
 }
 
 /* ---- formula frames: formulas marked by hand, as pictures for an AI chat */
@@ -521,23 +521,21 @@ async function addFormulaFrame(page, box) {
   const r2 = (v) => Math.round(v * 100) / 100;
   box = box.map(r2);
   const rec = ocrRecord(page);
+  // (no message and no scrolling: the frame's toolbar appears where the user drew, "Remove frame" undoes)
   if (!rec) {
-    if (!(await runSegEdit({ op: "frame", page, box }))) return false;
+    if (!(await runSegEdit({ op: "frame", page, box }, true))) return false;
   } else {
     const r = applyFrameOp(rec.segs, { op: "frame", page, box, ocr: true });
     addOcrResults({ [page]: { segs: r.list, seps: rec.seps, raw: rec.raw, family: rec.family } });
   }
   const frame = doc.segments.find((s) => s.frame && s.page === page && sameBox(s.bbox, box));
   if (!frame || state.doc !== doc) return true;
-  if (rec) {
-    setActive(frame.id, { scrollList: true, scrollViewer: true });
-    toast(t("fx.frameAdded", { n: frame.id }), "ok", { label: t("seg.undo"), run: () => { if (state.doc === doc && segById(frame.id) === frame) removeFormulaFrame(frame.id, true); } });
-  }
+  if (rec) setActive(frame.id, { scrollList: true, scrollViewer: false });
   // The toolbar above the new frame ("TeX" reads it) – the tool stays on for the next frame.
   ensureBoxes(frame.page);
   const el = document.querySelector(`.page .box[data-id="${frame.id}"]`);
   if (el) segBarShow(el);
-  if (frameAutoTex()) await readLatexFor([frame.id]); // (chosen in the bar below the page: every frame read at once)
+  if (frameAutoTex()) await readLatexFor([frame.id], true); // (chosen in the bar below the page: every frame read at once)
   return true;
 }
 

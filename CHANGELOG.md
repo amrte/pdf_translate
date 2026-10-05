@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.53
+
+- **Quieter frames:** drawing a formula frame no longer scrolls the page and shows no message; its toolbar above the frame is the confirmation ("Remove frame" undoes). Reading it as LaTeX at once reports only when a formula could not be read reliably.
+
 ## 2.52
 
 - **Frames read as LaTeX automatically, if wanted.** While the frame tool is on, a bar at the bottom of the page says what to do and offers "read as LaTeX at once" (on by default): every frame drawn by hand is read with the pix2tex model straight away; switched off, the choice is remembered. "Done" in the bar leaves the tool.
