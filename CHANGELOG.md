@@ -4,6 +4,11 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.49
+
+- **Checking the LaTeX by eye:** under a formula's picture, its card now shows the formula as the LaTeX sets it (rendered with KaTeX, fetched from the internet once), so the AI's or the model's reading can be compared with the original at a glance. Red parts are LaTeX mistakes; the LaTeX of a frame can be corrected in the box below, and the preview follows while typing. The same preview appears under the LaTeX of formulas found automatically. Where KaTeX cannot be fetched (offline), the LaTeX stands there as text.
+- **"Formula" button beside "AI":** the formula-frame tool is also switched on and off from the toolbar above the segment list, not only from the rail beside the page.
+
 ## 2.48
 
 - **Formula pictures carry their instructions.** Pasting only a picture into the AI chat left the AI without the prompt. Now every sheet has the instruction for the AI written at its top in short (formulas as LaTeX, words translated, answer as `[[n]]` lines), and a click on a picture button puts the formula prompt on the clipboard as text together with the picture, so chats that take both from one paste get both. The AI window names the order – 1. copy the formula prompt, 2. the pictures, 3. paste the answer – with the prompt button first and highlighted until it has been copied.

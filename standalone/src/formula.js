@@ -403,7 +403,8 @@ function latexRowHtml(s) {
   if (!tex) return `<div class="seg-latex none"><button type="button" class="mini" data-act="latexRead" title="${escapeHtml(t("fx.readTitle"))}">${escapeHtml(t("fx.read"))}</button>${all}</div>`;
   return `<div class="seg-latex"><code class="seg-latex-code" title="LaTeX">${escapeHtml(tex)}</code>`
     + `<button type="button" class="mini" data-act="latexCopy" title="${escapeHtml(t("fx.copyTitle"))}">${escapeHtml(t("fx.copy"))}</button>`
-    + `<button type="button" class="mini" data-act="latexRead" title="${escapeHtml(t("fx.againTitle"))}">↻</button>${all}</div>`;
+    + `<button type="button" class="mini" data-act="latexRead" title="${escapeHtml(t("fx.againTitle"))}">↻</button>${all}</div>`
+    + `<div class="seg-tex" title="${escapeHtml(t("fx.previewTitle"))}" hidden></div>`;
 }
 
 let fxReader = null, fxIdle = 0; // (the reading model stays loaded a minute after use)
@@ -571,6 +572,56 @@ function cleanLatex(text) {
 const segDone = (id) => { const s = segById(id); return s && s.frame ? Boolean(state.latex[id]) : hasTr(id); };
 /** What a segment's card shows in its box: the translation, for a frame its LaTeX. */
 const cardValue = (id) => { const s = segById(id); return (s && s.frame ? state.latex[id] : state.translations[id]) || ""; };
+
+/* ---- LaTeX set as a formula (KaTeX, fetched once): the eye checks it against the picture */
+
+const KATEX_URL = "https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/";
+let katexLoading = null;
+/** KaTeX (script and stylesheet) from the CDN, once; rejects where it cannot be fetched (offline). */
+function loadKatex() {
+  if (window.katex) return Promise.resolve(window.katex);
+  if (!katexLoading) {
+    katexLoading = new Promise((resolve, reject) => {
+      const css = document.createElement("link");
+      css.rel = "stylesheet";
+      css.href = `${KATEX_URL}katex.min.css`;
+      document.head.appendChild(css);
+      const js = document.createElement("script");
+      js.src = `${KATEX_URL}katex.min.js`;
+      js.onload = () => (window.katex ? resolve(window.katex) : reject(new Error("KaTeX")));
+      js.onerror = () => { katexLoading = null; js.remove(); css.remove(); reject(new Error("KaTeX")); };
+      document.head.appendChild(js);
+    });
+  }
+  return katexLoading;
+}
+/**
+ * The LaTeX `tex` set as a formula in `el` (hidden when there is none): what the eye compares with
+ * the picture of the formula. Mistakes KaTeX cannot set are shown in red; without KaTeX (offline)
+ * the LaTeX stands there as text.
+ */
+function texPreview(el, tex) {
+  if (!el) return;
+  tex = (tex || "").trim();
+  el.hidden = !tex;
+  if (!tex) { el.replaceChildren(); return; }
+  el.dataset.tex = tex;
+  loadKatex().then((katex) => {
+    if (el.dataset.tex !== tex) return; // (changed meanwhile)
+    el.classList.remove("plain");
+    katex.render(tex, el, { throwOnError: false, displayMode: true, errorColor: "#d32f2f", strict: "ignore", trust: false, output: "html" });
+  }).catch(() => { el.classList.add("plain"); el.textContent = tex; });
+}
+const texPreviewTimers = new Map();
+/** The preview of a card's formula, a moment after the LaTeX was typed. */
+function texPreviewSoon(id) {
+  clearTimeout(texPreviewTimers.get(id));
+  texPreviewTimers.set(id, setTimeout(() => {
+    texPreviewTimers.delete(id);
+    const card = vl.rendered.get(id);
+    if (card) texPreview(card.querySelector(".seg-tex"), latexOf(segById(id)));
+  }, 350));
+}
 
 /* ---- the pictures: a frame's area of the page, and the sheets for the AI */
 

@@ -157,6 +157,11 @@ svg [fill="#287130"] { fill: var(--accent); } svg [stroke="#287130"] { stroke: v
 .seg-frame img { display: block; max-width: 100%; max-height: 140px; border: 1px solid var(--border); border-radius: 4px; background: #fff; }
 .seg-frame img:not([src]) { width: 100%; height: 36px; }
 .seg.frame .seg-src { padding-top: 2px; }
+.seg-tex { padding: 2px 10px 6px; overflow-x: auto; font-size: 15px; color: var(--text); }
+.seg-tex .katex-display { margin: 4px 0; text-align: left; }
+.seg-tex .katex-display > .katex { text-align: left; }
+.seg-tex.plain { font: 12px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: var(--muted); white-space: pre-wrap; }
+.pane-toolbar .btn.on { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
 .ai-fx { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; padding-top: 10px; border-top: 1px solid var(--border); }
 .page .box.active { border: 2px solid #f0a020; background: rgba(240, 160, 32, .18); z-index: 4; } /* above the markups, so its handles can be grabbed */
 .pages.no-boxes .box:not(.active) { display: none; }
@@ -364,8 +369,8 @@ p.help-part { display: block; }
   .pane-toolbar #btnOcr, .pane-toolbar #btnCopy { padding: 0 7px; }
 }
 @container (max-width: 720px) {
-  .pane-toolbar #btnExport span, .pane-toolbar #btnCopy span, .pane-toolbar #btnAi span, .pane-toolbar #btnImport span { display: none; }
-  .pane-toolbar #btnExport, .pane-toolbar #btnCopy, .pane-toolbar #btnAi, .pane-toolbar #btnImport { padding: 0 7px; }
+  .pane-toolbar #btnExport span, .pane-toolbar #btnCopy span, .pane-toolbar #btnAi span, .pane-toolbar #btnImport span, .pane-toolbar #btnFrame span { display: none; }
+  .pane-toolbar #btnExport, .pane-toolbar #btnCopy, .pane-toolbar #btnAi, .pane-toolbar #btnImport, .pane-toolbar #btnFrame { padding: 0 7px; }
 }
 /* "remove all translations" + toast actions (v1.01) */
 .progress-row .clear-btn { width: 24px; height: 22px; display: inline-grid; place-items: center; color: var(--muted); }

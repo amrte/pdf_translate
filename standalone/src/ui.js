@@ -1193,11 +1193,12 @@ function makeCard(id) {
     </div>
     ${repCardHtml(id)}
     ${styleOpen.has(id) && !isBook() ? stylePanelHtml(s) : ""}
-    ${s.frame ? `<div class="seg-frame" title="${escapeHtml(t("fx.frameThumbTitle"))}"><img alt=""></div>${s.text ? `<div class="seg-src muted small">${srcHtml(s)}</div>` : ""}` : `<div class="seg-src">${srcHtml(s)}</div>${latexRowHtml(s)}`}
+    ${s.frame ? `<div class="seg-frame" title="${escapeHtml(t("fx.frameThumbTitle"))}"><img alt=""></div><div class="seg-tex" title="${escapeHtml(t("fx.previewTitle"))}" hidden></div>${s.text ? `<div class="seg-src muted small">${srcHtml(s)}</div>` : ""}` : `<div class="seg-src">${srcHtml(s)}</div>${latexRowHtml(s)}`}
     <textarea rows="1" spellcheck="${s.frame ? "false" : "true"}" placeholder="${escapeHtml(t(s.frame ? "fx.framePlaceholder" : repLocked(id) ? (repGroup(id).mode === "keep" ? "rep.keepPlaceholder" : "rep.oncePlaceholder") : "card.placeholder", { n: repGroup(id)?.lead }))}" aria-label="${escapeHtml(t("card.aria", { n: id }))}"${repLocked(id) ? " readonly" : ""}></textarea>`;
   if (repGroup(id)) el.classList.add(repLocked(id) ? "rep-locked" : "rep-lead");
   el.querySelector("textarea").value = cardValue(id);
   if (s.frame) frameThumb(el.querySelector(".seg-frame img"), s);
+  if (s.skip) texPreview(el.querySelector(".seg-tex"), latexOf(s)); // (the LaTeX set as a formula, to check it against the picture)
   if (find.open) requestAnimationFrame(() => decorateCard(el, id)); // (once it has its size)
   markWarn(el, id);
   return el;
@@ -1437,7 +1438,7 @@ function mergeImported(parsed, overwrite = $("#importOverwrite").checked) {
   // Update what is on screen; everything else picks the new text up when it is shown.
   for (const [id, el] of vl.rendered) {
     const ta = el.querySelector("textarea");
-    if (ta.value !== cardValue(id)) { ta.value = cardValue(id); autoGrow(ta); }
+    if (ta.value !== cardValue(id)) { ta.value = cardValue(id); autoGrow(ta); if (segById(id)?.frame) texPreview(el.querySelector(".seg-tex"), cardValue(id)); }
     el.classList.toggle("done", segDone(id));
     el.classList.toggle("pending", isPending(id));
     markWarn(el, id);
@@ -1833,7 +1834,7 @@ function init() {
   list.addEventListener("input", (e) => {
     if (e.target.tagName !== "TEXTAREA") return;
     const id = Number(e.target.closest(".seg").dataset.id);
-    if (segById(id)?.frame) setFrameLatex(id, e.target.value); else setTranslation(id, e.target.value); // (a frame's box holds its LaTeX)
+    if (segById(id)?.frame) { setFrameLatex(id, e.target.value); texPreviewSoon(id); } else setTranslation(id, e.target.value); // (a frame's box holds its LaTeX)
     autoGrow(e.target);
   });
   list.addEventListener("change", (e) => { // fires when a changed translation box is left

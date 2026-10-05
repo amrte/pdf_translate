@@ -222,6 +222,7 @@ function setTool(tool) {
   pages.classList.toggle("drawing", tool !== "select" && tool !== "eraser");
   pages.classList.toggle("erasing", tool === "eraser");
   pages.dataset.tool = tool;
+  $("#btnFrame")?.classList.toggle("on", tool === "formula"); // (the Formula button beside AI)
   if (tool !== "select") select(null);
   updateSwatches();
   updateNoteBar();
@@ -789,6 +790,7 @@ function initMarkup() {
   pages.addEventListener("click", (e) => { if (mk.tool !== "select" || e.target.closest(".mk")) e.stopPropagation(); }, true);
 
   document.querySelectorAll("#toolRail .tool[data-tool]").forEach((b) => b.addEventListener("click", () => setTool(b.dataset.tool)));
+  $("#btnFrame").addEventListener("click", () => { if (state.doc && !isBook()) setTool(mk.tool === "formula" ? "select" : "formula"); });
   document.querySelectorAll("#toolRail .swatch").forEach((b) => b.addEventListener("click", () => {
     const color = b.dataset.color;
     const sel = state.markups.find((m) => m.id === mk.selected);
