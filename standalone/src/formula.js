@@ -543,7 +543,7 @@ async function addFormulaFrame(page, box) {
 
 /* ---- the bar below the page while the frame tool is on: what to do, "read at once", Done */
 const LS_AUTOTEX = "pdftr:frame-autotex";
-const frameAutoTex = () => { try { return localStorage.getItem(LS_AUTOTEX) === "1"; } catch (_) { return false; } };
+const frameAutoTex = () => { try { return localStorage.getItem(LS_AUTOTEX) !== "0"; } catch (_) { return true; } }; // (on unless switched off)
 function frameHintShow(on) {
   const bar = $("#frameHint");
   if (!bar) return;

@@ -6,7 +6,7 @@ shown in the app's top bar and help dialog.
 
 ## 2.52
 
-- **Frames read as LaTeX automatically, if wanted.** While the frame tool is on, a bar at the bottom of the page says what to do and offers "read as LaTeX at once": with it ticked, every frame drawn by hand is read with the pix2tex model straight away (the choice is remembered). "Done" in the bar leaves the tool.
+- **Frames read as LaTeX automatically, if wanted.** While the frame tool is on, a bar at the bottom of the page says what to do and offers "read as LaTeX at once" (on by default): every frame drawn by hand is read with the pix2tex model straight away; switched off, the choice is remembered. "Done" in the bar leaves the tool.
 
 ## 2.51
 
