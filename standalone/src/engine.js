@@ -3522,13 +3522,15 @@ function ocrToBlocks(data, zoom, origin, colors) {
  *   standing one above the other (numerator, bar, denominator) or alone.
  * Returns the lines with the formulas' lines replaced (in place of their first line).
  */
-function formulaRegions(lines, boxes = []) {
+function formulaRegions(lines, boxes = [], { barOf = null } = {}) {
   const box = (l) => [Math.min(...l.words.map((w) => w.bbox[0])), Math.min(...l.words.map((w) => w.bbox[1])), Math.max(...l.words.map((w) => w.bbox[2])), Math.max(...l.words.map((w) => w.bbox[3]))];
   const textOf = (l) => l.words.map((w) => w.text).join(" ");
+  // Words of prose: read with confidence and shaped like words ("Gleichung", "die"; capitals only
+  // when long and sure) – what OCR makes of a formula ("JOCN", "jot,", "Roll" read at 0) is none.
+  const realWords = (l) => l.words.flatMap((w) => proseWords(w.text).filter((x) => (w.conf >= 80 && /^\p{Lu}?\p{Ll}+$/u.test(x)) || (w.conf >= 90 && x.length >= 5 && /^\p{Lu}+$/u.test(x))));
   const prose = (l) => {
-    const t = textOf(l);
-    const words = proseWords(t);
-    return words.length >= 3 || words.some((w) => w.length >= 6 && /^\p{Lu}?\p{Ll}+$/u.test(w)) && words.length >= 2;
+    const words = realWords(l);
+    return words.length >= 3 || words.some((w) => w.length >= 6) && words.length >= 2;
   };
   const conf = (l) => l.words.reduce((a, w) => a + w.conf, 0) / l.words.length;
   const mathy = (l) => {
@@ -3537,9 +3539,10 @@ function formulaRegions(lines, boxes = []) {
     if (/[=≈≠≤≥±∓×÷·⋅√∑∏∫∂∞∝∇∆Δ\u0370-\u03ff]/u.test(t.replace(GREEK_WORD_RE, " ")) && /\p{L}/u.test(t)) return true;
     return conf(l) < 45 && t.replace(/\s/g, "").length >= 3 && !/\p{L}{4,}/u.test(t); // (a formula OCR could not read; not a faint word)
   };
+  // (made of symbols: letters, digits, signs – no word of four letters read with confidence)
+  const symbolic = (l) => !prose(l) && !realWords(l).some((w) => w.length >= 4) && /[\p{L}\p{N}]/u.test(textOf(l));
   const inside = (b, r, tol) => { const cx = (b[0] + b[2]) / 2, cy = (b[1] + b[3]) / 2; return cx >= r[0] - tol && cx <= r[2] + tol && cy >= r[1] - tol && cy <= r[3] + tol; };
   const taken = new Set(), regions = [], boxSeeds = new Set();
-  const symbolic = (l) => !/\p{L}{3,}/u.test(textOf(l).replace(MATH_FUNC_RE_G, "")) && /\p{L}/u.test(textOf(l));
   for (const r of boxes) {
     const members = lines.filter((l) => !taken.has(l) && inside(box(l), r, 0.3 * l.size));
     if (!members.length) continue;
@@ -3550,18 +3553,29 @@ function formulaRegions(lines, boxes = []) {
     if (keep.length < members.length) { for (const l of keep) if (mathy(l) || symbolic(l)) boxSeeds.add(l); continue; }
     const group = keep;
     let reg = r.slice();
-    for (const l of group) { const b = box(l); reg = reg ? [Math.min(reg[0], b[0]), Math.min(reg[1], b[1]), Math.max(reg[2], b[2]), Math.max(reg[3], b[3])] : b; taken.add(l); }
+    for (const l of group) { const b = box(l); reg = [Math.min(reg[0], b[0]), Math.min(reg[1], b[1]), Math.max(reg[2], b[2]), Math.max(reg[3], b[3])]; taken.add(l); }
     regions.push({ box: reg, lines: group });
   }
-  // Without the model (or what it missed): lines that look like a formula, the ones stacked above
-  // each other joined (a fraction's parts overlap sideways and follow closely).
-  const cand = lines.filter((l) => !taken.has(l) && (mathy(l) || boxSeeds.has(l) || (l.words.length <= 2 && symbolic(l))));
-  const seeds = cand.filter((l) => mathy(l) || boxSeeds.has(l));
+  // Without the model (or what it missed): lines that look like a formula – math signs, or a part
+  // of a fraction: a piece made of symbols with a fraction bar below or above it on the page
+  // (`barOf(box, size)`, page points) – and the pieces around them: those stacked closely above or
+  // below (the bar counts to the formula), and those made of symbols beside them on the same band.
+  const free = lines.filter((l) => !taken.has(l) && !prose(l) && l.words.length <= 8);
+  const bars = new Map();
+  // (a fraction's part: letters with no run of four – "R₁", "jωC₂", "Cx Cn" – not a word read
+  // unsure, nor a number in a table)
+  const fractionLike = (l) => { const t = textOf(l); return /\p{L}/u.test(t) && !/\p{L}{4,}/u.test(t.replace(MATH_FUNC_RE_G, "")); };
+  if (barOf) for (const l of free) if (fractionLike(l) && (mathy(l) || symbolic(l))) { const b = barOf(box(l), l.size); if (b) bars.set(l, b); }
+  const cand = free.filter((l) => mathy(l) || boxSeeds.has(l) || bars.has(l) || symbolic(l));
+  const seeds = cand.filter((l) => mathy(l) || boxSeeds.has(l) || bars.has(l));
+  if (typeof self !== "undefined" && self.FXDEBUG) console.warn("FXSEED", JSON.stringify(lines.map((l) => [textOf(l), Math.round(conf(l)), box(l).map(Math.round), prose(l) ? "P" : "", mathy(l) ? "M" : "", symbolic(l) ? "S" : "", bars.has(l) ? "F" + bars.get(l).map(Math.round) : ""].join(" ")).filter((x) => / [MF]/.test(x))));
   for (const seed of seeds) {
     if (taken.has(seed)) continue;
     const group = [seed];
     taken.add(seed);
     let reg = box(seed);
+    const sb = bars.get(seed);
+    if (sb) reg = [Math.min(reg[0], sb[0]), Math.min(reg[1], sb[1]), Math.max(reg[2], sb[2]), Math.max(reg[3], sb[3])];
     for (let grown = true; grown;) {
       grown = false;
       for (const l of cand) {
@@ -3569,24 +3583,42 @@ function formulaRegions(lines, boxes = []) {
         const b = box(l), h = Math.max(l.size, seed.size);
         const overlapX = Math.min(b[2], reg[2]) - Math.max(b[0], reg[0]);
         const gapY = Math.max(b[1] - reg[3], reg[1] - b[3]);
-        if (overlapX > 0.3 * Math.min(b[2] - b[0], reg[2] - reg[0]) && gapY < 1.3 * h) {
+        const overlapY = Math.min(b[3], reg[3]) - Math.max(b[1], reg[1]);
+        const gapX = Math.max(b[0] - reg[2], reg[0] - b[2]);
+        // (only pieces like a formula's: symbols, no run of four letters, or what OCR could hardly
+        // read without a word read surely in it – a label beside a symbol in a drawing stays text)
+        const part = mathy(l) || bars.has(l) || fractionLike(l) || (conf(l) < 60 && !realWords(l).some((w) => w.length >= 4));
+        const stacked = part && overlapX > 0.3 * Math.min(b[2] - b[0], reg[2] - reg[0]) && gapY < 1.3 * h && (l.words.length <= 2 || mathy(l) || bars.has(l));
+        const beside = part && overlapY > 0.5 * (b[3] - b[1]) && gapX < 2 * h;
+        if (stacked || beside) {
           group.push(l); taken.add(l); grown = true;
           reg = [Math.min(reg[0], b[0]), Math.min(reg[1], b[1]), Math.max(reg[2], b[2]), Math.max(reg[3], b[3])];
+          const lb = bars.get(l);
+          if (lb) reg = [Math.min(reg[0], lb[0]), Math.min(reg[1], lb[1]), Math.max(reg[2], lb[2]), Math.max(reg[3], lb[3])];
         }
       }
+    }
+    // (what OCR made of the formula's middle – garbled pieces inside its area – belongs to it)
+    for (const l of cand) {
+      if (taken.has(l)) continue;
+      const b = box(l), cut = Math.max(0, Math.min(b[2], reg[2]) - Math.max(b[0], reg[0])) * Math.max(0, Math.min(b[3], reg[3]) - Math.max(b[1], reg[1]));
+      if (cut >= 0.6 * (b[2] - b[0]) * (b[3] - b[1])) { group.push(l); taken.add(l); }
     }
     regions.push({ box: reg, lines: group });
   }
   if (!regions.length) return lines;
   // (regions that overlap – a piece beside a fraction, a box the model drew around part of a
-  // formula found by its signs – are one formula)
+  // formula found by its signs – or that follow each other closely on one line are one formula)
   const area = (b) => Math.max(0, b[2] - b[0]) * Math.max(0, b[3] - b[1]);
+  const lineSize = (g) => Math.max(...g.lines.map((l) => l.size));
   for (let merged = true; merged;) {
     merged = false;
     for (let i = 0; i < regions.length && !merged; i++) for (let j = i + 1; j < regions.length && !merged; j++) {
       const a = regions[i].box, c = regions[j].box;
       const cut = area([Math.max(a[0], c[0]), Math.max(a[1], c[1]), Math.min(a[2], c[2]), Math.min(a[3], c[3])]);
-      if (cut > 0.2 * Math.min(area(a), area(c))) {
+      const h = Math.max(lineSize(regions[i]), lineSize(regions[j]));
+      const along = Math.min(a[3], c[3]) - Math.max(a[1], c[1]) > 0.3 * Math.min(a[3] - a[1], c[3] - c[1]) && Math.max(c[0] - a[2], a[0] - c[2]) < 1.5 * h;
+      if (cut > 0.2 * Math.min(area(a), area(c)) || along) {
         regions[i] = { box: [Math.min(a[0], c[0]), Math.min(a[1], c[1]), Math.max(a[2], c[2]), Math.max(a[3], c[3])], lines: regions[i].lines.concat(regions[j].lines) };
         regions.splice(j, 1);
         merged = true;

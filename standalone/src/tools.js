@@ -719,15 +719,102 @@ async function ocrFormulas(block, img, zoom, page, finder, reader, data) {
     const line = { size: body0, base: r[3] - 0.25 * (r[3] - r[1]), color: fg, bg, bold: false, words }, at = block.lines.findIndex((l) => l.base > line.base);
     block.lines.splice(at < 0 ? block.lines.length : at, 0, line); // (in reading order)
   });
-  block.lines = Engine.formulaRegions(block.lines, boxes);
-  if (!reader) return;
+  // A fraction bar next to a piece (`B`, page points; `size` its letter size): a thin row of ink
+  // just below or above it, through its middle, at least about as wide as the piece, with ink on
+  // the bar's other side too (the other part of the fraction – an underline has none) and not much
+  // longer than a formula (a table's rule runs on). Returns the bar's box (page points) or null.
+  const dark = (x, y) => { const i = (y * img.width + x) * 4, d = img.data; return 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2] < 140; };
+  const barOf = (B, size) => {
+    const X = (v) => Math.round((v - page.x0) * zoom), Y = (v) => Math.round((v - page.y0) * zoom);
+    const em = size * zoom, x0 = X(B[0]), x1 = X(B[2]), w = x1 - x0;
+    // (looked for through the piece's quarters too: a piece can hold two fractions' parts)
+    const probes = [0.5, 0.25, 0.75].map((f) => Math.round(x0 + f * w)).filter((x) => x >= 0 && x < img.width);
+    for (const below of [true, false]) {
+      const ya = Math.max(3, below ? Math.round(Y(B[3]) - 0.3 * em) : Math.round(Y(B[1]) - 0.9 * em));
+      const yb = Math.min(img.height - 4, below ? Math.round(Y(B[3]) + 0.9 * em) : Math.round(Y(B[1]) + 0.3 * em));
+      for (let y = ya; y <= yb; y++) for (const cx of probes) {
+        if (!dark(cx, y)) continue;
+        let l = cx, r = cx;
+        while (l > 0 && (dark(l - 1, y) || (l > 1 && dark(l - 2, y)))) l--;
+        while (r < img.width - 1 && (dark(r + 1, y) || (r < img.width - 2 && dark(r + 2, y)))) r++;
+        const len = r - l + 1;
+        if (len < Math.max(0.6 * em, 0.3 * w) || len > 15 * em) continue;
+        let thick = 0;
+        for (let x = l; x <= r; x++) if (dark(x, y - 3) && dark(x, y + 3)) thick++;
+        if (thick > 0.3 * len) continue; // (a row through letters, not a bar)
+        // (the parts of a fraction are no wider than its bar: text running past a piece of line –
+        // a table's border, broken on the scan – is no numerator)
+        if (x0 < l - 0.4 * em || x1 > r + 0.4 * em) continue;
+        // (a table's or box's border meets vertical lines – at its ends or across it; a fraction bar
+        // stands free)
+        const reach = Math.max(4, Math.round(0.6 * em));
+        const upright = (x) => {
+          let up = 0, down = 0;
+          for (let k = 2; k <= reach; k++) { if (y - k >= 0 && (dark(x, y - k) || dark(Math.max(0, x - 1), y - k) || dark(Math.min(img.width - 1, x + 1), y - k))) up++; if (y + k < img.height && (dark(x, y + k) || dark(Math.max(0, x - 1), y + k) || dark(Math.min(img.width - 1, x + 1), y + k))) down++; }
+          return up >= 0.9 * (reach - 1) || down >= 0.9 * (reach - 1);
+        };
+        let ruled = upright(l) || upright(r);
+        for (let x = l + 2; x <= r - 2 && !ruled; x += 1) if (upright(x)) {
+          // (a vertical line, not a letter standing on the bar: thin)
+          let width = 1;
+          while (x + width <= r && upright(x + width)) width++;
+          if (width <= Math.max(3, 0.12 * em)) ruled = true;
+          x += width;
+        }
+        if (ruled) continue;
+        const from = below ? y + 3 : Math.max(0, Math.round(y - 0.9 * em)), to = below ? Math.min(img.height - 1, Math.round(y + 0.9 * em)) : y - 3;
+        let other = 0;
+        for (let x = l; x <= r; x += 2) for (let yy = from; yy <= to; yy++) if (dark(x, yy)) { other++; break; }
+        if (other < 0.1 * (len / 2)) continue; // (a "1" over a long bar is enough)
+        return [l / zoom + page.x0, y / zoom + page.y0, (r + 1) / zoom + page.x0, y / zoom + page.y0];
+      }
+    }
+    return null;
+  };
+  block.lines = Engine.formulaRegions(block.lines, boxes, { barOf });
   const sizes = block.lines.filter((l) => !l.fx).map((l) => l.size).sort((a, b) => a - b);
   const body = sizes.length ? sizes[sizes.length >> 1] : 10;
+  const regions = [];
   for (const l of block.lines) {
-    if (!l.fx || ocrCancel) continue;
+    if (!l.fx) continue;
     const [x0, y0, x1, y1] = l.fx.box, px = { x0: (x0 - page.x0) * zoom, y0: (y0 - page.y0) * zoom, x1: (x1 - page.x0) * zoom, y1: (y1 - page.y0) * zoom };
+    // (the formula's picture stays clear of the text lines above and below)
+    const near = block.lines.filter((o) => o !== l && !o.fx).map((o) => [Math.min(...o.words.map((w) => w.bbox[0])), Math.min(...o.words.map((w) => w.bbox[1])), Math.max(...o.words.map((w) => w.bbox[2])), Math.max(...o.words.map((w) => w.bbox[3]))])
+      .filter((b) => Math.min(b[2], x1) > Math.max(b[0], x0));
+    const mid = (y0 + y1) / 2, above = near.filter((b) => b[3] <= mid).map((b) => b[3]), below = near.filter((b) => b[1] >= mid).map((b) => b[1]);
+    const limit = { y0: ((above.length ? Math.max(...above) : -1e9) - page.y0) * zoom, y1: ((below.length ? Math.min(...below) : 1e9) - page.y0) * zoom };
+    // Parts OCR did not find – the "1" over a fraction bar – belong to the formula too: its area
+    // grows over the ink above and below it, up to a blank band or the next text line.
+    const blank = Math.max(3, 0.4 * body * zoom);
+    // (sideways too, along its band: a fraction OCR did not read at all, at the line's end – up to
+    // a gap of an em and a half, or a word of the text)
+    const words = block.lines.filter((o) => o !== l).flatMap((o) => o.words.map((w) => [(w.bbox[0] - page.x0) * zoom, (w.bbox[1] - page.y0) * zoom, (w.bbox[2] - page.x0) * zoom, (w.bbox[3] - page.y0) * zoom]))
+      .filter((b) => Math.min(b[3], px.y1) > Math.max(b[1], px.y0));
+    const colInk = (x) => { if (x < 0 || x >= img.width) return false; for (let y = Math.max(0, Math.floor(px.y0)); y < Math.min(img.height, px.y1); y++) if (dark(x, y)) return true; return false; };
+    const sideGap = Math.max(4, 1.5 * body * zoom);
+    for (const dir of [-1, 1]) {
+      const wall = dir < 0 ? Math.max(0, ...words.filter((b) => b[2] <= px.x0).map((b) => b[2])) : Math.min(img.width - 1, ...words.filter((b) => b[0] >= px.x1).map((b) => b[0]));
+      let x = Math.round(dir < 0 ? px.x0 : px.x1), gap = 0, edge = x;
+      while ((dir < 0 ? x > wall : x < wall) && gap < sideGap) { x += dir; if (colInk(x)) { gap = 0; edge = x; } else gap++; }
+      if (dir < 0) px.x0 = Math.min(px.x0, edge); else px.x1 = Math.max(px.x1, edge);
+    }
+    const rowInk = (y) => { if (y < 0 || y >= img.height) return false; for (let x = Math.max(0, Math.floor(px.x0)); x < Math.min(img.width, px.x1); x++) if (dark(x, y)) return true; return false; };
+    for (const dir of [-1, 1]) {
+      const stop = dir < 0 ? Math.max(0, limit.y0) : Math.min(img.height - 1, limit.y1);
+      let y = Math.round(dir < 0 ? px.y0 : px.y1), gap = 0, edge = y;
+      while ((dir < 0 ? y > stop : y < stop) && gap < blank) { y += dir; if (rowInk(y)) { gap = 0; edge = y; } else gap++; }
+      if (dir < 0) px.y0 = Math.min(px.y0, edge); else px.y1 = Math.max(px.y1, edge);
+    }
+    l.fx.box = [px.x0 / zoom + page.x0, px.y0 / zoom + page.y0, px.x1 / zoom + page.x0, px.y1 / zoom + page.y0].map((v) => Math.round(v * 100) / 100);
+    regions.push({ l, px, limit });
+  }
+  if (!reader) return;
+  for (const { l, px, limit } of regions) {
+    if (ocrCancel) return;
+    // (the formula's own words help with a word between two formulas)
+    const texts = l.words.map((w) => ({ x0: (w.bbox[0] - page.x0) * zoom, x1: (w.bbox[2] - page.x0) * zoom, text: w.text }));
     try {
-      const r = await reader.read(formulaCrop(img, px, body * zoom));
+      const r = await readFormulaBest(reader, img, px, body * zoom, { limit, texts });
       if (r.latex && r.conf >= FORMULA_SURE) l.fx.latex = r.latex;
     } catch (err) { console.warn("formula", err); }
   }

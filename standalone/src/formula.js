@@ -156,7 +156,16 @@ function formulaWorkerMain() {
     }
     if (looping || ids.length >= most) return { latex: "", conf: 0 };
     const raw = ids.slice(1).map((i) => vocab[i] || "").join("").replace(/Ġ/g, " ").replace(/\[(?:EOS|BOS|PAD)\]/g, "").trim();
-    return { latex: tidy(raw), conf: probs.length ? probs.reduce((a, b) => a + b, 0) / probs.length : 0 };
+    // (the same one to four tokens over and over, anywhere: a decoder caught in a loop for a while –
+    // what it wrote there is no formula, however sure each step was)
+    const seq = ids.slice(1);
+    let stuck = false;
+    for (let k = 1; k <= 4 && !stuck; k++) {
+      let run = 0;
+      for (let i = k; i < seq.length && !stuck; i++) { run = seq[i] === seq[i - k] ? run + 1 : 0; if (run >= 12) stuck = true; }
+    }
+    const mean = probs.length ? probs.reduce((a, b) => a + b, 0) / probs.length : 0;
+    return { latex: tidy(raw), conf: stuck ? mean * 0.8 : mean };
   }
 
   /** pix2tex's own clean-up: spaces that LaTeX does not need go (between signs, and next to them). */
@@ -231,13 +240,80 @@ async function makeFormulaWorker({ find = false, read = false } = {}, onProgress
 }
 
 /**
- * Part of a page picture (ImageData) cut out around `box` (pixels) with a white margin, scaled so
- * that letters of `emPx` pixels come out FORMULA_EM_PX tall: what readFormula wants.
+ * The surest reading of a formula's picture (`box` in the page picture's pixels). The letter size
+ * of `emPx` is a guess (a formula is often set larger or smaller than the page's text), so when the
+ * reading is unsure the formula is read smaller and larger too, and the surest reading is kept. A
+ * long line with gaps in it – two formulas with "bzw." between them – that does not read with
+ * confidence as a whole is read in its parts (joined with \qquad; a short part the model cannot
+ * read, a word between formulas, comes from the OCR's `texts` [{x0, x1, text}] as \text{…}).
+ * `limit` {y0, y1}: the cut-out stays between the text lines above and below.
  */
-function formulaCrop(img, box, emPx) {
+async function readFormulaBest(reader, img, box, emPx, { limit = null, texts = [] } = {}) {
+  const readScaled = async (b) => {
+    let best = { latex: "", conf: 0 };
+    for (const f of [1, 0.75, 1.35, 0.55]) {
+      const r = await reader.read(formulaCrop(img, b, emPx / f, limit));
+      if (r.conf > best.conf) best = r;
+      if (best.conf >= FORMULA_SURE + 0.02) break;
+    }
+    return best;
+  };
+  // (parts first: shorter pictures read faster and surer – the decoder's work grows with the
+  // square of the length)
+  const parts = formulaParts(img, box, emPx);
+  let split = null;
+  if (parts.length >= 2) {
+    const out = [];
+    let conf = 1;
+    for (const part of parts) {
+      // (a short part that OCR read as a word – "bzw.", "und" – is that word)
+      const words = texts.filter((w) => (w.x0 + w.x1) / 2 >= part.x0 && (w.x0 + w.x1) / 2 <= part.x1).map((w) => w.text).join(" ").trim();
+      const short = part.x1 - part.x0 <= 5 * emPx, plain = /^\p{L}{2,}[.:,;]*$/u.test(words);
+      if (short && plain) { out.push(`\\text{${words}}`); continue; }
+      const r = await readScaled(part);
+      if (r.latex && r.conf >= FORMULA_SURE) { out.push(r.latex); conf = Math.min(conf, r.conf); continue; }
+      if (!short || !words || /[\\{}$^_%#&]/.test(words)) { conf = 0; break; }
+      out.push(`\\text{${words}}`);
+    }
+    if (conf >= FORMULA_SURE) split = { latex: out.join("\\qquad "), conf };
+    if (split && split.conf >= FORMULA_SURE + 0.02) return split;
+  }
+  const whole = await readScaled(box);
+  return split && split.conf >= whole.conf ? split : whole;
+}
+/** A formula's box (pixels) cut at gaps without ink of two letters and more: its parts side by side. */
+function formulaParts(img, box, emPx) {
+  const x0 = Math.max(0, Math.floor(box.x0)), x1 = Math.min(img.width - 1, Math.ceil(box.x1));
+  const y0 = Math.max(0, Math.floor(box.y0)), y1 = Math.min(img.height - 1, Math.ceil(box.y1)), d = img.data;
+  const inked = [];
+  for (let x = x0; x <= x1; x++) {
+    let ink = false;
+    for (let y = y0; y <= y1 && !ink; y++) { const i = (y * img.width + x) * 4; ink = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2] < 140; }
+    inked.push(ink);
+  }
+  const parts = [], least = 2 * emPx;
+  let start = -1, gap = 0;
+  inked.forEach((ink, k) => {
+    if (ink) {
+      if (start < 0) start = k;
+      else if (gap >= least) { parts.push([start, k - gap - 1]); start = k; }
+      gap = 0;
+    } else if (start >= 0) gap++;
+  });
+  if (start >= 0) parts.push([start, inked.length - 1 - gap]);
+  return parts.map(([a, b]) => ({ x0: x0 + a, x1: x0 + b + 1, y0: box.y0, y1: box.y1 }));
+}
+
+/**
+ * Part of a page picture (ImageData) cut out around `box` (pixels) with a white margin, scaled so
+ * that letters of `emPx` pixels come out FORMULA_EM_PX tall: what readFormula wants. `limit`
+ * {y0, y1}: the margin does not reach past it (the text lines above and below).
+ */
+function formulaCrop(img, box, emPx, limit = null) {
   const s = FORMULA_EM_PX / Math.max(4, emPx), m = 0.25 * emPx;
-  const x0 = Math.max(0, Math.floor(box.x0 - m)), y0 = Math.max(0, Math.floor(box.y0 - m));
-  const x1 = Math.min(img.width, Math.ceil(box.x1 + m)), y1 = Math.min(img.height, Math.ceil(box.y1 + m));
+  const top = limit ? Math.max(limit.y0, box.y0 - m) : box.y0 - m, bottom = limit ? Math.min(limit.y1, box.y1 + m) : box.y1 + m;
+  const x0 = Math.max(0, Math.floor(box.x0 - m)), y0 = Math.max(0, Math.floor(top));
+  const x1 = Math.min(img.width, Math.ceil(box.x1 + m)), y1 = Math.min(img.height, Math.ceil(bottom));
   const w = Math.max(1, x1 - x0), h = Math.max(1, y1 - y0);
   const src = new OffscreenCanvas(w, h);
   src.getContext("2d").putImageData(img, -x0, -y0, x0, y0, w, h);
@@ -364,7 +440,12 @@ async function readLatexFor(ids) {
       }
       const page = doc.pages[g.page], img = pages.get(g.page), [x0, y0, x1, y1] = g.bbox;
       const box = { x0: (x0 - page.x0) * zoom, y0: (y0 - page.y0) * zoom, x1: (x1 - page.x0) * zoom, y1: (y1 - page.y0) * zoom };
-      const r = await fxReader.read(formulaCrop(img, box, FORMULA_EM_PX));
+      // (clear of the other text above and below; the pieces' own text for a word between formulas)
+      const others = doc.segments.filter((o) => o.page === g.page && o.bbox && !g.ids.includes(o.id) && Math.min(o.bbox[2], x1) > Math.max(o.bbox[0], x0));
+      const mid = (y0 + y1) / 2, above = others.filter((o) => o.bbox[3] <= mid).map((o) => o.bbox[3]), below = others.filter((o) => o.bbox[1] >= mid).map((o) => o.bbox[1]);
+      const limit = { y0: ((above.length ? Math.max(...above) : -1e9) - page.y0) * zoom, y1: ((below.length ? Math.min(...below) : 1e9) - page.y0) * zoom };
+      const texts = g.ids.map((id) => segById(id)).filter(Boolean).map((o) => ({ x0: (o.bbox[0] - page.x0) * zoom, x1: (o.bbox[2] - page.x0) * zoom, text: o.text }));
+      const r = await readFormulaBest(fxReader, img, box, FORMULA_EM_PX, { limit, texts });
       if (r.latex && r.conf >= FORMULA_SURE) { state.latex[g.lead] = r.latex; read++; } else unsure++;
     }
   } catch (err) {

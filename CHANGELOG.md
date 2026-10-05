@@ -4,6 +4,13 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.46
+
+- **Formulas on scans recognised and read far better.** A formula such as 1/(jωCx) = 1/(jωCN) · R₁/(R₂‖1/(jωC₂)) bzw. 1/Cx = … came out of OCR as scattered pieces ("jot, 1 JOCN 1 Ry Ri JOL? bzw …"), partly translated, with no LaTeX:
+  - **Found without the layout model too:** fraction bars on the scan mark a formula (a thin line with the fraction's parts above and below it, not wider than them – table borders and underlines do not count); the pieces around it join it, also what OCR could only read as gibberish, and the formula's area grows over ink OCR missed (a "1" over a bar). Garbled pieces no longer count as prose ("JOCN", "jot," are not words); words read with confidence still keep a line as text, so labels in drawings stay translatable.
+  - **LaTeX read reliably:** the formula is read at its own letter size (tried smaller and larger when unsure), clear of the text lines around it; a line with two formulas is read in its parts, a word between them ("bzw.") as `\text{bzw.}`; a reading stuck in a loop is not taken.
+  - In a test, the formula above now reads correctly with Tesseract and with PaddleOCR, with and without the layout model.
+
 ## 2.45
 
 - **Offline libraries: what can be fetched is kept.** When some files could not be downloaded (blocked on the computer, no connection), "Download as ZIP" stopped and saved nothing. Now the ZIP is made from all files that came through (named `…-partial.zip`); the message names the missing ones, and the ZIP holds a list of them with their addresses (`MISSING-FEHLT.txt`), so they can be downloaded by hand (e.g. on another computer). Chosen together with the ZIP – "Load ZIP file…" now also accepts the loose files, or "Load folder…" – they complete the set. "Store directly in the browser" likewise stores what it got and keeps files stored earlier for this version. A set without the document engine (MuPDF) still brings the rest while the engine comes from the internet.
