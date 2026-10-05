@@ -992,7 +992,10 @@ function splitColumns(rows) {
     for (let k = 1; k < it.chunk.length; k++) {
       const prev = it.chunk[k - 1], cur = it.chunk[k];
       const size = Math.max(prev.size, cur.size), gap = gapOf(prev, cur, it.rot);
-      if (cur.gapBefore && gap >= 0.4 * size && gap >= 1.6 * typical * size && !MARKER_ONLY_RE.test(spansText(it.chunk.slice(0, k), it.rot))) {
+      // (recognised text needs a gap of two letter heights at least: a typewriter puts every letter
+      // on a grid, so its wide spaces stand one above the other by chance and look like a gutter)
+      const least = cur.ocr ? Math.max(2.0, 1.6 * typical) : Math.max(0.4, 1.6 * typical);
+      if (cur.gapBefore && gap >= least * size && !MARKER_ONLY_RE.test(spansText(it.chunk.slice(0, k), it.rot))) {
         cands.push({ x: localBox(cur.bbox, it.rot)[0], base: it.base, rot: it.rot, chunk: it.chunk, k, size, row: it.row });
       }
     }
@@ -3397,9 +3400,12 @@ function ocrToBlocks(data, zoom, origin, colors) {
   // Colours measured line by line vary a little; near ones are made equal, so that the lines of
   // one paragraph keep one colour (a colour change starts a new segment).
   const palette = [];
+  // Dark grey and black ink are one ink on a scan (a typewriter strikes some lines fainter): only a
+  // colour of its own (red, blue …) starts a new paragraph.
+  const greyInk = (c) => Math.max(...c) - Math.min(...c) < 36 && 0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2] < 150;
   const snap = (hex, tol) => { // (paper colours must stay close: a patch shows on grey table heads)
     const c = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
-    for (const p of palette) if (p.tol === tol && Math.hypot(p.c[0] - c[0], p.c[1] - c[1], p.c[2] - c[2]) < tol) return p.hex;
+    for (const p of palette) if (p.tol === tol && (Math.hypot(p.c[0] - c[0], p.c[1] - c[1], p.c[2] - c[2]) < tol || (tol === 48 && greyInk(p.c) && greyInk(c)))) return p.hex;
     palette.push({ c, hex, tol });
     return hex;
   };
@@ -3508,7 +3514,8 @@ function mergeRowPieces(lines, seps) {
     const a = lines[i];
     for (let j = i + 1; j < lines.length; j++) {
       const b = lines[j], size = Math.min(a.size, b.size);
-      if (Math.abs(a.base - b.base) > 0.3 * size || Math.max(a.size, b.size) > 1.35 * size) continue;
+      // (a piece of only small letters – "gering-" – measures smaller than its row: up to 1.6 times is one size)
+      if (Math.abs(a.base - b.base) > 0.3 * size || Math.max(a.size, b.size) > 1.6 * size) continue;
       const [a0, a1] = span(a), [b0, b1] = span(b);
       const left = a1 <= b0 + 0.3 * size ? [a1, b0] : b1 <= a0 + 0.3 * size ? [b1, a0] : null;
       if (!left) continue; // (overlapping pieces are not one row read twice)

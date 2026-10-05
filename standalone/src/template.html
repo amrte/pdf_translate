@@ -478,6 +478,7 @@
         <li data-i18n="help.offTessCorePlain"></li>
         <li data-i18n="help.offLangs"></li>
         <li data-i18n="help.offHeif"></li>
+        <li data-i18n="help.offPaddle"></li>
       </ul>
       <p class="muted small" data-i18n="help.offlineHow"></p>
     </section>
@@ -535,6 +536,7 @@
       <p class="muted small" data-i18n="offline.text"></p>
       <p class="small" id="offlineStatus"></p>
       <div class="field"><span data-i18n="offline.langsTitle"></span><div class="ocr-langs" id="offlineLangs"></div></div>
+      <label class="check" data-i18n-title="offline.paddleTitle"><input type="checkbox" id="offlinePaddle"> <span data-i18n="offline.paddle"></span></label>
       <div class="wf-row offline-actions">
         <button type="button" class="btn primary" id="offlineZipBtn" data-i18n="offline.zip"></button>
         <button type="button" class="btn" id="offlineLoadZip" data-i18n="offline.loadZip"></button>
@@ -795,6 +797,12 @@
   <form method="dialog">
     <h2 id="ocrTitle" data-i18n="ocr.title">Text recognition (OCR)</h2>
     <p class="muted" data-i18n="ocr.text"></p>
+    <div class="field"><span data-i18n="ocr.engine">Recognition engine</span>
+      <div class="ocr-engines">
+        <label class="check" data-i18n-title="ocr.engineTessTitle"><input type="radio" name="ocrEngine" id="ocrEngineTess" value="tesseract" checked> <span data-i18n="ocr.engineTess">Tesseract</span></label>
+        <label class="check" data-i18n-title="ocr.enginePaddleTitle"><input type="radio" name="ocrEngine" id="ocrEnginePaddle" value="paddle"> <span data-i18n="ocr.enginePaddle">PaddleOCR</span></label>
+      </div>
+      <p class="muted small" id="ocrEngineNote"></p></div>
     <div class="field"><span data-i18n="ocr.langs">Languages in the document</span><div class="ocr-langs" id="ocrLangs"></div></div>
     <div class="field"><span data-i18n="ocr.pages">Pages</span>
       <label class="check"><input type="radio" name="ocrPages" id="ocrPagesEmpty" checked> <span data-i18n="ocr.pagesEmpty"></span> <span class="muted" id="ocrScanCount"></span></label>

@@ -93,10 +93,11 @@ async function fetchWithProgress(url, onProgress) {
 }
 
 /** Fetch the library files (both Tesseract builds when `allCores`) and the language data. */
-async function fetchLibrarySet(langs, allCores) {
+async function fetchLibrarySet(langs, allCores, paddle = false) {
   const names = Object.keys(LIB_FILES).filter((n) => allCores || (n !== CORE_SIMD && n !== CORE_PLAIN) || n === OCR_CORE_FILE);
-  const items = names.map((n) => [n, LIB_FILES[n]]).concat(langs.map((l) => [`${l}.traineddata.gz`, langUrl(l)]));
-  const data = {}, langData = {};
+  const items = names.map((n) => [n, LIB_FILES[n]]).concat(langs.map((l) => [`${l}.traineddata.gz`, langUrl(l)]))
+    .concat(paddle ? Object.entries(PADDLE_FILES) : []); // (PaddleOCR, when ticked: about 35 MB)
+  const data = {}, langData = {}, paddleData = {};
   let total = 0;
   for (const [i, [name, url]] of items.entries()) {
     const show = (got) => busy(t("offline.fetching", { i: i + 1, n: items.length, name, mb: mbOf(got) }));
@@ -104,9 +105,9 @@ async function fetchLibrarySet(langs, allCores) {
     const buf = await fetchWithProgress(url, show);
     total += buf.byteLength;
     const m = /^([a-z_]+)\.traineddata\.gz$/.exec(name);
-    if (m) langData[m[1]] = buf; else data[name] = buf;
+    if (m) langData[m[1]] = buf; else if (PADDLE_FILES[name]) paddleData[name] = buf; else data[name] = buf;
   }
-  return { data, langData, total };
+  return { data, langData, paddleData, total };
 }
 
 /* ------------------------------------------------ Tesseract's language cache */
@@ -159,12 +160,17 @@ async function activateLibs(data, langData, remember, source) {
 }
 
 /** Download the whole set as a ZIP on the computer. */
-async function downloadOfflineZip(langs) {
+/** PaddleOCR files kept where the engine looks for them (see paddleFiles). */
+async function storePaddleFiles(paddleData) {
+  for (const [name, buf] of Object.entries(paddleData || {})) await idbPut(buf, `paddle:${name}`, true);
+}
+async function downloadOfflineZip(langs, paddle = false) {
   try {
-    const { data, langData, total } = await fetchLibrarySet(langs, true);
+    const { data, langData, paddleData, total } = await fetchLibrarySet(langs, true, paddle);
     busy(t("offline.zipping"));
     const entries = Object.entries(data).map(([name, buf]) => ({ name, data: new Uint8Array(buf) }))
-      .concat(Object.entries(langData).map(([code, buf]) => ({ name: `${code}.traineddata.gz`, data: new Uint8Array(buf), store: true })));
+      .concat(Object.entries(langData).map(([code, buf]) => ({ name: `${code}.traineddata.gz`, data: new Uint8Array(buf), store: true })))
+      .concat(Object.entries(paddleData).map(([name, buf]) => ({ name, data: new Uint8Array(buf) })));
     entries.push({ name: "README.txt", data: new TextEncoder().encode(OFFLINE_README) });
     const zip = await zipWrite(entries);
     const name = `Kameleon-offline-${APP_VERSION}.zip`;
@@ -194,6 +200,10 @@ auf Ihrem Computer; die Dateinamen bitte nicht ändern.
   tesseract-core-lstm.wasm.js        dieselbe für ältere Browser ohne SIMD
   <sprache>.traineddata.gz           Sprachdaten der Texterkennung, eine je Sprache (deu, eng, fra …)
   libheif-bundle.mjs                 liest iPhone-Fotos (HEIC/HEIF)
+  ort.wasm.min.js, ort-wasm-simd-threaded.mjs/.wasm   ONNX Runtime für PaddleOCR (wenn gewählt)
+  PP-OCRv5_mobile_det_infer.ort      PaddleOCR: findet die Textzeilen
+  PP-OCRv5_mobile_rec_infer.onnx     PaddleOCR: liest die Zeilen
+  ppocrv5_dict.txt                   PaddleOCR: die Zeichen, die es kennt
 
 EN: This ZIP holds the document engine (MuPDF), text recognition (Tesseract), language data and the
 reader for iPhone photos (libheif). Without internet: open Kameleon, then choose this ZIP file (or
@@ -209,14 +219,19 @@ computer; please do not rename them.
   tesseract-core-lstm.wasm.js        the same for older browsers without SIMD
   <language>.traineddata.gz          language data for text recognition, one per language (deu, eng, fra …)
   libheif-bundle.mjs                 reads iPhone photos (HEIC/HEIF)
+  ort.wasm.min.js, ort-wasm-simd-threaded.mjs/.wasm   ONNX Runtime for PaddleOCR (when chosen)
+  PP-OCRv5_mobile_det_infer.ort      PaddleOCR: finds the text lines
+  PP-OCRv5_mobile_rec_infer.onnx     PaddleOCR: reads the lines
+  ppocrv5_dict.txt                   PaddleOCR: the characters it knows
 `;
 
 /** Store the set in the browser directly (fetched from the internet). */
-async function storeOfflineLibs(langs) {
+async function storeOfflineLibs(langs, paddle = false) {
   try {
-    const { data, langData } = await fetchLibrarySet(langs, false);
+    const { data, langData, paddleData } = await fetchLibrarySet(langs, false, paddle);
     busy(t("offline.storing"));
     await activateLibs(data, langData, true, "browser");
+    await storePaddleFiles(paddleData);
     toast(t("offline.done"), "ok");
   } catch (err) {
     console.error(err);
@@ -229,12 +244,14 @@ async function storeOfflineLibs(langs) {
 
 /** Library files chosen by the user: loose files, a folder, or one or more ZIPs. */
 async function useLibraryFiles(files, remember) {
-  const data = {}, langData = {};
+  const data = {}, langData = {}, paddleData = {};
   const take = (name, bytes) => {
     // (an entry read from a ZIP may be a view into the archive: copy just its own bytes)
     const buf = bytes instanceof ArrayBuffer ? bytes : bytes.slice().buffer;
     const base = name.split(/[\\/]/).pop().toLowerCase();
     if (LIB_FILES[base]) data[base] = buf;
+    const pk = Object.keys(PADDLE_FILES).find((k) => k.toLowerCase() === base); // (PaddleOCR, if the set has it)
+    if (pk) paddleData[pk] = buf;
     const m = /^([a-z_]+)\.traineddata(\.gz)?$/.exec(base);
     if (m) langData[m[1]] = buf;
   };
@@ -251,7 +268,8 @@ async function useLibraryFiles(files, remember) {
     const missing = LIB_REQUIRED.filter((n) => !data[n]);
     if (missing.length) { toast(t("offline.missing", { names: missing.join(", ") }), "error"); return; }
     await activateLibs(data, langData, remember, "folder");
-    toast(t("offline.loaded", { n: Object.keys(data).length + Object.keys(langData).length }), "ok");
+    await storePaddleFiles(paddleData);
+    toast(t("offline.loaded", { n: Object.keys(data).length + Object.keys(langData).length + Object.keys(paddleData).length }), "ok");
   } catch (err) {
     console.error(err);
     toast(t("offline.failed", { err: userError(err) }), "error");
@@ -263,6 +281,7 @@ async function useLibraryFiles(files, remember) {
 
 async function removeOfflineLibs() {
   for (const name of Object.keys(LIB_FILES)) await idbDel(libKey(name));
+  for (const name of Object.keys(PADDLE_FILES)) await idbDel(`paddle:${name}`);
   await idbDel(libKey("manifest"));
   if (!offlineSource) offlineLibsPromise = null;
   toast(t("offline.removed"), "ok");
@@ -302,8 +321,8 @@ function initOffline() {
   renderOfflineLangs();
   document.addEventListener("languagechange", () => { renderOfflineLangs(); if ($("#helpDialog").open) refreshOfflineStatus(); });
   const closeHelp = () => { if ($("#helpDialog").open) $("#helpDialog").close("cancel"); }; // (the progress box would be hidden behind it)
-  $("#offlineZipBtn").addEventListener("click", () => { const langs = chosenOfflineLangs(); closeHelp(); downloadOfflineZip(langs); });
-  $("#offlineDownload").addEventListener("click", () => { const langs = chosenOfflineLangs(); closeHelp(); storeOfflineLibs(langs); });
+  $("#offlineZipBtn").addEventListener("click", () => { const langs = chosenOfflineLangs(), paddle = $("#offlinePaddle").checked; closeHelp(); downloadOfflineZip(langs, paddle); });
+  $("#offlineDownload").addEventListener("click", () => { const langs = chosenOfflineLangs(), paddle = $("#offlinePaddle").checked; closeHelp(); storeOfflineLibs(langs, paddle); });
   $("#offlineRemove").addEventListener("click", () => removeOfflineLibs());
   const pick = (input) => (e) => { e.preventDefault(); e.stopPropagation(); input.value = ""; input.click(); };
   $("#offlineLoadZip").addEventListener("click", pick($("#offlineZip")));

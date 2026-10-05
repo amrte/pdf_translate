@@ -4,6 +4,11 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.40
+
+- Text recognition: a second engine, **PaddleOCR** (PP-OCRv5), to choose in the OCR dialog next to Tesseract. It runs in the browser (ONNX Runtime, WebAssembly) and offline: its files (about 35 MB) are fetched once and kept in the browser, and "Offline use" can include them in the ZIP or the stored set ("Include PaddleOCR"). It reads Latin script (German, Swedish, French …), Chinese and Japanese – not Cyrillic, Greek or Arabic (the dialog says so). On typewritten pages it was clearly more accurate in tests (0–1 wrong words of 104, Tesseract 2–5); on clean print both are about equally good, and Tesseract stays the default. The chosen languages decide umlauts and accents (an unsure "a" becomes "ä" when the second reading says so; an accent a language does not have is replaced). Its results go through the same steps as Tesseract's: straightening, paragraphs, uncertain words, searchable PDF.
+- Recognised text in general: wide typewriter spaces that happen to stand one above the other are no column gutter any more (lines were cut into pieces); darker or fainter grey ink no longer starts a new paragraph (only a colour of its own does).
+
 ## 2.39
 
 - The segment list: a card can be dragged by its handle (⠿, left of the number) to another place in its page's order – a line shows where it lands, the list scrolls along at its edges, Esc cancels. Alt+Shift+↑/↓ in a translation box does the same step by step. The order is the reading order: the AI prompt and the exports follow it, "join" takes the next segment; the segments are numbered anew, translations, styles and kinds go along, and the new order is kept when the file is opened again (undo in the message). Segments stay on their page – a segment cannot be dropped among another page's (the line turns red) – and recognised text moves among recognised text.

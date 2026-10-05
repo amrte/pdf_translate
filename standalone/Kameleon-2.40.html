@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="Kameleon 2.39">
+  <meta name="generator" content="Kameleon 2.40">
   <meta name="description" content="Kameleon – Wechselt die Sprache, behält die Form. Changes language, keeps its shape.">
   <title>Kameleon</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2216%22 fill=%22%23287130%22/%3E%3Cg transform=%22translate(2.5 1) scale(0.9)%22 fill=%22%23ffffff%22 stroke=%22%23ffffff%22%3E%3Cpath d=%22M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6%22 fill=%22none%22 stroke-width=%223.8%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M21 43l-1 10M30 44v9M38 43l1 10%22 stroke-width=%223.6%22 stroke-linecap=%22round%22/%3E%3Cellipse cx=%2221%22 cy=%2225%22 rx=%227%22 ry=%227.5%22 stroke=%22none%22/%3E%3Cellipse cx=%2233%22 cy=%2223.5%22 rx=%227.5%22 ry=%228%22 stroke=%22none%22/%3E%3Cpath d=%22M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z%22 stroke=%22none%22/%3E%3Cpath d=%22M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z%22 stroke=%22none%22/%3E%3Cpath d=%22M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z%22 stroke=%22none%22/%3E%3Cpath d=%22M16 37l4-3 4 3 4-3 4 3 4-3 4 3%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%222.1%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3Cpath d=%22M43.5 33.9L57 32.6%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%221.5%22 stroke-linecap=%22round%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%224.4%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%222.7%22 stroke=%22none%22/%3E%3Ccircle cx=%2246.2%22 cy=%2226.7%22 r=%221.3%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Cpath d=%22M4 55.5c15-3 39-3 54 0%22 fill=%22none%22 stroke-width=%222.4%22 stroke-linecap=%22round%22/%3E%3C/g%3E%3C/svg%3E">
@@ -1068,6 +1068,12 @@ body.seg-dragging, body.seg-dragging * { cursor: grabbing !important; user-selec
 .seg-drop.bad { background: #c0392b; box-shadow: 0 0 0 2px rgba(192, 57, 43, .2); }
 .seg-drop[hidden] { display: none; }
 
+/* ---------- v2.40: the OCR engine choice ---------- */
+.ocr-engines { display: flex; gap: 18px; flex-wrap: wrap; }
+#ocrEngineNote { margin: 4px 0 0; }
+#ocrEngineNote:empty { display: none; }
+#ocrEngineNote.warn { color: #c0392b; }
+
   </style>
 </head>
 <body>
@@ -1075,7 +1081,7 @@ body.seg-dragging, body.seg-dragging * { cursor: grabbing !important; user-selec
   <div class="brand">
     <span class="logo"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#287130"/><g transform="translate(2.5 1) scale(0.9)" fill="#ffffff" stroke="#ffffff"><path d="M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6" fill="none" stroke-width="3.8" stroke-linecap="round"/><path d="M21 43l-1 10M30 44v9M38 43l1 10" stroke-width="3.6" stroke-linecap="round"/><ellipse cx="21" cy="25" rx="7" ry="7.5" stroke="none"/><ellipse cx="33" cy="23.5" rx="7.5" ry="8" stroke="none"/><path d="M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z" stroke="none"/><path d="M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z" stroke="none"/><path d="M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z" stroke="none"/><path d="M16 37l4-3 4 3 4-3 4 3 4-3 4 3" fill="none" stroke="#287130" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M43.5 33.9L57 32.6" fill="none" stroke="#287130" stroke-width="1.5" stroke-linecap="round"/><circle cx="45.5" cy="26.5" r="4.4" fill="#287130" stroke="none"/><circle cx="45.5" cy="26.5" r="2.7" stroke="none"/><circle cx="46.2" cy="26.7" r="1.3" fill="#287130" stroke="none"/><path d="M4 55.5c15-3 39-3 54 0" fill="none" stroke-width="2.4" stroke-linecap="round"/></g></svg></span>
     <span class="brand-name">Kameleon</span>
-    <span class="version" id="appVersion">v2.39</span>
+    <span class="version" id="appVersion">v2.40</span>
   </div>
   <div class="topbar-actions">
     <span class="doc-name" id="docName"></span>
@@ -1537,6 +1543,7 @@ body.seg-dragging, body.seg-dragging * { cursor: grabbing !important; user-selec
         <li data-i18n="help.offTessCorePlain"></li>
         <li data-i18n="help.offLangs"></li>
         <li data-i18n="help.offHeif"></li>
+        <li data-i18n="help.offPaddle"></li>
       </ul>
       <p class="muted small" data-i18n="help.offlineHow"></p>
     </section>
@@ -1594,6 +1601,7 @@ body.seg-dragging, body.seg-dragging * { cursor: grabbing !important; user-selec
       <p class="muted small" data-i18n="offline.text"></p>
       <p class="small" id="offlineStatus"></p>
       <div class="field"><span data-i18n="offline.langsTitle"></span><div class="ocr-langs" id="offlineLangs"></div></div>
+      <label class="check" data-i18n-title="offline.paddleTitle"><input type="checkbox" id="offlinePaddle"> <span data-i18n="offline.paddle"></span></label>
       <div class="wf-row offline-actions">
         <button type="button" class="btn primary" id="offlineZipBtn" data-i18n="offline.zip"></button>
         <button type="button" class="btn" id="offlineLoadZip" data-i18n="offline.loadZip"></button>
@@ -1607,7 +1615,7 @@ body.seg-dragging, body.seg-dragging * { cursor: grabbing !important; user-selec
     </div>
     <input type="file" id="offlineZip" class="visually-hidden" accept=".zip,application/zip" multiple tabindex="-1">
     <input type="file" id="offlineFolder" class="visually-hidden" webkitdirectory multiple tabindex="-1">
-    <p class="muted small help-version help-part">Kameleon v2.39 · <span data-i18n="app.tagline"></span></p>
+    <p class="muted small help-version help-part">Kameleon v2.40 · <span data-i18n="app.tagline"></span></p>
     <div class="modal-actions">
       <button type="button" value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
     </div>
@@ -1854,6 +1862,12 @@ body.seg-dragging, body.seg-dragging * { cursor: grabbing !important; user-selec
   <form method="dialog">
     <h2 id="ocrTitle" data-i18n="ocr.title">Text recognition (OCR)</h2>
     <p class="muted" data-i18n="ocr.text"></p>
+    <div class="field"><span data-i18n="ocr.engine">Recognition engine</span>
+      <div class="ocr-engines">
+        <label class="check" data-i18n-title="ocr.engineTessTitle"><input type="radio" name="ocrEngine" id="ocrEngineTess" value="tesseract" checked> <span data-i18n="ocr.engineTess">Tesseract</span></label>
+        <label class="check" data-i18n-title="ocr.enginePaddleTitle"><input type="radio" name="ocrEngine" id="ocrEnginePaddle" value="paddle"> <span data-i18n="ocr.enginePaddle">PaddleOCR</span></label>
+      </div>
+      <p class="muted small" id="ocrEngineNote"></p></div>
     <div class="field"><span data-i18n="ocr.langs">Languages in the document</span><div class="ocr-langs" id="ocrLangs"></div></div>
     <div class="field"><span data-i18n="ocr.pages">Pages</span>
       <label class="check"><input type="radio" name="ocrPages" id="ocrPagesEmpty" checked> <span data-i18n="ocr.pagesEmpty"></span> <span class="muted" id="ocrScanCount"></span></label>
@@ -2362,6 +2376,19 @@ const I18N = {
     "pw.ok": "Öffnen",
     "ocr.title": "Texterkennung (OCR)",
     "ocr.text": "Erkennt Text in gescannten Seiten und in Bildern. Er wird wie anderer Text übersetzt; beim Erstellen wird die Übersetzung auf eine Fläche in Papierfarbe über den Originaltext gesetzt.",
+    "ocr.engine": "Erkennungs-Engine",
+    "ocr.engineTess": "Tesseract",
+    "ocr.engineTessTitle": "Bewährt, schnell, viele Sprachen und Schriften (auch Kyrillisch, Griechisch, Arabisch …)",
+    "ocr.enginePaddle": "PaddleOCR",
+    "ocr.enginePaddleTitle": "PP-OCRv5: genauer bei Schreibmaschinentext, schwachen oder schiefen Scans, Fotos und Chinesisch; langsamer",
+    "ocr.paddleNote": "PaddleOCR liest lateinische Schrift (Deutsch, Schwedisch, Französisch …), Chinesisch und Japanisch. Es ist bei Schreibmaschinentext, schwachen Scans und Fotos meist genauer als Tesseract, aber langsamer; bei sauberem Druck sind beide etwa gleich gut. Die gewählten Sprachen bestimmen die Umlaute und Akzente.",
+    "ocr.paddleReady": "Die Dateien sind im Browser gespeichert (auch offline).",
+    "ocr.paddleDownload": "Beim ersten Mal werden ca. 35 MB geladen und im Browser gespeichert.",
+    "ocr.paddleNoScript": "PaddleOCR liest {langs} nicht – dafür bitte Tesseract wählen.",
+    "ocr.paddleFetching": "PaddleOCR wird geladen: {name} – {mb} von {total} MB …",
+    "offline.paddle": "PaddleOCR mitnehmen (ca. 35 MB)",
+    "offline.paddleTitle": "Die genauere Texterkennung PaddleOCR (ONNX Runtime und die PP-OCRv5-Modelle) gehört dann zum Offline-Satz",
+    "help.offPaddle": "<b>ort.wasm.min.js</b>, <b>ort-wasm-simd-threaded.mjs</b>, <b>ort-wasm-simd-threaded.wasm</b> (ca. 14 MB) – ONNX Runtime, führt die Modelle von PaddleOCR aus; <b>PP-OCRv5_mobile_det_infer.ort</b> (5 MB) findet die Textzeilen, <b>PP-OCRv5_mobile_rec_infer.onnx</b> (16 MB) liest sie, <b>ppocrv5_dict.txt</b> ihre Zeichen. <i>Nur für die Engine PaddleOCR.</i>",
     "ocr.langs": "Sprachen im Dokument",
     "ocr.pages": "Seiten",
     "ocr.pagesEmpty": "Nur Seiten ohne Text",
@@ -3279,6 +3306,19 @@ const I18N = {
     "pw.ok": "Open",
     "ocr.title": "Text recognition (OCR)",
     "ocr.text": "Recognises text in scanned pages and in pictures. It is translated like other text; when the PDF is built, the translation is set on a patch of the paper colour over the original text.",
+    "ocr.engine": "Recognition engine",
+    "ocr.engineTess": "Tesseract",
+    "ocr.engineTessTitle": "Proven, fast, many languages and scripts (also Cyrillic, Greek, Arabic …)",
+    "ocr.enginePaddle": "PaddleOCR",
+    "ocr.enginePaddleTitle": "PP-OCRv5: more accurate on typewritten text, faint or skewed scans, photos and Chinese; slower",
+    "ocr.paddleNote": "PaddleOCR reads Latin script (German, Swedish, French …), Chinese and Japanese. On typewritten text, faint scans and photos it is mostly more accurate than Tesseract, but slower; on clean print both do about equally well. The chosen languages decide the umlauts and accents.",
+    "ocr.paddleReady": "Its files are stored in the browser (offline too).",
+    "ocr.paddleDownload": "The first time, about 35 MB are loaded and stored in the browser.",
+    "ocr.paddleNoScript": "PaddleOCR cannot read {langs} – please choose Tesseract for that.",
+    "ocr.paddleFetching": "Loading PaddleOCR: {name} – {mb} of {total} MB …",
+    "offline.paddle": "Include PaddleOCR (about 35 MB)",
+    "offline.paddleTitle": "The more accurate recognition PaddleOCR (ONNX Runtime and the PP-OCRv5 models) becomes part of the offline set",
+    "help.offPaddle": "<b>ort.wasm.min.js</b>, <b>ort-wasm-simd-threaded.mjs</b>, <b>ort-wasm-simd-threaded.wasm</b> (about 14 MB) – ONNX Runtime, runs the PaddleOCR models; <b>PP-OCRv5_mobile_det_infer.ort</b> (5 MB) finds the text lines, <b>PP-OCRv5_mobile_rec_infer.onnx</b> (16 MB) reads them, <b>ppocrv5_dict.txt</b> holds their characters. <i>Only for the PaddleOCR engine.</i>",
     "ocr.langs": "Languages in the document",
     "ocr.pages": "Pages",
     "ocr.pagesEmpty": "Only pages without text",
@@ -4859,7 +4899,10 @@ function splitColumns(rows) {
     for (let k = 1; k < it.chunk.length; k++) {
       const prev = it.chunk[k - 1], cur = it.chunk[k];
       const size = Math.max(prev.size, cur.size), gap = gapOf(prev, cur, it.rot);
-      if (cur.gapBefore && gap >= 0.4 * size && gap >= 1.6 * typical * size && !MARKER_ONLY_RE.test(spansText(it.chunk.slice(0, k), it.rot))) {
+      // (recognised text needs a gap of two letter heights at least: a typewriter puts every letter
+      // on a grid, so its wide spaces stand one above the other by chance and look like a gutter)
+      const least = cur.ocr ? Math.max(2.0, 1.6 * typical) : Math.max(0.4, 1.6 * typical);
+      if (cur.gapBefore && gap >= least * size && !MARKER_ONLY_RE.test(spansText(it.chunk.slice(0, k), it.rot))) {
         cands.push({ x: localBox(cur.bbox, it.rot)[0], base: it.base, rot: it.rot, chunk: it.chunk, k, size, row: it.row });
       }
     }
@@ -7264,9 +7307,12 @@ function ocrToBlocks(data, zoom, origin, colors) {
   // Colours measured line by line vary a little; near ones are made equal, so that the lines of
   // one paragraph keep one colour (a colour change starts a new segment).
   const palette = [];
+  // Dark grey and black ink are one ink on a scan (a typewriter strikes some lines fainter): only a
+  // colour of its own (red, blue …) starts a new paragraph.
+  const greyInk = (c) => Math.max(...c) - Math.min(...c) < 36 && 0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2] < 150;
   const snap = (hex, tol) => { // (paper colours must stay close: a patch shows on grey table heads)
     const c = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
-    for (const p of palette) if (p.tol === tol && Math.hypot(p.c[0] - c[0], p.c[1] - c[1], p.c[2] - c[2]) < tol) return p.hex;
+    for (const p of palette) if (p.tol === tol && (Math.hypot(p.c[0] - c[0], p.c[1] - c[1], p.c[2] - c[2]) < tol || (tol === 48 && greyInk(p.c) && greyInk(c)))) return p.hex;
     palette.push({ c, hex, tol });
     return hex;
   };
@@ -7375,7 +7421,8 @@ function mergeRowPieces(lines, seps) {
     const a = lines[i];
     for (let j = i + 1; j < lines.length; j++) {
       const b = lines[j], size = Math.min(a.size, b.size);
-      if (Math.abs(a.base - b.base) > 0.3 * size || Math.max(a.size, b.size) > 1.35 * size) continue;
+      // (a piece of only small letters – "gering-" – measures smaller than its row: up to 1.6 times is one size)
+      if (Math.abs(a.base - b.base) > 0.3 * size || Math.max(a.size, b.size) > 1.6 * size) continue;
       const [a0, a1] = span(a), [b0, b1] = span(b);
       const left = a1 <= b0 + 0.3 * size ? [a1, b0] : b1 <= a0 + 0.3 * size ? [b1, a0] : null;
       if (!left) continue; // (overlapping pieces are not one row read twice)
@@ -18015,7 +18062,20 @@ function openOcrDialog() {
   $("#ocrClean").checked = saved.clean !== false;
   $("#ocrDewarp").checked = saved.dewarp !== false;
   $("#ocrCrop").checked = saved.crop !== false;
+  (saved.engine === "paddle" ? $("#ocrEnginePaddle") : $("#ocrEngineTess")).checked = true;
+  ocrEngineNote();
   openModal($("#ocrDialog"));
+}
+/** Under the engine choice: what PaddleOCR reads, and whether its files are here already. */
+async function ocrEngineNote() {
+  const paddle = $("#ocrEnginePaddle").checked;
+  const langs = [...document.querySelectorAll("#ocrLangs input:checked")].map((i) => i.value);
+  const bad = paddle ? langs.filter((l) => PADDLE_UNSUPPORTED.has(l)) : [];
+  let note = paddle ? t("ocr.paddleNote") : "";
+  if (paddle) note += " " + t((await idbGet("paddle:PP-OCRv5_mobile_rec_infer.onnx")) ? "ocr.paddleReady" : "ocr.paddleDownload");
+  if (bad.length) note += " " + t("ocr.paddleNoScript", { langs: bad.map((l) => t("ocrlang." + l)).join(", ") });
+  $("#ocrEngineNote").textContent = note.trim();
+  $("#ocrEngineNote").classList.toggle("warn", bad.length > 0);
 }
 
 /**
@@ -18059,8 +18119,10 @@ function ocrWorkerOptions(stored) {
 async function startOcr({ area = null } = {}) {
   const langs = [...document.querySelectorAll("#ocrLangs input:checked")].map((i) => i.value);
   if (!langs.length) { toast(t("ocr.noLang"), "error"); return; }
+  const engine = $("#ocrEnginePaddle").checked ? "paddle" : "tesseract";
+  if (engine === "paddle" && langs.some((l) => PADDLE_UNSUPPORTED.has(l))) { toast(t("ocr.paddleNoScript", { langs: langs.filter((l) => PADDLE_UNSUPPORTED.has(l)).map((l) => t("ocrlang." + l)).join(", ") }), "error"); return; }
   const family = $("#ocrFamily").value, deskew = $("#ocrDeskew").checked, dewarp = $("#ocrDewarp").checked, crop = $("#ocrCrop").checked, orient = $("#ocrOrient").checked, split = $("#ocrSplit").checked, clean = $("#ocrClean").checked;
-  try { localStorage.setItem(LS_OCR, JSON.stringify({ langs, family, deskew, dewarp, crop, orient, split, clean })); } catch (_) { /* fine */ }
+  try { localStorage.setItem(LS_OCR, JSON.stringify({ langs, family, deskew, dewarp, crop, orient, split, clean, engine })); } catch (_) { /* fine */ }
   let pages = area ? [area.page] : ocrPageChoice() || [];
   if (!pages.length) { toast(t("ocr.none")); return; }
   ocrCancel = false;
@@ -18076,12 +18138,19 @@ async function startOcr({ area = null } = {}) {
   const cancel = () => { ocrCancel = true; for (const w of workers) w.terminate().catch(() => {}); };
   try {
     busy(t("ocr.loading"), cancel);
+    let make;
+    if (engine === "paddle") { // PaddleOCR: its files (fetched once, then kept), one worker per page read at once
+      const files = await paddleFiles((name, got, total, whole) => { if (!whole) busy(t("ocr.paddleFetching", { name, mb: mbOf(got), total: mbOf(total) }), cancel); });
+      if (ocrCancel) return;
+      busy(t("ocr.loading"), cancel);
+      make = () => makePaddleWorker(files, langs);
+    } else {
     const libs = await offlineLibs(), stored = libs && libs.ocr; // Tesseract saved for offline use, if any
     const T = await import(stored ? stored.lib : OCR_LIB);
     if (ocrCancel) return;
     const createWorker = T.createWorker || (T.default && T.default.createWorker);
     // (a language that cannot be fetched is reported; the worker itself would wait for ever)
-    const make = () => {
+    make = () => {
       let failLoad = null;
       const failed = new Promise((_, reject) => { failLoad = reject; });
       return Promise.race([
@@ -18089,11 +18158,12 @@ async function startOcr({ area = null } = {}) {
         failed,
       ]);
     };
+    }
     // Several pages are read at once: up to three workers, as many as the computer has cores to
     // spare (one on a device with little memory). The first loads the language data, the others
     // find it in the browser's cache.
     const cores = navigator.hardwareConcurrency || 2, memory = navigator.deviceMemory || 8;
-    const count = Math.max(1, Math.min(3, pages.length, Math.floor(cores / 2), memory < 4 ? 1 : 3));
+    const count = Math.max(1, Math.min(engine === "paddle" ? 2 : 3, pages.length, Math.floor(cores / 2), memory < 4 ? 1 : 3));
     workers.push(await make());
     if (count > 1) for (const w of await Promise.all(Array.from({ length: count - 1 }, () => make().catch(() => null)))) if (w) workers.push(w);
     if (ocrCancel) { cancel(); return; }
@@ -18119,10 +18189,12 @@ async function startOcr({ area = null } = {}) {
         back = (x, y) => to((x - m) / res.width, (y - m) / res.height);
       }
       const first = (await worker.recognize(blob, {}, { blocks: true })).data;
-      // Rows Tesseract was unsure of are read again as single lines.
-      await worker.setParameters({ tessedit_pageseg_mode: "7" });
-      const data = await Engine.refineOcr(first, async (rectangle) => (await worker.recognize(blob, { rectangle }, { blocks: true })).data);
-      await worker.setParameters({ tessedit_pageseg_mode: "11" });
+      let data = first;
+      if (engine !== "paddle") { // Rows Tesseract was unsure of are read again as single lines.
+        await worker.setParameters({ tessedit_pageseg_mode: "7" });
+        data = await Engine.refineOcr(first, async (rectangle) => (await worker.recognize(blob, { rectangle }, { blocks: true })).data);
+        await worker.setParameters({ tessedit_pageseg_mode: "11" });
+      }
       if (ocrCancel || state.doc !== doc) return;
       if (back) mapOcrData(data, back);
       const img = whole || await imageDataOf(blob);
@@ -18797,6 +18869,8 @@ function initTools() {
     }
   }, true);
   $("#btnOcr").addEventListener("click", openOcrDialog);
+  for (const id of ["#ocrEngineTess", "#ocrEnginePaddle"]) $(id).addEventListener("change", ocrEngineNote);
+  $("#ocrLangs").addEventListener("change", ocrEngineNote);
   $("#ocrGo").addEventListener("click", (e) => {
     e.preventDefault();
     if ($("#ocrPagesRange").checked && !parsePageRange($("#ocrRange").value, state.doc.pages.length)) {
@@ -19552,7 +19626,7 @@ function initPicture() {
 // from its own browser cache before the network, so language files are written into that cache.
 // ======================================================================
 
-const APP_VERSION = "2.39";
+const APP_VERSION = "2.40";
 // (a change of library version makes a stored set outdated: it is then ignored)
 const OFFLINE_VERSION = `${MUPDF_URL} ${OCR_LIB}`;
 const CORE_SIMD = "tesseract-core-simd-lstm.wasm.js", CORE_PLAIN = "tesseract-core-lstm.wasm.js";
@@ -19634,10 +19708,11 @@ async function fetchWithProgress(url, onProgress) {
 }
 
 /** Fetch the library files (both Tesseract builds when `allCores`) and the language data. */
-async function fetchLibrarySet(langs, allCores) {
+async function fetchLibrarySet(langs, allCores, paddle = false) {
   const names = Object.keys(LIB_FILES).filter((n) => allCores || (n !== CORE_SIMD && n !== CORE_PLAIN) || n === OCR_CORE_FILE);
-  const items = names.map((n) => [n, LIB_FILES[n]]).concat(langs.map((l) => [`${l}.traineddata.gz`, langUrl(l)]));
-  const data = {}, langData = {};
+  const items = names.map((n) => [n, LIB_FILES[n]]).concat(langs.map((l) => [`${l}.traineddata.gz`, langUrl(l)]))
+    .concat(paddle ? Object.entries(PADDLE_FILES) : []); // (PaddleOCR, when ticked: about 35 MB)
+  const data = {}, langData = {}, paddleData = {};
   let total = 0;
   for (const [i, [name, url]] of items.entries()) {
     const show = (got) => busy(t("offline.fetching", { i: i + 1, n: items.length, name, mb: mbOf(got) }));
@@ -19645,9 +19720,9 @@ async function fetchLibrarySet(langs, allCores) {
     const buf = await fetchWithProgress(url, show);
     total += buf.byteLength;
     const m = /^([a-z_]+)\.traineddata\.gz$/.exec(name);
-    if (m) langData[m[1]] = buf; else data[name] = buf;
+    if (m) langData[m[1]] = buf; else if (PADDLE_FILES[name]) paddleData[name] = buf; else data[name] = buf;
   }
-  return { data, langData, total };
+  return { data, langData, paddleData, total };
 }
 
 /* ------------------------------------------------ Tesseract's language cache */
@@ -19700,12 +19775,17 @@ async function activateLibs(data, langData, remember, source) {
 }
 
 /** Download the whole set as a ZIP on the computer. */
-async function downloadOfflineZip(langs) {
+/** PaddleOCR files kept where the engine looks for them (see paddleFiles). */
+async function storePaddleFiles(paddleData) {
+  for (const [name, buf] of Object.entries(paddleData || {})) await idbPut(buf, `paddle:${name}`, true);
+}
+async function downloadOfflineZip(langs, paddle = false) {
   try {
-    const { data, langData, total } = await fetchLibrarySet(langs, true);
+    const { data, langData, paddleData, total } = await fetchLibrarySet(langs, true, paddle);
     busy(t("offline.zipping"));
     const entries = Object.entries(data).map(([name, buf]) => ({ name, data: new Uint8Array(buf) }))
-      .concat(Object.entries(langData).map(([code, buf]) => ({ name: `${code}.traineddata.gz`, data: new Uint8Array(buf), store: true })));
+      .concat(Object.entries(langData).map(([code, buf]) => ({ name: `${code}.traineddata.gz`, data: new Uint8Array(buf), store: true })))
+      .concat(Object.entries(paddleData).map(([name, buf]) => ({ name, data: new Uint8Array(buf) })));
     entries.push({ name: "README.txt", data: new TextEncoder().encode(OFFLINE_README) });
     const zip = await zipWrite(entries);
     const name = `Kameleon-offline-${APP_VERSION}.zip`;
@@ -19735,6 +19815,10 @@ auf Ihrem Computer; die Dateinamen bitte nicht ändern.
   tesseract-core-lstm.wasm.js        dieselbe für ältere Browser ohne SIMD
   <sprache>.traineddata.gz           Sprachdaten der Texterkennung, eine je Sprache (deu, eng, fra …)
   libheif-bundle.mjs                 liest iPhone-Fotos (HEIC/HEIF)
+  ort.wasm.min.js, ort-wasm-simd-threaded.mjs/.wasm   ONNX Runtime für PaddleOCR (wenn gewählt)
+  PP-OCRv5_mobile_det_infer.ort      PaddleOCR: findet die Textzeilen
+  PP-OCRv5_mobile_rec_infer.onnx     PaddleOCR: liest die Zeilen
+  ppocrv5_dict.txt                   PaddleOCR: die Zeichen, die es kennt
 
 EN: This ZIP holds the document engine (MuPDF), text recognition (Tesseract), language data and the
 reader for iPhone photos (libheif). Without internet: open Kameleon, then choose this ZIP file (or
@@ -19750,14 +19834,19 @@ computer; please do not rename them.
   tesseract-core-lstm.wasm.js        the same for older browsers without SIMD
   <language>.traineddata.gz          language data for text recognition, one per language (deu, eng, fra …)
   libheif-bundle.mjs                 reads iPhone photos (HEIC/HEIF)
+  ort.wasm.min.js, ort-wasm-simd-threaded.mjs/.wasm   ONNX Runtime for PaddleOCR (when chosen)
+  PP-OCRv5_mobile_det_infer.ort      PaddleOCR: finds the text lines
+  PP-OCRv5_mobile_rec_infer.onnx     PaddleOCR: reads the lines
+  ppocrv5_dict.txt                   PaddleOCR: the characters it knows
 `;
 
 /** Store the set in the browser directly (fetched from the internet). */
-async function storeOfflineLibs(langs) {
+async function storeOfflineLibs(langs, paddle = false) {
   try {
-    const { data, langData } = await fetchLibrarySet(langs, false);
+    const { data, langData, paddleData } = await fetchLibrarySet(langs, false, paddle);
     busy(t("offline.storing"));
     await activateLibs(data, langData, true, "browser");
+    await storePaddleFiles(paddleData);
     toast(t("offline.done"), "ok");
   } catch (err) {
     console.error(err);
@@ -19770,12 +19859,14 @@ async function storeOfflineLibs(langs) {
 
 /** Library files chosen by the user: loose files, a folder, or one or more ZIPs. */
 async function useLibraryFiles(files, remember) {
-  const data = {}, langData = {};
+  const data = {}, langData = {}, paddleData = {};
   const take = (name, bytes) => {
     // (an entry read from a ZIP may be a view into the archive: copy just its own bytes)
     const buf = bytes instanceof ArrayBuffer ? bytes : bytes.slice().buffer;
     const base = name.split(/[\\/]/).pop().toLowerCase();
     if (LIB_FILES[base]) data[base] = buf;
+    const pk = Object.keys(PADDLE_FILES).find((k) => k.toLowerCase() === base); // (PaddleOCR, if the set has it)
+    if (pk) paddleData[pk] = buf;
     const m = /^([a-z_]+)\.traineddata(\.gz)?$/.exec(base);
     if (m) langData[m[1]] = buf;
   };
@@ -19792,7 +19883,8 @@ async function useLibraryFiles(files, remember) {
     const missing = LIB_REQUIRED.filter((n) => !data[n]);
     if (missing.length) { toast(t("offline.missing", { names: missing.join(", ") }), "error"); return; }
     await activateLibs(data, langData, remember, "folder");
-    toast(t("offline.loaded", { n: Object.keys(data).length + Object.keys(langData).length }), "ok");
+    await storePaddleFiles(paddleData);
+    toast(t("offline.loaded", { n: Object.keys(data).length + Object.keys(langData).length + Object.keys(paddleData).length }), "ok");
   } catch (err) {
     console.error(err);
     toast(t("offline.failed", { err: userError(err) }), "error");
@@ -19804,6 +19896,7 @@ async function useLibraryFiles(files, remember) {
 
 async function removeOfflineLibs() {
   for (const name of Object.keys(LIB_FILES)) await idbDel(libKey(name));
+  for (const name of Object.keys(PADDLE_FILES)) await idbDel(`paddle:${name}`);
   await idbDel(libKey("manifest"));
   if (!offlineSource) offlineLibsPromise = null;
   toast(t("offline.removed"), "ok");
@@ -19843,8 +19936,8 @@ function initOffline() {
   renderOfflineLangs();
   document.addEventListener("languagechange", () => { renderOfflineLangs(); if ($("#helpDialog").open) refreshOfflineStatus(); });
   const closeHelp = () => { if ($("#helpDialog").open) $("#helpDialog").close("cancel"); }; // (the progress box would be hidden behind it)
-  $("#offlineZipBtn").addEventListener("click", () => { const langs = chosenOfflineLangs(); closeHelp(); downloadOfflineZip(langs); });
-  $("#offlineDownload").addEventListener("click", () => { const langs = chosenOfflineLangs(); closeHelp(); storeOfflineLibs(langs); });
+  $("#offlineZipBtn").addEventListener("click", () => { const langs = chosenOfflineLangs(), paddle = $("#offlinePaddle").checked; closeHelp(); downloadOfflineZip(langs, paddle); });
+  $("#offlineDownload").addEventListener("click", () => { const langs = chosenOfflineLangs(), paddle = $("#offlinePaddle").checked; closeHelp(); storeOfflineLibs(langs, paddle); });
   $("#offlineRemove").addEventListener("click", () => removeOfflineLibs());
   const pick = (input) => (e) => { e.preventDefault(); e.stopPropagation(); input.value = ""; input.click(); };
   $("#offlineLoadZip").addEventListener("click", pick($("#offlineZip")));
@@ -23782,6 +23875,341 @@ async function buildApkg(pair, rows) {
   ]);
   const list = Object.fromEntries(media.map((m, i) => [String(i), m.name])); // the files are stored under their numbers
   return zipWrite([{ name: "collection.anki2", data: db }, { name: "media", data: enc8.encode(JSON.stringify(list)) }, ...media.map((m, i) => ({ name: String(i), data: m.data, store: true }))]);
+}
+
+/* ------------------------------------------------ PaddleOCR (PP-OCRv5) as a second OCR engine */
+// The PP-OCRv5 mobile models run with ONNX Runtime Web (WebAssembly) in a worker of their own:
+// a detection model finds the text lines, a recognition model reads each line. What they find is
+// handed on in the shape Tesseract gives (blocks → lines → words with boxes and confidence), so
+// straightening, the paragraph building, unsure words and the searchable PDF work as before.
+// PP-OCRv5 reads Latin script with accents (German, Swedish, French …), Chinese and Japanese;
+// Cyrillic, Greek and other scripts stay with Tesseract. The files (about 35 MB) are fetched once
+// and kept in the browser; "Offline use" can store them too.
+const PADDLE_ORT = "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.30.0/dist/";
+const PADDLE_MODELS = "https://cdn.jsdelivr.net/npm/pdfmarkdown-ppocrv5-models@1.0.0/";
+const PADDLE_FILES = {
+  "ort.wasm.min.js": PADDLE_ORT + "ort.wasm.min.js",
+  "ort-wasm-simd-threaded.mjs": PADDLE_ORT + "ort-wasm-simd-threaded.mjs",
+  "ort-wasm-simd-threaded.wasm": PADDLE_ORT + "ort-wasm-simd-threaded.wasm",
+  "PP-OCRv5_mobile_det_infer.ort": PADDLE_MODELS + "detection/PP-OCRv5_mobile_det_infer.ort",
+  "PP-OCRv5_mobile_rec_infer.onnx": PADDLE_MODELS + "recognition/PP-OCRv5_mobile_rec_infer.onnx",
+  "ppocrv5_dict.txt": PADDLE_MODELS + "recognition/ppocrv5_dict.txt",
+};
+// The accented letters of each language: PP-OCRv5 is unsure of small accents (ä read as a), and
+// gives accents a language does not have (à in Swedish): those are decided between the letters
+// the document's languages use.
+const PADDLE_ACCENTS = {
+  deu: "äöüÄÖÜ", swe: "åäöÅÄÖ", fin: "äöåÄÖÅ", fra: "àâçéèêëîïôùûüÿÀÂÇÉÈÊËÎÏÔÙÛÜ", spa: "áéíóúñüÁÉÍÓÚÑÜ",
+  por: "ãõáâàçéêíóôúÃÕÁÂÀÇÉÊÍÓÔÚ", nld: "ëïéèÉËÏ", pol: "ąćęłńóśźżĄĆĘŁŃÓŚŹŻ", ces: "áčďéěíňóřšťúůýžÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ",
+  slk: "áäčďéíĺľňóôŕšťúýžÁÄČĎÉÍĹĽŇÓÔŔŠŤÚÝŽ", hun: "áéíóöőúüűÁÉÍÓÖŐÚÜŰ",
+};
+// Tesseract language codes whose script PP-OCRv5 does not read.
+const PADDLE_UNSUPPORTED = new Set(["ukr", "rus", "bel", "bul", "srp", "mkd", "kaz", "ell", "ara", "fas", "heb", "hin", "ben", "tha", "kor", "kat", "hye", "amh"]);
+
+/** The PaddleOCR files: kept from an earlier download or the offline set, or fetched now (and kept). */
+async function paddleFiles(onProgress) {
+  const out = {}, names = Object.keys(PADDLE_FILES);
+  let done = 0;
+  for (const name of names) {
+    let buf = await idbGet(`paddle:${name}`); // (from an earlier download, or from the offline set)
+    if (!buf) {
+      const res = await fetch(PADDLE_FILES[name]);
+      if (!res.ok) throw new Error(`PaddleOCR file not available (${name}: HTTP ${res.status})`);
+      const total = Number(res.headers.get("content-length")) || 0, reader = res.body.getReader(), parts = [];
+      let got = 0;
+      for (;;) {
+        const { done: end, value } = await reader.read();
+        if (end) break;
+        parts.push(value); got += value.length;
+        if (onProgress && total) onProgress(name, got, total);
+      }
+      buf = await new Blob(parts).arrayBuffer();
+      await idbPut(buf, `paddle:${name}`); // (the next time it is here)
+    }
+    out[name] = buf;
+    done++;
+    if (onProgress) onProgress(name, done, names.length, true);
+  }
+  return out;
+}
+
+/** The worker's program (run from a blob URL). */
+function paddleWorkerMain() {
+  let ort = null, det = null, rec = null, dict = null, classOf = null, accents = "";
+  const baseOf = (c) => c.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  /** A Latin letter decided between the letters the languages use (see PADDLE_ACCENTS). */
+  const settle = (ch, p, probs) => {
+    if (!ch || !/\p{Script=Latin}/u.test(ch)) return [ch, p];
+    const base = baseOf(ch);
+    if (base.length !== 1 || !/[A-Za-z]/.test(base)) return [ch, p];
+    const family = [base, ...[...accents].filter((a) => baseOf(a) === base)];
+    if (family.length === 1 && ch === base) return [ch, p];
+    const scored = family.map((c) => [c, classOf.has(c) ? probs[classOf.get(c)] : 0]);
+    if (ch === base) { // a plain letter: an accented one of the languages wins when it is a real contender
+      if (p >= 0.95) return [ch, p];
+      const alt = scored.slice(1).sort((a, b) => b[1] - a[1])[0];
+      return alt && alt[1] >= 0.05 ? [alt[0], p + alt[1]] : [ch, p];
+    }
+    if (accents.includes(ch)) return [ch, p];
+    const best = scored.sort((a, b) => b[1] - a[1])[0]; // an accent the languages do not have
+    return [best[0], Math.max(best[1], p)];
+  };
+  // (lines are read one at a time: padding lines to a common width cost time and accuracy)
+  const PADDLE_BATCH = 1;
+  const MEAN = [0.485, 0.456, 0.406], STD = [0.229, 0.224, 0.225];
+  // A pixel of the RGBA image (bilinear), as [r, g, b].
+  const sample = (img, x, y) => {
+    const { width: w, height: h, data: d } = img;
+    x = Math.max(0, Math.min(w - 1.001, x)); y = Math.max(0, Math.min(h - 1.001, y));
+    const x0 = Math.floor(x), y0 = Math.floor(y), fx = x - x0, fy = y - y0;
+    const i = (y0 * w + x0) * 4, j = i + 4, k = i + w * 4, l = k + 4, out = [0, 0, 0];
+    for (let c = 0; c < 3; c++) out[c] = (d[i + c] * (1 - fx) + d[j + c] * fx) * (1 - fy) + (d[k + c] * (1 - fx) + d[l + c] * fx) * fy;
+    return out;
+  };
+
+  /** Text lines on the page: [{corners: [tl, tr, br, bl]}] in image pixels. */
+  async function detect(img, limit = 1280) {
+    const { width: w0, height: h0, data } = img;
+    const s = Math.min(1, limit / Math.max(w0, h0));
+    const W = Math.max(32, Math.round((w0 * s) / 32) * 32), H = Math.max(32, Math.round((h0 * s) / 32) * 32);
+    const sx = w0 / W, sy = h0 / H, plane = W * H, t = new Float32Array(3 * plane);
+    // (each map pixel is the mean of the image pixels it covers; channels in the order B, G, R)
+    for (let y = 0; y < H; y++) {
+      const ya = Math.floor(y * sy), yb = Math.max(ya + 1, Math.floor((y + 1) * sy));
+      for (let x = 0; x < W; x++) {
+        const xa = Math.floor(x * sx), xb = Math.max(xa + 1, Math.floor((x + 1) * sx));
+        let r = 0, g = 0, b = 0, n = 0;
+        for (let yy = ya; yy < yb && yy < h0; yy++) for (let xx = xa; xx < xb && xx < w0; xx++) { const i = (yy * w0 + xx) * 4; r += data[i]; g += data[i + 1]; b += data[i + 2]; n++; }
+        n = n || 1;
+        const o = y * W + x;
+        t[o] = (b / n / 255 - MEAN[0]) / STD[0]; t[plane + o] = (g / n / 255 - MEAN[1]) / STD[1]; t[2 * plane + o] = (r / n / 255 - MEAN[2]) / STD[2];
+      }
+    }
+    const out = await det.run({ [det.inputNames[0]]: new ort.Tensor("float32", t, [1, 3, H, W]) });
+    const prob = out[det.outputNames[0]].data;
+    // Regions of the probability map above 0.3; each a line (or a part of one) when sure enough.
+    const label = new Int32Array(plane), queue = new Int32Array(plane), boxes = [];
+    let comp = 0;
+    for (let start = 0; start < plane; start++) {
+      if (label[start] || prob[start] <= 0.3) continue;
+      comp++;
+      let head = 0, tail = 0, sum = 0, mx = 0, my = 0;
+      queue[tail++] = start; label[start] = comp;
+      while (head < tail) {
+        const p = queue[head++], x = p % W, y = (p - x) / W;
+        sum += prob[p]; mx += x; my += y;
+        if (x > 0 && !label[p - 1] && prob[p - 1] > 0.3) { label[p - 1] = comp; queue[tail++] = p - 1; }
+        if (x < W - 1 && !label[p + 1] && prob[p + 1] > 0.3) { label[p + 1] = comp; queue[tail++] = p + 1; }
+        if (y > 0 && !label[p - W] && prob[p - W] > 0.3) { label[p - W] = comp; queue[tail++] = p - W; }
+        if (y < H - 1 && !label[p + W] && prob[p + W] > 0.3) { label[p + W] = comp; queue[tail++] = p + W; }
+      }
+      const n = tail;
+      if (n < 6 || sum / n < 0.6) continue;
+      mx /= n; my /= n;
+      let cxx = 0, cyy = 0, cxy = 0;
+      for (let q = 0; q < n; q++) { const p = queue[q], x = p % W - mx, y = (p - (p % W)) / W - my; cxx += x * x; cyy += y * y; cxy += x * y; }
+      // (the region's direction from its second moments: the line's slant)
+      let a = 0.5 * Math.atan2(2 * cxy, cxx - cyy);
+      if (Math.abs(a) > Math.PI / 4 && cxx >= cyy) a = 0;
+      const ux = Math.cos(a), uy = Math.sin(a), vx = -uy, vy = ux;
+      let a0 = Infinity, a1 = -Infinity, b0 = Infinity, b1 = -Infinity;
+      for (let q = 0; q < n; q++) {
+        const p = queue[q], x = p % W, y = (p - x) / W, pu = x * ux + y * uy, pv = x * vx + y * vy;
+        if (pu < a0) a0 = pu; if (pu > a1) a1 = pu; if (pv < b0) b0 = pv; if (pv > b1) b1 = pv;
+      }
+      let bw = a1 - a0 + 1, bh = b1 - b0 + 1;
+      if (Math.min(bw, bh) < 2) continue;
+      const dd = (bw * bh * 1.5) / (2 * (bw + bh)); // (the model marks a shrunk core of each line: grown back)
+      const cu = (a0 + a1) / 2, cv = (b0 + b1) / 2;
+      bw += 2 * dd; bh += 2 * dd;
+      // (some room above and below: umlaut dots and accents sit above the letters' core)
+      bh *= 1.2; bw += 0.2 * bh;
+      const c = [cu * ux + cv * vx, cu * uy + cv * vy];
+      const pt = (su, sv) => [(c[0] + su * ux * bw / 2 + sv * vx * bh / 2 + 0.5) * sx, (c[1] + su * uy * bw / 2 + sv * vy * bh / 2 + 0.5) * sy];
+      boxes.push({ corners: [pt(-1, -1), pt(1, -1), pt(1, 1), pt(-1, 1)], score: sum / n, mapH: Math.min(bw, bh) });
+    }
+    // Small print comes out only a few pixels high at this scale: then the page is looked at larger.
+    if (limit < 1920 && s < 1 && boxes.length) {
+      const hs = boxes.map((b) => b.mapH).sort((a, b) => a - b);
+      if (hs[hs.length >> 1] < 16) return detect(img, 1920);
+    }
+    return boxes;
+  }
+
+  /** A line cut out of the page, straightened, 48 pixels high: {t (B,G,R planes), gray, Tw, corners}. */
+  function cropLine(img, corners) {
+    let [tl, tr, br, bl] = corners;
+    const len = (p, q) => Math.hypot(q[0] - p[0], q[1] - p[1]);
+    if (len(tl, bl) > 1.5 * len(tl, tr)) [tl, tr, br, bl] = [bl, tl, tr, br]; // (a vertical line is read turned)
+    const wPx = len(tl, tr), hPx = len(tl, bl), Th = 48;
+    const Tw = Math.max(8, Math.min(3200, Math.round((Th * wPx) / Math.max(1, hPx))));
+    const plane = Th * Tw, rgb = new Float32Array(3 * plane), gray = new Float32Array(plane);
+    for (let y = 0; y < Th; y++) {
+      const fy = (y + 0.5) / Th;
+      for (let x = 0; x < Tw; x++) {
+        const fx = (x + 0.5) / Tw;
+        const px = tl[0] + fx * (tr[0] - tl[0]) + fy * (bl[0] - tl[0]), py = tl[1] + fx * (tr[1] - tl[1]) + fy * (bl[1] - tl[1]);
+        const [r, g, b] = sample(img, px, py), o = y * Tw + x;
+        rgb[o] = (b / 255 - 0.5) / 0.5; rgb[plane + o] = (g / 255 - 0.5) / 0.5; rgb[2 * plane + o] = (r / 255 - 0.5) / 0.5;
+        gray[o] = 0.299 * r + 0.587 * g + 0.114 * b;
+      }
+    }
+    return { rgb, gray, Tw, corners: [tl, tr, br, bl] };
+  }
+  /** Rows with ink in a crop: where the letters sit (top, baseline, bottom; 0…1 of its height). */
+  function inkRows(gray, Tw) {
+    const Th = 48, plane = Th * Tw;
+    const sorted = Float32Array.from(gray).sort();
+    const lo = sorted[Math.floor(plane * 0.03)], hi = sorted[Math.floor(plane * 0.9)], thr = (lo + hi) / 2;
+    const dens = new Float32Array(Th);
+    for (let y = 0; y < Th; y++) { let n = 0; for (let x = 0; x < Tw; x++) if (gray[y * Tw + x] < thr) n++; dens[y] = n / Tw; }
+    const peak = Math.max(...dens);
+    let top = 0, bottom = Th - 1;
+    while (top < Th - 1 && dens[top] < 0.08 * peak) top++;
+    while (bottom > top && dens[bottom] < 0.08 * peak) bottom--;
+    let base = bottom;
+    while (base > top && dens[base] < 0.35 * peak) base--;
+    return { top: top / Th, base: (base + 1) / Th, bottom: (bottom + 1) / Th };
+  }
+  /**
+   * Lines read, several at a time (lines of similar length together, padded to the widest): for
+   * each {chars: [{ch, x, p}] (x: 0…1 along the line), rows, corners}.
+   */
+  async function recognizeAll(img, boxes) {
+    const crops = boxes.map((b) => cropLine(img, b.corners));
+    const order = crops.map((c, i) => i).sort((a, b) => crops[a].Tw - crops[b].Tw);
+    const results = new Array(crops.length), Th = 48;
+    for (let k = 0; k < order.length;) {
+      const batch = [order[k]];
+      while (batch.length < PADDLE_BATCH && k + batch.length < order.length && crops[order[k + batch.length]].Tw <= 1.5 * crops[order[k]].Tw) batch.push(order[k + batch.length]);
+      k += batch.length;
+      const W = Math.max(...batch.map((i) => crops[i].Tw)), plane = Th * W, t = new Float32Array(batch.length * 3 * plane);
+      batch.forEach((i, bi) => {
+        const c = crops[i], cp = Th * c.Tw;
+        for (let ch = 0; ch < 3; ch++) for (let y = 0; y < Th; y++) t.set(c.rgb.subarray(ch * cp + y * c.Tw, ch * cp + (y + 1) * c.Tw), bi * 3 * plane + ch * plane + y * W);
+      });
+      const out = await rec.run({ [rec.inputNames[0]]: new ort.Tensor("float32", t, [batch.length, 3, Th, W]) });
+      const o = out[rec.outputNames[0]], [, T, C] = o.dims, d = o.data;
+      batch.forEach((i, bi) => {
+        // CTC: the best class per step; repeats and blanks (class 0) fall away. The steps cover
+        // the padded width: positions are taken back to the line's own.
+        const c = crops[i], steps = Math.min(T, Math.ceil((T * c.Tw) / W) + 1), chars = [];
+        let prev = 0;
+        for (let st = 0; st < steps; st++) {
+          let best = 0, bp = -Infinity;
+          const off = (bi * T + st) * C;
+          for (let q = 0; q < C; q++) { const v = d[off + q]; if (v > bp) { bp = v; best = q; } }
+          if (best !== 0 && best !== prev) {
+            let ch = best - 1 < dict.length ? dict[best - 1] : " ", p = bp;
+            if (ch === "\u3000") ch = " ";
+            [ch, p] = settle(ch, p, d.subarray(off, off + C));
+            chars.push({ ch, x: Math.min(1, ((st + 0.5) / T) * (W / c.Tw)), p: Math.min(1, p) });
+          }
+          prev = best;
+        }
+        results[i] = { chars, rows: inkRows(c.gray, c.Tw), corners: c.corners };
+      });
+    }
+    return results;
+  }
+
+  /** A page image read: Tesseract's result shape ({blocks: [{paragraphs: [{lines}]}]}). */
+  async function read(img) {
+    const boxes = await detect(img);
+    boxes.sort((a, b) => (a.corners[0][1] + a.corners[3][1]) - (b.corners[0][1] + b.corners[3][1]) || a.corners[0][0] - b.corners[0][0]);
+    const lines = [], read = await recognizeAll(img, boxes);
+    // The letter height (top of capitals and ascenders to the baseline) of the page's longer lines:
+    // a short piece without tall letters ("gering-") would otherwise seem smaller than its row.
+    const lineLen = (r) => r.chars.length, heightOf = (r) => (r.rows.base - r.rows.top) * Math.hypot(r.corners[3][0] - r.corners[0][0], r.corners[3][1] - r.corners[0][1]);
+    const tall = read.filter((r) => lineLen(r) >= 12).map(heightOf).sort((a, b) => a - b), usual = tall.length ? tall[tall.length >> 1] : 0;
+    for (const r of read) {
+      const text = r.chars.map((c) => c.ch).join("");
+      if (!text.trim()) continue;
+      const [tl, tr, , bl] = r.corners;
+      const at = (fx, fy) => [tl[0] + fx * (tr[0] - tl[0]) + fy * (bl[0] - tl[0]), tl[1] + fx * (tr[1] - tl[1]) + fy * (bl[1] - tl[1])];
+      const boxOf = (f0, f1, g0, g1) => {
+        const ps = [at(f0, g0), at(f1, g0), at(f0, g1), at(f1, g1)];
+        return { x0: Math.min(...ps.map((p) => p[0])), y0: Math.min(...ps.map((p) => p[1])), x1: Math.max(...ps.map((p) => p[0])), y1: Math.max(...ps.map((p) => p[1])) };
+      };
+      // Words: the characters between spaces; a character covers half the way to its neighbours.
+      const cs = r.chars, gaps = [];
+      for (let i = 1; i < cs.length; i++) gaps.push(cs[i].x - cs[i - 1].x);
+      const step = gaps.length ? gaps.slice().sort((a, b) => a - b)[gaps.length >> 1] : 0.02;
+      const words = [];
+      let cur = null;
+      cs.forEach((c, i) => {
+        if (c.ch === " ") { cur = null; return; }
+        const left = i > 0 && cs[i - 1].ch !== " " ? (cs[i - 1].x + c.x) / 2 : c.x - step / 2;
+        const right = i < cs.length - 1 && cs[i + 1].ch !== " " ? (c.x + cs[i + 1].x) / 2 : c.x + step / 2;
+        if (!cur) { cur = { text: "", f0: left, f1: right, ps: [] }; words.push(cur); }
+        cur.text += c.ch; cur.f1 = right; cur.ps.push(c.p);
+      });
+      const { top, base, bottom } = r.rows;
+      const out = words.map((w) => {
+        const mean = w.ps.reduce((a, b) => a + b, 0) / w.ps.length, min = Math.min(...w.ps);
+        return { text: w.text, confidence: Math.round(100 * (0.5 * mean + 0.5 * min)), bbox: boxOf(Math.max(0, w.f0), Math.min(1, w.f1), top, bottom) };
+      });
+      if (!out.length) continue;
+      const lb = boxOf(Math.max(0, out.length ? words[0].f0 : 0), Math.min(1, words[words.length - 1].f1), top, bottom);
+      const bl0 = at(0, base), bl1 = at(1, base);
+      let hRow = Math.hypot(bl[0] - tl[0], bl[1] - tl[1]) * (base - top);
+      if (usual && lineLen(r) < 12 && hRow < 0.8 * usual) hRow = usual;
+      lines.push({ text, bbox: lb, words: out, baseline: { x0: bl0[0], y0: bl0[1], x1: bl1[0], y1: bl1[1], has_baseline: true }, rowAttributes: { row_height: hRow / 0.72 } });
+    }
+    return { blocks: lines.length ? [{ paragraphs: [{ lines }] }] : [] };
+  }
+
+  self.onmessage = async (e) => {
+    const { id, cmd, args } = e.data;
+    try {
+      if (cmd === "init") {
+        const url = (name, type) => URL.createObjectURL(new Blob([args.files[name]], { type }));
+        importScripts(url("ort.wasm.min.js", "text/javascript"));
+        ort = self.ort;
+        ort.env.wasm.numThreads = 1; // (threads need a cross-origin isolated page)
+        ort.env.wasm.wasmPaths = { mjs: url("ort-wasm-simd-threaded.mjs", "text/javascript"), wasm: url("ort-wasm-simd-threaded.wasm", "application/wasm") };
+        const opts = { executionProviders: ["wasm"], graphOptimizationLevel: "all" };
+        det = await ort.InferenceSession.create(new Uint8Array(args.files["PP-OCRv5_mobile_det_infer.ort"]), opts);
+        rec = await ort.InferenceSession.create(new Uint8Array(args.files["PP-OCRv5_mobile_rec_infer.onnx"]), opts);
+        // (one character per line; empty lines are none – copies of the file differ in them; the
+        // space follows the last entry)
+        dict = new TextDecoder().decode(args.files["ppocrv5_dict.txt"]).replace(/\r/g, "").split("\n").filter((l) => l !== "");
+        classOf = new Map(dict.map((c, i) => [c, i + 1]));
+        accents = args.accents || "";
+        self.postMessage({ id, result: true });
+      } else if (cmd === "read") {
+        self.postMessage({ id, result: await read(args) });
+      }
+    } catch (err) {
+      self.postMessage({ id, error: String((err && err.message) || err) });
+    }
+  };
+}
+
+/** A PaddleOCR worker, ready to read pages: {recognize(blob), terminate()} like a Tesseract worker. */
+async function makePaddleWorker(files, langs = []) {
+  const src = `(${paddleWorkerMain.toString()})();`;
+  const url = URL.createObjectURL(new Blob([src], { type: "text/javascript" }));
+  const worker = new Worker(url);
+  let seq = 0;
+  const waiting = new Map();
+  worker.onmessage = (e) => { const w = waiting.get(e.data.id); if (!w) return; waiting.delete(e.data.id); if (e.data.error) w.reject(new Error(e.data.error)); else w.resolve(e.data.result); };
+  worker.onerror = (e) => { for (const w of waiting.values()) w.reject(new Error(e.message || "PaddleOCR worker failed")); waiting.clear(); };
+  const call = (cmd, args, transfer = []) => new Promise((resolve, reject) => { const id = ++seq; waiting.set(id, { resolve, reject }); worker.postMessage({ id, cmd, args }, transfer); });
+  // (each worker gets its own copies: the buffers are transferred)
+  const copy = {};
+  for (const [k, v] of Object.entries(files)) copy[k] = v.slice(0);
+  const accents = [...new Set(langs.flatMap((l) => [...(PADDLE_ACCENTS[l] || "")]))].join("");
+  await call("init", { files: copy, accents }, Object.values(copy));
+  return {
+    async recognize(blob) {
+      const img = await imageDataOf(blob);
+      const data = await call("read", { width: img.width, height: img.height, data: img.data }, [img.data.buffer]);
+      return { data };
+    },
+    async setParameters() { /* (Tesseract's page modes: nothing to set) */ },
+    async terminate() { worker.terminate(); URL.revokeObjectURL(url); for (const w of waiting.values()) w.reject(new Error("cancelled")); waiting.clear(); },
+  };
 }
 
 // Start-up (runs after ui.js, markup.js and tools.js have defined everything).

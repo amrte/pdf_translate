@@ -1057,3 +1057,9 @@ body.seg-dragging, body.seg-dragging * { cursor: grabbing !important; user-selec
 .seg-drop { position: fixed; z-index: 60; height: 3px; border-radius: 2px; background: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); pointer-events: none; }
 .seg-drop.bad { background: #c0392b; box-shadow: 0 0 0 2px rgba(192, 57, 43, .2); }
 .seg-drop[hidden] { display: none; }
+
+/* ---------- v2.40: the OCR engine choice ---------- */
+.ocr-engines { display: flex; gap: 18px; flex-wrap: wrap; }
+#ocrEngineNote { margin: 4px 0 0; }
+#ocrEngineNote:empty { display: none; }
+#ocrEngineNote.warn { color: #c0392b; }
