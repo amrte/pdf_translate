@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="Kameleon 2.38">
+  <meta name="generator" content="Kameleon 2.39">
   <meta name="description" content="Kameleon – Wechselt die Sprache, behält die Form. Changes language, keeps its shape.">
   <title>Kameleon</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2216%22 fill=%22%23287130%22/%3E%3Cg transform=%22translate(2.5 1) scale(0.9)%22 fill=%22%23ffffff%22 stroke=%22%23ffffff%22%3E%3Cpath d=%22M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6%22 fill=%22none%22 stroke-width=%223.8%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M21 43l-1 10M30 44v9M38 43l1 10%22 stroke-width=%223.6%22 stroke-linecap=%22round%22/%3E%3Cellipse cx=%2221%22 cy=%2225%22 rx=%227%22 ry=%227.5%22 stroke=%22none%22/%3E%3Cellipse cx=%2233%22 cy=%2223.5%22 rx=%227.5%22 ry=%228%22 stroke=%22none%22/%3E%3Cpath d=%22M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z%22 stroke=%22none%22/%3E%3Cpath d=%22M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z%22 stroke=%22none%22/%3E%3Cpath d=%22M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z%22 stroke=%22none%22/%3E%3Cpath d=%22M16 37l4-3 4 3 4-3 4 3 4-3 4 3%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%222.1%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3Cpath d=%22M43.5 33.9L57 32.6%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%221.5%22 stroke-linecap=%22round%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%224.4%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%222.7%22 stroke=%22none%22/%3E%3Ccircle cx=%2246.2%22 cy=%2226.7%22 r=%221.3%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Cpath d=%22M4 55.5c15-3 39-3 54 0%22 fill=%22none%22 stroke-width=%222.4%22 stroke-linecap=%22round%22/%3E%3C/g%3E%3C/svg%3E">
@@ -1059,6 +1059,15 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
 .segbar-id:hover { color: var(--accent); }
 .segbar-sep { width: 1px; align-self: stretch; margin: 4px 3px; background: var(--border); }
 
+/* ---------- v2.39: cards dragged to another place in the reading order ---------- */
+.seg-drag { display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 18px; margin: 0 -2px 0 -4px; color: var(--muted); opacity: .55; cursor: grab; touch-action: none; border-radius: 4px; }
+.seg-drag:hover { opacity: 1; color: var(--accent); background: var(--accent-soft); }
+body.seg-dragging, body.seg-dragging * { cursor: grabbing !important; user-select: none !important; }
+.seg.dragging { opacity: .45; }
+.seg-drop { position: fixed; z-index: 60; height: 3px; border-radius: 2px; background: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); pointer-events: none; }
+.seg-drop.bad { background: #c0392b; box-shadow: 0 0 0 2px rgba(192, 57, 43, .2); }
+.seg-drop[hidden] { display: none; }
+
   </style>
 </head>
 <body>
@@ -1066,7 +1075,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
   <div class="brand">
     <span class="logo"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#287130"/><g transform="translate(2.5 1) scale(0.9)" fill="#ffffff" stroke="#ffffff"><path d="M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6" fill="none" stroke-width="3.8" stroke-linecap="round"/><path d="M21 43l-1 10M30 44v9M38 43l1 10" stroke-width="3.6" stroke-linecap="round"/><ellipse cx="21" cy="25" rx="7" ry="7.5" stroke="none"/><ellipse cx="33" cy="23.5" rx="7.5" ry="8" stroke="none"/><path d="M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z" stroke="none"/><path d="M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z" stroke="none"/><path d="M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z" stroke="none"/><path d="M16 37l4-3 4 3 4-3 4 3 4-3 4 3" fill="none" stroke="#287130" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M43.5 33.9L57 32.6" fill="none" stroke="#287130" stroke-width="1.5" stroke-linecap="round"/><circle cx="45.5" cy="26.5" r="4.4" fill="#287130" stroke="none"/><circle cx="45.5" cy="26.5" r="2.7" stroke="none"/><circle cx="46.2" cy="26.7" r="1.3" fill="#287130" stroke="none"/><path d="M4 55.5c15-3 39-3 54 0" fill="none" stroke-width="2.4" stroke-linecap="round"/></g></svg></span>
     <span class="brand-name">Kameleon</span>
-    <span class="version" id="appVersion">v2.38</span>
+    <span class="version" id="appVersion">v2.39</span>
   </div>
   <div class="topbar-actions">
     <span class="doc-name" id="docName"></span>
@@ -1598,7 +1607,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
     </div>
     <input type="file" id="offlineZip" class="visually-hidden" accept=".zip,application/zip" multiple tabindex="-1">
     <input type="file" id="offlineFolder" class="visually-hidden" webkitdirectory multiple tabindex="-1">
-    <p class="muted small help-version help-part">Kameleon v2.38 · <span data-i18n="app.tagline"></span></p>
+    <p class="muted small help-version help-part">Kameleon v2.39 · <span data-i18n="app.tagline"></span></p>
     <div class="modal-actions">
       <button type="button" value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
     </div>
@@ -2114,6 +2123,9 @@ const I18N = {
     "filter.empty": "Keine Segmente passen zum Filter.",
     "filter.noText": "In dieser Datei wurden keine Textsegmente gefunden.",
 
+    "seg.dragTitle": "Ziehen, um die Reihenfolge zu ändern (innerhalb der Seite) – oder Alt+Umschalt+↑/↓ im Übersetzungsfeld",
+    "seg.moved": "Segment verschoben – die Reihenfolge ist neu nummeriert (jetzt #{n}).",
+    "seg.moveOtherPage": "Segmente lassen sich nur innerhalb ihrer Seite verschieben (erkannter Text nur unter erkanntem Text).",
     "bar.split": "Teilen",
     "bar.join": "Verbinden",
     "bar.clearTitle": "Übersetzung dieses Segments löschen",
@@ -2257,7 +2269,7 @@ const I18N = {
     "help.learnCards": "<b>Lernkarten:</b> Oben wählen Sie die Quelle: die Begriffe dieses Dokuments oder den Wortschatz (so, wie der Reiter „Wortschatz“ ihn zeigt). „Heute fällig“ zeigt zuerst neue Wörter (so viele pro Tag wie eingestellt), dann die gewussten, deren Wiederholung ansteht (nach 1, 3, 7, 14, 30, dann alle 90 Tagen). Vier Bewertungen: Nochmal (zurück auf Anfang), Schwer (Abstand bleibt), Gewusst (eine Stufe weiter), Leicht (zwei Stufen). Der Beispielsatz vorn kann als Lücke, ganz oder gar nicht gezeigt werden; „Umgekehrt“ fragt von der Übersetzung nach dem Begriff. Tasten: <kbd>Leertaste</kbd> umdrehen, <kbd>←</kbd>/<kbd>→</kbd> blättern, <kbd>A</kbd>/<kbd>H</kbd>/<kbd>K</kbd>/<kbd>E</kbd> oder <kbd>1</kbd>–<kbd>4</kbd> bewerten, <kbd>F</kbd> Favorit, <kbd>R</kbd> Richtung. Karten aus Anki-Stapeln mit Bildern und Tönen zeigen das Bild auf der Rückseite und 🔊-Knöpfe neben Wort und Beispielsatz (<kbd>P</kbd> Aussprache, <kbd>S</kbd> Satz); „🔊 Automatisch“ spielt die Aussprache ab, sobald das Wort erscheint.",
     "help.learnVocab": "<b>Wortschatz:</b> Die Begriffe aller Dokumente je Sprachpaar, mit Suche, Filter nach Lernstand (neu, im Lernen, gefestigt, heute fällig), Favoriten (das Kameleon), Dubletten-Zusammenführung und Korrektur des Sprachpaars; darüber die Lernstatistik mit der Lernserie. Export als PDF-Liste, Karten-PDF zum Ausdrucken oder Anki-Paket (.apkg) – jeweils das, was gerade gezeigt wird. Import aus .txt/.tsv/.csv und aus Anki-Paketen – mit deren Bildern und Tönen, die im Browser gespeichert werden (auf Wunsch nur die Wörter). „Sichern“ speichert den ganzen Wortschatz mit Lernstand, Bildern und Tönen als Datei für ein anderes Gerät; „Importieren…“ führt sie dort zusammen.",
     "help.learnDecks": "<b>Fertige Lernkarten:</b> Tausende freie Anki-Stapel für viele Sprachen gibt es unter <a href=\"https://ankiweb.net/shared/decks\" target=\"_blank\" rel=\"noopener noreferrer\">ankiweb.net/shared/decks</a> – die .apkg-Datei herunterladen und unter „Wortschatz → Importieren…“ laden.",
-    "help.shortcuts": "Tastenkürzel im Übersetzungsfeld: <kbd>Strg</kbd>+<kbd>Enter</kbd> nächstes Segment · <kbd>Alt</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> vorheriges/nächstes · <kbd>Strg</kbd>+<kbd>S</kbd> Segment ins Dokument übernehmen · <kbd>Strg</kbd> + Mausrad zoomen.",
+    "help.shortcuts": "Tastenkürzel im Übersetzungsfeld: <kbd>Strg</kbd>+<kbd>Enter</kbd> nächstes Segment · <kbd>Alt</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> vorheriges/nächstes · <kbd>Strg</kbd>+<kbd>S</kbd> Segment ins Dokument übernehmen · <kbd>Strg</kbd> + Mausrad zoomen. · <kbd>Alt</kbd>+<kbd>Umschalt</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> Segment in der Reihenfolge verschieben (oder am Griff ⠿ ziehen)",
     "ai.title": "Mit KI übersetzen (ChatGPT, Claude, Gemini…)",
     "ai.targetPh": "z. B. Englisch",
     "ai.pages": "Seiten",
@@ -3027,6 +3039,9 @@ const I18N = {
     "filter.empty": "No segments match the filter.",
     "filter.noText": "No text segments found in this file.",
 
+    "seg.dragTitle": "Drag to change the order (within the page) – or Alt+Shift+↑/↓ in the translation box",
+    "seg.moved": "Segment moved – the order is numbered anew (now #{n}).",
+    "seg.moveOtherPage": "Segments can only be moved within their page (recognised text only among recognised text).",
     "bar.split": "Split",
     "bar.join": "Join",
     "bar.clearTitle": "Delete this segment's translation",
@@ -3170,7 +3185,7 @@ const I18N = {
     "help.learnCards": "<b>Flashcards:</b> At the top you choose the source: the terms of this document or the vocabulary (as the “Vocabulary” tab shows it). \"Due today\" shows new words first (as many per day as set), then the known ones whose review is due (after 1, 3, 7, 14, 30, then every 90 days). Four grades: Again (back to the start), Hard (interval stays), Known (one step up), Easy (two steps). The example sentence on the front can be shown as a gap, whole or not at all; \"Reversed\" asks from the translation for the term. Keys: <kbd>Space</kbd> turn, <kbd>←</kbd>/<kbd>→</kbd> browse, <kbd>A</kbd>/<kbd>H</kbd>/<kbd>K</kbd>/<kbd>E</kbd> or <kbd>1</kbd>–<kbd>4</kbd> grade, <kbd>F</kbd> favourite, <kbd>R</kbd> direction. Cards from Anki decks with pictures and sounds show the picture on the back and 🔊 buttons next to the word and the example sentence (<kbd>P</kbd> pronunciation, <kbd>S</kbd> sentence); “🔊 Auto-play” plays the pronunciation as soon as the word appears.",
     "help.learnVocab": "<b>Vocabulary:</b> The terms of all documents per language pair, with search, a filter by learning stage (new, learning, mature, due today), favourites (the chameleon), merging of duplicates and correction of the pair; above it the learning statistics with the study streak. Export as a PDF list, a printable card sheet or an Anki package (.apkg) – each taking what is shown. Import from .txt/.tsv/.csv and from Anki packages – with their pictures and sounds, which are stored in the browser (or the words alone, if you prefer). “Back up” saves the whole vocabulary with its learning state, pictures and sounds as a file for another device; “Import…” merges it there.",
     "help.learnDecks": "<b>Ready-made flashcards:</b> thousands of free Anki decks for many languages are at <a href=\"https://ankiweb.net/shared/decks\" target=\"_blank\" rel=\"noopener noreferrer\">ankiweb.net/shared/decks</a> – download the .apkg file and load it under \"Vocabulary → Import…\".",
-    "help.shortcuts": "Shortcuts in a translation box: <kbd>Ctrl</kbd>+<kbd>Enter</kbd> next segment · <kbd>Alt</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> previous/next · <kbd>Ctrl</kbd>+<kbd>S</kbd> update this segment in the document · <kbd>Ctrl</kbd> + mouse wheel to zoom.",
+    "help.shortcuts": "Shortcuts in a translation box: <kbd>Ctrl</kbd>+<kbd>Enter</kbd> next segment · <kbd>Alt</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> previous/next · <kbd>Ctrl</kbd>+<kbd>S</kbd> update this segment in the document · <kbd>Ctrl</kbd> + mouse wheel to zoom. · <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> move the segment in the order (or drag its handle ⠿)",
     "ai.title": "Translate with AI (ChatGPT, Claude, Gemini…)",
     "ai.targetPh": "e.g. English",
     "ai.pages": "Pages",
@@ -15700,6 +15715,7 @@ function makeCard(id) {
   el.dataset.id = id;
   el.innerHTML = `
     <div class="seg-head">
+      ${segMovable(s) ? `<span class="seg-drag" title="${escapeHtml(t("seg.dragTitle"))}" aria-hidden="true"><svg viewBox="0 0 10 16" width="9" height="14" fill="currentColor"><circle cx="2.5" cy="3" r="1.4"/><circle cx="7.5" cy="3" r="1.4"/><circle cx="2.5" cy="8" r="1.4"/><circle cx="7.5" cy="8" r="1.4"/><circle cx="2.5" cy="13" r="1.4"/><circle cx="7.5" cy="13" r="1.4"/></svg></span>` : ""}
       <span class="seg-status"></span>
       <span class="seg-id">#${id}</span>
       <span class="seg-meta" data-shrunk="${escapeHtml(t("meta.shrunk"))}">${escapeHtml(segMeta(s))}</span>
@@ -16369,6 +16385,11 @@ function init() {
       e.preventDefault();
       applyField(Number(e.target.closest(".seg").dataset.id));
       repApplyMembers(Number(e.target.closest(".seg").dataset.id));
+      return;
+    }
+    if (e.altKey && e.shiftKey && (e.key === "ArrowUp" || e.key === "ArrowDown")) { // move the segment in the reading order
+      e.preventDefault();
+      segMoveBy(Number(e.target.closest(".seg").dataset.id), e.key === "ArrowUp" ? -1 : 1);
       return;
     }
     const down = (e.key === "Enter" && (e.ctrlKey || e.metaKey)) || (e.altKey && e.key === "ArrowDown");
@@ -19531,7 +19552,7 @@ function initPicture() {
 // from its own browser cache before the network, so language files are written into that cache.
 // ======================================================================
 
-const APP_VERSION = "2.38";
+const APP_VERSION = "2.39";
 // (a change of library version makes a stored set outdated: it is then ignored)
 const OFFLINE_VERSION = `${MUPDF_URL} ${OCR_LIB}`;
 const CORE_SIMD = "tesseract-core-simd-lstm.wasm.js", CORE_PLAIN = "tesseract-core-lstm.wasm.js";
@@ -22286,6 +22307,7 @@ async function pageLinesOf(page, ocr) {
  * boxes: [a, b]}. Returns the new list (ids redone) and the id map, or null if the sources are gone.
  */
 async function applySegEdit(segments, op) {
+  if (op.op === "move") return applyMove(segments, op);
   const plan = await planSegEdit(segments, op);
   if (!plan) return null;
   const { sources, fresh } = plan;
@@ -22296,6 +22318,55 @@ async function applySegEdit(segments, op) {
   const remap = new Map();
   list.forEach((s, i) => { if (oldId.has(s)) remap.set(oldId.get(s), i + 1); s.id = i + 1; });
   return { list, remap, sources, fresh };
+}
+
+/**
+ * A segment of a page moved before another one of that page (`to`: its box), or to the end of
+ * the page's text (`to`: null). The order is the reading order: the AI gets the segments in it,
+ * exports follow it, "join" takes the next one.
+ */
+function applyMove(segments, op) {
+  const onPage = segments.filter((s) => s.page === op.page && !s.ocr && !s.extra);
+  const s = onPage.find((x) => sameBox(x.bbox, op.box));
+  const target = op.to ? onPage.find((x) => sameBox(x.bbox, op.to)) : null;
+  if (!s || (op.to && !target) || target === s) return null;
+  const list = segments.filter((x) => x !== s);
+  let at = target ? list.indexOf(target) : -1;
+  if (!target) { const rest = list.filter((x) => x.page === op.page && !x.ocr && !x.extra); at = rest.length ? list.indexOf(rest[rest.length - 1]) + 1 : list.findIndex((x) => x.page > op.page); }
+  if (at < 0) at = list.length;
+  list.splice(at, 0, s);
+  const oldId = new Map(segments.map((x) => [x, x.id]));
+  const remap = new Map();
+  list.forEach((x, i) => { remap.set(oldId.get(x), i + 1); x.id = i + 1; });
+  return { list, remap, sources: [s], fresh: [s] };
+}
+/** Can this segment be moved in the list (PDF and recognised text; not notes, bookmarks, e-books)? */
+const segMovable = (s) => Boolean(state.doc && !isBook() && s && !s.extra);
+/**
+ * Move segment `id` before segment `beforeId` of the same page (null: to the end of its page).
+ * Recognised (OCR) segments keep their order in the stored OCR results; the others as an edit
+ * that is repeated when the file is opened again.
+ */
+async function moveSegment(id, beforeId) {
+  const s = segById(id), target = beforeId != null ? segById(beforeId) : null;
+  if (!segMovable(s) || target === s) return false;
+  if (target && (target.page !== s.page || Boolean(target.ocr) !== Boolean(s.ocr) || target.extra)) { toast(t("seg.moveOtherPage"), "error"); return false; }
+  if (!s.ocr) return runSegEdit({ op: "move", page: s.page, box: s.bbox.slice(), to: target ? target.bbox.slice() : null });
+  const doc = state.doc, rec = ocrRecord(s.page);
+  if (!rec) { toast(t("seg.ocrOld"), "error"); return false; }
+  const prev = rec.segs.slice(), saved = new Map(prev.map((x) => [x, segState(x.id)]));
+  const segs = rec.segs.filter((x) => x !== s);
+  segs.splice(target ? segs.indexOf(target) : segs.length, 0, s);
+  addOcrResults({ [s.page]: { segs, seps: rec.seps, raw: rec.raw, family: rec.family } });
+  setActive(s.id, { scrollList: true, scrollViewer: true });
+  const undo = () => {
+    if (state.doc !== doc) return;
+    const r = ocrRecord(s.page);
+    addOcrResults({ [s.page]: { segs: prev, seps: r.seps, raw: r.raw, family: r.family } });
+    restoreSegStates(doc.ocr[s.page].segs.map((x, i) => [x, saved.get(prev[i])]));
+  };
+  toast(t("seg.moved", { n: s.id }), "ok", { label: t("seg.undo"), run: undo });
+  return true;
 }
 
 /** The segments an operation replaces (`sources`) and the ones built in their place (`fresh`). */
@@ -22380,7 +22451,7 @@ async function runSegEdit(op) {
     updateProgress();
     const first = r.fresh[0].id;
     setActive(first, { scrollList: true, scrollViewer: true });
-    toast(t(op.op === "split" ? "seg.split" : "seg.joined", { n: r.fresh.length }), "ok", { label: t("seg.undo"), run: undoLastSegEdit });
+    toast(t(op.op === "split" ? "seg.split" : op.op === "move" ? "seg.moved" : "seg.joined", { n: op.op === "move" ? first : r.fresh.length }), "ok", { label: t("seg.undo"), run: undoLastSegEdit });
     return true;
   } catch (err) {
     console.error(err);
@@ -22583,7 +22654,88 @@ async function joinWithNext(id) {
   await runSegEdit({ page: s.page, op: "join", boxes: [s.bbox.slice(), n.bbox.slice()], ...(s.ocr ? { ocr: true } : {}) });
 }
 
+/* ---- dragging a card in the list to another place in its page's order */
+/** The segments of `s`'s page it can be moved among, in order. */
+const movePeers = (s) => state.doc.segments.filter((x) => x.page === s.page && Boolean(x.ocr) === Boolean(s.ocr) && !x.extra);
+/** Where a segment would go when dropped before or after `target`: the segment it then stands before (null: the end). */
+function moveBefore(s, target, after) {
+  const peers = movePeers(s).filter((x) => x !== s);
+  const at = peers.indexOf(target) + (after ? 1 : 0);
+  return peers[at] || null;
+}
+/** One step up or down (Alt+Shift+↑/↓). */
+function segMoveBy(id, dir) {
+  const s = segById(id);
+  if (!segMovable(s)) return;
+  const peers = movePeers(s), i = peers.indexOf(s), j = i + dir;
+  if (j < 0 || j >= peers.length) return;
+  moveSegment(id, dir < 0 ? peers[j].id : (peers[j + 1] ? peers[j + 1].id : null));
+}
+const segDrag = { id: null, line: null, target: null, y: 0, raf: 0, pointer: null };
+function segDragUpdate() {
+  const list = $("#segments"), lr = list.getBoundingClientRect(), y = segDrag.y;
+  const el = document.elementFromPoint(lr.left + lr.width / 2, Math.max(lr.top + 2, Math.min(lr.bottom - 2, y)))?.closest(".seg");
+  const s = segById(segDrag.id);
+  segDrag.target = null;
+  if (el && s) {
+    const tid = Number(el.dataset.id), tgt = segById(tid), r = el.getBoundingClientRect(), after = y > r.top + r.height / 2;
+    const ok = Boolean(tgt && tgt !== s && tgt.page === s.page && Boolean(tgt.ocr) === Boolean(s.ocr) && !tgt.extra);
+    segDrag.target = { tgt, after, ok };
+    segDrag.line.hidden = false;
+    segDrag.line.classList.toggle("bad", !ok && tgt !== s);
+    segDrag.line.style.left = `${r.left + 6}px`;
+    segDrag.line.style.width = `${r.width - 12}px`;
+    segDrag.line.style.top = `${(after ? r.bottom + 5 : r.top - 5) - 1.5}px`;
+    if (tgt === s) segDrag.line.hidden = true;
+  } else segDrag.line.hidden = true;
+}
+function segDragLoop() { // the list scrolls while the card is held near its top or bottom edge
+  if (segDrag.id === null) return;
+  const list = $("#segments"), lr = list.getBoundingClientRect(), edge = 48;
+  const v = segDrag.y < lr.top + edge ? -Math.ceil((lr.top + edge - segDrag.y) / 4) : segDrag.y > lr.bottom - edge ? Math.ceil((segDrag.y - (lr.bottom - edge)) / 4) : 0;
+  if (v) { list.scrollTop += v; segDragUpdate(); }
+  segDrag.raf = requestAnimationFrame(segDragLoop);
+}
+function segDragEnd(drop) {
+  if (segDrag.id === null) return;
+  const { id, target } = segDrag;
+  cancelAnimationFrame(segDrag.raf);
+  segDrag.line?.remove();
+  document.body.classList.remove("seg-dragging");
+  vl.rendered.get(id)?.classList.remove("dragging");
+  segDrag.id = null; segDrag.line = null; segDrag.target = null;
+  if (!drop || !target) return;
+  const s = segById(id);
+  if (!target.ok) { if (target.tgt && target.tgt !== s) toast(t("seg.moveOtherPage"), "error"); return; }
+  const before = moveBefore(s, target.tgt, target.after);
+  const now = movePeers(s)[movePeers(s).indexOf(s) + 1] || null;
+  if (before === now) return; // (dropped where it was)
+  moveSegment(id, before ? before.id : null);
+}
+function initSegDrag() {
+  const list = $("#segments");
+  list.addEventListener("pointerdown", (e) => {
+    const h = e.target.closest(".seg-drag");
+    if (!h || e.button !== 0) return;
+    const id = Number(h.closest(".seg").dataset.id);
+    if (!segMovable(segById(id))) return;
+    e.preventDefault();
+    segDrag.id = id; segDrag.y = e.clientY;
+    segDrag.line = Object.assign(document.createElement("div"), { className: "seg-drop", hidden: true });
+    document.body.appendChild(segDrag.line);
+    document.body.classList.add("seg-dragging");
+    vl.rendered.get(id)?.classList.add("dragging");
+    segDragUpdate();
+    segDrag.raf = requestAnimationFrame(segDragLoop);
+  });
+  document.addEventListener("pointermove", (e) => { if (segDrag.id !== null) { segDrag.y = e.clientY; segDragUpdate(); } });
+  document.addEventListener("pointerup", () => segDragEnd(true));
+  document.addEventListener("pointercancel", () => segDragEnd(false));
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && segDrag.id !== null) { e.stopPropagation(); segDragEnd(false); } }, true);
+}
+
 function initSegEdit() {
+  initSegDrag();
   const dlg = $("#splitDialog");
   $("#splitList").addEventListener("click", async (e) => {
     const b = e.target.closest(".split-cut");

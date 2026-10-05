@@ -1048,3 +1048,12 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
 .note-bar { z-index: 31; }
 .segbar-id:hover { color: var(--accent); }
 .segbar-sep { width: 1px; align-self: stretch; margin: 4px 3px; background: var(--border); }
+
+/* ---------- v2.39: cards dragged to another place in the reading order ---------- */
+.seg-drag { display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 18px; margin: 0 -2px 0 -4px; color: var(--muted); opacity: .55; cursor: grab; touch-action: none; border-radius: 4px; }
+.seg-drag:hover { opacity: 1; color: var(--accent); background: var(--accent-soft); }
+body.seg-dragging, body.seg-dragging * { cursor: grabbing !important; user-select: none !important; }
+.seg.dragging { opacity: .45; }
+.seg-drop { position: fixed; z-index: 60; height: 3px; border-radius: 2px; background: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); pointer-events: none; }
+.seg-drop.bad { background: #c0392b; box-shadow: 0 0 0 2px rgba(192, 57, 43, .2); }
+.seg-drop[hidden] { display: none; }

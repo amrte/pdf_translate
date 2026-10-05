@@ -53,6 +53,7 @@ async function pageLinesOf(page, ocr) {
  * boxes: [a, b]}. Returns the new list (ids redone) and the id map, or null if the sources are gone.
  */
 async function applySegEdit(segments, op) {
+  if (op.op === "move") return applyMove(segments, op);
   const plan = await planSegEdit(segments, op);
   if (!plan) return null;
   const { sources, fresh } = plan;
@@ -63,6 +64,55 @@ async function applySegEdit(segments, op) {
   const remap = new Map();
   list.forEach((s, i) => { if (oldId.has(s)) remap.set(oldId.get(s), i + 1); s.id = i + 1; });
   return { list, remap, sources, fresh };
+}
+
+/**
+ * A segment of a page moved before another one of that page (`to`: its box), or to the end of
+ * the page's text (`to`: null). The order is the reading order: the AI gets the segments in it,
+ * exports follow it, "join" takes the next one.
+ */
+function applyMove(segments, op) {
+  const onPage = segments.filter((s) => s.page === op.page && !s.ocr && !s.extra);
+  const s = onPage.find((x) => sameBox(x.bbox, op.box));
+  const target = op.to ? onPage.find((x) => sameBox(x.bbox, op.to)) : null;
+  if (!s || (op.to && !target) || target === s) return null;
+  const list = segments.filter((x) => x !== s);
+  let at = target ? list.indexOf(target) : -1;
+  if (!target) { const rest = list.filter((x) => x.page === op.page && !x.ocr && !x.extra); at = rest.length ? list.indexOf(rest[rest.length - 1]) + 1 : list.findIndex((x) => x.page > op.page); }
+  if (at < 0) at = list.length;
+  list.splice(at, 0, s);
+  const oldId = new Map(segments.map((x) => [x, x.id]));
+  const remap = new Map();
+  list.forEach((x, i) => { remap.set(oldId.get(x), i + 1); x.id = i + 1; });
+  return { list, remap, sources: [s], fresh: [s] };
+}
+/** Can this segment be moved in the list (PDF and recognised text; not notes, bookmarks, e-books)? */
+const segMovable = (s) => Boolean(state.doc && !isBook() && s && !s.extra);
+/**
+ * Move segment `id` before segment `beforeId` of the same page (null: to the end of its page).
+ * Recognised (OCR) segments keep their order in the stored OCR results; the others as an edit
+ * that is repeated when the file is opened again.
+ */
+async function moveSegment(id, beforeId) {
+  const s = segById(id), target = beforeId != null ? segById(beforeId) : null;
+  if (!segMovable(s) || target === s) return false;
+  if (target && (target.page !== s.page || Boolean(target.ocr) !== Boolean(s.ocr) || target.extra)) { toast(t("seg.moveOtherPage"), "error"); return false; }
+  if (!s.ocr) return runSegEdit({ op: "move", page: s.page, box: s.bbox.slice(), to: target ? target.bbox.slice() : null });
+  const doc = state.doc, rec = ocrRecord(s.page);
+  if (!rec) { toast(t("seg.ocrOld"), "error"); return false; }
+  const prev = rec.segs.slice(), saved = new Map(prev.map((x) => [x, segState(x.id)]));
+  const segs = rec.segs.filter((x) => x !== s);
+  segs.splice(target ? segs.indexOf(target) : segs.length, 0, s);
+  addOcrResults({ [s.page]: { segs, seps: rec.seps, raw: rec.raw, family: rec.family } });
+  setActive(s.id, { scrollList: true, scrollViewer: true });
+  const undo = () => {
+    if (state.doc !== doc) return;
+    const r = ocrRecord(s.page);
+    addOcrResults({ [s.page]: { segs: prev, seps: r.seps, raw: r.raw, family: r.family } });
+    restoreSegStates(doc.ocr[s.page].segs.map((x, i) => [x, saved.get(prev[i])]));
+  };
+  toast(t("seg.moved", { n: s.id }), "ok", { label: t("seg.undo"), run: undo });
+  return true;
 }
 
 /** The segments an operation replaces (`sources`) and the ones built in their place (`fresh`). */
@@ -147,7 +197,7 @@ async function runSegEdit(op) {
     updateProgress();
     const first = r.fresh[0].id;
     setActive(first, { scrollList: true, scrollViewer: true });
-    toast(t(op.op === "split" ? "seg.split" : "seg.joined", { n: r.fresh.length }), "ok", { label: t("seg.undo"), run: undoLastSegEdit });
+    toast(t(op.op === "split" ? "seg.split" : op.op === "move" ? "seg.moved" : "seg.joined", { n: op.op === "move" ? first : r.fresh.length }), "ok", { label: t("seg.undo"), run: undoLastSegEdit });
     return true;
   } catch (err) {
     console.error(err);
@@ -350,7 +400,88 @@ async function joinWithNext(id) {
   await runSegEdit({ page: s.page, op: "join", boxes: [s.bbox.slice(), n.bbox.slice()], ...(s.ocr ? { ocr: true } : {}) });
 }
 
+/* ---- dragging a card in the list to another place in its page's order */
+/** The segments of `s`'s page it can be moved among, in order. */
+const movePeers = (s) => state.doc.segments.filter((x) => x.page === s.page && Boolean(x.ocr) === Boolean(s.ocr) && !x.extra);
+/** Where a segment would go when dropped before or after `target`: the segment it then stands before (null: the end). */
+function moveBefore(s, target, after) {
+  const peers = movePeers(s).filter((x) => x !== s);
+  const at = peers.indexOf(target) + (after ? 1 : 0);
+  return peers[at] || null;
+}
+/** One step up or down (Alt+Shift+↑/↓). */
+function segMoveBy(id, dir) {
+  const s = segById(id);
+  if (!segMovable(s)) return;
+  const peers = movePeers(s), i = peers.indexOf(s), j = i + dir;
+  if (j < 0 || j >= peers.length) return;
+  moveSegment(id, dir < 0 ? peers[j].id : (peers[j + 1] ? peers[j + 1].id : null));
+}
+const segDrag = { id: null, line: null, target: null, y: 0, raf: 0, pointer: null };
+function segDragUpdate() {
+  const list = $("#segments"), lr = list.getBoundingClientRect(), y = segDrag.y;
+  const el = document.elementFromPoint(lr.left + lr.width / 2, Math.max(lr.top + 2, Math.min(lr.bottom - 2, y)))?.closest(".seg");
+  const s = segById(segDrag.id);
+  segDrag.target = null;
+  if (el && s) {
+    const tid = Number(el.dataset.id), tgt = segById(tid), r = el.getBoundingClientRect(), after = y > r.top + r.height / 2;
+    const ok = Boolean(tgt && tgt !== s && tgt.page === s.page && Boolean(tgt.ocr) === Boolean(s.ocr) && !tgt.extra);
+    segDrag.target = { tgt, after, ok };
+    segDrag.line.hidden = false;
+    segDrag.line.classList.toggle("bad", !ok && tgt !== s);
+    segDrag.line.style.left = `${r.left + 6}px`;
+    segDrag.line.style.width = `${r.width - 12}px`;
+    segDrag.line.style.top = `${(after ? r.bottom + 5 : r.top - 5) - 1.5}px`;
+    if (tgt === s) segDrag.line.hidden = true;
+  } else segDrag.line.hidden = true;
+}
+function segDragLoop() { // the list scrolls while the card is held near its top or bottom edge
+  if (segDrag.id === null) return;
+  const list = $("#segments"), lr = list.getBoundingClientRect(), edge = 48;
+  const v = segDrag.y < lr.top + edge ? -Math.ceil((lr.top + edge - segDrag.y) / 4) : segDrag.y > lr.bottom - edge ? Math.ceil((segDrag.y - (lr.bottom - edge)) / 4) : 0;
+  if (v) { list.scrollTop += v; segDragUpdate(); }
+  segDrag.raf = requestAnimationFrame(segDragLoop);
+}
+function segDragEnd(drop) {
+  if (segDrag.id === null) return;
+  const { id, target } = segDrag;
+  cancelAnimationFrame(segDrag.raf);
+  segDrag.line?.remove();
+  document.body.classList.remove("seg-dragging");
+  vl.rendered.get(id)?.classList.remove("dragging");
+  segDrag.id = null; segDrag.line = null; segDrag.target = null;
+  if (!drop || !target) return;
+  const s = segById(id);
+  if (!target.ok) { if (target.tgt && target.tgt !== s) toast(t("seg.moveOtherPage"), "error"); return; }
+  const before = moveBefore(s, target.tgt, target.after);
+  const now = movePeers(s)[movePeers(s).indexOf(s) + 1] || null;
+  if (before === now) return; // (dropped where it was)
+  moveSegment(id, before ? before.id : null);
+}
+function initSegDrag() {
+  const list = $("#segments");
+  list.addEventListener("pointerdown", (e) => {
+    const h = e.target.closest(".seg-drag");
+    if (!h || e.button !== 0) return;
+    const id = Number(h.closest(".seg").dataset.id);
+    if (!segMovable(segById(id))) return;
+    e.preventDefault();
+    segDrag.id = id; segDrag.y = e.clientY;
+    segDrag.line = Object.assign(document.createElement("div"), { className: "seg-drop", hidden: true });
+    document.body.appendChild(segDrag.line);
+    document.body.classList.add("seg-dragging");
+    vl.rendered.get(id)?.classList.add("dragging");
+    segDragUpdate();
+    segDrag.raf = requestAnimationFrame(segDragLoop);
+  });
+  document.addEventListener("pointermove", (e) => { if (segDrag.id !== null) { segDrag.y = e.clientY; segDragUpdate(); } });
+  document.addEventListener("pointerup", () => segDragEnd(true));
+  document.addEventListener("pointercancel", () => segDragEnd(false));
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && segDrag.id !== null) { e.stopPropagation(); segDragEnd(false); } }, true);
+}
+
 function initSegEdit() {
+  initSegDrag();
   const dlg = $("#splitDialog");
   $("#splitList").addEventListener("click", async (e) => {
     const b = e.target.closest(".split-cut");

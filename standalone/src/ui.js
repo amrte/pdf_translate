@@ -1173,6 +1173,7 @@ function makeCard(id) {
   el.dataset.id = id;
   el.innerHTML = `
     <div class="seg-head">
+      ${segMovable(s) ? `<span class="seg-drag" title="${escapeHtml(t("seg.dragTitle"))}" aria-hidden="true"><svg viewBox="0 0 10 16" width="9" height="14" fill="currentColor"><circle cx="2.5" cy="3" r="1.4"/><circle cx="7.5" cy="3" r="1.4"/><circle cx="2.5" cy="8" r="1.4"/><circle cx="7.5" cy="8" r="1.4"/><circle cx="2.5" cy="13" r="1.4"/><circle cx="7.5" cy="13" r="1.4"/></svg></span>` : ""}
       <span class="seg-status"></span>
       <span class="seg-id">#${id}</span>
       <span class="seg-meta" data-shrunk="${escapeHtml(t("meta.shrunk"))}">${escapeHtml(segMeta(s))}</span>
@@ -1842,6 +1843,11 @@ function init() {
       e.preventDefault();
       applyField(Number(e.target.closest(".seg").dataset.id));
       repApplyMembers(Number(e.target.closest(".seg").dataset.id));
+      return;
+    }
+    if (e.altKey && e.shiftKey && (e.key === "ArrowUp" || e.key === "ArrowDown")) { // move the segment in the reading order
+      e.preventDefault();
+      segMoveBy(Number(e.target.closest(".seg").dataset.id), e.key === "ArrowUp" ? -1 : 1);
       return;
     }
     const down = (e.key === "Enter" && (e.ctrlKey || e.metaKey)) || (e.altKey && e.key === "ArrowDown");

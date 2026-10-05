@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.39
+
+- The segment list: a card can be dragged by its handle (⠿, left of the number) to another place in its page's order – a line shows where it lands, the list scrolls along at its edges, Esc cancels. Alt+Shift+↑/↓ in a translation box does the same step by step. The order is the reading order: the AI prompt and the exports follow it, "join" takes the next segment; the segments are numbered anew, translations, styles and kinds go along, and the new order is kept when the file is opened again (undo in the message). Segments stay on their page – a segment cannot be dropped among another page's (the line turns red) – and recognised text moves among recognised text.
+
 ## 2.38
 
 - OCR of typewritten pages: segments no longer sit inside other segments, and paragraphs stay whole. Three causes are fixed: wide, uneven typewriter spaces no longer count as column gaps in recognised text (the limit for scans is now 2.5 character heights instead of one); specks that the recognition reads as "|" only count as table borders when a real line is on the page there (ink along its whole height); and pieces of a row that Tesseract returns separately become one line again, in reading order (before, "je nach Der maximale …" could come out). A piece that is still left alone inside its paragraph joins its row. A single row of running text that looks darker (struck harder) no longer counts as bold and splits its paragraph.
