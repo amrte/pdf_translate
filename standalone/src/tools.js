@@ -38,6 +38,7 @@ function applyKinds() {
     else if (k === "text") { s.skip = false; s.formula = false; }
     else { s.skip = s.auto.skip; s.formula = s.auto.formula; }
   }
+  fxGroupCache = null; // (formulas are grouped anew, see formulaGroups)
 }
 /** Text → formula, or formula (and numbers) → text; the detection's own result needs no entry. */
 function toggleKind(id) {

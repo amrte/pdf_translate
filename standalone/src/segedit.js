@@ -347,6 +347,7 @@ function setSourceText(s, text, edited) {
   s.text = text;
   if (edited) s.edited = true; else { delete s.edited; delete s.recognised; }
   s.skip = !/\p{L}/u.test(text) || Boolean(s.formula);
+  fxGroupCache = null;
   idbPut(doc.ocr, `ocr:${doc.id}`);
   refreshCards();
 }

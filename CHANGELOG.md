@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.44
+
+- **No more freeze when clicking a formula in a large document:** since 2.42, a click on a formula (or a number) in a long PDF – several hundred pages with formulas in their text, or a scan with a text layer – blocked the app, for longer the more formulas the document had (11 s for 400 pages in a test, a freeze for bigger ones), and again after a restart. Finding which pieces belong to one formula was done over the whole document again for every formula shown; it is now done once and kept until segments change. The click takes a few hundredths of a second.
+
 ## 2.43
 
 - **Pages turned upright for OCR:** pages with little text among many lines – circuit diagrams, drawings – were often turned upside down, because the measurement on the text lines (ink above against below them) is fooled there. Now a turn the measurement asks for, and any page where it is unsure, is tried first: the recognition reads the page small both ways round, and the page is only turned when that reads clearly better. Real upside-down and sideways pages are still turned; this costs a few seconds for such pages only.

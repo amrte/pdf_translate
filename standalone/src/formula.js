@@ -263,17 +263,21 @@ function saveLatex() {
  * segments, and the numbers among them – are one formula: [{lead, ids, page, bbox}] (`lead`: its
  * first segment, which shows the LaTeX). A recognised formula is one segment already.
  */
+// (worked out once per list of segments: built anew when segments are added, split or joined –
+// a new list – and dropped when a segment is made a formula or text, see applyKinds)
 let fxGroupCache = null;
 function formulaGroups() {
   const segs = state.doc ? state.doc.segments : [];
-  const sig = segs.filter((s) => s.formula).map((s) => s.id).join(",");
-  if (fxGroupCache && fxGroupCache.segs === segs && fxGroupCache.sig === sig) return fxGroupCache;
-  const groups = [], byId = new Map();
+  if (fxGroupCache && fxGroupCache.segs === segs && fxGroupCache.n === segs.length) return fxGroupCache;
+  const groups = [], byId = new Map(), segOf = new Map();
   const byPage = new Map();
-  for (const s of segs) if (s.skip && s.bbox && !s.extra) (byPage.get(s.page) || byPage.set(s.page, []).get(s.page)).push(s);
+  for (const s of segs) {
+    segOf.set(s.id, s);
+    if (s.skip && s.bbox && !s.extra) (byPage.get(s.page) || byPage.set(s.page, []).get(s.page)).push(s);
+  }
   for (const list of byPage.values()) {
     const parent = new Map(list.map((s) => [s.id, s.id]));
-    const root = (id) => { while (parent.get(id) !== id) id = parent.get(id); return id; };
+    const root = (id) => { while (parent.get(id) !== id) { const up = parent.get(parent.get(id)); parent.set(id, up); id = up; } return id; };
     const near = (a, b) => {
       const h = Math.max(a.size || 10, b.size || 10), A = a.bbox, B = b.bbox;
       const gx = Math.max(B[0] - A[2], A[0] - B[2]), gy = Math.max(B[1] - A[3], A[1] - B[3]);
@@ -281,13 +285,13 @@ function formulaGroups() {
     };
     for (let i = 0; i < list.length; i++) for (let j = i + 1; j < list.length; j++) {
       if (!(list[i].formula || list[j].formula) || !near(list[i], list[j])) continue;
-      parent.set(root(list[i].id), root(list[j].id));
+      const a = root(list[i].id), c = root(list[j].id);
+      if (a !== c) parent.set(a, c);
     }
     const sets = new Map();
-    for (const s of list) (sets.get(root(s.id)) || sets.set(root(s.id), []).get(root(s.id))).push(s);
+    for (const s of list) { const r = root(s.id); (sets.get(r) || sets.set(r, []).get(r)).push(s); }
     for (const members of sets.values()) {
       if (!members.some((s) => s.formula)) continue; // (numbers on their own stay numbers)
-      // (grown again: a piece can join through a number that joined later)
       const ids = members.map((s) => s.id).sort((a, b) => a - b);
       let bbox = null;
       for (const s of members) bbox = bbox ? [Math.min(bbox[0], s.bbox[0]), Math.min(bbox[1], s.bbox[1]), Math.max(bbox[2], s.bbox[2]), Math.max(bbox[3], s.bbox[3])] : s.bbox.slice();
@@ -297,14 +301,19 @@ function formulaGroups() {
     }
   }
   groups.sort((a, b) => a.lead - b.lead);
-  fxGroupCache = { segs, sig, groups, byId };
+  fxGroupCache = { segs, n: segs.length, groups, byId, segOf };
   return fxGroupCache;
 }
 /** The LaTeX of the formula a segment belongs to: read later (kept per document), or while it was recognised. */
 function latexOf(s) {
   if (!s) return "";
-  const g = formulaGroups().byId.get(s.id), lead = g ? g.lead : s.id, ls = g ? segById(lead) : s;
+  const fg = formulaGroups(), g = fg.byId.get(s.id), lead = g ? g.lead : s.id, ls = g ? fg.segOf.get(lead) : s;
   return state.latex[lead] || (ls && ls.latex) || "";
+}
+/** The formulas (their leading segments) still without LaTeX. */
+function formulasToRead() {
+  const fg = formulaGroups();
+  return fg.groups.filter((g) => !(state.latex[g.lead] || (fg.segOf.get(g.lead) || {}).latex)).map((g) => g.lead);
 }
 /** The formula row of a segment's card: its LaTeX (copy, read again), or a button to read it. */
 function latexRowHtml(s) {
@@ -312,15 +321,13 @@ function latexRowHtml(s) {
   const g = formulaGroups().byId.get(s.id);
   if (!g) return "";
   if (g.lead !== s.id) return `<div class="seg-latex part muted small">${escapeHtml(t("fx.partOf", { n: g.lead }))}</div>`;
-  const tex = latexOf(s), rest = formulaGroups().groups.filter((o) => !latexOf(segById(o.lead))).length;
+  const tex = latexOf(s), rest = formulasToRead().length;
   const all = rest > 1 ? `<button type="button" class="mini" data-act="latexAll" title="${escapeHtml(t("fx.allTitle"))}">${escapeHtml(t("fx.all", { n: rest }))}</button>` : "";
   if (!tex) return `<div class="seg-latex none"><button type="button" class="mini" data-act="latexRead" title="${escapeHtml(t("fx.readTitle"))}">${escapeHtml(t("fx.read"))}</button>${all}</div>`;
   return `<div class="seg-latex"><code class="seg-latex-code" title="LaTeX">${escapeHtml(tex)}</code>`
     + `<button type="button" class="mini" data-act="latexCopy" title="${escapeHtml(t("fx.copyTitle"))}">${escapeHtml(t("fx.copy"))}</button>`
     + `<button type="button" class="mini" data-act="latexRead" title="${escapeHtml(t("fx.againTitle"))}">↻</button>${all}</div>`;
 }
-/** The formulas (their leading segments) still without LaTeX. */
-const formulasToRead = () => formulaGroups().groups.filter((g) => !latexOf(segById(g.lead))).map((g) => g.lead);
 
 let fxReader = null, fxIdle = 0; // (the reading model stays loaded a minute after use)
 /**
