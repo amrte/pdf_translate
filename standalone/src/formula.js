@@ -610,7 +610,9 @@ function texPreview(el, tex) {
     if (el.dataset.tex !== tex) return; // (changed meanwhile)
     el.classList.remove("plain");
     katex.render(tex, el, { throwOnError: false, displayMode: true, errorColor: "#d32f2f", strict: "ignore", trust: false, output: "html" });
-  }).catch(() => { el.classList.add("plain"); el.textContent = tex; });
+    vl.measure(el.closest(".seg"));
+    document.fonts?.ready.then(() => vl.measure(el.closest(".seg"))); // (KaTeX's fonts arrive later still)
+  }).catch(() => { el.classList.add("plain"); el.textContent = tex; vl.measure(el.closest(".seg")); });
 }
 const texPreviewTimers = new Map();
 /** The preview of a card's formula, a moment after the LaTeX was typed. */
@@ -661,6 +663,7 @@ async function frameThumb(img, s) {
   if (!frameCache.thumbs.has(key)) {
     frameCache.thumbs.set(key, frameCanvas(s, 2).then((c) => new Promise((res) => c.toBlob((b) => res(URL.createObjectURL(b)), "image/png"))));
   }
+  img.addEventListener("load", () => vl.measure(img.closest(".seg")), { once: true }); // (the card grew: the list places the next cards anew)
   try { img.src = await frameCache.thumbs.get(key); } catch (_) { /* the picture stays empty */ }
 }
 /**

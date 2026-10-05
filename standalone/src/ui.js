@@ -1104,6 +1104,7 @@ const vl = {
   },
   render() {
     if (!state.doc) return;
+    this.verify();
     this.layout();
     const box = this.el();
     const top = box.scrollTop, bottom = top + box.clientHeight;
@@ -1135,6 +1136,22 @@ const vl = {
     const hs = tas.map((ta) => ta.scrollHeight);
     tas.forEach((ta, k) => { ta.style.height = `${Math.min(hs[k] + 2, 320)}px`; });
     created.forEach((el) => ro.observe(el));
+  },
+  /**
+   * The cards on screen measured once more before they are placed: a card that grew after it was
+   * measured (its formula's picture or rendering arrived, a text box grew) would otherwise be
+   * drawn over by the next one until the size observer catches up.
+   */
+  verify() {
+    for (const [id, el] of this.rendered) {
+      if (!el.isConnected) continue;
+      const h = Math.round(el.offsetHeight) + GAP;
+      if (h > GAP && this.heights.get(id) !== h) { this.heights.set(id, h); this.dirty = true; }
+    }
+  },
+  /** A card measured again after something in it changed size (a picture loaded, a formula set). */
+  measure(el) {
+    if (el && el.isConnected && this.rendered.get(Number(el.dataset.id)) === el) this.remeasure([{ target: el }]);
   },
   /** Re-measure after cards changed size, keeping the first visible card in place. */
   remeasure(entries) {

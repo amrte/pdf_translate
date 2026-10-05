@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.50
+
+- **Fixed: cards drawn over each other in the segment list after formulas were framed.** A card's height was measured before its formula picture or rendered formula had arrived, and the following cards kept the old positions in some browsers. The list now measures a card again when its picture loads or its formula is set, and checks the cards on screen before placing them.
+
 ## 2.49
 
 - **Checking the LaTeX by eye:** under a formula's picture, its card now shows the formula as the LaTeX sets it (rendered with KaTeX, fetched from the internet once), so the AI's or the model's reading can be compared with the original at a glance. Red parts are LaTeX mistakes; the LaTeX of a frame can be corrected in the box below, and the preview follows while typing. The same preview appears under the LaTeX of formulas found automatically. Where KaTeX cannot be fetched (offline), the LaTeX stands there as text.
