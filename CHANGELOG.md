@@ -4,6 +4,11 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.51
+
+- **Formula frames from one button.** The frame tool is now only the "Formula" button, placed left of "AI" above the segment list (the ∑ tool in the rail beside the page is gone; <kbd>M</kbd> still works). After a frame is drawn, the toolbar above it appears by itself: "TeX" reads the formula without leaving the tool, so the next frame can be drawn straight away (<kbd>Esc</kbd> or the button leaves the tool).
+- The OCR window says in one line how formulas are recognised by hand.
+
 ## 2.50
 
 - **Fixed: cards drawn over each other in the segment list after formulas were framed.** A card's height was measured before its formula picture or rendered formula had arrived, and the following cards kept the old positions in some browsers. The list now measures a card again when its picture loads or its formula is set, and checks the cards on screen before placing them.

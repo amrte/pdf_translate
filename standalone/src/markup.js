@@ -255,7 +255,7 @@ function deleteMarkup(id) {
 
 function onPointerDown(e) {
   if (e.button !== 0 || !state.doc || isBook()) return; // markups are PDF annotations
-  if (e.target.closest(".note-bar, .mk-editor")) return; // (their own controls)
+  if (e.target.closest(".note-bar, .mk-editor, .segbar")) return; // (their own controls)
   const pageEl = e.target.closest(".page");
   if (!pageEl) return;
   const i = Number(pageEl.dataset.page);
@@ -787,7 +787,7 @@ function initMarkup() {
     if (m) openTextEditor(m.page, [m.x0, m.y0], m);
   });
   // A click that selected or drew a markup must not also select the segment box below it.
-  pages.addEventListener("click", (e) => { if (mk.tool !== "select" || e.target.closest(".mk")) e.stopPropagation(); }, true);
+  pages.addEventListener("click", (e) => { if ((mk.tool !== "select" && !e.target.closest(".segbar")) || e.target.closest(".mk")) e.stopPropagation(); }, true);
 
   document.querySelectorAll("#toolRail .tool[data-tool]").forEach((b) => b.addEventListener("click", () => setTool(b.dataset.tool)));
   $("#btnFrame").addEventListener("click", () => { if (state.doc && !isBook()) setTool(mk.tool === "formula" ? "select" : "formula"); });

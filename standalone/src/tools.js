@@ -1929,7 +1929,8 @@ function segBarButtons(s) {
 /** The toolbar for the segment of a clicked box. */
 function segBarShow(box) {
   const id = Number(box.dataset.id), s = segById(id);
-  if (!s || mk.tool !== "select" || document.body.classList.contains("reading") || boxDrag.justDragged) return;
+  // (with the formula tool, the toolbar of a frame just drawn: "TeX" without leaving the tool)
+  if (!s || (mk.tool !== "select" && !(mk.tool === "formula" && s.frame)) || document.body.classList.contains("reading") || boxDrag.justDragged) return;
   segBar.id = id;
   let bar = $("#segBar");
   if (!bar) {

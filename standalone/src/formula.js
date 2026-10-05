@@ -461,6 +461,7 @@ async function readLatexFor(ids) {
   if (state.doc !== doc) return;
   saveLatex();
   refreshCards();
+  segBarRefresh(); // (the toolbar on the page: "TeX" now copies)
   toast(unsure ? t("fx.doneUnsure", { n: read, u: unsure }) : t("fx.done", { n: read }), read ? "ok" : "");
 }
 
@@ -520,14 +521,22 @@ async function addFormulaFrame(page, box) {
   const r2 = (v) => Math.round(v * 100) / 100;
   box = box.map(r2);
   const rec = ocrRecord(page);
-  if (!rec) return runSegEdit({ op: "frame", page, box });
-  const r = applyFrameOp(rec.segs, { op: "frame", page, box, ocr: true });
-  addOcrResults({ [page]: { segs: r.list, seps: rec.seps, raw: rec.raw, family: rec.family } });
-  const frame = doc.ocr[page].segs.find((s) => s.frame && sameBox(s.bbox, box));
-  if (frame) {
+  if (!rec) {
+    if (!(await runSegEdit({ op: "frame", page, box }))) return false;
+  } else {
+    const r = applyFrameOp(rec.segs, { op: "frame", page, box, ocr: true });
+    addOcrResults({ [page]: { segs: r.list, seps: rec.seps, raw: rec.raw, family: rec.family } });
+  }
+  const frame = doc.segments.find((s) => s.frame && s.page === page && sameBox(s.bbox, box));
+  if (!frame || state.doc !== doc) return true;
+  if (rec) {
     setActive(frame.id, { scrollList: true, scrollViewer: true });
     toast(t("fx.frameAdded", { n: frame.id }), "ok", { label: t("seg.undo"), run: () => { if (state.doc === doc && segById(frame.id) === frame) removeFormulaFrame(frame.id, true); } });
   }
+  // The toolbar above the new frame ("TeX" reads it) – the tool stays on for the next frame.
+  ensureBoxes(frame.page);
+  const el = document.querySelector(`.page .box[data-id="${frame.id}"]`);
+  if (el) segBarShow(el);
   return true;
 }
 /** The frame removed: the segments it covered come back in its place. */
