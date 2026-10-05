@@ -4,6 +4,13 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.47
+
+- **Formula frames – formulas as pictures for the AI.** A new tool beside the page (∑, key <kbd>M</kbd>): drag a rectangle around a formula and it becomes a segment of its own, kept as it is in the translated document; the segments inside the rectangle – also what text recognition read as gibberish – belong to it from then on ("Remove frame" in its card or in the bar above it brings them back). Frames are remembered with the document (with the OCR result on recognised pages, as a segment edit elsewhere) and shown in the list with a picture of the formula.
+- **AI window: "Formulas as pictures".** The frames' pictures are put together on sheets – each formula with its number [[n]] in blue at the left, as many as fit on one picture (at most about 1400 × 1400 px), so a document's formulas need only a few pictures. "Copy formula prompt" puts a prompt on the clipboard that asks for every formula as LaTeX with the words in it translated; each sheet is copied to the clipboard as a picture with one click (or all are saved as PNG files) and pasted into the same chat. The answer is pasted on the right like the text answer: `[[n]]` lines belonging to frames become their LaTeX – shown in the card (editable), copied with "copy", shown in reading mode. The page range and "only segments without translation" apply to the frames too.
+- The "TeX" button of a frame reads it with the pix2tex model, as for other formulas.
+- Fixed: version 2.46 did not start in English (a quote in a help text broke the interface texts).
+
 ## 2.46
 
 - **Formulas on scans recognised and read far better.** A formula such as 1/(jωCx) = 1/(jωCN) · R₁/(R₂‖1/(jωC₂)) bzw. 1/Cx = … came out of OCR as scattered pieces ("jot, 1 JOCN 1 Ry Ri JOL? bzw …"), partly translated, with no LaTeX:

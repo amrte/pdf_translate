@@ -26,6 +26,7 @@ function readable(text, tags) {
 /** What the bubble says for a segment: its translation, or on the translated view its original. */
 function bubbleContent(s) {
   if (state.variant === "translated") return { text: readable(s.text, s.tags), kind: "orig" };
+  if (s.frame) { const tex = latexOf(s); return tex ? { text: tex, kind: "tr" } : { text: t("read.none"), kind: "none" }; } // (a formula frame: its LaTeX)
   const tr = (state.translations[s.id] || "").trim();
   return tr ? { text: readable(tr, s.tags), kind: "tr" } : { text: t("read.none"), kind: "none" };
 }

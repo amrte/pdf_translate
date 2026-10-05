@@ -242,6 +242,7 @@ const styleOpen = new Set(); // cards whose style panel is open
 /** Forget what belongs to the previous document (when a file is opened or closed). */
 function resetToolsState() {
   styleOpen.clear();
+  frameCacheClear(); // (the pictures of the formula frames)
   for (const timer of applyTimers.values()) clearTimeout(timer);
   applyTimers.clear();
   boxDrag.cur = null;
@@ -1900,20 +1901,22 @@ const SB_ICONS = {
   clear: SB_ICON('<path d="M6 6l12 12M18 6L6 18"/>'),
   copy: SB_ICON('<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a1 1 0 0 1 1-1h9"/>'),
   apply: SB_ICON('<path d="M20 12a8 8 0 1 1-2.3-5.7"/><path d="M20 4v5h-5"/>'),
+  trash: SB_ICON('<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>'),
 };
 function segBarButtons(s) {
   const id = s.id, b = (act, icon, label, title, on = false) =>
     `<button type="button" class="segbar-btn${on ? " on" : ""}" data-act="${act}" title="${escapeHtml(title)}">${icon}${label ? `<span>${escapeHtml(label)}</span>` : ""}</button>`;
   const out = [];
-  if (kindsEditable() && !s.extra) out.push(s.skip ? b("kind", '<span class="segbar-glyph">Aa</span>', t("card.asText"), t("card.asTextTitle")) : b("kind", '<span class="segbar-glyph">∑</span>', t("card.asFormula"), t("card.asFormulaTitle")));
+  if (kindsEditable() && !s.extra && !s.frame) out.push(s.skip ? b("kind", '<span class="segbar-glyph">Aa</span>', t("card.asText"), t("card.asTextTitle")) : b("kind", '<span class="segbar-glyph">∑</span>', t("card.asFormula"), t("card.asFormulaTitle")));
   if (segEditable(s)) {
     if (s.lines > 1) out.push(b("split", SB_ICONS.split, t("bar.split"), t("card.splitTitle")));
     out.push(b("join", SB_ICONS.join, t("bar.join"), t("card.joinTitle")));
   }
   if (repSupported() && !s.skip && !s.extra && !repGroup(id)) out.push(b("repMake", SB_ICONS.repMake, "", t("rep.makeTitle")));
   if (fieldsEditable() && !s.extra && !s.skip) out.push(b("style", '<span class="segbar-glyph">Aa</span>', "", t("card.styleTitle"), Boolean(state.overrides[id])));
-  if (s.ocr && !isBook()) out.push(b("editSrc", SB_ICONS.editSrc, "", t("card.editSrcTitle")));
+  if (s.ocr && !isBook() && !s.frame) out.push(b("editSrc", SB_ICONS.editSrc, "", t("card.editSrcTitle")));
   if (s.skip && !isBook() && formulaGroups().byId.has(id)) out.push(latexOf(s) ? b("latexCopy", '<span class="segbar-glyph">TeX</span>', "", t("fx.copyTitle")) : b("latexRead", '<span class="segbar-glyph">TeX</span>', "", t("fx.readTitle")));
+  if (s.frame) out.push(b("frameDel", SB_ICONS.trash, t("fx.frameRemove"), t("fx.frameRemoveTitle")));
   out.push("<span class=\"segbar-sep\"></span>");
   if (!s.skip) {
     out.push(b("same", SB_ICONS.same, "", t("card.keepTitle")));

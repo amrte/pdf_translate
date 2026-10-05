@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="Kameleon 2.46">
+  <meta name="generator" content="Kameleon 2.47">
   <meta name="description" content="Kameleon – Wechselt die Sprache, behält die Form. Changes language, keeps its shape.">
   <title>Kameleon</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2216%22 fill=%22%23287130%22/%3E%3Cg transform=%22translate(2.5 1) scale(0.9)%22 fill=%22%23ffffff%22 stroke=%22%23ffffff%22%3E%3Cpath d=%22M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6%22 fill=%22none%22 stroke-width=%223.8%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M21 43l-1 10M30 44v9M38 43l1 10%22 stroke-width=%223.6%22 stroke-linecap=%22round%22/%3E%3Cellipse cx=%2221%22 cy=%2225%22 rx=%227%22 ry=%227.5%22 stroke=%22none%22/%3E%3Cellipse cx=%2233%22 cy=%2223.5%22 rx=%227.5%22 ry=%228%22 stroke=%22none%22/%3E%3Cpath d=%22M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z%22 stroke=%22none%22/%3E%3Cpath d=%22M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z%22 stroke=%22none%22/%3E%3Cpath d=%22M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z%22 stroke=%22none%22/%3E%3Cpath d=%22M16 37l4-3 4 3 4-3 4 3 4-3 4 3%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%222.1%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3Cpath d=%22M43.5 33.9L57 32.6%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%221.5%22 stroke-linecap=%22round%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%224.4%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%222.7%22 stroke=%22none%22/%3E%3Ccircle cx=%2246.2%22 cy=%2226.7%22 r=%221.3%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Cpath d=%22M4 55.5c15-3 39-3 54 0%22 fill=%22none%22 stroke-width=%222.4%22 stroke-linecap=%22round%22/%3E%3C/g%3E%3C/svg%3E">
@@ -160,6 +160,14 @@ svg [fill="#287130"] { fill: var(--accent); } svg [stroke="#287130"] { stroke: v
 }
 .page .box.done { border: 1px solid rgba(31, 138, 76, .6); background: rgba(31, 138, 76, .07); }
 .page .box:hover { background: color-mix(in srgb, var(--accent) 16%, transparent); }
+.page .box.frame { border: 1.5px dashed #1a56db; background: rgba(26, 86, 219, .07); }
+.page .box.frame::before { content: "∑"; position: absolute; left: -1px; top: -1px; transform: translateY(-100%); font: 700 10px/1.3 system-ui, sans-serif; color: #fff; background: #1a56db; padding: 0 4px; border-radius: 3px 3px 3px 0; pointer-events: none; }
+.pages.translated .box.frame::before, body.reading .pages .box.frame::before { display: none; }
+.seg-frame { padding: 5px 10px 2px; }
+.seg-frame img { display: block; max-width: 100%; max-height: 140px; border: 1px solid var(--border); border-radius: 4px; background: #fff; }
+.seg-frame img:not([src]) { width: 100%; height: 36px; }
+.seg.frame .seg-src { padding-top: 2px; }
+.ai-fx { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; padding-top: 10px; border-top: 1px solid var(--border); }
 .page .box.active { border: 2px solid #f0a020; background: rgba(240, 160, 32, .18); z-index: 4; } /* above the markups, so its handles can be grabbed */
 .pages.no-boxes .box:not(.active) { display: none; }
 /* Reading mode: boxes stay invisible but clickable; the bubble shows the translation. */
@@ -1085,7 +1093,7 @@ body.seg-dragging, body.seg-dragging * { cursor: grabbing !important; user-selec
   <div class="brand">
     <span class="logo"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#287130"/><g transform="translate(2.5 1) scale(0.9)" fill="#ffffff" stroke="#ffffff"><path d="M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6" fill="none" stroke-width="3.8" stroke-linecap="round"/><path d="M21 43l-1 10M30 44v9M38 43l1 10" stroke-width="3.6" stroke-linecap="round"/><ellipse cx="21" cy="25" rx="7" ry="7.5" stroke="none"/><ellipse cx="33" cy="23.5" rx="7.5" ry="8" stroke="none"/><path d="M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z" stroke="none"/><path d="M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z" stroke="none"/><path d="M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z" stroke="none"/><path d="M16 37l4-3 4 3 4-3 4 3 4-3 4 3" fill="none" stroke="#287130" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M43.5 33.9L57 32.6" fill="none" stroke="#287130" stroke-width="1.5" stroke-linecap="round"/><circle cx="45.5" cy="26.5" r="4.4" fill="#287130" stroke="none"/><circle cx="45.5" cy="26.5" r="2.7" stroke="none"/><circle cx="46.2" cy="26.7" r="1.3" fill="#287130" stroke="none"/><path d="M4 55.5c15-3 39-3 54 0" fill="none" stroke-width="2.4" stroke-linecap="round"/></g></svg></span>
     <span class="brand-name">Kameleon</span>
-    <span class="version" id="appVersion">v2.46</span>
+    <span class="version" id="appVersion">v2.47</span>
   </div>
   <div class="topbar-actions">
     <span class="doc-name" id="docName"></span>
@@ -1239,6 +1247,7 @@ body.seg-dragging, body.seg-dragging * { cursor: grabbing !important; user-selec
       <button type="button" class="tool" data-tool="arrow" data-i18n-title="tool.arrow"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19L19 5"/><path d="M10 5h9v9"/></svg></button>
       <button type="button" class="tool" data-tool="text" data-i18n-title="tool.text"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 6V4h14v2"/><path d="M12 4v16"/><path d="M9 20h6"/></svg></button>
       <button type="button" class="tool" data-tool="whiteout" data-i18n-title="tool.whiteout"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="1" fill="currentColor" fill-opacity=".15"/><path d="M7 12h10" stroke-dasharray="2 2"/></svg></button>
+      <button type="button" class="tool" data-tool="formula" data-i18n-title="tool.formula"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="1" stroke-dasharray="3 2"/><path d="M9 8h6l-4 4 4 4H9"/></svg></button>
       <button type="button" class="tool" data-tool="eraser" data-i18n-title="tool.eraser"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20H9L4 15l9.5-9.5a2 2 0 0 1 2.8 0l3.2 3.2a2 2 0 0 1 0 2.8L12 19"/><path d="M8 11l6 6"/></svg></button>
       <div class="rail-sep"></div>
       <div class="swatches">
@@ -1583,6 +1592,11 @@ body.seg-dragging, body.seg-dragging * { cursor: grabbing !important; user-selec
     <div class="ai-parts-head"><b data-i18n="ai.parts">Copy prompt + text</b> <span class="muted small" data-i18n="ai.partsHint"></span></div>
     <div class="ai-parts" id="aiParts"></div>
     <div class="ai-left-actions"><button type="button" class="btn" id="aiCopyPrompt" data-i18n="ai.copyPrompt">Copy prompt only</button></div>
+    <div class="ai-fx" id="aiFx" hidden>
+      <div class="ai-parts-head"><b data-i18n="ai.fxHead">Formulas as pictures</b> <span class="muted small" id="aiFxHint"></span></div>
+      <div class="ai-parts" id="aiFxSheets"></div>
+      <div class="ai-left-actions"><button type="button" class="btn" id="aiFxPrompt" data-i18n="ai.fxPrompt">Copy formula prompt</button> <button type="button" class="btn" id="aiFxSave" data-i18n="ai.fxSave">Save pictures</button></div>
+    </div>
     </div>
     <div class="ai-right">
       <h3 class="ai-right-title" data-i18n="ai.answer">AI answer</h3>
@@ -1622,7 +1636,7 @@ body.seg-dragging, body.seg-dragging * { cursor: grabbing !important; user-selec
     </div>
     <input type="file" id="offlineZip" class="visually-hidden" accept=".zip,application/zip,.js,.mjs,.wasm,.gz,.traineddata,.onnx,.ort,.txt,.json" multiple tabindex="-1">
     <input type="file" id="offlineFolder" class="visually-hidden" webkitdirectory multiple tabindex="-1">
-    <p class="muted small help-version help-part">Kameleon v2.46 · <span data-i18n="app.tagline"></span></p>
+    <p class="muted small help-version help-part">Kameleon v2.47 · <span data-i18n="app.tagline"></span></p>
     <div class="modal-actions">
       <button type="button" value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
     </div>
@@ -2029,6 +2043,27 @@ const I18N = {
     "fx.done": "{n} Formel(n) als LaTeX gelesen.",
     "fx.doneUnsure": "{n} Formel(n) als LaTeX gelesen; {u} konnte(n) nicht sicher gelesen werden.",
     "fx.failed": "Die Formeln konnten nicht gelesen werden: {err}",
+    "tool.formula": "Formelrahmen: ein Rechteck um eine Formel ziehen – sie wird ein eigenes Segment und ein Bild für die KI (M)",
+    "meta.frame": "Formelrahmen – Bild für die KI",
+    "fx.frameAdded": "Formelrahmen #{n} gesetzt; die Segmente darin gehören jetzt zu ihm. Im KI-Fenster: Formel-Prompt und Bilder kopieren.",
+    "fx.frameRemove": "Rahmen weg",
+    "fx.frameRemoveTitle": "Den Formelrahmen entfernen – die Segmente, die darin lagen, kommen zurück",
+    "fx.frameRemoved": "Formelrahmen entfernt.",
+    "fx.framePlaceholder": "LaTeX der Formel – die Antwort der KI (im KI-Fenster einfügen) oder „TeX“ (Modell); hier auch von Hand",
+    "fx.frameThumbTitle": "Das Bild der Formel, wie es die KI bekommt",
+    "ai.fxHead": "Formeln als Bilder",
+    "ai.fxPreparing": "– {n} Formel(n), die Bilder werden vorbereitet…",
+    "ai.fxHint": "– {n} Formel(n) auf {k} Bild(ern). Formel-Prompt kopieren und in den KI-Chat einfügen, dann jedes Bild kopieren und mit Strg+V in denselben Chat einfügen (oder „Bilder speichern“ und die Dateien hineinziehen). Die Antwort rechts einfügen wie beim Text.",
+    "ai.fxPrompt": "Formel-Prompt kopieren",
+    "ai.fxPromptCopied": "Formel-Prompt kopiert. Dazu die Bilder in den Chat einfügen, dann die Antwort rechts einfügen.",
+    "ai.fxSave": "Bilder speichern",
+    "ai.fxSaved": "{n} Bild(er) gespeichert.",
+    "ai.fxFile": "Formeln",
+    "ai.fxSheet": "Bild {k} von {total}: [[{a}]] – [[{b}]] ({n} Formeln)",
+    "ai.fxSheetTitle": "Das Bild in die Zwischenablage kopieren",
+    "ai.fxCopied": "Bild {k} von {total} kopiert – mit Strg+V in den KI-Chat einfügen.",
+    "ai.fxSavedInstead": "Der Browser kann keine Bilder in die Zwischenablage legen – das Bild wurde als Datei gespeichert.",
+    "msg.importedFx": " {n} Formel(n) als LaTeX übernommen.",
     "ocr.formulas": "Formeln",
     "ocr.fxFind": "Formeln mit einem Layout-Modell finden",
     "ocr.fxFindTitle": "Ein kleines Modell findet abgesetzte Formeln auf der Seite; jede wird ein Segment für sich, bleibt als Bild erhalten und wird nicht übersetzt. Ohne das Modell werden Formeln an ihren Zeichen erkannt.",
@@ -2148,7 +2183,7 @@ const I18N = {
     "msg.picturesOpened": "{n} Bilder als ein Dokument geöffnet – eine Seite je Bild, nach Dateinamen geordnet. Ihr Text wird per Texterkennung gelesen; die Reihenfolge lässt sich unter „Seiten anordnen“ ändern.",
     "err.rawPhoto": "Dieses RAW-Foto (DNG) enthält kein Vorschaubild. Bitte als JPEG exportieren und dieses öffnen.",
     "help.deskew": "<b>Gerade richten:</b> Schief gescannte Seiten und schief fotografierte Bilder werden gerade gedreht. Die Neigung wird an den Textzeilen gemessen (bis ±15°). In der Texterkennung (OCR) geschieht das vorher von selbst („Schiefe Seiten gerade richten“, dazu „Gewölbte Textzeilen glätten“ und „Automatisch zuschneiden“); unter „Seiten anordnen“ mit „⟂ Gerade richten“ für die ausgewählten Seiten oder von Hand im Feld daneben; bei einem Bild im Bild-Werkzeug mit „Automatisch“ oder dem Regler. „Von Hand…“ zeigt die Seite groß: drehen wie an einem Drehknopf, eine Linie an einer Textzeile anlegen oder die vier Seitenecken ziehen – eine schräg fotografierte Seite wird so zu einem geraden Rechteck – und „Zeilen glätten“ biegt gewölbte Textzeilen (ein aufgeschlagenes Buch) gerade, automatisch erkannt oder von Hand nachgezogen (dabei wird die Seite als Bild neu gespeichert). Übernommene Bildänderungen verwirft „↺ Original wiederherstellen“ im Bild-Werkzeug auf einmal. Ein Scan in einer PDF wird dabei nicht neu gespeichert, nur gedreht – die Qualität bleibt gleich. Gewölbte Buchseiten werden als Ganzes gedreht, nicht geglättet. <b>Nur einen Bereich erkennen:</b> im OCR-Fenster „Nur einen Bereich – auf der Seite markieren“, dann ein Rechteck über den Text ziehen und bei Bedarf seine vier Ecken verschieben (auch schräg); „Erkennen“ oder <kbd>Enter</kbd> liest nur diesen Teil. <b>Erkannte Segmente bearbeiten:</b> ✂ teilt ein Segment zwischen zwei Zeilen, ⤵ verbindet es mit dem nächsten, ✎ korrigiert den erkannten Text (mit dem Ausschnitt der Seite zum Vergleich; <kbd>Strg</kbd>+<kbd>Z</kbd> nimmt es zurück).",
-    "help.formulas": "<b>Formeln:</b> Formeln bleiben, wie sie sind, und werden nicht übersetzt – in einer PDF an Formelschriften und Zeichen erkannt, auf gescannten Seiten an ihren Zeichen (eine Zeile ohne Fließtext mit = · √ Σ, griechischen Buchstaben) und an Bruchstrichen; die Teile einer Formel – auch was die Texterkennung nur als Zeichensalat lesen konnte – werden eine Formel. Genauer findet sie im OCR-Fenster „Formeln mit einem Layout-Modell finden“ (ca. 7 MB, einmal geladen): jede abgesetzte Formel wird ein Segment für sich, das Bild bleibt im übersetzten Dokument. <b>Als LaTeX lesen:</b> „Formeln als LaTeX lesen“ im OCR-Fenster, oder bei jeder Formel „Als LaTeX lesen“ bzw. „Alle … Formeln lesen“ in ihrer Karte und „TeX“ in der Leiste über dem Segment (auch in PDFs mit Text: die Teile einer Formel werden zusammen gelesen). Das Modell pix2tex (ca. 100 MB, einmal geladen) liest gedruckte Formeln gut, auch zwei Formeln in einer Zeile („… bzw. …“); was es nicht sicher lesen kann, bleibt ohne LaTeX. „LaTeX kopieren“ legt es in die Zwischenablage.",
+    "help.formulas": "<b>Formeln:</b> Formeln bleiben, wie sie sind, und werden nicht übersetzt – in einer PDF an Formelschriften und Zeichen erkannt, auf gescannten Seiten an ihren Zeichen (eine Zeile ohne Fließtext mit = · √ Σ, griechischen Buchstaben) und an Bruchstrichen; die Teile einer Formel – auch was die Texterkennung nur als Zeichensalat lesen konnte – werden eine Formel. Genauer findet sie im OCR-Fenster „Formeln mit einem Layout-Modell finden“ (ca. 7 MB, einmal geladen): jede abgesetzte Formel wird ein Segment für sich, das Bild bleibt im übersetzten Dokument. <b>Als LaTeX lesen:</b> „Formeln als LaTeX lesen“ im OCR-Fenster, oder bei jeder Formel „Als LaTeX lesen“ bzw. „Alle … Formeln lesen“ in ihrer Karte und „TeX“ in der Leiste über dem Segment (auch in PDFs mit Text: die Teile einer Formel werden zusammen gelesen). Das Modell pix2tex (ca. 100 MB, einmal geladen) liest gedruckte Formeln gut, auch zwei Formeln in einer Zeile („… bzw. …“); was es nicht sicher lesen kann, bleibt ohne LaTeX. „LaTeX kopieren“ legt es in die Zwischenablage. <b>Formelrahmen (Werkzeug ∑ links neben der Seite, <kbd>M</kbd>):</b> ein Rechteck um eine Formel ziehen – sie wird ein Segment für sich, die Segmente darin (auch Zeichensalat der Texterkennung) gehören zu ihm; „Rahmen weg“ holt sie zurück. Im KI-Fenster erscheinen die Rahmen als Bilder: jede Formel mit ihrer Nummer [[n]], so viele auf einem Bild, wie darauf Platz haben. „Formel-Prompt kopieren“ und das Bild (die Bilder) in den KI-Chat einfügen; die Antwort – zu jeder Nummer das LaTeX, Wörter darin übersetzt – rechts einfügen wie beim Text: sie wird das LaTeX der Rahmen (in der Karte, zum Kopieren, im Lesemodus). Im übersetzten Dokument bleibt die Formel als Bild.",
     "filter.repeats": "Kopf- & Fußzeilen",
     "rep.header": "Kopfzeile · {n} Seiten",
     "rep.footer": "Fußzeile · {n} Seiten",
@@ -2854,7 +2889,7 @@ const I18N = {
     "hist.import": "Import",
     "hist.clear": "Alle Übersetzungen gelöscht",
     "hist.nothing": "Nichts rückgängig zu machen.",
-    "help.markup": "<b>Vollbild:</b> Schaltfläche rechts in der Ansichtsleiste oder <kbd>F</kbd>, beenden mit <kbd>Esc</kbd>. <b>Markieren:</b> Werkzeuge links neben der Seite – Rechteck <kbd>R</kbd>, Ellipse <kbd>O</kbd>, Textmarker <kbd>H</kbd>, Stift <kbd>P</kbd>, Pfeil <kbd>A</kbd>, Textnotiz <kbd>T</kbd>, Abdecken <kbd>W</kbd>, Radierer <kbd>E</kbd>, Auswählen <kbd>V</kbd>/<kbd>Esc</kbd>. Ausgewählte Markierung verschieben (auch mit den Pfeiltasten), mit <kbd>Entf</kbd> löschen, mit <kbd>Strg</kbd>+<kbd>C</kbd>/<kbd>X</kbd>/<kbd>V</kbd> kopieren, ausschneiden und einfügen, mit <kbd>Strg</kbd>+<kbd>D</kbd> duplizieren; eingefügter Text wird eine Textnotiz. Eine ausgewählte Textnotiz zeigt eine Leiste: Schrift, Größe (beliebig eintippen oder A−/A+), fett/kursiv, Schrift-, Hintergrund- und Rahmenfarbe, abgerundete Ecken, Deckkraft; Doppelklick bearbeitet ihren Text. <kbd>Strg</kbd>+<kbd>Z</kbd>/<kbd>Y</kbd> macht Markierungen, Importe und Übersetzungsänderungen rückgängig. Seiten blättern: <kbd>Bild ↑</kbd>/<kbd>Bild ↓</kbd>, <kbd>Pos1</kbd>/<kbd>Ende</kbd>. Markierungen werden beim Download als normale PDF-Anmerkungen gespeichert.",
+    "help.markup": "<b>Vollbild:</b> Schaltfläche rechts in der Ansichtsleiste oder <kbd>F</kbd>, beenden mit <kbd>Esc</kbd>. <b>Markieren:</b> Werkzeuge links neben der Seite – Rechteck <kbd>R</kbd>, Ellipse <kbd>O</kbd>, Textmarker <kbd>H</kbd>, Stift <kbd>P</kbd>, Pfeil <kbd>A</kbd>, Textnotiz <kbd>T</kbd>, Abdecken <kbd>W</kbd>, Formelrahmen <kbd>M</kbd>, Radierer <kbd>E</kbd>, Auswählen <kbd>V</kbd>/<kbd>Esc</kbd>. Ausgewählte Markierung verschieben (auch mit den Pfeiltasten), mit <kbd>Entf</kbd> löschen, mit <kbd>Strg</kbd>+<kbd>C</kbd>/<kbd>X</kbd>/<kbd>V</kbd> kopieren, ausschneiden und einfügen, mit <kbd>Strg</kbd>+<kbd>D</kbd> duplizieren; eingefügter Text wird eine Textnotiz. Eine ausgewählte Textnotiz zeigt eine Leiste: Schrift, Größe (beliebig eintippen oder A−/A+), fett/kursiv, Schrift-, Hintergrund- und Rahmenfarbe, abgerundete Ecken, Deckkraft; Doppelklick bearbeitet ihren Text. <kbd>Strg</kbd>+<kbd>Z</kbd>/<kbd>Y</kbd> macht Markierungen, Importe und Übersetzungsänderungen rückgängig. Seiten blättern: <kbd>Bild ↑</kbd>/<kbd>Bild ↓</kbd>, <kbd>Pos1</kbd>/<kbd>Ende</kbd>. Markierungen werden beim Download als normale PDF-Anmerkungen gespeichert.",
     "default.targetCode": "de",
     "default.targetName": "Deutsch",
     "clear.title": "Alle Übersetzungen löschen",
@@ -3009,6 +3044,27 @@ const I18N = {
     "fx.done": "{n} formula(s) read as LaTeX.",
     "fx.doneUnsure": "{n} formula(s) read as LaTeX; {u} could not be read reliably.",
     "fx.failed": "The formulas could not be read: {err}",
+    "tool.formula": "Formula frame: drag a rectangle around a formula – it becomes a segment of its own and a picture for the AI (M)",
+    "meta.frame": "formula frame – picture for the AI",
+    "fx.frameAdded": "Formula frame #{n} set; the segments inside it now belong to it. In the AI window: copy the formula prompt and the pictures.",
+    "fx.frameRemove": "Remove frame",
+    "fx.frameRemoveTitle": "Remove the formula frame – the segments that were inside it come back",
+    "fx.frameRemoved": "Formula frame removed.",
+    "fx.framePlaceholder": "The formula's LaTeX – the AI's answer (paste it in the AI window) or “TeX” (model); or type it here",
+    "fx.frameThumbTitle": "The picture of the formula as the AI gets it",
+    "ai.fxHead": "Formulas as pictures",
+    "ai.fxPreparing": "– {n} formula(s), preparing the pictures…",
+    "ai.fxHint": "– {n} formula(s) on {k} picture(s). Copy the formula prompt and paste it into the AI chat, then copy each picture and paste it into the same chat with Ctrl+V (or “Save pictures” and drag the files in). Paste the answer on the right, like the text.",
+    "ai.fxPrompt": "Copy formula prompt",
+    "ai.fxPromptCopied": "Formula prompt copied. Add the pictures to the chat, then paste the answer on the right.",
+    "ai.fxSave": "Save pictures",
+    "ai.fxSaved": "{n} picture(s) saved.",
+    "ai.fxFile": "formulas",
+    "ai.fxSheet": "Picture {k} of {total}: [[{a}]] – [[{b}]] ({n} formulas)",
+    "ai.fxSheetTitle": "Copy the picture to the clipboard",
+    "ai.fxCopied": "Picture {k} of {total} copied – paste it into the AI chat with Ctrl+V.",
+    "ai.fxSavedInstead": "The browser cannot put pictures on the clipboard – the picture was saved as a file.",
+    "msg.importedFx": " {n} formula(s) taken over as LaTeX.",
     "ocr.formulas": "Formulas",
     "ocr.fxFind": "Find formulas with a layout model",
     "ocr.fxFindTitle": "A small model finds displayed formulas on the page; each becomes a segment of its own, kept as a picture and not translated. Without the model, formulas are recognised by their signs.",
@@ -3127,7 +3183,7 @@ const I18N = {
     "msg.picturesToPdf": "Putting {n} pictures together into one document…",
     "msg.picturesOpened": "{n} pictures opened as one document – a page for each, in the order of their file names. Their text is read with text recognition; the order can be changed under “Arrange pages”.",
     "help.deskew": "<b>Straighten:</b> Pages scanned askew and pictures photographed at a slant are turned straight. The tilt is measured on the text lines (up to ±15°). Text recognition (OCR) does it first by itself (\"Straighten tilted pages\", also \"Flatten curved text lines\" and \"Crop automatically\"); in \"Arrange pages\" use \"⟂ Straighten\" for the selected pages or the field beside it by hand; for a picture use \"Auto\" or the slider in the picture tools. \"By hand…\" shows the page large: turn it like a dial, draw a line along a text line, or drag the four page corners – a page photographed at a slant becomes a straight rectangle – and \"Flatten lines\" bends curved text lines (a book photographed open) straight, found automatically or traced by hand (the page is then saved anew as a picture). \"↺ Restore original\" in the picture tools discards all applied picture changes at once. A scan in a PDF is not saved anew, only turned – its quality stays the same. Curved book pages are turned as a whole, not flattened. <b>Recognise only an area:</b> in the OCR window choose “Only an area – marked on the page”, then drag a rectangle over the text and move its four corners if needed (also slanted); “Recognise” or <kbd>Enter</kbd> reads only that part. <b>Editing recognised segments:</b> ✂ splits a segment between two lines, ⤵ joins it with the next, ✎ corrects the recognised text (with the cutout of the page for comparison; <kbd>Ctrl</kbd>+<kbd>Z</kbd> takes it back).",
-    "help.formulas": "<b>Formulas:</b> formulas stay as they are and are not translated – in a PDF recognised by their math fonts and signs, on scanned pages by their signs (a line without running text with = · √ Σ, Greek letters) and by fraction bars; the parts of a formula – also what text recognition could only read as gibberish – become one formula. In the OCR window, “Find formulas with a layout model” (about 7 MB, loaded once) finds them more reliably: every displayed formula becomes a segment of its own, and its picture stays in the translated document. <b>Read as LaTeX:</b> “Read formulas as LaTeX” in the OCR window, or “Read as LaTeX” / “Read all … formulas” in a formula's card and “TeX” in the bar above the segment (also in PDFs with text: the pieces of a formula are read together). The pix2tex model (about 100 MB, loaded once) reads printed formulas well, also two formulas in one line ("… or …"); what it cannot read reliably gets no LaTeX. “Copy LaTeX” puts it on the clipboard.",
+    "help.formulas": "<b>Formulas:</b> formulas stay as they are and are not translated – in a PDF recognised by their math fonts and signs, on scanned pages by their signs (a line without running text with = · √ Σ, Greek letters) and by fraction bars; the parts of a formula – also what text recognition could only read as gibberish – become one formula. In the OCR window, “Find formulas with a layout model” (about 7 MB, loaded once) finds them more reliably: every displayed formula becomes a segment of its own, and its picture stays in the translated document. <b>Read as LaTeX:</b> “Read formulas as LaTeX” in the OCR window, or “Read as LaTeX” / “Read all … formulas” in a formula's card and “TeX” in the bar above the segment (also in PDFs with text: the pieces of a formula are read together). The pix2tex model (about 100 MB, loaded once) reads printed formulas well, also two formulas in one line (\"… or …\"); what it cannot read reliably gets no LaTeX. “Copy LaTeX” puts it on the clipboard. <b>Formula frames (∑ tool to the left of the page, <kbd>M</kbd>):</b> drag a rectangle around a formula – it becomes a segment of its own, and the segments inside it (gibberish from text recognition too) belong to it; “Remove frame” brings them back. In the AI window the frames appear as pictures: each formula with its number [[n]], as many on one picture as fit. “Copy formula prompt” and paste the picture(s) into the AI chat; paste the answer – the LaTeX for each number, words in it translated – on the right like the text: it becomes the frames' LaTeX (in the card, to copy, in reading mode). In the translated document the formula stays as a picture.",
     "filter.repeats": "Headers & footers",
     "rep.header": "Header · {n} pages",
     "rep.footer": "Footer · {n} pages",
@@ -3834,7 +3890,7 @@ const I18N = {
     "hist.import": "import",
     "hist.clear": "all translations removed",
     "hist.nothing": "Nothing to undo.",
-    "help.markup": "<b>Full screen:</b> button at the right of the view toolbar or <kbd>F</kbd>, leave with <kbd>Esc</kbd>. <b>Markup:</b> tools to the left of the page – rectangle <kbd>R</kbd>, ellipse <kbd>O</kbd>, highlighter <kbd>H</kbd>, pen <kbd>P</kbd>, arrow <kbd>A</kbd>, text note <kbd>T</kbd>, whiteout <kbd>W</kbd>, eraser <kbd>E</kbd>, select <kbd>V</kbd>/<kbd>Esc</kbd>. Drag a selected markup to move it (or use the arrow keys), press <kbd>Delete</kbd> to remove it, <kbd>Ctrl</kbd>+<kbd>C</kbd>/<kbd>X</kbd>/<kbd>V</kbd> to copy, cut and paste it, <kbd>Ctrl</kbd>+<kbd>D</kbd> to duplicate it; pasted text becomes a text note. A selected text note shows a bar: font, size (type any size, or A−/A+), bold/italic, text, background and frame colour, rounded corners, opacity; double-click it to edit its text. <kbd>Ctrl</kbd>+<kbd>Z</kbd>/<kbd>Y</kbd> undoes markups, imports and translation changes. Turn pages with <kbd>Page Up</kbd>/<kbd>Page Down</kbd>, <kbd>Home</kbd>/<kbd>End</kbd>. Markups are saved as standard PDF annotations when you download.",
+    "help.markup": "<b>Full screen:</b> button at the right of the view toolbar or <kbd>F</kbd>, leave with <kbd>Esc</kbd>. <b>Markup:</b> tools to the left of the page – rectangle <kbd>R</kbd>, ellipse <kbd>O</kbd>, highlighter <kbd>H</kbd>, pen <kbd>P</kbd>, arrow <kbd>A</kbd>, text note <kbd>T</kbd>, whiteout <kbd>W</kbd>, formula frame <kbd>M</kbd>, eraser <kbd>E</kbd>, select <kbd>V</kbd>/<kbd>Esc</kbd>. Drag a selected markup to move it (or use the arrow keys), press <kbd>Delete</kbd> to remove it, <kbd>Ctrl</kbd>+<kbd>C</kbd>/<kbd>X</kbd>/<kbd>V</kbd> to copy, cut and paste it, <kbd>Ctrl</kbd>+<kbd>D</kbd> to duplicate it; pasted text becomes a text note. A selected text note shows a bar: font, size (type any size, or A−/A+), bold/italic, text, background and frame colour, rounded corners, opacity; double-click it to edit its text. <kbd>Ctrl</kbd>+<kbd>Z</kbd>/<kbd>Y</kbd> undoes markups, imports and translation changes. Turn pages with <kbd>Page Up</kbd>/<kbd>Page Down</kbd>, <kbd>Home</kbd>/<kbd>End</kbd>. Markups are saved as standard PDF annotations when you download.",
     "default.targetCode": "en",
     "default.targetName": "English",
     "clear.title": "Remove all translations",
@@ -3922,6 +3978,16 @@ const AI_PROMPT = {
       "7. Antworte nur mit den übersetzten Segmenten im exakt gleichen [[n]]-Format, als reiner Text: keine Einleitung, keine Kommentare, kein Markdown, kein Codeblock.",
     ],
     part: (k, total, a, b) => `Dies ist Teil ${k} von ${total} des Dokuments (Segmente [[${a}]] bis [[${b}]]). Die Nummerierung setzt die vorherigen Teile fort: übernimm die Nummern genau so und beginne nicht wieder bei 1.`,
+    formulas: (tgt, n, k) => [
+      `${k > 1 ? `Die ${k} angehängten Bilder zeigen` : "Das angehängte Bild zeigt"} ${n} Formel(n) aus einem Dokument, untereinander, jede mit ihrer Nummer in blauer Schrift links davon, z. B. [[12]]. Zielsprache: ${tgt}.`,
+      "",
+      "Schreibe jede Formel als LaTeX. Halte dich an diese Regeln:",
+      "1. Antworte zu jeder Formel mit ihrer Markierungszeile [[n]] (genau die Nummer vom Bild, in einer eigenen Zeile) und darunter dem LaTeX der Formel – nur der Inhalt, ohne $-Zeichen und ohne \\begin{equation}. Alle Formeln in der Reihenfolge der Bilder; keine hinzufügen, keine weglassen. Fehlen in einer Nachricht Bilder, beantworte nur die Formeln der mitgeschickten.",
+      "2. Gib die Formel genau wieder: alle Symbole, Indizes, Exponenten, Brüche (\\frac), Wurzeln, Klammern, Vektorpfeile, Einheiten. Variablen, Zahlen und Einheiten unverändert lassen.",
+      "3. Wörter in der Formel – Text zwischen zwei Formeln („bzw.“, „für“, „mit“), ausgeschriebene Indizes und Bezeichnungen – in die Zielsprache übersetzen und in \\text{…} setzen. Fachübliche Kurzzeichen (U_{eff}, P_{max}) bleiben, wie sie sind.",
+      "4. Antworte nur mit den Markierungen und dem LaTeX, als reiner Text: keine Einleitung, keine Erklärungen, kein Markdown, kein Codeblock.",
+    ],
+    formulaList: "Formeln:",
   },
   en: {
     intro: (tgt) => `Translate the text segments below into ${tgt}. Detect the source language yourself (it may change within the document).`,
@@ -3968,6 +4034,16 @@ const AI_PROMPT = {
       "7. Reply with the translated segments only, in exactly the same [[n]] format, as plain text: no introduction, no comments, no Markdown, no code block.",
     ],
     part: (k, total, a, b) => `This is part ${k} of ${total} of the document (segments [[${a}]] to [[${b}]]). The numbering continues from the previous parts: keep the numbers exactly as they are and do not restart at 1.`,
+    formulas: (tgt, n, k) => [
+      `The attached ${k > 1 ? `${k} pictures show` : "picture shows"} ${n} formula(s) from a document, one under the other, each with its number in blue at the left, e.g. [[12]]. Target language: ${tgt}.`,
+      "",
+      "Write every formula as LaTeX. Follow these rules:",
+      "1. Answer for every formula with its marker line [[n]] (exactly the number from the picture, on a line of its own) and under it the formula's LaTeX – the content only, without $ signs and without \\begin{equation}. All formulas in the order of the pictures; add none, leave none out. If a message lacks some pictures, answer only for the formulas in the pictures it has.",
+      "2. Reproduce the formula exactly: every symbol, subscript, exponent, fraction (\\frac), root, bracket, vector arrow, unit. Leave variables, numbers and units unchanged.",
+      "3. Translate words in the formula – text between two formulas (\"or\", \"for\", \"with\"), spelt-out subscripts and labels – into the target language and put them in \\text{…}. Customary short symbols (U_{rms}, P_{max}) stay as they are.",
+      "4. Reply with the markers and the LaTeX only, as plain text: no introduction, no explanations, no Markdown, no code block.",
+    ],
+    formulaList: "Formulas:",
   },
 };
 
@@ -15310,7 +15386,7 @@ async function loadBytes(bytes, name, remember, knownId = null) {
     if (remember) rememberDocument(name, image ? original : bytes, id); else touchRecent(id); // (a picture is stored as it was)
     const restored = kind === "pdf" ? await restoreOcr(id, segments, pages) : { segments, ocr: null };
     if (stale()) return;
-    if (kind === "pdf" && !image) restored.segments = await replaySegEdits(id, restored.segments); // splits and joins from earlier sessions
+    if (kind === "pdf") restored.segments = await replaySegEdits(id, restored.segments); // splits, joins and formula frames from earlier sessions
     if (stale()) return;
     openDocument({ id, name, kind, pages, segments: restored.segments, ocr: restored.ocr, image }, bytes);
     state.segEdits = kind === "pdf" ? loadSegEdits(id) : [];
@@ -15780,7 +15856,7 @@ function ensureBoxes(i) {
   const html = (boxesByPage.get(i) || []).map(([s, bbox]) => {
     const [x0, y0, x1, y1] = bbox;
     const active = s.id === state.activeId, custom = fieldsEditable() && state.overrides[s.id] && state.overrides[s.id].bbox;
-    const cls = "box" + (hasTr(s.id) ? " done" : "") + (s.skip ? " skip" : "") + (active ? " active" : "") + (custom ? " custom" : "");
+    const cls = "box" + (segDone(s.id) ? " done" : "") + (s.skip ? " skip" : "") + (s.frame ? " frame" : "") + (active ? " active" : "") + (custom ? " custom" : "");
     return `<div class="${cls}" data-id="${s.id}" title="#${s.id}" style="left:${((x0 - page.x0) / page.width) * 100}%;top:${((y0 - page.y0) / page.height) * 100}%;width:${((x1 - x0) / page.width) * 100}%;height:${((y1 - y0) / page.height) * 100}%">${active && fieldsEditable() ? HANDLES : ""}</div>`;
   }).join("");
   el.querySelector(".page-body").insertAdjacentHTML("beforeend", html);
@@ -15874,6 +15950,7 @@ const translatable = () => state.doc.segments.filter((s) => !s.skip && !repHidde
 
 function segMeta(s) {
   const page = t("meta.page", { n: s.page + 1 });
+  if (s.frame) return `${page} · ${t("meta.frame")}`;
   if (s.skip) return `${page} · ${t(s.formula ? "meta.formula" : "meta.numbers")}${s.edited ? " · " + t("meta.corrected") : ""}`;
   if (isBook()) return s.hidden ? `${t("meta.notShown")} · ${s.tag}` : `${page} · ${s.notes ? t("meta.notes") : s.tag}`;
   if (s.extra) return s.extra === "title" ? t("meta.extra_title") : `${page} · ${t("meta.extra_" + s.extra)}`;
@@ -16018,7 +16095,7 @@ const isPending = (id) => (state.translations[id] || "").trim() !== (state.appli
 function makeCard(id) {
   const s = segById(id);
   const el = document.createElement("div");
-  el.className = "seg" + (hasTr(id) ? " done" : "") + (state.shrunk.has(id) ? " shrunk" : "") + (id === state.activeId ? " active" : "") + (isPending(id) ? " pending" : "");
+  el.className = "seg" + (segDone(id) ? " done" : "") + (s.frame ? " frame" : "") + (state.shrunk.has(id) ? " shrunk" : "") + (id === state.activeId ? " active" : "") + (isPending(id) ? " pending" : "");
   el.dataset.id = id;
   el.innerHTML = `
     <div class="seg-head">
@@ -16027,22 +16104,22 @@ function makeCard(id) {
       <span class="seg-id">#${id}</span>
       <span class="seg-meta" data-shrunk="${escapeHtml(t("meta.shrunk"))}">${escapeHtml(segMeta(s))}</span>
       <span class="seg-warn" hidden></span>
-      <button type="button" class="mini" data-act="copy" title="${escapeHtml(t("card.copyTitle"))}">${t("card.copy")}</button>
-      <button type="button" class="mini" data-act="same" title="${escapeHtml(t("card.keepTitle"))}">${t("card.keep")}</button>
-      ${!fieldsEditable() || s.extra ? "" : `<button type="button" class="mini${state.overrides[id] ? " on" : ""}" data-act="style" title="${escapeHtml(t("card.styleTitle"))}">Aa</button>`}
-      ${!kindsEditable() || s.extra ? "" : `<button type="button" class="mini kind${state.kinds[id] ? " on" : ""}" data-act="kind" title="${escapeHtml(t(s.skip ? "card.asTextTitle" : "card.asFormulaTitle"))}">${t(s.skip ? "card.asText" : "card.asFormula")}</button>`}
+      <button type="button" class="mini" data-act="copy" title="${escapeHtml(t(s.frame ? "fx.copyTitle" : "card.copyTitle"))}">${t("card.copy")}</button>
+      ${s.frame ? `<button type="button" class="mini" data-act="latexRead" title="${escapeHtml(t("fx.readTitle"))}">TeX</button><button type="button" class="mini" data-act="frameDel" title="${escapeHtml(t("fx.frameRemoveTitle"))}">${t("fx.frameRemove")}</button>` : `<button type="button" class="mini" data-act="same" title="${escapeHtml(t("card.keepTitle"))}">${t("card.keep")}</button>`}
+      ${!fieldsEditable() || s.extra || s.frame ? "" : `<button type="button" class="mini${state.overrides[id] ? " on" : ""}" data-act="style" title="${escapeHtml(t("card.styleTitle"))}">Aa</button>`}
+      ${!kindsEditable() || s.extra || s.frame ? "" : `<button type="button" class="mini kind${state.kinds[id] ? " on" : ""}" data-act="kind" title="${escapeHtml(t(s.skip ? "card.asTextTitle" : "card.asFormulaTitle"))}">${t(s.skip ? "card.asText" : "card.asFormula")}</button>`}
       ${!repSupported() || s.skip || s.extra || repGroup(id) ? "" : `<button type="button" class="mini" data-act="repMake" title="${escapeHtml(t("rep.makeTitle"))}">⧉</button>`}
-      ${!s.ocr || isBook() ? "" : `<button type="button" class="mini" data-act="editSrc" title="${escapeHtml(t("card.editSrcTitle"))}">✎</button>`}
+      ${!s.ocr || isBook() || s.frame ? "" : `<button type="button" class="mini" data-act="editSrc" title="${escapeHtml(t("card.editSrcTitle"))}">✎</button>`}
       ${!segEditable(s) ? "" : `${s.lines > 1 ? `<button type="button" class="mini" data-act="split" title="${escapeHtml(t("card.splitTitle"))}">✂</button>` : ""}<button type="button" class="mini" data-act="join" title="${escapeHtml(t("card.joinTitle"))}">⤵</button>`}
       <button type="button" class="mini apply" data-act="apply" title="${escapeHtml(t("card.applyTitle"))}">${t("card.apply")}</button>
     </div>
     ${repCardHtml(id)}
     ${styleOpen.has(id) && !isBook() ? stylePanelHtml(s) : ""}
-    <div class="seg-src">${srcHtml(s)}</div>
-    ${latexRowHtml(s)}
-    <textarea rows="1" spellcheck="true" placeholder="${escapeHtml(t(repLocked(id) ? (repGroup(id).mode === "keep" ? "rep.keepPlaceholder" : "rep.oncePlaceholder") : "card.placeholder", { n: repGroup(id)?.lead }))}" aria-label="${escapeHtml(t("card.aria", { n: id }))}"${repLocked(id) ? " readonly" : ""}></textarea>`;
+    ${s.frame ? `<div class="seg-frame" title="${escapeHtml(t("fx.frameThumbTitle"))}"><img alt=""></div>${s.text ? `<div class="seg-src muted small">${srcHtml(s)}</div>` : ""}` : `<div class="seg-src">${srcHtml(s)}</div>${latexRowHtml(s)}`}
+    <textarea rows="1" spellcheck="${s.frame ? "false" : "true"}" placeholder="${escapeHtml(t(s.frame ? "fx.framePlaceholder" : repLocked(id) ? (repGroup(id).mode === "keep" ? "rep.keepPlaceholder" : "rep.oncePlaceholder") : "card.placeholder", { n: repGroup(id)?.lead }))}" aria-label="${escapeHtml(t("card.aria", { n: id }))}"${repLocked(id) ? " readonly" : ""}></textarea>`;
   if (repGroup(id)) el.classList.add(repLocked(id) ? "rep-locked" : "rep-lead");
-  el.querySelector("textarea").value = state.translations[id] || "";
+  el.querySelector("textarea").value = cardValue(id);
+  if (s.frame) frameThumb(el.querySelector(".seg-frame img"), s);
   if (find.open) requestAnimationFrame(() => decorateCard(el, id)); // (once it has its size)
   markWarn(el, id);
   return el;
@@ -16093,7 +16170,7 @@ function markWarn(el, id) {
 }
 
 function markDone(id) {
-  const done = hasTr(id);
+  const done = segDone(id);
   vl.rendered.get(id)?.classList.toggle("done", done);
   vl.rendered.get(id)?.classList.toggle("pending", isPending(id));
   markWarn(vl.rendered.get(id), id);
@@ -16119,13 +16196,13 @@ function applyFilter() {
   const ids = [];
   for (const s of state.doc.segments) {
     if (page !== null && s.page !== page) continue;
-    if (status === "numbers" ? !s.skip : s.skip) continue; // numbers-only segments have their own filter
+    if (!s.frame && (status === "numbers" ? !s.skip : s.skip)) continue; // numbers-only segments have their own filter (formula frames are listed with the text)
     if (status !== "numbers" && repHidden(s.id) && repGroup(s.id).lead !== s.id) continue; // (an open group shows them after its lead)
     if (status === "repeats" && !repGroup(s.id)) continue;
     if (status === "unsure" && !unsureWords(s).length) continue;
     if (status === "markers" && !markerIssues(s)) continue;
     if (status === "extra" && !s.extra) continue;
-    if ((status === "todo" || status === "done") && (status === "done") !== hasTr(s.id)) continue;
+    if ((status === "todo" || status === "done") && (status === "done") !== segDone(s.id)) continue;
     if (re && !((scope !== "tr" && hit(s.text)) || (scope !== "src" && hit(state.translations[s.id] || "")))) continue;
     ids.push(s.id);
   }
@@ -16150,7 +16227,8 @@ function segAction(id, act) {
     if (ta) { ta.value = value; ta.dataset.before = value; autoGrow(ta); }
     recordTranslations({ [id]: before }, { [id]: value }, t("hist.translation"));
   };
-  if (act === "copy") navigator.clipboard?.writeText(s.text).then(() => toast(t("msg.sourceCopied"))).catch(() => toast(t("msg.noClipboard"), "error"));
+  if (act === "copy") navigator.clipboard?.writeText(s.frame ? latexOf(s) || s.text : s.text).then(() => toast(t(s.frame && latexOf(s) ? "fx.copied" : "msg.sourceCopied"))).catch(() => toast(t("msg.noClipboard"), "error"));
+  else if (act === "frameDel") { segBarHide(); removeFormulaFrame(id); return; }
   else if (act === "same") setTr(s.text);
   else if (act === "clear") setTr("");
   else if (act === "apply") { applyField(id); repApplyMembers(id); applyChain.then(segBarRefresh); }
@@ -16257,9 +16335,17 @@ function mergeImported(parsed, overwrite = $("#importOverwrite").checked) {
   const ids = Object.keys(parsed).map(Number);
   const matched = ids.filter((id) => segIndex.has(id));
   const unknown = ids.length - matched.length;
-  let applied = 0;
+  let applied = 0, formulas = 0;
   const before = {}, after = {};
   for (const id of matched) {
+    if (segIndex.get(id).frame) { // a formula frame: the answer is its LaTeX
+      const v = cleanLatex(parsed[id]);
+      if (!v || (!overwrite && state.latex[id])) continue;
+      state.latex[id] = v;
+      vl.heights.delete(id);
+      formulas++;
+      continue;
+    }
     if (!overwrite && hasTr(id)) continue;
     before[id] = state.translations[id] || "";
     after[id] = parsed[id];
@@ -16268,20 +16354,22 @@ function mergeImported(parsed, overwrite = $("#importOverwrite").checked) {
     applied++;
   }
   persist();
+  if (formulas) saveLatex();
   if (applied) recordTranslations(before, after, t("hist.import"));
   // Update what is on screen; everything else picks the new text up when it is shown.
   for (const [id, el] of vl.rendered) {
     const ta = el.querySelector("textarea");
-    if (ta.value !== (state.translations[id] || "")) { ta.value = state.translations[id] || ""; autoGrow(ta); }
-    el.classList.toggle("done", hasTr(id));
+    if (ta.value !== cardValue(id)) { ta.value = cardValue(id); autoGrow(ta); }
+    el.classList.toggle("done", segDone(id));
     el.classList.toggle("pending", isPending(id));
     markWarn(el, id);
   }
-  document.querySelectorAll(".box").forEach((b) => b.classList.toggle("done", hasTr(b.dataset.id)));
+  document.querySelectorAll(".box").forEach((b) => b.classList.toggle("done", segDone(Number(b.dataset.id))));
   vl.dirty = true;
   applyFilter();
   updateProgress();
-  let msg = t("msg.imported", { n: applied });
+  let msg = [applied || !formulas ? t("msg.imported", { n: applied }) : "", formulas ? t("msg.importedFx", { n: formulas }).trim() : ""].filter(Boolean).join(" ");
+  applied += formulas;
   if (unknown) msg += t("msg.unknownMarkers", { n: unknown });
   const got = new Set(matched);
   const missing = translatable().filter((s) => !got.has(s.id)).length;
@@ -16666,7 +16754,8 @@ function init() {
   }, { passive: true });
   list.addEventListener("input", (e) => {
     if (e.target.tagName !== "TEXTAREA") return;
-    setTranslation(Number(e.target.closest(".seg").dataset.id), e.target.value);
+    const id = Number(e.target.closest(".seg").dataset.id);
+    if (segById(id)?.frame) setFrameLatex(id, e.target.value); else setTranslation(id, e.target.value); // (a frame's box holds its LaTeX)
     autoGrow(e.target);
   });
   list.addEventListener("change", (e) => { // fires when a changed translation box is left
@@ -16675,7 +16764,7 @@ function init() {
     const id = e.target.closest(".seg").dataset.id;
     const before = e.target.dataset.before || "", after = e.target.value;
     e.target.dataset.before = after;
-    if (before !== after) recordTranslations({ [id]: before }, { [id]: after }, t("hist.translation"));
+    if (before !== after && !segById(id)?.frame) recordTranslations({ [id]: before }, { [id]: after }, t("hist.translation"));
   });
   list.addEventListener("focusin", (e) => {
     if (e.target.tagName === "TEXTAREA") e.target.dataset.before = e.target.value;
@@ -16924,6 +17013,7 @@ const aiCopied = new Set(); // parts already copied; kept until the selection of
 let aiSelection = "";
 
 function refreshAiPrompt() {
+  refreshAiFormulas(); // (the formula frames' pictures, see formula.js)
   if (!state.doc) { $("#aiPrompt").value = aiPromptText(); $("#aiParts").innerHTML = ""; return; }
   const parts = aiParts();
   const segs = parts.flat();
@@ -17035,7 +17125,7 @@ initHelp();
 // localStorage, and written into the PDF as standard annotations when it is downloaded.
 // ======================================================================
 const SVGNS = "http://www.w3.org/2000/svg";
-const TOOL_KEYS = { v: "select", r: "rect", o: "ellipse", h: "highlight", p: "ink", a: "arrow", t: "text", w: "whiteout", e: "eraser" };
+const TOOL_KEYS = { v: "select", r: "rect", o: "ellipse", h: "highlight", p: "ink", a: "arrow", t: "text", w: "whiteout", m: "formula", e: "eraser" };
 const BOX_TOOLS = new Set(["rect", "ellipse", "highlight", "whiteout"]);
 
 const mk = {
@@ -17194,6 +17284,8 @@ function markupNode(m) {
     g.append(svgEl("rect", { x: x0, y: y0, width: w, height: h, fill: m.color, "fill-opacity": 0.4, class: "hl" }));
   } else if (m.type === "whiteout") {
     g.append(svgEl("rect", { x: x0, y: y0, width: w, height: h, fill: "#fff", class: "wo" }));
+  } else if (m.type === "frame") { // (the formula frame while it is drawn)
+    g.append(svgEl("rect", { x: x0, y: y0, width: w, height: h, fill: "rgba(26, 86, 219, .08)", stroke: "#1a56db", "stroke-width": 1.5, "stroke-dasharray": "4 3", "vector-effect": "non-scaling-stroke" }));
   } else if (m.type === "ink") {
     const pts = m.points.map((p) => p.join(",")).join(" ");
     g.append(svgEl("polyline", { points: pts, ...hitStroke }), svgEl("polyline", { points: pts, ...stroke }));
@@ -17310,7 +17402,8 @@ function onPointerDown(e) {
     if (note) { select(note.id); openTextEditor(note.page, [note.x0, note.y0], note); } else openTextEditor(i, pt);
     return;
   }
-  const m = { id: mk.seq++, page: i, type: mk.tool, color: currentColor(), width: mk.width, x0: pt[0], y0: pt[1], x1: pt[0], y1: pt[1] };
+  // (the formula tool draws a frame that becomes a segment, not a markup – see addFormulaFrame)
+  const m = { id: mk.seq++, page: i, type: mk.tool === "formula" ? "frame" : mk.tool, color: currentColor(), width: mk.width, x0: pt[0], y0: pt[1], x1: pt[0], y1: pt[1] };
   if (m.type === "ink") m.points = [pt];
   mk.draft = { m, svg, page: i };
 }
@@ -17358,7 +17451,10 @@ function onPointerUp() {
     mk.draft = null;
     const [x0, y0, x1, y1] = boxOfMarkup(m);
     const big = m.type === "ink" ? m.points.length > 1 : m.type === "arrow" ? Math.hypot(m.x1 - m.x0, m.y1 - m.y0) > 3 : x1 - x0 > 2 && y1 - y0 > 2;
-    if (big) {
+    if (m.type === "frame") {
+      renderMarkups(page);
+      if (x1 - x0 > 4 && y1 - y0 > 4) addFormulaFrame(page, [x0, y0, x1, y1]);
+    } else if (big) {
       if (m.type === "ink") m.points = simplify(m.points, 0.4);
       changeMarkups(() => { state.markups.push(m); });
     } else {
@@ -18107,6 +18203,7 @@ const styleOpen = new Set(); // cards whose style panel is open
 /** Forget what belongs to the previous document (when a file is opened or closed). */
 function resetToolsState() {
   styleOpen.clear();
+  frameCacheClear(); // (the pictures of the formula frames)
   for (const timer of applyTimers.values()) clearTimeout(timer);
   applyTimers.clear();
   boxDrag.cur = null;
@@ -19765,20 +19862,22 @@ const SB_ICONS = {
   clear: SB_ICON('<path d="M6 6l12 12M18 6L6 18"/>'),
   copy: SB_ICON('<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a1 1 0 0 1 1-1h9"/>'),
   apply: SB_ICON('<path d="M20 12a8 8 0 1 1-2.3-5.7"/><path d="M20 4v5h-5"/>'),
+  trash: SB_ICON('<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>'),
 };
 function segBarButtons(s) {
   const id = s.id, b = (act, icon, label, title, on = false) =>
     `<button type="button" class="segbar-btn${on ? " on" : ""}" data-act="${act}" title="${escapeHtml(title)}">${icon}${label ? `<span>${escapeHtml(label)}</span>` : ""}</button>`;
   const out = [];
-  if (kindsEditable() && !s.extra) out.push(s.skip ? b("kind", '<span class="segbar-glyph">Aa</span>', t("card.asText"), t("card.asTextTitle")) : b("kind", '<span class="segbar-glyph">∑</span>', t("card.asFormula"), t("card.asFormulaTitle")));
+  if (kindsEditable() && !s.extra && !s.frame) out.push(s.skip ? b("kind", '<span class="segbar-glyph">Aa</span>', t("card.asText"), t("card.asTextTitle")) : b("kind", '<span class="segbar-glyph">∑</span>', t("card.asFormula"), t("card.asFormulaTitle")));
   if (segEditable(s)) {
     if (s.lines > 1) out.push(b("split", SB_ICONS.split, t("bar.split"), t("card.splitTitle")));
     out.push(b("join", SB_ICONS.join, t("bar.join"), t("card.joinTitle")));
   }
   if (repSupported() && !s.skip && !s.extra && !repGroup(id)) out.push(b("repMake", SB_ICONS.repMake, "", t("rep.makeTitle")));
   if (fieldsEditable() && !s.extra && !s.skip) out.push(b("style", '<span class="segbar-glyph">Aa</span>', "", t("card.styleTitle"), Boolean(state.overrides[id])));
-  if (s.ocr && !isBook()) out.push(b("editSrc", SB_ICONS.editSrc, "", t("card.editSrcTitle")));
+  if (s.ocr && !isBook() && !s.frame) out.push(b("editSrc", SB_ICONS.editSrc, "", t("card.editSrcTitle")));
   if (s.skip && !isBook() && formulaGroups().byId.has(id)) out.push(latexOf(s) ? b("latexCopy", '<span class="segbar-glyph">TeX</span>', "", t("fx.copyTitle")) : b("latexRead", '<span class="segbar-glyph">TeX</span>', "", t("fx.readTitle")));
+  if (s.frame) out.push(b("frameDel", SB_ICONS.trash, t("fx.frameRemove"), t("fx.frameRemoveTitle")));
   out.push("<span class=\"segbar-sep\"></span>");
   if (!s.skip) {
     out.push(b("same", SB_ICONS.same, "", t("card.keepTitle")));
@@ -20147,7 +20246,7 @@ function initPicture() {
 // from its own browser cache before the network, so language files are written into that cache.
 // ======================================================================
 
-const APP_VERSION = "2.46";
+const APP_VERSION = "2.47";
 // (a change of library version makes a stored set outdated: it is then ignored)
 const OFFLINE_VERSION = `${MUPDF_URL} ${OCR_LIB}`;
 const CORE_SIMD = "tesseract-core-simd-lstm.wasm.js", CORE_PLAIN = "tesseract-core-lstm.wasm.js";
@@ -22879,6 +22978,7 @@ function readable(text, tags) {
 /** What the bubble says for a segment: its translation, or on the translated view its original. */
 function bubbleContent(s) {
   if (state.variant === "translated") return { text: readable(s.text, s.tags), kind: "orig" };
+  if (s.frame) { const tex = latexOf(s); return tex ? { text: tex, kind: "tr" } : { text: t("read.none"), kind: "none" }; } // (a formula frame: its LaTeX)
   const tr = (state.translations[s.id] || "").trim();
   return tr ? { text: readable(tr, s.tags), kind: "tr" } : { text: t("read.none"), kind: "none" };
 }
@@ -22949,7 +23049,7 @@ function initReading() {
 // The text of a recognised segment can also be corrected by hand.
 
 const segKey = (id) => `pdftr:seg:${id}`;
-const segEditable = (s) => Boolean(state.doc && !isBook() && s && !s.extra && (s.ocr || !state.doc.image));
+const segEditable = (s) => Boolean(state.doc && !isBook() && s && !s.extra && !s.frame && (s.ocr || !state.doc.image));
 /** The stored OCR result of a page, when it has its lines (results from before 2.20 have not). */
 const ocrRecord = (p) => { const r = state.doc && state.doc.ocr && state.doc.ocr[p]; return r && r.raw ? r : null; };
 const sameBox = (a, b) => a && b && a.every((v, i) => Math.abs(v - b[i]) < 0.6);
@@ -22978,7 +23078,7 @@ function nextJoinable(segments, s) {
     const n = segments[k];
     if (n.page !== s.page) return null;
     // (numbers and dates, not shown in the list, are passed over: the next card is meant)
-    if (Boolean(n.ocr) === Boolean(s.ocr) && (s.skip || !n.skip)) return n;
+    if (Boolean(n.ocr) === Boolean(s.ocr) && !n.frame && (s.skip || !n.skip)) return n;
   }
   return null;
 }
@@ -22996,6 +23096,7 @@ async function pageLinesOf(page, ocr) {
  */
 async function applySegEdit(segments, op) {
   if (op.op === "move") return applyMove(segments, op);
+  if (op.op === "frame") return applyFrameOp(segments, op); // (a formula frame, see formula.js)
   const plan = await planSegEdit(segments, op);
   if (!plan) return null;
   const { sources, fresh } = plan;
@@ -23109,38 +23210,14 @@ async function runSegEdit(op) {
   try {
     const r = await applySegEdit(doc.segments, op);
     if (!r) { toast(t("seg.notFound"), "error"); return false; }
-    const move = (obj) => {
-      const out = {};
-      for (const [k, v] of Object.entries(obj || {})) if (r.remap.has(Number(k))) out[r.remap.get(Number(k))] = v;
-      return out;
-    };
     const joined = op.op === "join" ? r.sources.map((s) => (state.translations[s.id] || "").trim()).filter(Boolean).join(" ") : "";
-    state.translations = move(state.translations);
-    state.overrides = move(state.overrides);
-    state.kinds = move(state.kinds);
-    state.latex = move(state.latex); saveLatex();
-    if (joined) state.translations[r.fresh[0].id] = joined; // a join keeps both translations, one after the other
-    doc.segments = r.list;
-    applyKinds(); saveKinds();
     state.segEdits = [...(state.segEdits || []), op];
     saveSegEdits();
-    persist(); saveOverrides();
-    disposeOutput();
-    pool.workers[0].call("resetOutput").catch(() => {});
-    state.shrunk = new Set();
-    segIndex.clear();
-    for (const s of doc.segments) segIndex.set(s.id, s);
-    repSetup(); repSync(); // (header/footer groups of the new numbering)
-    resetHistory();
-    renderPages();
-    vl.reset();
-    applyFilter();
-    setBuilt(false);
-    setVariant("original");
-    updateProgress();
+    relistSegments(doc, r, () => { if (joined) state.translations[r.fresh[0].id] = joined; }); // a join keeps both translations, one after the other
     const first = r.fresh[0].id;
     setActive(first, { scrollList: true, scrollViewer: true });
-    toast(t(op.op === "split" ? "seg.split" : op.op === "move" ? "seg.moved" : "seg.joined", { n: op.op === "move" ? first : r.fresh.length }), "ok", { label: t("seg.undo"), run: undoLastSegEdit });
+    const key = { split: "seg.split", move: "seg.moved", frame: "fx.frameAdded" }[op.op] || "seg.joined";
+    toast(t(key, { n: op.op === "move" || op.op === "frame" ? first : r.fresh.length }), "ok", { label: t("seg.undo"), run: undoLastSegEdit });
     return true;
   } catch (err) {
     console.error(err);
@@ -23149,6 +23226,40 @@ async function runSegEdit(op) {
   } finally {
     busy("");
   }
+}
+
+/**
+ * The document's segments replaced by a new list ({list, remap}: old id → new id); everything
+ * keyed by the numbers follows, and everything that shows them is drawn anew. `between` runs
+ * after the maps have moved and before the list is shown.
+ */
+function relistSegments(doc, r, between) {
+  const move = (obj) => {
+    const out = {};
+    for (const [k, v] of Object.entries(obj || {})) if (r.remap.has(Number(k))) out[r.remap.get(Number(k))] = v;
+    return out;
+  };
+  state.translations = move(state.translations);
+  state.overrides = move(state.overrides);
+  state.kinds = move(state.kinds);
+  state.latex = move(state.latex); saveLatex();
+  if (between) between();
+  doc.segments = r.list;
+  applyKinds(); saveKinds();
+  persist(); saveOverrides();
+  disposeOutput();
+  pool.workers[0].call("resetOutput").catch(() => {});
+  state.shrunk = new Set();
+  segIndex.clear();
+  for (const s of doc.segments) segIndex.set(s.id, s);
+  repSetup(); repSync(); // (header/footer groups of the new numbering)
+  resetHistory();
+  renderPages();
+  vl.reset();
+  applyFilter();
+  setBuilt(false);
+  setVariant("original");
+  updateProgress();
 }
 
 /* ---- recognised segments: split and joined in the stored OCR result */
@@ -25275,6 +25386,7 @@ function formulaGroups() {
       return gx < 0.8 * h && gy < 0.5 * h;
     };
     for (let i = 0; i < list.length; i++) for (let j = i + 1; j < list.length; j++) {
+      if (list[i].frame || list[j].frame) continue; // (a frame drawn by hand is a formula of its own)
       if (!(list[i].formula || list[j].formula) || !near(list[i], list[j])) continue;
       const a = root(list[i].id), c = root(list[j].id);
       if (a !== c) parent.set(a, c);
@@ -25359,7 +25471,8 @@ async function readLatexFor(ids) {
       const others = doc.segments.filter((o) => o.page === g.page && o.bbox && !g.ids.includes(o.id) && Math.min(o.bbox[2], x1) > Math.max(o.bbox[0], x0));
       const mid = (y0 + y1) / 2, above = others.filter((o) => o.bbox[3] <= mid).map((o) => o.bbox[3]), below = others.filter((o) => o.bbox[1] >= mid).map((o) => o.bbox[1]);
       const limit = { y0: ((above.length ? Math.max(...above) : -1e9) - page.y0) * zoom, y1: ((below.length ? Math.min(...below) : 1e9) - page.y0) * zoom };
-      const texts = g.ids.map((id) => segById(id)).filter(Boolean).map((o) => ({ x0: (o.bbox[0] - page.x0) * zoom, x1: (o.bbox[2] - page.x0) * zoom, text: o.text }));
+      const pieces = g.ids.map((id) => segById(id)).filter(Boolean).flatMap((o) => (o.frame ? o.frame.removed || [] : [o])); // (a frame: the pieces it covers)
+      const texts = pieces.map((o) => ({ x0: (o.bbox[0] - page.x0) * zoom, x1: (o.bbox[2] - page.x0) * zoom, text: o.text }));
       const r = await readFormulaBest(fxReader, img, box, FORMULA_EM_PX, { limit, texts });
       if (r.latex && r.conf >= FORMULA_SURE) { state.latex[g.lead] = r.latex; read++; } else unsure++;
     }
@@ -25375,6 +25488,277 @@ async function readLatexFor(ids) {
   refreshCards();
   toast(unsure ? t("fx.doneUnsure", { n: read, u: unsure }) : t("fx.done", { n: read }), read ? "ok" : "");
 }
+
+/* ---- formula frames: formulas marked by hand, as pictures for an AI chat */
+// A rectangle drawn around a formula (the ∑ tool beside the page) becomes a formula segment of
+// its own: the segments inside it go (they come back when the frame is removed), and its area of
+// the page is cut out as a picture. The pictures of all frames, each with its number, are put
+// together on a few sheets for an AI chat; the answer – [[n]] and the formula as LaTeX, the words
+// in it translated – is imported like a translation and kept as the frame's LaTeX. On a page with
+// recognised text the frame lives in the stored OCR result, elsewhere among the remembered
+// segment edits (repeated when the file opens again).
+
+const FRAME_INSIDE = 0.6; // (a segment with this much of its area in the frame belongs to it)
+const SHEET_W = 1400, SHEET_H = 1400, SHEET_PAD = 14, SHEET_ZOOM = 3; // (a sheet: at most this big, formulas at 3 px per point)
+
+function insideFrame(s, box) {
+  if (!s.bbox || s.extra) return false;
+  const [x0, y0, x1, y1] = s.bbox, area = Math.max(1e-6, (x1 - x0) * (y1 - y0));
+  const w = Math.min(x1, box[2]) - Math.max(x0, box[0]), h = Math.min(y1, box[3]) - Math.max(y0, box[1]);
+  return w > 0 && h > 0 && (w * h) / area >= FRAME_INSIDE;
+}
+/** A frame's segment: a formula kept as it is; its text is what the pieces inside it read (a hint). */
+function frameSegment(page, box, removed) {
+  const sizes = removed.map((s) => s.size).filter(Boolean).sort((a, b) => a - b);
+  const size = sizes.length ? sizes[sizes.length >> 1] : 10;
+  return {
+    id: 0, page, text: removed.map((s) => s.text.trim()).filter(Boolean).join(" "), size, font: "", rotation: 0, lines: 1, line_pitch: size * 1.2,
+    skip: true, formula: true, frame: { box: box.slice(), removed }, bbox: box.slice(), color: "#000000", bold: false, italic: false, family: "sans-serif", align: "left",
+    origin: [box[0], box[3]], redact: [],
+  };
+}
+/**
+ * A segment list with a frame added ({op: "frame", page, box, ocr?}): the segments inside the box
+ * taken out and kept with the frame, the frame put where the first of them was (else in reading
+ * order), ids redone. {list, remap, sources, fresh: [frame]}, like applySegEdit.
+ */
+function applyFrameOp(segments, op) {
+  const mine = (s) => s.page === op.page && !s.extra && s.bbox && Boolean(s.ocr) === Boolean(op.ocr);
+  const removed = segments.filter((s) => mine(s) && insideFrame(s, op.box));
+  const frame = frameSegment(op.page, op.box, removed);
+  if (op.ocr) frame.ocr = true;
+  const list = segments.filter((s) => !removed.includes(s));
+  const cy = (op.box[1] + op.box[3]) / 2;
+  const after = removed.length
+    ? segments.slice(segments.indexOf(removed[0])).find((s) => !removed.includes(s))
+    : list.find((s) => s.page > op.page || (mine(s) && (s.bbox[1] + s.bbox[3]) / 2 > cy));
+  list.splice(after ? list.indexOf(after) : list.length, 0, frame);
+  const oldId = new Map(segments.map((s) => [s, s.id])), remap = new Map();
+  list.forEach((s, i) => { if (oldId.has(s)) remap.set(oldId.get(s), i + 1); s.id = i + 1; });
+  return { list, remap, sources: removed, fresh: [frame] };
+}
+
+/** A frame drawn on a page: in the page's OCR result when it has one, else as a segment edit. */
+async function addFormulaFrame(page, box) {
+  const doc = state.doc;
+  if (!doc || isBook()) return false;
+  const r2 = (v) => Math.round(v * 100) / 100;
+  box = box.map(r2);
+  const rec = ocrRecord(page);
+  if (!rec) return runSegEdit({ op: "frame", page, box });
+  const r = applyFrameOp(rec.segs, { op: "frame", page, box, ocr: true });
+  addOcrResults({ [page]: { segs: r.list, seps: rec.seps, raw: rec.raw, family: rec.family } });
+  const frame = doc.ocr[page].segs.find((s) => s.frame && sameBox(s.bbox, box));
+  if (frame) {
+    setActive(frame.id, { scrollList: true, scrollViewer: true });
+    toast(t("fx.frameAdded", { n: frame.id }), "ok", { label: t("seg.undo"), run: () => { if (state.doc === doc && segById(frame.id) === frame) removeFormulaFrame(frame.id, true); } });
+  }
+  return true;
+}
+/** The frame removed: the segments it covered come back in its place. */
+function removeFormulaFrame(id, quiet = false) {
+  const doc = state.doc, s = segById(id);
+  if (!s || !s.frame) return;
+  const back = s.frame.removed || [];
+  if (s.ocr) {
+    const rec = ocrRecord(s.page);
+    if (!rec) return;
+    const segs = rec.segs.slice();
+    segs.splice(segs.indexOf(s), 1, ...back);
+    addOcrResults({ [s.page]: { segs, seps: rec.seps, raw: rec.raw, family: rec.family } });
+  } else {
+    const list = doc.segments.slice();
+    list.splice(list.indexOf(s), 1, ...back);
+    const oldId = new Map(doc.segments.map((x) => [x, x.id])), remap = new Map();
+    list.forEach((x, i) => { if (oldId.has(x)) remap.set(oldId.get(x), i + 1); x.id = i + 1; });
+    state.segEdits = (state.segEdits || []).filter((op) => !(op.op === "frame" && op.page === s.page && sameBox(op.box, s.frame.box)));
+    saveSegEdits();
+    relistSegments(doc, { list, remap });
+  }
+  if (back.length) setActive(back[0].id, { scrollList: true });
+  if (!quiet) toast(t("fx.frameRemoved"));
+}
+/** The LaTeX of a frame, typed or imported: kept with the document (an empty text drops it). */
+function setFrameLatex(id, value) {
+  const v = cleanLatex(value);
+  if (v) state.latex[id] = v; else delete state.latex[id];
+  saveLatex();
+  markDone(id);
+}
+/** An AI's LaTeX without the wrapping it likes to add (a code block, $…$, \[…\]). */
+function cleanLatex(text) {
+  let v = String(text || "").trim();
+  v = v.replace(/^```[a-z]*\s*\n?/i, "").replace(/\n?```$/, "").trim();
+  v = v.replace(/^\\\[\s*/, "").replace(/\s*\\\]$/, "").replace(/^\\\(\s*/, "").replace(/\s*\\\)$/, "");
+  v = v.replace(/^\$\$?\s*/, "").replace(/\s*\$\$?$/, "");
+  return v.replace(/^\\begin\{(equation|displaymath|align)\*?\}\s*/, "").replace(/\s*\\end\{(equation|displaymath|align)\*?\}$/, "").trim();
+}
+/** A frame counts as done once it has its LaTeX; any other segment once it has a translation. */
+const segDone = (id) => { const s = segById(id); return s && s.frame ? Boolean(state.latex[id]) : hasTr(id); };
+/** What a segment's card shows in its box: the translation, for a frame its LaTeX. */
+const cardValue = (id) => { const s = segById(id); return (s && s.frame ? state.latex[id] : state.translations[id]) || ""; };
+
+/* ---- the pictures: a frame's area of the page, and the sheets for the AI */
+
+const frameCache = { doc: null, pages: new Map(), thumbs: new Map() };
+function frameCacheClear() {
+  for (const p of frameCache.thumbs.values()) p.then((u) => URL.revokeObjectURL(u)).catch(() => {});
+  for (const p of frameCache.pages.values()) p.then((b) => b.close && b.close()).catch(() => {});
+  frameCache.thumbs.clear();
+  frameCache.pages.clear();
+  frameCache.doc = state.doc;
+}
+/** A frame's area of the original page as a canvas, `zoom` pixels per point, turned as the page is shown. */
+async function frameCanvas(s, zoom) {
+  const doc = state.doc, page = doc.pages[s.page], key = `${s.page}@${zoom}`;
+  if (frameCache.doc !== doc) frameCacheClear();
+  if (!frameCache.pages.has(key)) {
+    if (frameCache.pages.size >= 4) { const k = frameCache.pages.keys().next().value; frameCache.pages.get(k).then((b) => b.close && b.close()).catch(() => {}); frameCache.pages.delete(k); }
+    frameCache.pages.set(key, pool.leastBusy(null).call("render", { page: s.page, zoom, variant: "original" }).then((buf) => createImageBitmap(new Blob([buf], { type: "image/png" }))));
+  }
+  const bmp = await frameCache.pages.get(key), [x0, y0, x1, y1] = s.bbox;
+  const sx = Math.max(0, Math.round((x0 - page.x0) * zoom)), sy = Math.max(0, Math.round((y0 - page.y0) * zoom));
+  const sw = Math.max(1, Math.min(bmp.width - sx, Math.round((x1 - x0) * zoom))), sh = Math.max(1, Math.min(bmp.height - sy, Math.round((y1 - y0) * zoom)));
+  const rot = pageRotation(s.page), c = document.createElement("canvas");
+  c.width = rot % 180 ? sh : sw;
+  c.height = rot % 180 ? sw : sh;
+  const cx = c.getContext("2d");
+  cx.translate(c.width / 2, c.height / 2);
+  cx.rotate((rot * Math.PI) / 180);
+  cx.drawImage(bmp, sx, sy, sw, sh, -sw / 2, -sh / 2, sw, sh);
+  return c;
+}
+/** The small picture of a frame in its card (drawn once per frame while the document is open). */
+async function frameThumb(img, s) {
+  if (!img) return;
+  const key = `${s.page}:${s.bbox.join(",")}:${pageRotation(s.page)}`;
+  if (frameCache.doc !== state.doc) frameCacheClear();
+  if (!frameCache.thumbs.has(key)) {
+    frameCache.thumbs.set(key, frameCanvas(s, 2).then((c) => new Promise((res) => c.toBlob((b) => res(URL.createObjectURL(b)), "image/png"))));
+  }
+  try { img.src = await frameCache.thumbs.get(key); } catch (_) { /* the picture stays empty */ }
+}
+/**
+ * The frames put together on sheets for the AI: each formula at 3 px per point (smaller when wide),
+ * its number in blue at the left, as many under each other as fit a sheet. [{ids, canvas}]
+ */
+async function formulaSheets(frames) {
+  const sheets = [];
+  let cur = null;
+  const probe = document.createElement("canvas").getContext("2d");
+  probe.font = "bold 20px system-ui, sans-serif";
+  const labelW = Math.ceil(Math.max(...frames.map((s) => probe.measureText(`[[${s.id}]]`).width), 40)) + 16;
+  const maxW = SHEET_W - labelW - 2 * SHEET_PAD;
+  for (const s of frames) {
+    const zoom = Math.max(1, Math.min(SHEET_ZOOM, maxW / Math.max(1, s.bbox[2] - s.bbox[0])));
+    const c = await frameCanvas(s, zoom);
+    const scale = Math.min(1, maxW / c.width, (SHEET_H - 2 * SHEET_PAD) / c.height);
+    const w = Math.round(c.width * scale), h = Math.round(c.height * scale);
+    if (!cur || (cur.rows.length && cur.h + h + SHEET_PAD > SHEET_H)) { cur = { ids: [], rows: [], h: SHEET_PAD }; sheets.push(cur); }
+    cur.rows.push({ id: s.id, c, w, h, y: cur.h });
+    cur.ids.push(s.id);
+    cur.h += h + SHEET_PAD;
+  }
+  return sheets.map((sh) => {
+    const canvas = document.createElement("canvas");
+    canvas.width = labelW + 2 * SHEET_PAD + Math.max(...sh.rows.map((r) => r.w));
+    canvas.height = sh.h;
+    const cx = canvas.getContext("2d");
+    cx.fillStyle = "#fff";
+    cx.fillRect(0, 0, canvas.width, canvas.height);
+    cx.font = probe.font;
+    cx.textBaseline = "top";
+    sh.rows.forEach((r, i) => {
+      if (i) { cx.fillStyle = "#d4d4d4"; cx.fillRect(SHEET_PAD, r.y - SHEET_PAD / 2 - 1, canvas.width - 2 * SHEET_PAD, 2); }
+      cx.fillStyle = "#1a56db";
+      cx.fillText(`[[${r.id}]]`, SHEET_PAD, r.y + 2);
+      cx.drawImage(r.c, SHEET_PAD + labelW, r.y, r.w, r.h);
+    });
+    return { ids: sh.ids, canvas };
+  });
+}
+
+/* ---- the AI window: the formula prompt, the sheets to copy or save, the answer */
+
+const aiFx = { key: "", sheets: [], copied: new Set(), gen: 0 };
+/** The frames the AI window offers: in its page range (and, if so chosen, without LaTeX yet). */
+function aiFrames() {
+  if (!state.doc || isBook()) return [];
+  const n = state.doc.pages.length;
+  const from = Math.min(n, Math.max(1, Number($("#aiFrom").value) || 1)) - 1;
+  const to = Math.min(n, Math.max(from + 1, Number($("#aiTo").value) || n)) - 1;
+  return state.doc.segments.filter((s) => s.frame && s.page >= from && s.page <= to && (!$("#aiOnlyTodo").checked || !state.latex[s.id]));
+}
+function fxPromptText(frames, sheets) {
+  const P = AI_PROMPT[LANG] || AI_PROMPT.en;
+  const target = $("#aiTarget").value.trim() || P.target;
+  return [...P.formulas(target, frames.length, Math.max(1, sheets)), "", `${P.formulaList} ${frames.map((s) => `[[${s.id}]]`).join(" ")}`].join("\n");
+}
+/** The formula part of the AI window: shown when the document has frames; the sheets are made once per selection. */
+function refreshAiFormulas() {
+  const box = $("#aiFx");
+  if (!box) return;
+  const frames = aiFrames();
+  box.hidden = !frames.length;
+  if (!frames.length) { aiFx.key = ""; aiFx.sheets = []; aiFx.gen++; return; }
+  const key = JSON.stringify([state.doc.id, frames.map((s) => [s.id, s.bbox, pageRotation(s.page)])]);
+  if (key === aiFx.key) { aiFxButtons(frames); return; }
+  aiFx.key = key;
+  aiFx.sheets = [];
+  aiFx.copied.clear();
+  const gen = ++aiFx.gen;
+  $("#aiFxHint").textContent = t("ai.fxPreparing", { n: frames.length });
+  $("#aiFxSheets").innerHTML = "";
+  formulaSheets(frames).then((sheets) => { if (gen !== aiFx.gen) return; aiFx.sheets = sheets; aiFxButtons(frames); })
+    .catch((err) => { console.error(err); if (gen === aiFx.gen) $("#aiFxHint").textContent = userError(err); });
+}
+function aiFxButtons(frames) {
+  const total = aiFx.sheets.length;
+  $("#aiFxHint").textContent = t("ai.fxHint", { n: frames.length, k: total });
+  $("#aiFxSheets").innerHTML = aiFx.sheets.map((sh, i) => {
+    const done = sh.ids.every((id) => state.latex[id]);
+    const cls = done ? " done" : aiFx.copied.has(i) ? " copied" : "";
+    return `<button type="button" class="btn${cls}" data-sheet="${i}" title="${escapeHtml(t("ai.fxSheetTitle"))}">${done || aiFx.copied.has(i) ? "✓ " : ""}${escapeHtml(t("ai.fxSheet", { k: i + 1, total, a: sh.ids[0], b: sh.ids[sh.ids.length - 1], n: sh.ids.length }))}</button>`;
+  }).join("");
+}
+const sheetBlob = (sh) => new Promise((res) => sh.canvas.toBlob(res, "image/png"));
+/** A sheet to the clipboard as a picture (saved as a file where the browser cannot do that). */
+async function copySheet(i) {
+  const sh = aiFx.sheets[i];
+  if (!sh) return;
+  const blob = await sheetBlob(sh);
+  try {
+    if (!navigator.clipboard || !navigator.clipboard.write || typeof ClipboardItem === "undefined") throw new Error("no picture clipboard");
+    await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+    toast(t("ai.fxCopied", { k: i + 1, total: aiFx.sheets.length }), "ok");
+  } catch (_) {
+    saveBlob(blob, `Kameleon-${t("ai.fxFile")}-${i + 1}.png`);
+    toast(t("ai.fxSavedInstead"));
+  }
+  aiFx.copied.add(i);
+  aiFxButtons(aiFrames());
+  const b = $(`#aiFxSheets [data-sheet="${i}"]`);
+  if (b) { b.classList.remove("flash"); void b.offsetWidth; b.classList.add("flash"); }
+}
+async function saveSheets() {
+  if (!aiFx.sheets.length) return;
+  for (const [i, sh] of aiFx.sheets.entries()) {
+    saveBlob(await sheetBlob(sh), `Kameleon-${t("ai.fxFile")}-${i + 1}.png`);
+    if (i < aiFx.sheets.length - 1) await new Promise((res) => setTimeout(res, 400)); // (the browser takes several downloads one after the other)
+  }
+  toast(t("ai.fxSaved", { n: aiFx.sheets.length }), "ok");
+}
+(function initFormulaFrames() {
+  const sheets = $("#aiFxSheets");
+  if (!sheets) return;
+  sheets.addEventListener("click", (e) => { const b = e.target.closest("[data-sheet]"); if (b) copySheet(Number(b.dataset.sheet)); });
+  $("#aiFxPrompt").addEventListener("click", () => {
+    const frames = aiFrames();
+    if (!frames.length) { toast(t("msg.noSelection"), "error"); return; }
+    copyText(fxPromptText(frames, aiFx.sheets.length), t("ai.fxPromptCopied"));
+  });
+  $("#aiFxSave").addEventListener("click", saveSheets);
+})();
 
 // Start-up (runs after ui.js, markup.js and tools.js have defined everything).
 initTheme(); // the colour of this start, before anything is drawn

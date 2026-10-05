@@ -5,7 +5,7 @@
 // localStorage, and written into the PDF as standard annotations when it is downloaded.
 // ======================================================================
 const SVGNS = "http://www.w3.org/2000/svg";
-const TOOL_KEYS = { v: "select", r: "rect", o: "ellipse", h: "highlight", p: "ink", a: "arrow", t: "text", w: "whiteout", e: "eraser" };
+const TOOL_KEYS = { v: "select", r: "rect", o: "ellipse", h: "highlight", p: "ink", a: "arrow", t: "text", w: "whiteout", m: "formula", e: "eraser" };
 const BOX_TOOLS = new Set(["rect", "ellipse", "highlight", "whiteout"]);
 
 const mk = {
@@ -164,6 +164,8 @@ function markupNode(m) {
     g.append(svgEl("rect", { x: x0, y: y0, width: w, height: h, fill: m.color, "fill-opacity": 0.4, class: "hl" }));
   } else if (m.type === "whiteout") {
     g.append(svgEl("rect", { x: x0, y: y0, width: w, height: h, fill: "#fff", class: "wo" }));
+  } else if (m.type === "frame") { // (the formula frame while it is drawn)
+    g.append(svgEl("rect", { x: x0, y: y0, width: w, height: h, fill: "rgba(26, 86, 219, .08)", stroke: "#1a56db", "stroke-width": 1.5, "stroke-dasharray": "4 3", "vector-effect": "non-scaling-stroke" }));
   } else if (m.type === "ink") {
     const pts = m.points.map((p) => p.join(",")).join(" ");
     g.append(svgEl("polyline", { points: pts, ...hitStroke }), svgEl("polyline", { points: pts, ...stroke }));
@@ -280,7 +282,8 @@ function onPointerDown(e) {
     if (note) { select(note.id); openTextEditor(note.page, [note.x0, note.y0], note); } else openTextEditor(i, pt);
     return;
   }
-  const m = { id: mk.seq++, page: i, type: mk.tool, color: currentColor(), width: mk.width, x0: pt[0], y0: pt[1], x1: pt[0], y1: pt[1] };
+  // (the formula tool draws a frame that becomes a segment, not a markup – see addFormulaFrame)
+  const m = { id: mk.seq++, page: i, type: mk.tool === "formula" ? "frame" : mk.tool, color: currentColor(), width: mk.width, x0: pt[0], y0: pt[1], x1: pt[0], y1: pt[1] };
   if (m.type === "ink") m.points = [pt];
   mk.draft = { m, svg, page: i };
 }
@@ -328,7 +331,10 @@ function onPointerUp() {
     mk.draft = null;
     const [x0, y0, x1, y1] = boxOfMarkup(m);
     const big = m.type === "ink" ? m.points.length > 1 : m.type === "arrow" ? Math.hypot(m.x1 - m.x0, m.y1 - m.y0) > 3 : x1 - x0 > 2 && y1 - y0 > 2;
-    if (big) {
+    if (m.type === "frame") {
+      renderMarkups(page);
+      if (x1 - x0 > 4 && y1 - y0 > 4) addFormulaFrame(page, [x0, y0, x1, y1]);
+    } else if (big) {
       if (m.type === "ink") m.points = simplify(m.points, 0.4);
       changeMarkups(() => { state.markups.push(m); });
     } else {

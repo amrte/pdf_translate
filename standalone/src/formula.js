@@ -360,6 +360,7 @@ function formulaGroups() {
       return gx < 0.8 * h && gy < 0.5 * h;
     };
     for (let i = 0; i < list.length; i++) for (let j = i + 1; j < list.length; j++) {
+      if (list[i].frame || list[j].frame) continue; // (a frame drawn by hand is a formula of its own)
       if (!(list[i].formula || list[j].formula) || !near(list[i], list[j])) continue;
       const a = root(list[i].id), c = root(list[j].id);
       if (a !== c) parent.set(a, c);
@@ -444,7 +445,8 @@ async function readLatexFor(ids) {
       const others = doc.segments.filter((o) => o.page === g.page && o.bbox && !g.ids.includes(o.id) && Math.min(o.bbox[2], x1) > Math.max(o.bbox[0], x0));
       const mid = (y0 + y1) / 2, above = others.filter((o) => o.bbox[3] <= mid).map((o) => o.bbox[3]), below = others.filter((o) => o.bbox[1] >= mid).map((o) => o.bbox[1]);
       const limit = { y0: ((above.length ? Math.max(...above) : -1e9) - page.y0) * zoom, y1: ((below.length ? Math.min(...below) : 1e9) - page.y0) * zoom };
-      const texts = g.ids.map((id) => segById(id)).filter(Boolean).map((o) => ({ x0: (o.bbox[0] - page.x0) * zoom, x1: (o.bbox[2] - page.x0) * zoom, text: o.text }));
+      const pieces = g.ids.map((id) => segById(id)).filter(Boolean).flatMap((o) => (o.frame ? o.frame.removed || [] : [o])); // (a frame: the pieces it covers)
+      const texts = pieces.map((o) => ({ x0: (o.bbox[0] - page.x0) * zoom, x1: (o.bbox[2] - page.x0) * zoom, text: o.text }));
       const r = await readFormulaBest(fxReader, img, box, FORMULA_EM_PX, { limit, texts });
       if (r.latex && r.conf >= FORMULA_SURE) { state.latex[g.lead] = r.latex; read++; } else unsure++;
     }
@@ -460,3 +462,274 @@ async function readLatexFor(ids) {
   refreshCards();
   toast(unsure ? t("fx.doneUnsure", { n: read, u: unsure }) : t("fx.done", { n: read }), read ? "ok" : "");
 }
+
+/* ---- formula frames: formulas marked by hand, as pictures for an AI chat */
+// A rectangle drawn around a formula (the ∑ tool beside the page) becomes a formula segment of
+// its own: the segments inside it go (they come back when the frame is removed), and its area of
+// the page is cut out as a picture. The pictures of all frames, each with its number, are put
+// together on a few sheets for an AI chat; the answer – [[n]] and the formula as LaTeX, the words
+// in it translated – is imported like a translation and kept as the frame's LaTeX. On a page with
+// recognised text the frame lives in the stored OCR result, elsewhere among the remembered
+// segment edits (repeated when the file opens again).
+
+const FRAME_INSIDE = 0.6; // (a segment with this much of its area in the frame belongs to it)
+const SHEET_W = 1400, SHEET_H = 1400, SHEET_PAD = 14, SHEET_ZOOM = 3; // (a sheet: at most this big, formulas at 3 px per point)
+
+function insideFrame(s, box) {
+  if (!s.bbox || s.extra) return false;
+  const [x0, y0, x1, y1] = s.bbox, area = Math.max(1e-6, (x1 - x0) * (y1 - y0));
+  const w = Math.min(x1, box[2]) - Math.max(x0, box[0]), h = Math.min(y1, box[3]) - Math.max(y0, box[1]);
+  return w > 0 && h > 0 && (w * h) / area >= FRAME_INSIDE;
+}
+/** A frame's segment: a formula kept as it is; its text is what the pieces inside it read (a hint). */
+function frameSegment(page, box, removed) {
+  const sizes = removed.map((s) => s.size).filter(Boolean).sort((a, b) => a - b);
+  const size = sizes.length ? sizes[sizes.length >> 1] : 10;
+  return {
+    id: 0, page, text: removed.map((s) => s.text.trim()).filter(Boolean).join(" "), size, font: "", rotation: 0, lines: 1, line_pitch: size * 1.2,
+    skip: true, formula: true, frame: { box: box.slice(), removed }, bbox: box.slice(), color: "#000000", bold: false, italic: false, family: "sans-serif", align: "left",
+    origin: [box[0], box[3]], redact: [],
+  };
+}
+/**
+ * A segment list with a frame added ({op: "frame", page, box, ocr?}): the segments inside the box
+ * taken out and kept with the frame, the frame put where the first of them was (else in reading
+ * order), ids redone. {list, remap, sources, fresh: [frame]}, like applySegEdit.
+ */
+function applyFrameOp(segments, op) {
+  const mine = (s) => s.page === op.page && !s.extra && s.bbox && Boolean(s.ocr) === Boolean(op.ocr);
+  const removed = segments.filter((s) => mine(s) && insideFrame(s, op.box));
+  const frame = frameSegment(op.page, op.box, removed);
+  if (op.ocr) frame.ocr = true;
+  const list = segments.filter((s) => !removed.includes(s));
+  const cy = (op.box[1] + op.box[3]) / 2;
+  const after = removed.length
+    ? segments.slice(segments.indexOf(removed[0])).find((s) => !removed.includes(s))
+    : list.find((s) => s.page > op.page || (mine(s) && (s.bbox[1] + s.bbox[3]) / 2 > cy));
+  list.splice(after ? list.indexOf(after) : list.length, 0, frame);
+  const oldId = new Map(segments.map((s) => [s, s.id])), remap = new Map();
+  list.forEach((s, i) => { if (oldId.has(s)) remap.set(oldId.get(s), i + 1); s.id = i + 1; });
+  return { list, remap, sources: removed, fresh: [frame] };
+}
+
+/** A frame drawn on a page: in the page's OCR result when it has one, else as a segment edit. */
+async function addFormulaFrame(page, box) {
+  const doc = state.doc;
+  if (!doc || isBook()) return false;
+  const r2 = (v) => Math.round(v * 100) / 100;
+  box = box.map(r2);
+  const rec = ocrRecord(page);
+  if (!rec) return runSegEdit({ op: "frame", page, box });
+  const r = applyFrameOp(rec.segs, { op: "frame", page, box, ocr: true });
+  addOcrResults({ [page]: { segs: r.list, seps: rec.seps, raw: rec.raw, family: rec.family } });
+  const frame = doc.ocr[page].segs.find((s) => s.frame && sameBox(s.bbox, box));
+  if (frame) {
+    setActive(frame.id, { scrollList: true, scrollViewer: true });
+    toast(t("fx.frameAdded", { n: frame.id }), "ok", { label: t("seg.undo"), run: () => { if (state.doc === doc && segById(frame.id) === frame) removeFormulaFrame(frame.id, true); } });
+  }
+  return true;
+}
+/** The frame removed: the segments it covered come back in its place. */
+function removeFormulaFrame(id, quiet = false) {
+  const doc = state.doc, s = segById(id);
+  if (!s || !s.frame) return;
+  const back = s.frame.removed || [];
+  if (s.ocr) {
+    const rec = ocrRecord(s.page);
+    if (!rec) return;
+    const segs = rec.segs.slice();
+    segs.splice(segs.indexOf(s), 1, ...back);
+    addOcrResults({ [s.page]: { segs, seps: rec.seps, raw: rec.raw, family: rec.family } });
+  } else {
+    const list = doc.segments.slice();
+    list.splice(list.indexOf(s), 1, ...back);
+    const oldId = new Map(doc.segments.map((x) => [x, x.id])), remap = new Map();
+    list.forEach((x, i) => { if (oldId.has(x)) remap.set(oldId.get(x), i + 1); x.id = i + 1; });
+    state.segEdits = (state.segEdits || []).filter((op) => !(op.op === "frame" && op.page === s.page && sameBox(op.box, s.frame.box)));
+    saveSegEdits();
+    relistSegments(doc, { list, remap });
+  }
+  if (back.length) setActive(back[0].id, { scrollList: true });
+  if (!quiet) toast(t("fx.frameRemoved"));
+}
+/** The LaTeX of a frame, typed or imported: kept with the document (an empty text drops it). */
+function setFrameLatex(id, value) {
+  const v = cleanLatex(value);
+  if (v) state.latex[id] = v; else delete state.latex[id];
+  saveLatex();
+  markDone(id);
+}
+/** An AI's LaTeX without the wrapping it likes to add (a code block, $…$, \[…\]). */
+function cleanLatex(text) {
+  let v = String(text || "").trim();
+  v = v.replace(/^```[a-z]*\s*\n?/i, "").replace(/\n?```$/, "").trim();
+  v = v.replace(/^\\\[\s*/, "").replace(/\s*\\\]$/, "").replace(/^\\\(\s*/, "").replace(/\s*\\\)$/, "");
+  v = v.replace(/^\$\$?\s*/, "").replace(/\s*\$\$?$/, "");
+  return v.replace(/^\\begin\{(equation|displaymath|align)\*?\}\s*/, "").replace(/\s*\\end\{(equation|displaymath|align)\*?\}$/, "").trim();
+}
+/** A frame counts as done once it has its LaTeX; any other segment once it has a translation. */
+const segDone = (id) => { const s = segById(id); return s && s.frame ? Boolean(state.latex[id]) : hasTr(id); };
+/** What a segment's card shows in its box: the translation, for a frame its LaTeX. */
+const cardValue = (id) => { const s = segById(id); return (s && s.frame ? state.latex[id] : state.translations[id]) || ""; };
+
+/* ---- the pictures: a frame's area of the page, and the sheets for the AI */
+
+const frameCache = { doc: null, pages: new Map(), thumbs: new Map() };
+function frameCacheClear() {
+  for (const p of frameCache.thumbs.values()) p.then((u) => URL.revokeObjectURL(u)).catch(() => {});
+  for (const p of frameCache.pages.values()) p.then((b) => b.close && b.close()).catch(() => {});
+  frameCache.thumbs.clear();
+  frameCache.pages.clear();
+  frameCache.doc = state.doc;
+}
+/** A frame's area of the original page as a canvas, `zoom` pixels per point, turned as the page is shown. */
+async function frameCanvas(s, zoom) {
+  const doc = state.doc, page = doc.pages[s.page], key = `${s.page}@${zoom}`;
+  if (frameCache.doc !== doc) frameCacheClear();
+  if (!frameCache.pages.has(key)) {
+    if (frameCache.pages.size >= 4) { const k = frameCache.pages.keys().next().value; frameCache.pages.get(k).then((b) => b.close && b.close()).catch(() => {}); frameCache.pages.delete(k); }
+    frameCache.pages.set(key, pool.leastBusy(null).call("render", { page: s.page, zoom, variant: "original" }).then((buf) => createImageBitmap(new Blob([buf], { type: "image/png" }))));
+  }
+  const bmp = await frameCache.pages.get(key), [x0, y0, x1, y1] = s.bbox;
+  const sx = Math.max(0, Math.round((x0 - page.x0) * zoom)), sy = Math.max(0, Math.round((y0 - page.y0) * zoom));
+  const sw = Math.max(1, Math.min(bmp.width - sx, Math.round((x1 - x0) * zoom))), sh = Math.max(1, Math.min(bmp.height - sy, Math.round((y1 - y0) * zoom)));
+  const rot = pageRotation(s.page), c = document.createElement("canvas");
+  c.width = rot % 180 ? sh : sw;
+  c.height = rot % 180 ? sw : sh;
+  const cx = c.getContext("2d");
+  cx.translate(c.width / 2, c.height / 2);
+  cx.rotate((rot * Math.PI) / 180);
+  cx.drawImage(bmp, sx, sy, sw, sh, -sw / 2, -sh / 2, sw, sh);
+  return c;
+}
+/** The small picture of a frame in its card (drawn once per frame while the document is open). */
+async function frameThumb(img, s) {
+  if (!img) return;
+  const key = `${s.page}:${s.bbox.join(",")}:${pageRotation(s.page)}`;
+  if (frameCache.doc !== state.doc) frameCacheClear();
+  if (!frameCache.thumbs.has(key)) {
+    frameCache.thumbs.set(key, frameCanvas(s, 2).then((c) => new Promise((res) => c.toBlob((b) => res(URL.createObjectURL(b)), "image/png"))));
+  }
+  try { img.src = await frameCache.thumbs.get(key); } catch (_) { /* the picture stays empty */ }
+}
+/**
+ * The frames put together on sheets for the AI: each formula at 3 px per point (smaller when wide),
+ * its number in blue at the left, as many under each other as fit a sheet. [{ids, canvas}]
+ */
+async function formulaSheets(frames) {
+  const sheets = [];
+  let cur = null;
+  const probe = document.createElement("canvas").getContext("2d");
+  probe.font = "bold 20px system-ui, sans-serif";
+  const labelW = Math.ceil(Math.max(...frames.map((s) => probe.measureText(`[[${s.id}]]`).width), 40)) + 16;
+  const maxW = SHEET_W - labelW - 2 * SHEET_PAD;
+  for (const s of frames) {
+    const zoom = Math.max(1, Math.min(SHEET_ZOOM, maxW / Math.max(1, s.bbox[2] - s.bbox[0])));
+    const c = await frameCanvas(s, zoom);
+    const scale = Math.min(1, maxW / c.width, (SHEET_H - 2 * SHEET_PAD) / c.height);
+    const w = Math.round(c.width * scale), h = Math.round(c.height * scale);
+    if (!cur || (cur.rows.length && cur.h + h + SHEET_PAD > SHEET_H)) { cur = { ids: [], rows: [], h: SHEET_PAD }; sheets.push(cur); }
+    cur.rows.push({ id: s.id, c, w, h, y: cur.h });
+    cur.ids.push(s.id);
+    cur.h += h + SHEET_PAD;
+  }
+  return sheets.map((sh) => {
+    const canvas = document.createElement("canvas");
+    canvas.width = labelW + 2 * SHEET_PAD + Math.max(...sh.rows.map((r) => r.w));
+    canvas.height = sh.h;
+    const cx = canvas.getContext("2d");
+    cx.fillStyle = "#fff";
+    cx.fillRect(0, 0, canvas.width, canvas.height);
+    cx.font = probe.font;
+    cx.textBaseline = "top";
+    sh.rows.forEach((r, i) => {
+      if (i) { cx.fillStyle = "#d4d4d4"; cx.fillRect(SHEET_PAD, r.y - SHEET_PAD / 2 - 1, canvas.width - 2 * SHEET_PAD, 2); }
+      cx.fillStyle = "#1a56db";
+      cx.fillText(`[[${r.id}]]`, SHEET_PAD, r.y + 2);
+      cx.drawImage(r.c, SHEET_PAD + labelW, r.y, r.w, r.h);
+    });
+    return { ids: sh.ids, canvas };
+  });
+}
+
+/* ---- the AI window: the formula prompt, the sheets to copy or save, the answer */
+
+const aiFx = { key: "", sheets: [], copied: new Set(), gen: 0 };
+/** The frames the AI window offers: in its page range (and, if so chosen, without LaTeX yet). */
+function aiFrames() {
+  if (!state.doc || isBook()) return [];
+  const n = state.doc.pages.length;
+  const from = Math.min(n, Math.max(1, Number($("#aiFrom").value) || 1)) - 1;
+  const to = Math.min(n, Math.max(from + 1, Number($("#aiTo").value) || n)) - 1;
+  return state.doc.segments.filter((s) => s.frame && s.page >= from && s.page <= to && (!$("#aiOnlyTodo").checked || !state.latex[s.id]));
+}
+function fxPromptText(frames, sheets) {
+  const P = AI_PROMPT[LANG] || AI_PROMPT.en;
+  const target = $("#aiTarget").value.trim() || P.target;
+  return [...P.formulas(target, frames.length, Math.max(1, sheets)), "", `${P.formulaList} ${frames.map((s) => `[[${s.id}]]`).join(" ")}`].join("\n");
+}
+/** The formula part of the AI window: shown when the document has frames; the sheets are made once per selection. */
+function refreshAiFormulas() {
+  const box = $("#aiFx");
+  if (!box) return;
+  const frames = aiFrames();
+  box.hidden = !frames.length;
+  if (!frames.length) { aiFx.key = ""; aiFx.sheets = []; aiFx.gen++; return; }
+  const key = JSON.stringify([state.doc.id, frames.map((s) => [s.id, s.bbox, pageRotation(s.page)])]);
+  if (key === aiFx.key) { aiFxButtons(frames); return; }
+  aiFx.key = key;
+  aiFx.sheets = [];
+  aiFx.copied.clear();
+  const gen = ++aiFx.gen;
+  $("#aiFxHint").textContent = t("ai.fxPreparing", { n: frames.length });
+  $("#aiFxSheets").innerHTML = "";
+  formulaSheets(frames).then((sheets) => { if (gen !== aiFx.gen) return; aiFx.sheets = sheets; aiFxButtons(frames); })
+    .catch((err) => { console.error(err); if (gen === aiFx.gen) $("#aiFxHint").textContent = userError(err); });
+}
+function aiFxButtons(frames) {
+  const total = aiFx.sheets.length;
+  $("#aiFxHint").textContent = t("ai.fxHint", { n: frames.length, k: total });
+  $("#aiFxSheets").innerHTML = aiFx.sheets.map((sh, i) => {
+    const done = sh.ids.every((id) => state.latex[id]);
+    const cls = done ? " done" : aiFx.copied.has(i) ? " copied" : "";
+    return `<button type="button" class="btn${cls}" data-sheet="${i}" title="${escapeHtml(t("ai.fxSheetTitle"))}">${done || aiFx.copied.has(i) ? "✓ " : ""}${escapeHtml(t("ai.fxSheet", { k: i + 1, total, a: sh.ids[0], b: sh.ids[sh.ids.length - 1], n: sh.ids.length }))}</button>`;
+  }).join("");
+}
+const sheetBlob = (sh) => new Promise((res) => sh.canvas.toBlob(res, "image/png"));
+/** A sheet to the clipboard as a picture (saved as a file where the browser cannot do that). */
+async function copySheet(i) {
+  const sh = aiFx.sheets[i];
+  if (!sh) return;
+  const blob = await sheetBlob(sh);
+  try {
+    if (!navigator.clipboard || !navigator.clipboard.write || typeof ClipboardItem === "undefined") throw new Error("no picture clipboard");
+    await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+    toast(t("ai.fxCopied", { k: i + 1, total: aiFx.sheets.length }), "ok");
+  } catch (_) {
+    saveBlob(blob, `Kameleon-${t("ai.fxFile")}-${i + 1}.png`);
+    toast(t("ai.fxSavedInstead"));
+  }
+  aiFx.copied.add(i);
+  aiFxButtons(aiFrames());
+  const b = $(`#aiFxSheets [data-sheet="${i}"]`);
+  if (b) { b.classList.remove("flash"); void b.offsetWidth; b.classList.add("flash"); }
+}
+async function saveSheets() {
+  if (!aiFx.sheets.length) return;
+  for (const [i, sh] of aiFx.sheets.entries()) {
+    saveBlob(await sheetBlob(sh), `Kameleon-${t("ai.fxFile")}-${i + 1}.png`);
+    if (i < aiFx.sheets.length - 1) await new Promise((res) => setTimeout(res, 400)); // (the browser takes several downloads one after the other)
+  }
+  toast(t("ai.fxSaved", { n: aiFx.sheets.length }), "ok");
+}
+(function initFormulaFrames() {
+  const sheets = $("#aiFxSheets");
+  if (!sheets) return;
+  sheets.addEventListener("click", (e) => { const b = e.target.closest("[data-sheet]"); if (b) copySheet(Number(b.dataset.sheet)); });
+  $("#aiFxPrompt").addEventListener("click", () => {
+    const frames = aiFrames();
+    if (!frames.length) { toast(t("msg.noSelection"), "error"); return; }
+    copyText(fxPromptText(frames, aiFx.sheets.length), t("ai.fxPromptCopied"));
+  });
+  $("#aiFxSave").addEventListener("click", saveSheets);
+})();

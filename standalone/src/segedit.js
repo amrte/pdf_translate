@@ -7,7 +7,7 @@
 // The text of a recognised segment can also be corrected by hand.
 
 const segKey = (id) => `pdftr:seg:${id}`;
-const segEditable = (s) => Boolean(state.doc && !isBook() && s && !s.extra && (s.ocr || !state.doc.image));
+const segEditable = (s) => Boolean(state.doc && !isBook() && s && !s.extra && !s.frame && (s.ocr || !state.doc.image));
 /** The stored OCR result of a page, when it has its lines (results from before 2.20 have not). */
 const ocrRecord = (p) => { const r = state.doc && state.doc.ocr && state.doc.ocr[p]; return r && r.raw ? r : null; };
 const sameBox = (a, b) => a && b && a.every((v, i) => Math.abs(v - b[i]) < 0.6);
@@ -36,7 +36,7 @@ function nextJoinable(segments, s) {
     const n = segments[k];
     if (n.page !== s.page) return null;
     // (numbers and dates, not shown in the list, are passed over: the next card is meant)
-    if (Boolean(n.ocr) === Boolean(s.ocr) && (s.skip || !n.skip)) return n;
+    if (Boolean(n.ocr) === Boolean(s.ocr) && !n.frame && (s.skip || !n.skip)) return n;
   }
   return null;
 }
@@ -54,6 +54,7 @@ async function pageLinesOf(page, ocr) {
  */
 async function applySegEdit(segments, op) {
   if (op.op === "move") return applyMove(segments, op);
+  if (op.op === "frame") return applyFrameOp(segments, op); // (a formula frame, see formula.js)
   const plan = await planSegEdit(segments, op);
   if (!plan) return null;
   const { sources, fresh } = plan;
@@ -167,38 +168,14 @@ async function runSegEdit(op) {
   try {
     const r = await applySegEdit(doc.segments, op);
     if (!r) { toast(t("seg.notFound"), "error"); return false; }
-    const move = (obj) => {
-      const out = {};
-      for (const [k, v] of Object.entries(obj || {})) if (r.remap.has(Number(k))) out[r.remap.get(Number(k))] = v;
-      return out;
-    };
     const joined = op.op === "join" ? r.sources.map((s) => (state.translations[s.id] || "").trim()).filter(Boolean).join(" ") : "";
-    state.translations = move(state.translations);
-    state.overrides = move(state.overrides);
-    state.kinds = move(state.kinds);
-    state.latex = move(state.latex); saveLatex();
-    if (joined) state.translations[r.fresh[0].id] = joined; // a join keeps both translations, one after the other
-    doc.segments = r.list;
-    applyKinds(); saveKinds();
     state.segEdits = [...(state.segEdits || []), op];
     saveSegEdits();
-    persist(); saveOverrides();
-    disposeOutput();
-    pool.workers[0].call("resetOutput").catch(() => {});
-    state.shrunk = new Set();
-    segIndex.clear();
-    for (const s of doc.segments) segIndex.set(s.id, s);
-    repSetup(); repSync(); // (header/footer groups of the new numbering)
-    resetHistory();
-    renderPages();
-    vl.reset();
-    applyFilter();
-    setBuilt(false);
-    setVariant("original");
-    updateProgress();
+    relistSegments(doc, r, () => { if (joined) state.translations[r.fresh[0].id] = joined; }); // a join keeps both translations, one after the other
     const first = r.fresh[0].id;
     setActive(first, { scrollList: true, scrollViewer: true });
-    toast(t(op.op === "split" ? "seg.split" : op.op === "move" ? "seg.moved" : "seg.joined", { n: op.op === "move" ? first : r.fresh.length }), "ok", { label: t("seg.undo"), run: undoLastSegEdit });
+    const key = { split: "seg.split", move: "seg.moved", frame: "fx.frameAdded" }[op.op] || "seg.joined";
+    toast(t(key, { n: op.op === "move" || op.op === "frame" ? first : r.fresh.length }), "ok", { label: t("seg.undo"), run: undoLastSegEdit });
     return true;
   } catch (err) {
     console.error(err);
@@ -207,6 +184,40 @@ async function runSegEdit(op) {
   } finally {
     busy("");
   }
+}
+
+/**
+ * The document's segments replaced by a new list ({list, remap}: old id → new id); everything
+ * keyed by the numbers follows, and everything that shows them is drawn anew. `between` runs
+ * after the maps have moved and before the list is shown.
+ */
+function relistSegments(doc, r, between) {
+  const move = (obj) => {
+    const out = {};
+    for (const [k, v] of Object.entries(obj || {})) if (r.remap.has(Number(k))) out[r.remap.get(Number(k))] = v;
+    return out;
+  };
+  state.translations = move(state.translations);
+  state.overrides = move(state.overrides);
+  state.kinds = move(state.kinds);
+  state.latex = move(state.latex); saveLatex();
+  if (between) between();
+  doc.segments = r.list;
+  applyKinds(); saveKinds();
+  persist(); saveOverrides();
+  disposeOutput();
+  pool.workers[0].call("resetOutput").catch(() => {});
+  state.shrunk = new Set();
+  segIndex.clear();
+  for (const s of doc.segments) segIndex.set(s.id, s);
+  repSetup(); repSync(); // (header/footer groups of the new numbering)
+  resetHistory();
+  renderPages();
+  vl.reset();
+  applyFilter();
+  setBuilt(false);
+  setVariant("original");
+  updateProgress();
 }
 
 /* ---- recognised segments: split and joined in the stored OCR result */

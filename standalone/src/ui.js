@@ -464,7 +464,7 @@ async function loadBytes(bytes, name, remember, knownId = null) {
     if (remember) rememberDocument(name, image ? original : bytes, id); else touchRecent(id); // (a picture is stored as it was)
     const restored = kind === "pdf" ? await restoreOcr(id, segments, pages) : { segments, ocr: null };
     if (stale()) return;
-    if (kind === "pdf" && !image) restored.segments = await replaySegEdits(id, restored.segments); // splits and joins from earlier sessions
+    if (kind === "pdf") restored.segments = await replaySegEdits(id, restored.segments); // splits, joins and formula frames from earlier sessions
     if (stale()) return;
     openDocument({ id, name, kind, pages, segments: restored.segments, ocr: restored.ocr, image }, bytes);
     state.segEdits = kind === "pdf" ? loadSegEdits(id) : [];
@@ -934,7 +934,7 @@ function ensureBoxes(i) {
   const html = (boxesByPage.get(i) || []).map(([s, bbox]) => {
     const [x0, y0, x1, y1] = bbox;
     const active = s.id === state.activeId, custom = fieldsEditable() && state.overrides[s.id] && state.overrides[s.id].bbox;
-    const cls = "box" + (hasTr(s.id) ? " done" : "") + (s.skip ? " skip" : "") + (active ? " active" : "") + (custom ? " custom" : "");
+    const cls = "box" + (segDone(s.id) ? " done" : "") + (s.skip ? " skip" : "") + (s.frame ? " frame" : "") + (active ? " active" : "") + (custom ? " custom" : "");
     return `<div class="${cls}" data-id="${s.id}" title="#${s.id}" style="left:${((x0 - page.x0) / page.width) * 100}%;top:${((y0 - page.y0) / page.height) * 100}%;width:${((x1 - x0) / page.width) * 100}%;height:${((y1 - y0) / page.height) * 100}%">${active && fieldsEditable() ? HANDLES : ""}</div>`;
   }).join("");
   el.querySelector(".page-body").insertAdjacentHTML("beforeend", html);
@@ -1028,6 +1028,7 @@ const translatable = () => state.doc.segments.filter((s) => !s.skip && !repHidde
 
 function segMeta(s) {
   const page = t("meta.page", { n: s.page + 1 });
+  if (s.frame) return `${page} · ${t("meta.frame")}`;
   if (s.skip) return `${page} · ${t(s.formula ? "meta.formula" : "meta.numbers")}${s.edited ? " · " + t("meta.corrected") : ""}`;
   if (isBook()) return s.hidden ? `${t("meta.notShown")} · ${s.tag}` : `${page} · ${s.notes ? t("meta.notes") : s.tag}`;
   if (s.extra) return s.extra === "title" ? t("meta.extra_title") : `${page} · ${t("meta.extra_" + s.extra)}`;
@@ -1172,7 +1173,7 @@ const isPending = (id) => (state.translations[id] || "").trim() !== (state.appli
 function makeCard(id) {
   const s = segById(id);
   const el = document.createElement("div");
-  el.className = "seg" + (hasTr(id) ? " done" : "") + (state.shrunk.has(id) ? " shrunk" : "") + (id === state.activeId ? " active" : "") + (isPending(id) ? " pending" : "");
+  el.className = "seg" + (segDone(id) ? " done" : "") + (s.frame ? " frame" : "") + (state.shrunk.has(id) ? " shrunk" : "") + (id === state.activeId ? " active" : "") + (isPending(id) ? " pending" : "");
   el.dataset.id = id;
   el.innerHTML = `
     <div class="seg-head">
@@ -1181,22 +1182,22 @@ function makeCard(id) {
       <span class="seg-id">#${id}</span>
       <span class="seg-meta" data-shrunk="${escapeHtml(t("meta.shrunk"))}">${escapeHtml(segMeta(s))}</span>
       <span class="seg-warn" hidden></span>
-      <button type="button" class="mini" data-act="copy" title="${escapeHtml(t("card.copyTitle"))}">${t("card.copy")}</button>
-      <button type="button" class="mini" data-act="same" title="${escapeHtml(t("card.keepTitle"))}">${t("card.keep")}</button>
-      ${!fieldsEditable() || s.extra ? "" : `<button type="button" class="mini${state.overrides[id] ? " on" : ""}" data-act="style" title="${escapeHtml(t("card.styleTitle"))}">Aa</button>`}
-      ${!kindsEditable() || s.extra ? "" : `<button type="button" class="mini kind${state.kinds[id] ? " on" : ""}" data-act="kind" title="${escapeHtml(t(s.skip ? "card.asTextTitle" : "card.asFormulaTitle"))}">${t(s.skip ? "card.asText" : "card.asFormula")}</button>`}
+      <button type="button" class="mini" data-act="copy" title="${escapeHtml(t(s.frame ? "fx.copyTitle" : "card.copyTitle"))}">${t("card.copy")}</button>
+      ${s.frame ? `<button type="button" class="mini" data-act="latexRead" title="${escapeHtml(t("fx.readTitle"))}">TeX</button><button type="button" class="mini" data-act="frameDel" title="${escapeHtml(t("fx.frameRemoveTitle"))}">${t("fx.frameRemove")}</button>` : `<button type="button" class="mini" data-act="same" title="${escapeHtml(t("card.keepTitle"))}">${t("card.keep")}</button>`}
+      ${!fieldsEditable() || s.extra || s.frame ? "" : `<button type="button" class="mini${state.overrides[id] ? " on" : ""}" data-act="style" title="${escapeHtml(t("card.styleTitle"))}">Aa</button>`}
+      ${!kindsEditable() || s.extra || s.frame ? "" : `<button type="button" class="mini kind${state.kinds[id] ? " on" : ""}" data-act="kind" title="${escapeHtml(t(s.skip ? "card.asTextTitle" : "card.asFormulaTitle"))}">${t(s.skip ? "card.asText" : "card.asFormula")}</button>`}
       ${!repSupported() || s.skip || s.extra || repGroup(id) ? "" : `<button type="button" class="mini" data-act="repMake" title="${escapeHtml(t("rep.makeTitle"))}">⧉</button>`}
-      ${!s.ocr || isBook() ? "" : `<button type="button" class="mini" data-act="editSrc" title="${escapeHtml(t("card.editSrcTitle"))}">✎</button>`}
+      ${!s.ocr || isBook() || s.frame ? "" : `<button type="button" class="mini" data-act="editSrc" title="${escapeHtml(t("card.editSrcTitle"))}">✎</button>`}
       ${!segEditable(s) ? "" : `${s.lines > 1 ? `<button type="button" class="mini" data-act="split" title="${escapeHtml(t("card.splitTitle"))}">✂</button>` : ""}<button type="button" class="mini" data-act="join" title="${escapeHtml(t("card.joinTitle"))}">⤵</button>`}
       <button type="button" class="mini apply" data-act="apply" title="${escapeHtml(t("card.applyTitle"))}">${t("card.apply")}</button>
     </div>
     ${repCardHtml(id)}
     ${styleOpen.has(id) && !isBook() ? stylePanelHtml(s) : ""}
-    <div class="seg-src">${srcHtml(s)}</div>
-    ${latexRowHtml(s)}
-    <textarea rows="1" spellcheck="true" placeholder="${escapeHtml(t(repLocked(id) ? (repGroup(id).mode === "keep" ? "rep.keepPlaceholder" : "rep.oncePlaceholder") : "card.placeholder", { n: repGroup(id)?.lead }))}" aria-label="${escapeHtml(t("card.aria", { n: id }))}"${repLocked(id) ? " readonly" : ""}></textarea>`;
+    ${s.frame ? `<div class="seg-frame" title="${escapeHtml(t("fx.frameThumbTitle"))}"><img alt=""></div>${s.text ? `<div class="seg-src muted small">${srcHtml(s)}</div>` : ""}` : `<div class="seg-src">${srcHtml(s)}</div>${latexRowHtml(s)}`}
+    <textarea rows="1" spellcheck="${s.frame ? "false" : "true"}" placeholder="${escapeHtml(t(s.frame ? "fx.framePlaceholder" : repLocked(id) ? (repGroup(id).mode === "keep" ? "rep.keepPlaceholder" : "rep.oncePlaceholder") : "card.placeholder", { n: repGroup(id)?.lead }))}" aria-label="${escapeHtml(t("card.aria", { n: id }))}"${repLocked(id) ? " readonly" : ""}></textarea>`;
   if (repGroup(id)) el.classList.add(repLocked(id) ? "rep-locked" : "rep-lead");
-  el.querySelector("textarea").value = state.translations[id] || "";
+  el.querySelector("textarea").value = cardValue(id);
+  if (s.frame) frameThumb(el.querySelector(".seg-frame img"), s);
   if (find.open) requestAnimationFrame(() => decorateCard(el, id)); // (once it has its size)
   markWarn(el, id);
   return el;
@@ -1247,7 +1248,7 @@ function markWarn(el, id) {
 }
 
 function markDone(id) {
-  const done = hasTr(id);
+  const done = segDone(id);
   vl.rendered.get(id)?.classList.toggle("done", done);
   vl.rendered.get(id)?.classList.toggle("pending", isPending(id));
   markWarn(vl.rendered.get(id), id);
@@ -1273,13 +1274,13 @@ function applyFilter() {
   const ids = [];
   for (const s of state.doc.segments) {
     if (page !== null && s.page !== page) continue;
-    if (status === "numbers" ? !s.skip : s.skip) continue; // numbers-only segments have their own filter
+    if (!s.frame && (status === "numbers" ? !s.skip : s.skip)) continue; // numbers-only segments have their own filter (formula frames are listed with the text)
     if (status !== "numbers" && repHidden(s.id) && repGroup(s.id).lead !== s.id) continue; // (an open group shows them after its lead)
     if (status === "repeats" && !repGroup(s.id)) continue;
     if (status === "unsure" && !unsureWords(s).length) continue;
     if (status === "markers" && !markerIssues(s)) continue;
     if (status === "extra" && !s.extra) continue;
-    if ((status === "todo" || status === "done") && (status === "done") !== hasTr(s.id)) continue;
+    if ((status === "todo" || status === "done") && (status === "done") !== segDone(s.id)) continue;
     if (re && !((scope !== "tr" && hit(s.text)) || (scope !== "src" && hit(state.translations[s.id] || "")))) continue;
     ids.push(s.id);
   }
@@ -1304,7 +1305,8 @@ function segAction(id, act) {
     if (ta) { ta.value = value; ta.dataset.before = value; autoGrow(ta); }
     recordTranslations({ [id]: before }, { [id]: value }, t("hist.translation"));
   };
-  if (act === "copy") navigator.clipboard?.writeText(s.text).then(() => toast(t("msg.sourceCopied"))).catch(() => toast(t("msg.noClipboard"), "error"));
+  if (act === "copy") navigator.clipboard?.writeText(s.frame ? latexOf(s) || s.text : s.text).then(() => toast(t(s.frame && latexOf(s) ? "fx.copied" : "msg.sourceCopied"))).catch(() => toast(t("msg.noClipboard"), "error"));
+  else if (act === "frameDel") { segBarHide(); removeFormulaFrame(id); return; }
   else if (act === "same") setTr(s.text);
   else if (act === "clear") setTr("");
   else if (act === "apply") { applyField(id); repApplyMembers(id); applyChain.then(segBarRefresh); }
@@ -1411,9 +1413,17 @@ function mergeImported(parsed, overwrite = $("#importOverwrite").checked) {
   const ids = Object.keys(parsed).map(Number);
   const matched = ids.filter((id) => segIndex.has(id));
   const unknown = ids.length - matched.length;
-  let applied = 0;
+  let applied = 0, formulas = 0;
   const before = {}, after = {};
   for (const id of matched) {
+    if (segIndex.get(id).frame) { // a formula frame: the answer is its LaTeX
+      const v = cleanLatex(parsed[id]);
+      if (!v || (!overwrite && state.latex[id])) continue;
+      state.latex[id] = v;
+      vl.heights.delete(id);
+      formulas++;
+      continue;
+    }
     if (!overwrite && hasTr(id)) continue;
     before[id] = state.translations[id] || "";
     after[id] = parsed[id];
@@ -1422,20 +1432,22 @@ function mergeImported(parsed, overwrite = $("#importOverwrite").checked) {
     applied++;
   }
   persist();
+  if (formulas) saveLatex();
   if (applied) recordTranslations(before, after, t("hist.import"));
   // Update what is on screen; everything else picks the new text up when it is shown.
   for (const [id, el] of vl.rendered) {
     const ta = el.querySelector("textarea");
-    if (ta.value !== (state.translations[id] || "")) { ta.value = state.translations[id] || ""; autoGrow(ta); }
-    el.classList.toggle("done", hasTr(id));
+    if (ta.value !== cardValue(id)) { ta.value = cardValue(id); autoGrow(ta); }
+    el.classList.toggle("done", segDone(id));
     el.classList.toggle("pending", isPending(id));
     markWarn(el, id);
   }
-  document.querySelectorAll(".box").forEach((b) => b.classList.toggle("done", hasTr(b.dataset.id)));
+  document.querySelectorAll(".box").forEach((b) => b.classList.toggle("done", segDone(Number(b.dataset.id))));
   vl.dirty = true;
   applyFilter();
   updateProgress();
-  let msg = t("msg.imported", { n: applied });
+  let msg = [applied || !formulas ? t("msg.imported", { n: applied }) : "", formulas ? t("msg.importedFx", { n: formulas }).trim() : ""].filter(Boolean).join(" ");
+  applied += formulas;
   if (unknown) msg += t("msg.unknownMarkers", { n: unknown });
   const got = new Set(matched);
   const missing = translatable().filter((s) => !got.has(s.id)).length;
@@ -1820,7 +1832,8 @@ function init() {
   }, { passive: true });
   list.addEventListener("input", (e) => {
     if (e.target.tagName !== "TEXTAREA") return;
-    setTranslation(Number(e.target.closest(".seg").dataset.id), e.target.value);
+    const id = Number(e.target.closest(".seg").dataset.id);
+    if (segById(id)?.frame) setFrameLatex(id, e.target.value); else setTranslation(id, e.target.value); // (a frame's box holds its LaTeX)
     autoGrow(e.target);
   });
   list.addEventListener("change", (e) => { // fires when a changed translation box is left
@@ -1829,7 +1842,7 @@ function init() {
     const id = e.target.closest(".seg").dataset.id;
     const before = e.target.dataset.before || "", after = e.target.value;
     e.target.dataset.before = after;
-    if (before !== after) recordTranslations({ [id]: before }, { [id]: after }, t("hist.translation"));
+    if (before !== after && !segById(id)?.frame) recordTranslations({ [id]: before }, { [id]: after }, t("hist.translation"));
   });
   list.addEventListener("focusin", (e) => {
     if (e.target.tagName === "TEXTAREA") e.target.dataset.before = e.target.value;
@@ -2078,6 +2091,7 @@ const aiCopied = new Set(); // parts already copied; kept until the selection of
 let aiSelection = "";
 
 function refreshAiPrompt() {
+  refreshAiFormulas(); // (the formula frames' pictures, see formula.js)
   if (!state.doc) { $("#aiPrompt").value = aiPromptText(); $("#aiParts").innerHTML = ""; return; }
   const parts = aiParts();
   const segs = parts.flat();
