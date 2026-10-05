@@ -479,7 +479,7 @@ function noteBarHtml(m) {
     ${b("round", m.round ? "▢" : "□", "note.round", m.round)}
     <label class="nb-op" title="${escapeHtml(t("note.opacity"))}">◐<input type="range" data-n="opacity" min="10" max="100" step="5" value="${Math.round((m.opacity != null ? m.opacity : 1) * 100)}"></label>
     <span class="nb-sep"></span>
-    ${b("edit", "✎", "note.edit")}${b("copy", "⧉", "note.copy")}${b("dup", "⊕", "note.duplicate")}${b("del", "🗑", "note.delete")}`;
+    ${b("edit", "✎", "note.edit")}${b("copy", '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:block"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a1 1 0 0 1 1-1h9"/></svg>', "note.copy")}${b("dup", "⊕", "note.duplicate")}${b("del", "🗑", "note.delete")}`;
 }
 
 /** The bar above the selected note (or below it at the top of a page); none while editing. */
@@ -488,6 +488,7 @@ function updateNoteBar() {
   if (!m || m.type !== "text" || mk.tool !== "select" || mk.editor || isBook()) { removeNoteBar(); return; }
   const pageEl = document.querySelector(`.page[data-page="${m.page}"] .page-body`);
   if (!pageEl) { removeNoteBar(); return; }
+  segBarHide(); // (one toolbar at a time: the segment's would cover the note's)
   let bar = pageEl.querySelector(".note-bar");
   if (!bar || bar.dataset.mk !== String(m.id)) {
     removeNoteBar();

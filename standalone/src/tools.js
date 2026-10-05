@@ -1614,25 +1614,36 @@ function initLayout() {
 // into the file. It moves with the page; Esc, a click beside the boxes or another segment closes
 // or moves it.
 const segBar = { id: null };
+const SB_ICON = (path) => `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${path}</svg>`;
+const SB_ICONS = {
+  split: SB_ICON('<circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M8.1 8.1L20 20M8.1 15.9L20 4"/>'),
+  join: SB_ICON('<path d="M4 6h10a4 4 0 0 1 4 4v8"/><path d="M14 14l4 4 4-4"/><path d="M4 18h8"/>'),
+  repMake: SB_ICON('<rect x="4" y="3" width="16" height="5" rx="1"/><rect x="4" y="16" width="16" height="5" rx="1"/><path d="M8 12h8" stroke-dasharray="2 2"/>'),
+  editSrc: SB_ICON('<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>'),
+  same: SB_ICON('<path d="M5 9h14M5 15h14"/>'),
+  clear: SB_ICON('<path d="M6 6l12 12M18 6L6 18"/>'),
+  copy: SB_ICON('<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a1 1 0 0 1 1-1h9"/>'),
+  apply: SB_ICON('<path d="M20 12a8 8 0 1 1-2.3-5.7"/><path d="M20 4v5h-5"/>'),
+};
 function segBarButtons(s) {
   const id = s.id, b = (act, icon, label, title, on = false) =>
     `<button type="button" class="segbar-btn${on ? " on" : ""}" data-act="${act}" title="${escapeHtml(title)}">${icon}${label ? `<span>${escapeHtml(label)}</span>` : ""}</button>`;
   const out = [];
-  if (kindsEditable() && !s.extra) out.push(s.skip ? b("kind", "Aa", t("card.asText"), t("card.asTextTitle")) : b("kind", "∑", t("card.asFormula"), t("card.asFormulaTitle")));
+  if (kindsEditable() && !s.extra) out.push(s.skip ? b("kind", '<span class="segbar-glyph">Aa</span>', t("card.asText"), t("card.asTextTitle")) : b("kind", '<span class="segbar-glyph">∑</span>', t("card.asFormula"), t("card.asFormulaTitle")));
   if (segEditable(s)) {
-    if (s.lines > 1) out.push(b("split", "✂", t("bar.split"), t("card.splitTitle")));
-    out.push(b("join", "⤵", t("bar.join"), t("card.joinTitle")));
+    if (s.lines > 1) out.push(b("split", SB_ICONS.split, t("bar.split"), t("card.splitTitle")));
+    out.push(b("join", SB_ICONS.join, t("bar.join"), t("card.joinTitle")));
   }
-  if (repSupported() && !s.skip && !s.extra && !repGroup(id)) out.push(b("repMake", "⧉", "", t("rep.makeTitle")));
-  if (fieldsEditable() && !s.extra && !s.skip) out.push(b("style", "Aa", "", t("card.styleTitle"), Boolean(state.overrides[id])));
-  if (s.ocr && !isBook()) out.push(b("editSrc", "✎", "", t("card.editSrcTitle")));
+  if (repSupported() && !s.skip && !s.extra && !repGroup(id)) out.push(b("repMake", SB_ICONS.repMake, "", t("rep.makeTitle")));
+  if (fieldsEditable() && !s.extra && !s.skip) out.push(b("style", '<span class="segbar-glyph">Aa</span>', "", t("card.styleTitle"), Boolean(state.overrides[id])));
+  if (s.ocr && !isBook()) out.push(b("editSrc", SB_ICONS.editSrc, "", t("card.editSrcTitle")));
   out.push("<span class=\"segbar-sep\"></span>");
   if (!s.skip) {
-    out.push(b("same", "=", "", t("card.keepTitle")));
-    if (hasTr(id)) out.push(b("clear", "✕", "", t("bar.clearTitle")));
+    out.push(b("same", SB_ICONS.same, "", t("card.keepTitle")));
+    if (hasTr(id)) out.push(b("clear", SB_ICONS.clear, "", t("bar.clearTitle")));
   }
-  out.push(b("copy", "⎘", "", t("card.copyTitle")));
-  if (state.hasOutput && isPending(id) && !s.skip) out.push(b("apply", "⟳", "", t("card.applyTitle")));
+  out.push(b("copy", SB_ICONS.copy, "", t("card.copyTitle")));
+  if (state.hasOutput && isPending(id) && !s.skip) out.push(b("apply", SB_ICONS.apply, "", t("card.applyTitle")));
   return `<span class="segbar-id" data-act="list" title="${escapeHtml(t("bar.listTitle"))}">#${id}</span>${out.join("")}`;
 }
 /** The toolbar for the segment of a clicked box. */

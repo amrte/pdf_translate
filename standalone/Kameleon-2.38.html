@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="Kameleon 2.37">
+  <meta name="generator" content="Kameleon 2.38">
   <meta name="description" content="Kameleon – Wechselt die Sprache, behält die Form. Changes language, keeps its shape.">
   <title>Kameleon</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2216%22 fill=%22%23287130%22/%3E%3Cg transform=%22translate(2.5 1) scale(0.9)%22 fill=%22%23ffffff%22 stroke=%22%23ffffff%22%3E%3Cpath d=%22M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6%22 fill=%22none%22 stroke-width=%223.8%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M21 43l-1 10M30 44v9M38 43l1 10%22 stroke-width=%223.6%22 stroke-linecap=%22round%22/%3E%3Cellipse cx=%2221%22 cy=%2225%22 rx=%227%22 ry=%227.5%22 stroke=%22none%22/%3E%3Cellipse cx=%2233%22 cy=%2223.5%22 rx=%227.5%22 ry=%228%22 stroke=%22none%22/%3E%3Cpath d=%22M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z%22 stroke=%22none%22/%3E%3Cpath d=%22M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z%22 stroke=%22none%22/%3E%3Cpath d=%22M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z%22 stroke=%22none%22/%3E%3Cpath d=%22M16 37l4-3 4 3 4-3 4 3 4-3 4 3%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%222.1%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3Cpath d=%22M43.5 33.9L57 32.6%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%221.5%22 stroke-linecap=%22round%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%224.4%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%222.7%22 stroke=%22none%22/%3E%3Ccircle cx=%2246.2%22 cy=%2226.7%22 r=%221.3%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Cpath d=%22M4 55.5c15-3 39-3 54 0%22 fill=%22none%22 stroke-width=%222.4%22 stroke-linecap=%22round%22/%3E%3C/g%3E%3C/svg%3E">
@@ -1051,7 +1051,11 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
 .segbar-btn:hover { background: var(--accent-soft); color: var(--accent); }
 .segbar-btn.on { color: var(--accent); background: var(--accent-soft); }
 .segbar-btn span { font-weight: 500; }
-.segbar-id { font-weight: 700; color: var(--muted); padding: 0 6px; cursor: pointer; font-variant-numeric: tabular-nums; }
+.segbar-id { display: inline-flex; align-items: center; height: 28px; line-height: 1; font-weight: 700; color: var(--muted); padding: 0 6px; cursor: pointer; font-variant-numeric: tabular-nums; }
+.segbar-btn { line-height: 1; }
+.segbar-btn svg { flex: 0 0 auto; display: block; }
+.segbar-glyph { display: inline-block; min-width: 16px; text-align: center; font-weight: 700; line-height: 16px; }
+.note-bar { z-index: 31; }
 .segbar-id:hover { color: var(--accent); }
 .segbar-sep { width: 1px; align-self: stretch; margin: 4px 3px; background: var(--border); }
 
@@ -1062,7 +1066,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
   <div class="brand">
     <span class="logo"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#287130"/><g transform="translate(2.5 1) scale(0.9)" fill="#ffffff" stroke="#ffffff"><path d="M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6" fill="none" stroke-width="3.8" stroke-linecap="round"/><path d="M21 43l-1 10M30 44v9M38 43l1 10" stroke-width="3.6" stroke-linecap="round"/><ellipse cx="21" cy="25" rx="7" ry="7.5" stroke="none"/><ellipse cx="33" cy="23.5" rx="7.5" ry="8" stroke="none"/><path d="M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z" stroke="none"/><path d="M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z" stroke="none"/><path d="M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z" stroke="none"/><path d="M16 37l4-3 4 3 4-3 4 3 4-3 4 3" fill="none" stroke="#287130" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M43.5 33.9L57 32.6" fill="none" stroke="#287130" stroke-width="1.5" stroke-linecap="round"/><circle cx="45.5" cy="26.5" r="4.4" fill="#287130" stroke="none"/><circle cx="45.5" cy="26.5" r="2.7" stroke="none"/><circle cx="46.2" cy="26.7" r="1.3" fill="#287130" stroke="none"/><path d="M4 55.5c15-3 39-3 54 0" fill="none" stroke-width="2.4" stroke-linecap="round"/></g></svg></span>
     <span class="brand-name">Kameleon</span>
-    <span class="version" id="appVersion">v2.37</span>
+    <span class="version" id="appVersion">v2.38</span>
   </div>
   <div class="topbar-actions">
     <span class="doc-name" id="docName"></span>
@@ -1594,7 +1598,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
     </div>
     <input type="file" id="offlineZip" class="visually-hidden" accept=".zip,application/zip" multiple tabindex="-1">
     <input type="file" id="offlineFolder" class="visually-hidden" webkitdirectory multiple tabindex="-1">
-    <p class="muted small help-version help-part">Kameleon v2.37 · <span data-i18n="app.tagline"></span></p>
+    <p class="muted small help-version help-part">Kameleon v2.38 · <span data-i18n="app.tagline"></span></p>
     <div class="modal-actions">
       <button type="button" value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
     </div>
@@ -4756,14 +4760,19 @@ const BLANK_RE = /^\s*[_…]{3,}\s*$|^\s*\.{4,}\s*$/; // fill-in blanks and dot 
 function chunksOf(line, rot, seps) {
   const spans = line.spans.filter((s) => s.text.trim());
   if (!spans.length) return [];
-  // A column gap is much wider than this line's ordinary word spaces.
-  const columnGap = Math.max(1.0, 3 * typicalGap(line));
+  // A column gap is much wider than this line's ordinary word spaces. Recognised text (OCR) needs
+  // a far wider one: typewritten lines have wide, uneven spaces, and a scan's font size is only
+  // estimated – a narrower limit cut such lines into pieces, which ended up as segments inside
+  // their paragraph. (Tables in scans have borders, which still divide.)
+  const ocr = Boolean(spans[0].ocr);
+  const columnGap = ocr ? Math.max(2.5, 4 * typicalGap(line)) : Math.max(1.0, 3 * typicalGap(line));
+  const hardGap = ocr ? 3.5 : 2;
   const out = [[spans[0]]];
   for (let i = 1; i < spans.length; i++) {
     const prev = spans[i - 1], cur = spans[i];
     const gap = gapOf(prev, cur, rot);
     const size = Math.max(prev.size, cur.size);
-    if (gap > 2 * size || (cur.gapBefore && gap > columnGap * size) || isLabelBoundary(prev, cur)
+    if (gap > hardGap * size || (cur.gapBefore && gap > columnGap * size) || isLabelBoundary(prev, cur)
       || (gap > 0.2 * size && (BLANK_RE.test(cur.text) || BLANK_RE.test(prev.text)))
       || (gap > 0 && divided(prev.bbox, cur.bbox, seps, rot === 0 || rot === 180))) out.push([cur]);
     else out[out.length - 1].push(cur);
@@ -5243,6 +5252,7 @@ function segmentPage(rawBlocks, p, bounds, seps, protect) {
         }
         if (target) target.push(line); else groups.push([line]);
       }
+      rejoinRowPieces(groups, pageLines, seps);
       for (const g of groups) {
         const seg = buildSegment(g, p, bounds, ++local, marginsByRot, pageLines, g.shaped);
         if (seg) segments.push(seg);
@@ -5250,6 +5260,53 @@ function segmentPage(rawBlocks, p, bounds, seps, protect) {
     }
   }
   return segments;
+}
+
+/**
+ * A piece of a recognised (OCR) row left as a group of its own, while the rest of its row is in
+ * a paragraph: it would be a segment inside the paragraph's box. The piece joins the line of its
+ * row it stands next to (no border between them), in reading order.
+ */
+function rejoinRowPieces(groups, pageLines, seps) {
+  const rot0 = (l) => l.rotation;
+  for (let hi = groups.length - 1; hi >= 0; hi--) {
+    const h = groups[hi];
+    if (h.length > 2 || !h.every((l) => l.spans[0].ocr)) continue;
+    const plan = [];
+    for (const piece of h) {
+      let best = null;
+      for (const g of groups) {
+        if (g === h || g.length < 2) continue;
+        for (const m of g) {
+          if (m.rotation !== piece.rotation || !sameBaseline(m, piece)) continue;
+          const [a, b] = localBox(m.bbox, m.rotation)[0] <= localBox(piece.bbox, piece.rotation)[0] ? [m, piece] : [piece, m];
+          const gap = localBox(b.bbox, b.rotation)[0] - localBox(a.bbox, a.rotation)[2];
+          const size = Math.max(m.size, piece.size);
+          if (gap < -0.3 * size || gap > 3.5 * size) continue;
+          if (divided(a.bbox, b.bbox, seps, m.rotation === 0 || m.rotation === 180)) continue;
+          // (only a piece inside the paragraph's width: one before it is a lead-in, "Zu 2.")
+          const others = g.filter((l) => l !== m).map((l) => localBox(l.bbox, rot0(l)));
+          const pb = localBox(piece.bbox, piece.rotation);
+          if (pb[0] < Math.min(...others.map((o) => o[0])) - 0.5 * size || pb[2] > Math.max(...others.map((o) => o[2])) + 0.5 * size) continue;
+          if (!best || gap < best.gap) best = { g, m, gap };
+        }
+      }
+      if (!best) { plan.length = 0; break; }
+      plan.push({ piece, ...best });
+    }
+    if (!plan.length) continue;
+    for (const { piece, m } of plan) {
+      const rot = m.rotation, first = (l) => l.spans[0];
+      const right = localBox(piece.bbox, rot)[0] > localBox(m.bbox, rot)[0] ? piece : m; // (a word space where the two meet)
+      if (!/^\s/.test(first(right).text)) first(right).text = " " + first(right).text;
+      const spans = m.spans.concat(piece.spans).sort((x, y) => localBox(x.bbox, rot)[0] - localBox(y.bbox, rot)[0]);
+      m.spans = spans; m.text = spansText(spans, rot); m.bbox = chunkBox(spans); m.origin = spans[0].origin;
+      m.size = Math.max(...spans.map((sp) => sp.size)); m.standalone = false;
+      const at = pageLines.indexOf(piece);
+      if (at >= 0) pageLines.splice(at, 1);
+    }
+    groups.splice(hi, 1);
+  }
 }
 
 /** The lines of a page for the segment editor: [{i, text, bbox, rotation}], and what re-segmenting needs. */
@@ -7199,7 +7256,14 @@ function ocrToBlocks(data, zoom, origin, colors) {
     return hex;
   };
   const seps = []; // table borders that Tesseract read as | [ ] (column separators)
-  const border = (bb) => { const x = (bb.x0 + bb.x1) / 2; seps.push([pt(x, origin[0]) - 0.25, pt(bb.y0, origin[1]), pt(x, origin[0]) + 0.25, pt(bb.y1, origin[1])]); };
+  // A mark read as | [ ] is a table border only when there is a line on the page: ink all along
+  // its height (a speck on a scan, read as "|", must not cut the text line beside it in two).
+  const isRule = (bb) => {
+    const x = (bb.x0 + bb.x1) / 2, h = bb.y1 - bb.y0, w = Math.max(1.5, (bb.x1 - bb.x0) / 2);
+    if (!(h > 0)) return false;
+    return [0, 1, 2].every((k) => colors([x - w, bb.y0 + (k * h) / 3, x + w, bb.y0 + ((k + 1) * h) / 3]).ink > 0.25);
+  };
+  const border = (bb) => { if (!isRule(bb)) return; const x = (bb.x0 + bb.x1) / 2; seps.push([pt(x, origin[0]) - 0.25, pt(bb.y0, origin[1]), pt(x, origin[0]) + 0.25, pt(bb.y1, origin[1])]); };
   for (const block of data.blocks || []) {
     for (const para of block.paragraphs || []) {
       for (const line of para.lines || []) {
@@ -7253,6 +7317,7 @@ function ocrToBlocks(data, zoom, origin, colors) {
       }
     }
   }
+  mergeRowPieces(lines, seps);
   // Sizes measured line by line vary too: lines on one baseline get their median size, and
   // sizes within 12 % of each other the same value.
   for (const l of lines) {
@@ -7272,8 +7337,45 @@ function ocrToBlocks(data, zoom, origin, colors) {
   // Bold lines have clearly more ink (in the cap-height band) than the page's usual text.
   const inks = lines.filter((l) => l.words.length > 1).map((l) => l.ink).sort((a, b) => a - b);
   const usual = inks.length ? inks[inks.length >> 1] : 0;
-  for (const l of lines) { l.bold = usual > 0 && l.ink > 1.2 * usual; delete l.ink; }
+  // A long row of running text that only looks darker (a typewriter struck harder) is no bold
+  // line: bold are short rows (headings, labels) and rows whose neighbour is bold too.
+  const heavy = lines.map((l) => usual > 0 && l.ink > 1.2 * usual);
+  const near = (i, j) => j >= 0 && j < lines.length && Math.abs(lines[i].base - lines[j].base) < 2.5 * lines[i].size;
+  lines.forEach((l, i) => { l.bold = heavy[i] && (l.words.length <= 6 || (near(i, i - 1) && heavy[i - 1]) || (near(i, i + 1) && heavy[i + 1])); });
+  for (const l of lines) delete l.ink;
   return { blocks: lines.length ? [{ lines }] : [], seps };
+}
+
+/**
+ * Tesseract sometimes returns one row of text in pieces – typewriter text with its wide spaces, a
+ * word struck harder than the rest. A piece on its own would not join its paragraph (it shares
+ * a row with another line) and became a segment of its own inside the paragraph's box. Pieces on
+ * one baseline that are near each other, with no table border between them, are one line again
+ * (in place of the first piece); real columns are still told apart later, by their gaps.
+ */
+function mergeRowPieces(lines, seps) {
+  const span = (l) => [Math.min(...l.words.map((w) => w.bbox[0])), Math.max(...l.words.map((w) => w.bbox[2]))];
+  const width = (l) => l.words.reduce((a, w) => a + (w.bbox[2] - w.bbox[0]), 0);
+  for (let i = 0; i < lines.length; i++) {
+    const a = lines[i];
+    for (let j = i + 1; j < lines.length; j++) {
+      const b = lines[j], size = Math.min(a.size, b.size);
+      if (Math.abs(a.base - b.base) > 0.3 * size || Math.max(a.size, b.size) > 1.35 * size) continue;
+      const [a0, a1] = span(a), [b0, b1] = span(b);
+      const left = a1 <= b0 + 0.3 * size ? [a1, b0] : b1 <= a0 + 0.3 * size ? [b1, a0] : null;
+      if (!left) continue; // (overlapping pieces are not one row read twice)
+      const [g0, g1] = left;
+      if (g1 - g0 > 2.2 * Math.max(a.size, b.size)) continue; // a column gap
+      const y = a.base - 0.3 * size;
+      if (seps.some(([x0, y0, x1, y1]) => x1 - x0 < 3 && (x0 + x1) / 2 >= g0 - 0.5 && (x0 + x1) / 2 <= g1 + 0.5 && y0 <= y && y <= y1)) continue;
+      const wa = width(a), wb = width(b), main = wa >= wb ? a : b;
+      a.ink = (a.ink * wa + b.ink * wb) / Math.max(1, wa + wb);
+      a.size = main.size; a.base = main.base; a.color = main.color; a.bg = main.bg;
+      a.words = a.words.concat(b.words).sort((p, q) => p.bbox[0] - q.bbox[0]);
+      lines.splice(j, 1);
+      j = i; // (the longer line may now reach another piece)
+    }
+  }
 }
 
 /** Turn pages by a multiple of 90° (added to the rotation they already have): {page: degrees}. */
@@ -17075,7 +17177,7 @@ function noteBarHtml(m) {
     ${b("round", m.round ? "▢" : "□", "note.round", m.round)}
     <label class="nb-op" title="${escapeHtml(t("note.opacity"))}">◐<input type="range" data-n="opacity" min="10" max="100" step="5" value="${Math.round((m.opacity != null ? m.opacity : 1) * 100)}"></label>
     <span class="nb-sep"></span>
-    ${b("edit", "✎", "note.edit")}${b("copy", "⧉", "note.copy")}${b("dup", "⊕", "note.duplicate")}${b("del", "🗑", "note.delete")}`;
+    ${b("edit", "✎", "note.edit")}${b("copy", '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:block"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a1 1 0 0 1 1-1h9"/></svg>', "note.copy")}${b("dup", "⊕", "note.duplicate")}${b("del", "🗑", "note.delete")}`;
 }
 
 /** The bar above the selected note (or below it at the top of a page); none while editing. */
@@ -17084,6 +17186,7 @@ function updateNoteBar() {
   if (!m || m.type !== "text" || mk.tool !== "select" || mk.editor || isBook()) { removeNoteBar(); return; }
   const pageEl = document.querySelector(`.page[data-page="${m.page}"] .page-body`);
   if (!pageEl) { removeNoteBar(); return; }
+  segBarHide(); // (one toolbar at a time: the segment's would cover the note's)
   let bar = pageEl.querySelector(".note-bar");
   if (!bar || bar.dataset.mk !== String(m.id)) {
     removeNoteBar();
@@ -19040,25 +19143,36 @@ function initLayout() {
 // into the file. It moves with the page; Esc, a click beside the boxes or another segment closes
 // or moves it.
 const segBar = { id: null };
+const SB_ICON = (path) => `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${path}</svg>`;
+const SB_ICONS = {
+  split: SB_ICON('<circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M8.1 8.1L20 20M8.1 15.9L20 4"/>'),
+  join: SB_ICON('<path d="M4 6h10a4 4 0 0 1 4 4v8"/><path d="M14 14l4 4 4-4"/><path d="M4 18h8"/>'),
+  repMake: SB_ICON('<rect x="4" y="3" width="16" height="5" rx="1"/><rect x="4" y="16" width="16" height="5" rx="1"/><path d="M8 12h8" stroke-dasharray="2 2"/>'),
+  editSrc: SB_ICON('<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>'),
+  same: SB_ICON('<path d="M5 9h14M5 15h14"/>'),
+  clear: SB_ICON('<path d="M6 6l12 12M18 6L6 18"/>'),
+  copy: SB_ICON('<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a1 1 0 0 1 1-1h9"/>'),
+  apply: SB_ICON('<path d="M20 12a8 8 0 1 1-2.3-5.7"/><path d="M20 4v5h-5"/>'),
+};
 function segBarButtons(s) {
   const id = s.id, b = (act, icon, label, title, on = false) =>
     `<button type="button" class="segbar-btn${on ? " on" : ""}" data-act="${act}" title="${escapeHtml(title)}">${icon}${label ? `<span>${escapeHtml(label)}</span>` : ""}</button>`;
   const out = [];
-  if (kindsEditable() && !s.extra) out.push(s.skip ? b("kind", "Aa", t("card.asText"), t("card.asTextTitle")) : b("kind", "∑", t("card.asFormula"), t("card.asFormulaTitle")));
+  if (kindsEditable() && !s.extra) out.push(s.skip ? b("kind", '<span class="segbar-glyph">Aa</span>', t("card.asText"), t("card.asTextTitle")) : b("kind", '<span class="segbar-glyph">∑</span>', t("card.asFormula"), t("card.asFormulaTitle")));
   if (segEditable(s)) {
-    if (s.lines > 1) out.push(b("split", "✂", t("bar.split"), t("card.splitTitle")));
-    out.push(b("join", "⤵", t("bar.join"), t("card.joinTitle")));
+    if (s.lines > 1) out.push(b("split", SB_ICONS.split, t("bar.split"), t("card.splitTitle")));
+    out.push(b("join", SB_ICONS.join, t("bar.join"), t("card.joinTitle")));
   }
-  if (repSupported() && !s.skip && !s.extra && !repGroup(id)) out.push(b("repMake", "⧉", "", t("rep.makeTitle")));
-  if (fieldsEditable() && !s.extra && !s.skip) out.push(b("style", "Aa", "", t("card.styleTitle"), Boolean(state.overrides[id])));
-  if (s.ocr && !isBook()) out.push(b("editSrc", "✎", "", t("card.editSrcTitle")));
+  if (repSupported() && !s.skip && !s.extra && !repGroup(id)) out.push(b("repMake", SB_ICONS.repMake, "", t("rep.makeTitle")));
+  if (fieldsEditable() && !s.extra && !s.skip) out.push(b("style", '<span class="segbar-glyph">Aa</span>', "", t("card.styleTitle"), Boolean(state.overrides[id])));
+  if (s.ocr && !isBook()) out.push(b("editSrc", SB_ICONS.editSrc, "", t("card.editSrcTitle")));
   out.push("<span class=\"segbar-sep\"></span>");
   if (!s.skip) {
-    out.push(b("same", "=", "", t("card.keepTitle")));
-    if (hasTr(id)) out.push(b("clear", "✕", "", t("bar.clearTitle")));
+    out.push(b("same", SB_ICONS.same, "", t("card.keepTitle")));
+    if (hasTr(id)) out.push(b("clear", SB_ICONS.clear, "", t("bar.clearTitle")));
   }
-  out.push(b("copy", "⎘", "", t("card.copyTitle")));
-  if (state.hasOutput && isPending(id) && !s.skip) out.push(b("apply", "⟳", "", t("card.applyTitle")));
+  out.push(b("copy", SB_ICONS.copy, "", t("card.copyTitle")));
+  if (state.hasOutput && isPending(id) && !s.skip) out.push(b("apply", SB_ICONS.apply, "", t("card.applyTitle")));
   return `<span class="segbar-id" data-act="list" title="${escapeHtml(t("bar.listTitle"))}">#${id}</span>${out.join("")}`;
 }
 /** The toolbar for the segment of a clicked box. */
@@ -19417,7 +19531,7 @@ function initPicture() {
 // from its own browser cache before the network, so language files are written into that cache.
 // ======================================================================
 
-const APP_VERSION = "2.37";
+const APP_VERSION = "2.38";
 // (a change of library version makes a stored set outdated: it is then ignored)
 const OFFLINE_VERSION = `${MUPDF_URL} ${OCR_LIB}`;
 const CORE_SIMD = "tesseract-core-simd-lstm.wasm.js", CORE_PLAIN = "tesseract-core-lstm.wasm.js";

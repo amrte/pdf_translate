@@ -4,6 +4,12 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.38
+
+- OCR of typewritten pages: segments no longer sit inside other segments, and paragraphs stay whole. Three causes are fixed: wide, uneven typewriter spaces no longer count as column gaps in recognised text (the limit for scans is now 2.5 character heights instead of one); specks that the recognition reads as "|" only count as table borders when a real line is on the page there (ink along its whole height); and pieces of a row that Tesseract returns separately become one line again, in reading order (before, "je nach Der maximale …" could come out). A piece that is still left alone inside its paragraph joins its row. A single row of running text that looks darker (struck harder) no longer counts as bold and splits its paragraph.
+- Segment toolbar: drawn icons instead of characters (some looked odd), and the segment number sits on the same line as the buttons.
+- The toolbar of a text note showed behind the segment toolbar when a segment had been clicked before: selecting a note now closes the segment toolbar, and the note toolbar is on top.
+
 ## 2.37
 
 - A click on a segment on the page opens a small toolbar above it (below it near the top of the page) with what can be done to that segment: treat it as a formula or as text (∑ / Aa), split it (✂, for segments of several lines) or join it with the next one (⤵), make it a header/footer group (⧉), open its style (Aa), correct recognised text (✎, OCR), keep the original as the translation (=), delete the translation (✕), copy the original (⎘) and – after building – write a changed translation into the file right away (⟳). Only what applies to the segment is shown; the number at the left jumps to its card in the list. The toolbar moves and zooms with the page, follows a box that is dragged, updates while you type, and closes with Esc or a click beside the boxes.

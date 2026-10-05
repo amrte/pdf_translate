@@ -1041,6 +1041,10 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
 .segbar-btn:hover { background: var(--accent-soft); color: var(--accent); }
 .segbar-btn.on { color: var(--accent); background: var(--accent-soft); }
 .segbar-btn span { font-weight: 500; }
-.segbar-id { font-weight: 700; color: var(--muted); padding: 0 6px; cursor: pointer; font-variant-numeric: tabular-nums; }
+.segbar-id { display: inline-flex; align-items: center; height: 28px; line-height: 1; font-weight: 700; color: var(--muted); padding: 0 6px; cursor: pointer; font-variant-numeric: tabular-nums; }
+.segbar-btn { line-height: 1; }
+.segbar-btn svg { flex: 0 0 auto; display: block; }
+.segbar-glyph { display: inline-block; min-width: 16px; text-align: center; font-weight: 700; line-height: 16px; }
+.note-bar { z-index: 31; }
 .segbar-id:hover { color: var(--accent); }
 .segbar-sep { width: 1px; align-self: stretch; margin: 4px 3px; background: var(--border); }

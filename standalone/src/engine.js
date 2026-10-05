@@ -908,14 +908,19 @@ const BLANK_RE = /^\s*[_…]{3,}\s*$|^\s*\.{4,}\s*$/; // fill-in blanks and dot 
 function chunksOf(line, rot, seps) {
   const spans = line.spans.filter((s) => s.text.trim());
   if (!spans.length) return [];
-  // A column gap is much wider than this line's ordinary word spaces.
-  const columnGap = Math.max(1.0, 3 * typicalGap(line));
+  // A column gap is much wider than this line's ordinary word spaces. Recognised text (OCR) needs
+  // a far wider one: typewritten lines have wide, uneven spaces, and a scan's font size is only
+  // estimated – a narrower limit cut such lines into pieces, which ended up as segments inside
+  // their paragraph. (Tables in scans have borders, which still divide.)
+  const ocr = Boolean(spans[0].ocr);
+  const columnGap = ocr ? Math.max(2.5, 4 * typicalGap(line)) : Math.max(1.0, 3 * typicalGap(line));
+  const hardGap = ocr ? 3.5 : 2;
   const out = [[spans[0]]];
   for (let i = 1; i < spans.length; i++) {
     const prev = spans[i - 1], cur = spans[i];
     const gap = gapOf(prev, cur, rot);
     const size = Math.max(prev.size, cur.size);
-    if (gap > 2 * size || (cur.gapBefore && gap > columnGap * size) || isLabelBoundary(prev, cur)
+    if (gap > hardGap * size || (cur.gapBefore && gap > columnGap * size) || isLabelBoundary(prev, cur)
       || (gap > 0.2 * size && (BLANK_RE.test(cur.text) || BLANK_RE.test(prev.text)))
       || (gap > 0 && divided(prev.bbox, cur.bbox, seps, rot === 0 || rot === 180))) out.push([cur]);
     else out[out.length - 1].push(cur);
@@ -1395,6 +1400,7 @@ function segmentPage(rawBlocks, p, bounds, seps, protect) {
         }
         if (target) target.push(line); else groups.push([line]);
       }
+      rejoinRowPieces(groups, pageLines, seps);
       for (const g of groups) {
         const seg = buildSegment(g, p, bounds, ++local, marginsByRot, pageLines, g.shaped);
         if (seg) segments.push(seg);
@@ -1402,6 +1408,53 @@ function segmentPage(rawBlocks, p, bounds, seps, protect) {
     }
   }
   return segments;
+}
+
+/**
+ * A piece of a recognised (OCR) row left as a group of its own, while the rest of its row is in
+ * a paragraph: it would be a segment inside the paragraph's box. The piece joins the line of its
+ * row it stands next to (no border between them), in reading order.
+ */
+function rejoinRowPieces(groups, pageLines, seps) {
+  const rot0 = (l) => l.rotation;
+  for (let hi = groups.length - 1; hi >= 0; hi--) {
+    const h = groups[hi];
+    if (h.length > 2 || !h.every((l) => l.spans[0].ocr)) continue;
+    const plan = [];
+    for (const piece of h) {
+      let best = null;
+      for (const g of groups) {
+        if (g === h || g.length < 2) continue;
+        for (const m of g) {
+          if (m.rotation !== piece.rotation || !sameBaseline(m, piece)) continue;
+          const [a, b] = localBox(m.bbox, m.rotation)[0] <= localBox(piece.bbox, piece.rotation)[0] ? [m, piece] : [piece, m];
+          const gap = localBox(b.bbox, b.rotation)[0] - localBox(a.bbox, a.rotation)[2];
+          const size = Math.max(m.size, piece.size);
+          if (gap < -0.3 * size || gap > 3.5 * size) continue;
+          if (divided(a.bbox, b.bbox, seps, m.rotation === 0 || m.rotation === 180)) continue;
+          // (only a piece inside the paragraph's width: one before it is a lead-in, "Zu 2.")
+          const others = g.filter((l) => l !== m).map((l) => localBox(l.bbox, rot0(l)));
+          const pb = localBox(piece.bbox, piece.rotation);
+          if (pb[0] < Math.min(...others.map((o) => o[0])) - 0.5 * size || pb[2] > Math.max(...others.map((o) => o[2])) + 0.5 * size) continue;
+          if (!best || gap < best.gap) best = { g, m, gap };
+        }
+      }
+      if (!best) { plan.length = 0; break; }
+      plan.push({ piece, ...best });
+    }
+    if (!plan.length) continue;
+    for (const { piece, m } of plan) {
+      const rot = m.rotation, first = (l) => l.spans[0];
+      const right = localBox(piece.bbox, rot)[0] > localBox(m.bbox, rot)[0] ? piece : m; // (a word space where the two meet)
+      if (!/^\s/.test(first(right).text)) first(right).text = " " + first(right).text;
+      const spans = m.spans.concat(piece.spans).sort((x, y) => localBox(x.bbox, rot)[0] - localBox(y.bbox, rot)[0]);
+      m.spans = spans; m.text = spansText(spans, rot); m.bbox = chunkBox(spans); m.origin = spans[0].origin;
+      m.size = Math.max(...spans.map((sp) => sp.size)); m.standalone = false;
+      const at = pageLines.indexOf(piece);
+      if (at >= 0) pageLines.splice(at, 1);
+    }
+    groups.splice(hi, 1);
+  }
 }
 
 /** The lines of a page for the segment editor: [{i, text, bbox, rotation}], and what re-segmenting needs. */
@@ -3351,7 +3404,14 @@ function ocrToBlocks(data, zoom, origin, colors) {
     return hex;
   };
   const seps = []; // table borders that Tesseract read as | [ ] (column separators)
-  const border = (bb) => { const x = (bb.x0 + bb.x1) / 2; seps.push([pt(x, origin[0]) - 0.25, pt(bb.y0, origin[1]), pt(x, origin[0]) + 0.25, pt(bb.y1, origin[1])]); };
+  // A mark read as | [ ] is a table border only when there is a line on the page: ink all along
+  // its height (a speck on a scan, read as "|", must not cut the text line beside it in two).
+  const isRule = (bb) => {
+    const x = (bb.x0 + bb.x1) / 2, h = bb.y1 - bb.y0, w = Math.max(1.5, (bb.x1 - bb.x0) / 2);
+    if (!(h > 0)) return false;
+    return [0, 1, 2].every((k) => colors([x - w, bb.y0 + (k * h) / 3, x + w, bb.y0 + ((k + 1) * h) / 3]).ink > 0.25);
+  };
+  const border = (bb) => { if (!isRule(bb)) return; const x = (bb.x0 + bb.x1) / 2; seps.push([pt(x, origin[0]) - 0.25, pt(bb.y0, origin[1]), pt(x, origin[0]) + 0.25, pt(bb.y1, origin[1])]); };
   for (const block of data.blocks || []) {
     for (const para of block.paragraphs || []) {
       for (const line of para.lines || []) {
@@ -3405,6 +3465,7 @@ function ocrToBlocks(data, zoom, origin, colors) {
       }
     }
   }
+  mergeRowPieces(lines, seps);
   // Sizes measured line by line vary too: lines on one baseline get their median size, and
   // sizes within 12 % of each other the same value.
   for (const l of lines) {
@@ -3424,8 +3485,45 @@ function ocrToBlocks(data, zoom, origin, colors) {
   // Bold lines have clearly more ink (in the cap-height band) than the page's usual text.
   const inks = lines.filter((l) => l.words.length > 1).map((l) => l.ink).sort((a, b) => a - b);
   const usual = inks.length ? inks[inks.length >> 1] : 0;
-  for (const l of lines) { l.bold = usual > 0 && l.ink > 1.2 * usual; delete l.ink; }
+  // A long row of running text that only looks darker (a typewriter struck harder) is no bold
+  // line: bold are short rows (headings, labels) and rows whose neighbour is bold too.
+  const heavy = lines.map((l) => usual > 0 && l.ink > 1.2 * usual);
+  const near = (i, j) => j >= 0 && j < lines.length && Math.abs(lines[i].base - lines[j].base) < 2.5 * lines[i].size;
+  lines.forEach((l, i) => { l.bold = heavy[i] && (l.words.length <= 6 || (near(i, i - 1) && heavy[i - 1]) || (near(i, i + 1) && heavy[i + 1])); });
+  for (const l of lines) delete l.ink;
   return { blocks: lines.length ? [{ lines }] : [], seps };
+}
+
+/**
+ * Tesseract sometimes returns one row of text in pieces – typewriter text with its wide spaces, a
+ * word struck harder than the rest. A piece on its own would not join its paragraph (it shares
+ * a row with another line) and became a segment of its own inside the paragraph's box. Pieces on
+ * one baseline that are near each other, with no table border between them, are one line again
+ * (in place of the first piece); real columns are still told apart later, by their gaps.
+ */
+function mergeRowPieces(lines, seps) {
+  const span = (l) => [Math.min(...l.words.map((w) => w.bbox[0])), Math.max(...l.words.map((w) => w.bbox[2]))];
+  const width = (l) => l.words.reduce((a, w) => a + (w.bbox[2] - w.bbox[0]), 0);
+  for (let i = 0; i < lines.length; i++) {
+    const a = lines[i];
+    for (let j = i + 1; j < lines.length; j++) {
+      const b = lines[j], size = Math.min(a.size, b.size);
+      if (Math.abs(a.base - b.base) > 0.3 * size || Math.max(a.size, b.size) > 1.35 * size) continue;
+      const [a0, a1] = span(a), [b0, b1] = span(b);
+      const left = a1 <= b0 + 0.3 * size ? [a1, b0] : b1 <= a0 + 0.3 * size ? [b1, a0] : null;
+      if (!left) continue; // (overlapping pieces are not one row read twice)
+      const [g0, g1] = left;
+      if (g1 - g0 > 2.2 * Math.max(a.size, b.size)) continue; // a column gap
+      const y = a.base - 0.3 * size;
+      if (seps.some(([x0, y0, x1, y1]) => x1 - x0 < 3 && (x0 + x1) / 2 >= g0 - 0.5 && (x0 + x1) / 2 <= g1 + 0.5 && y0 <= y && y <= y1)) continue;
+      const wa = width(a), wb = width(b), main = wa >= wb ? a : b;
+      a.ink = (a.ink * wa + b.ink * wb) / Math.max(1, wa + wb);
+      a.size = main.size; a.base = main.base; a.color = main.color; a.bg = main.bg;
+      a.words = a.words.concat(b.words).sort((p, q) => p.bbox[0] - q.bbox[0]);
+      lines.splice(j, 1);
+      j = i; // (the longer line may now reach another piece)
+    }
+  }
 }
 
 /** Turn pages by a multiple of 90° (added to the rotation they already have): {page: degrees}. */
