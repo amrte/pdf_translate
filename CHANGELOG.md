@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.37
+
+- A click on a segment on the page opens a small toolbar above it (below it near the top of the page) with what can be done to that segment: treat it as a formula or as text (∑ / Aa), split it (✂, for segments of several lines) or join it with the next one (⤵), make it a header/footer group (⧉), open its style (Aa), correct recognised text (✎, OCR), keep the original as the translation (=), delete the translation (✕), copy the original (⎘) and – after building – write a changed translation into the file right away (⟳). Only what applies to the segment is shown; the number at the left jumps to its card in the list. The toolbar moves and zooms with the page, follows a box that is dragged, updates while you type, and closes with Esc or a click beside the boxes.
+
 ## 2.36
 
 - Scans with an invisible text layer (PDFs from scanners and "make searchable" tools): the translation used to be drawn over the scanned words, which stay visible in the picture – both texts overlapped. Now the scanned lines are covered with patches of the paper colour (measured on the page) and the translation is set on them in the ink colour, as with the app's own OCR; the invisible original text is removed. Such segments say "OCR layer of a scan".

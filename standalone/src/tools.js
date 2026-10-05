@@ -204,6 +204,7 @@ function onBoxMove(e) {
     if (Math.hypot(dx, dy) * scale < 4) return;
     d.moved = true;
     document.body.classList.add("box-dragging");
+    segBarHide(); // (shown again where the box is let go)
   }
   e.preventDefault();
   let [x0, y0, x1, y1] = d.orig;
@@ -223,6 +224,7 @@ function onBoxUp() {
   boxDrag.cur = null;
   if (!d || !d.moved) return;
   document.body.classList.remove("box-dragging");
+  requestAnimationFrame(() => { if (d.box.isConnected) segBarShow(d.box); });
   boxDrag.justDragged = true; // the click that follows must not count as a click on the box
   setTimeout(() => { boxDrag.justDragged = false; }, 300);
   const s = segById(d.id);
@@ -1604,3 +1606,81 @@ function initLayout() {
   $("#railFold").addEventListener("click", () => fold(!rail.classList.contains("folded")));
   document.addEventListener("languagechange", () => { $("#railFold").title = t(rail.classList.contains("folded") ? "tool.unfold" : "tool.fold"); });
 }
+
+/* ------------------------------------------- the toolbar above a clicked segment on the page */
+// A click on a segment's box shows a small toolbar above it (below, near the top of the page)
+// with what can be done to that segment: formula or text, split, join, header/footer group,
+// style, correct the recognised text, keep or clear the translation, copy the original, write it
+// into the file. It moves with the page; Esc, a click beside the boxes or another segment closes
+// or moves it.
+const segBar = { id: null };
+function segBarButtons(s) {
+  const id = s.id, b = (act, icon, label, title, on = false) =>
+    `<button type="button" class="segbar-btn${on ? " on" : ""}" data-act="${act}" title="${escapeHtml(title)}">${icon}${label ? `<span>${escapeHtml(label)}</span>` : ""}</button>`;
+  const out = [];
+  if (kindsEditable() && !s.extra) out.push(s.skip ? b("kind", "Aa", t("card.asText"), t("card.asTextTitle")) : b("kind", "∑", t("card.asFormula"), t("card.asFormulaTitle")));
+  if (segEditable(s)) {
+    if (s.lines > 1) out.push(b("split", "✂", t("bar.split"), t("card.splitTitle")));
+    out.push(b("join", "⤵", t("bar.join"), t("card.joinTitle")));
+  }
+  if (repSupported() && !s.skip && !s.extra && !repGroup(id)) out.push(b("repMake", "⧉", "", t("rep.makeTitle")));
+  if (fieldsEditable() && !s.extra && !s.skip) out.push(b("style", "Aa", "", t("card.styleTitle"), Boolean(state.overrides[id])));
+  if (s.ocr && !isBook()) out.push(b("editSrc", "✎", "", t("card.editSrcTitle")));
+  out.push("<span class=\"segbar-sep\"></span>");
+  if (!s.skip) {
+    out.push(b("same", "=", "", t("card.keepTitle")));
+    if (hasTr(id)) out.push(b("clear", "✕", "", t("bar.clearTitle")));
+  }
+  out.push(b("copy", "⎘", "", t("card.copyTitle")));
+  if (state.hasOutput && isPending(id) && !s.skip) out.push(b("apply", "⟳", "", t("card.applyTitle")));
+  return `<span class="segbar-id" data-act="list" title="${escapeHtml(t("bar.listTitle"))}">#${id}</span>${out.join("")}`;
+}
+/** The toolbar for the segment of a clicked box. */
+function segBarShow(box) {
+  const id = Number(box.dataset.id), s = segById(id);
+  if (!s || mk.tool !== "select" || document.body.classList.contains("reading") || boxDrag.justDragged) return;
+  segBar.id = id;
+  let bar = $("#segBar");
+  if (!bar) {
+    bar = document.createElement("div");
+    bar.id = "segBar";
+    bar.className = "segbar";
+    bar.setAttribute("role", "toolbar");
+    bar.addEventListener("pointerdown", (e) => e.stopPropagation()); // (no box drag, no markup)
+    bar.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const btn = e.target.closest("[data-act]");
+      if (!btn || segBar.id === null) return;
+      if (btn.dataset.act === "list") { setActive(segBar.id, { scrollList: true, focus: true }); return; }
+      const act = btn.dataset.act, id = segBar.id;
+      if (act === "split" || act === "join" || act === "editSrc") segBarHide(); // (the segment changes or a dialog opens)
+      segAction(id, act);
+    });
+  }
+  bar.innerHTML = segBarButtons(s);
+  box.parentElement.appendChild(bar); // (in the page: it scrolls and zooms with it)
+  segBarPlace(box);
+}
+function segBarPlace(box) {
+  const bar = $("#segBar"), body = box.parentElement;
+  if (!bar || !body) return;
+  const W = body.clientWidth, top = box.offsetTop, h = bar.offsetHeight;
+  bar.classList.toggle("below", top - h - 8 < 0);
+  bar.style.top = `${top - h - 8 < 0 ? top + box.offsetHeight + 6 : top - h - 6}px`;
+  bar.style.left = `${Math.max(4, Math.min(box.offsetLeft, W - bar.offsetWidth - 4))}px`;
+}
+/** After an action: the toolbar shows the segment's new state (or goes, when the segment is gone). */
+function segBarRefresh() {
+  const bar = $("#segBar");
+  if (!bar || segBar.id === null) return;
+  const s = segById(segBar.id), box = document.querySelector(`.page .box[data-id="${segBar.id}"]`);
+  if (!s || !box) { segBarHide(); return; }
+  bar.innerHTML = segBarButtons(s);
+  if (bar.parentElement !== box.parentElement) box.parentElement.appendChild(bar);
+  segBarPlace(box);
+}
+function segBarHide() {
+  segBar.id = null;
+  $("#segBar")?.remove();
+}
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && segBar.id !== null && !document.querySelector("dialog[open]")) segBarHide(); });

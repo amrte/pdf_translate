@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="Kameleon 2.36">
+  <meta name="generator" content="Kameleon 2.37">
   <meta name="description" content="Kameleon – Wechselt die Sprache, behält die Form. Changes language, keeps its shape.">
   <title>Kameleon</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2216%22 fill=%22%23287130%22/%3E%3Cg transform=%22translate(2.5 1) scale(0.9)%22 fill=%22%23ffffff%22 stroke=%22%23ffffff%22%3E%3Cpath d=%22M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6%22 fill=%22none%22 stroke-width=%223.8%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M21 43l-1 10M30 44v9M38 43l1 10%22 stroke-width=%223.6%22 stroke-linecap=%22round%22/%3E%3Cellipse cx=%2221%22 cy=%2225%22 rx=%227%22 ry=%227.5%22 stroke=%22none%22/%3E%3Cellipse cx=%2233%22 cy=%2223.5%22 rx=%227.5%22 ry=%228%22 stroke=%22none%22/%3E%3Cpath d=%22M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z%22 stroke=%22none%22/%3E%3Cpath d=%22M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z%22 stroke=%22none%22/%3E%3Cpath d=%22M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z%22 stroke=%22none%22/%3E%3Cpath d=%22M16 37l4-3 4 3 4-3 4 3 4-3 4 3%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%222.1%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3Cpath d=%22M43.5 33.9L57 32.6%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%221.5%22 stroke-linecap=%22round%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%224.4%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%222.7%22 stroke=%22none%22/%3E%3Ccircle cx=%2246.2%22 cy=%2226.7%22 r=%221.3%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Cpath d=%22M4 55.5c15-3 39-3 54 0%22 fill=%22none%22 stroke-width=%222.4%22 stroke-linecap=%22round%22/%3E%3C/g%3E%3C/svg%3E">
@@ -1045,6 +1045,16 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
 .seg-warn { flex-shrink: 0; color: #c0392b; font-weight: 600; white-space: nowrap; cursor: help; }
 .seg-warn[hidden] { display: none; }
 
+/* ---------- v2.37: the toolbar above a clicked segment on the page ---------- */
+.segbar { position: absolute; z-index: 30; display: flex; align-items: center; gap: 2px; padding: 3px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); box-shadow: 0 4px 16px rgba(0, 0, 0, .18); white-space: nowrap; font-size: 12.5px; color: var(--text); cursor: default; }
+.segbar-btn { display: inline-flex; align-items: center; gap: 4px; height: 28px; min-width: 28px; padding: 0 7px; border: 0; border-radius: 7px; background: transparent; color: inherit; font: inherit; font-weight: 600; cursor: pointer; justify-content: center; }
+.segbar-btn:hover { background: var(--accent-soft); color: var(--accent); }
+.segbar-btn.on { color: var(--accent); background: var(--accent-soft); }
+.segbar-btn span { font-weight: 500; }
+.segbar-id { font-weight: 700; color: var(--muted); padding: 0 6px; cursor: pointer; font-variant-numeric: tabular-nums; }
+.segbar-id:hover { color: var(--accent); }
+.segbar-sep { width: 1px; align-self: stretch; margin: 4px 3px; background: var(--border); }
+
   </style>
 </head>
 <body>
@@ -1052,7 +1062,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
   <div class="brand">
     <span class="logo"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#287130"/><g transform="translate(2.5 1) scale(0.9)" fill="#ffffff" stroke="#ffffff"><path d="M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6" fill="none" stroke-width="3.8" stroke-linecap="round"/><path d="M21 43l-1 10M30 44v9M38 43l1 10" stroke-width="3.6" stroke-linecap="round"/><ellipse cx="21" cy="25" rx="7" ry="7.5" stroke="none"/><ellipse cx="33" cy="23.5" rx="7.5" ry="8" stroke="none"/><path d="M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z" stroke="none"/><path d="M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z" stroke="none"/><path d="M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z" stroke="none"/><path d="M16 37l4-3 4 3 4-3 4 3 4-3 4 3" fill="none" stroke="#287130" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M43.5 33.9L57 32.6" fill="none" stroke="#287130" stroke-width="1.5" stroke-linecap="round"/><circle cx="45.5" cy="26.5" r="4.4" fill="#287130" stroke="none"/><circle cx="45.5" cy="26.5" r="2.7" stroke="none"/><circle cx="46.2" cy="26.7" r="1.3" fill="#287130" stroke="none"/><path d="M4 55.5c15-3 39-3 54 0" fill="none" stroke-width="2.4" stroke-linecap="round"/></g></svg></span>
     <span class="brand-name">Kameleon</span>
-    <span class="version" id="appVersion">v2.36</span>
+    <span class="version" id="appVersion">v2.37</span>
   </div>
   <div class="topbar-actions">
     <span class="doc-name" id="docName"></span>
@@ -1584,7 +1594,7 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
     </div>
     <input type="file" id="offlineZip" class="visually-hidden" accept=".zip,application/zip" multiple tabindex="-1">
     <input type="file" id="offlineFolder" class="visually-hidden" webkitdirectory multiple tabindex="-1">
-    <p class="muted small help-version help-part">Kameleon v2.36 · <span data-i18n="app.tagline"></span></p>
+    <p class="muted small help-version help-part">Kameleon v2.37 · <span data-i18n="app.tagline"></span></p>
     <div class="modal-actions">
       <button type="button" value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
     </div>
@@ -2100,6 +2110,10 @@ const I18N = {
     "filter.empty": "Keine Segmente passen zum Filter.",
     "filter.noText": "In dieser Datei wurden keine Textsegmente gefunden.",
 
+    "bar.split": "Teilen",
+    "bar.join": "Verbinden",
+    "bar.clearTitle": "Übersetzung dieses Segments löschen",
+    "bar.listTitle": "Zum Segment in der Liste",
     "card.copy": "kopieren",
     "card.copyTitle": "Originaltext kopieren",
     "card.keep": "behalten",
@@ -3009,6 +3023,10 @@ const I18N = {
     "filter.empty": "No segments match the filter.",
     "filter.noText": "No text segments found in this file.",
 
+    "bar.split": "Split",
+    "bar.join": "Join",
+    "bar.clearTitle": "Delete this segment's translation",
+    "bar.listTitle": "Go to the segment in the list",
     "card.copy": "copy",
     "card.copyTitle": "Copy source text",
     "card.keep": "keep",
@@ -15653,6 +15671,7 @@ function markDone(id) {
   vl.rendered.get(id)?.classList.toggle("done", done);
   vl.rendered.get(id)?.classList.toggle("pending", isPending(id));
   markWarn(vl.rendered.get(id), id);
+  if (segBar.id === id) segBarRefresh(); // (the toolbar on the page: clear, apply)
   document.querySelectorAll(`.box[data-id="${id}"]`).forEach((b) => b.classList.toggle("done", done));
 }
 
@@ -15694,6 +15713,35 @@ function applyFilter() {
   vl.setIds(listed);
 }
 
+/** What the buttons of a segment's card and of its toolbar on the page do. */
+function segAction(id, act) {
+  const s = segById(id);
+  if (!s) return;
+  const setTr = (value) => { // (the card, when shown, follows)
+    const before = state.translations[id] || "";
+    setTranslation(id, value);
+    const ta = vl.rendered.get(id)?.querySelector("textarea");
+    if (ta) { ta.value = value; ta.dataset.before = value; autoGrow(ta); }
+    recordTranslations({ [id]: before }, { [id]: value }, t("hist.translation"));
+  };
+  if (act === "copy") navigator.clipboard?.writeText(s.text).then(() => toast(t("msg.sourceCopied"))).catch(() => toast(t("msg.noClipboard"), "error"));
+  else if (act === "same") setTr(s.text);
+  else if (act === "clear") setTr("");
+  else if (act === "apply") { applyField(id); repApplyMembers(id); applyChain.then(segBarRefresh); }
+  else if (act === "repOpen") repToggleOpen(id);
+  else if (act === "repAll") repSetAll(id);
+  else if (act === "repDrop") repDrop(id);
+  else if (act === "repMake") repMakeGroup(id);
+  else if (act === "style") {
+    if (styleOpen.has(id)) styleOpen.delete(id); else styleOpen.add(id);
+    refreshStylePanel(id);
+  } else if (act === "kind") toggleKind(id);
+  else if (act === "split") openSplitDialog(id);
+  else if (act === "join") joinWithNext(id);
+  else if (act === "editSrc") openSrcDialog(id);
+  segBarRefresh();
+}
+
 function setActive(id, { scrollList = false, scrollViewer = false, focus = false } = {}) {
   if (state.activeId !== null) {
     vl.rendered.get(state.activeId)?.classList.remove("active");
@@ -15728,6 +15776,7 @@ function clearActive() {
   state.activeId = null;
   cmpMarkActive(null);
   showHandles(null);
+  segBarHide();
   const focused = document.activeElement;
   if (focused && focused.closest && focused.closest(".seg")) focused.blur();
 }
@@ -16175,8 +16224,9 @@ function init() {
   }, { passive: false });
   $("#showBoxes").addEventListener("change", (e) => $("#pages").classList.toggle("no-boxes", !e.target.checked));
   $("#pages").addEventListener("click", (e) => {
+    if (e.target.closest("#segBar")) return; // (the toolbar handles its own clicks)
     const box = e.target.closest(".box");
-    if (box) setActive(Number(box.dataset.id), { scrollList: true, focus: true });
+    if (box) { setActive(Number(box.dataset.id), { scrollList: true, focus: true }); segBarShow(box); }
     else if (mk.tool === "select" && !e.target.closest(".mk, .mk-editor")) clearActive(); // clicked beside the boxes
   });
 
@@ -16208,41 +16258,8 @@ function init() {
     if (!card) { clearActive(); return; } // clicked beside the cards
     const id = Number(card.dataset.id);
     const act = e.target.dataset.act;
-    if (act === "copy") {
-      navigator.clipboard?.writeText(segById(id).text).then(() => toast(t("msg.sourceCopied"))).catch(() => toast(t("msg.noClipboard"), "error"));
-    } else if (act === "same") {
-      const ta = card.querySelector("textarea");
-      const before = state.translations[id] || "";
-      ta.value = segById(id).text;
-      ta.dataset.before = ta.value;
-      setTranslation(id, ta.value);
-      autoGrow(ta);
-      recordTranslations({ [id]: before }, { [id]: ta.value }, t("hist.translation"));
-    } else if (act === "apply") {
-      applyField(id);
-      repApplyMembers(id);
-    } else if (act === "repOpen") {
-      repToggleOpen(id);
-    } else if (act === "repAll") {
-      repSetAll(id);
-    } else if (act === "repDrop") {
-      repDrop(id);
-    } else if (act === "repMake") {
-      repMakeGroup(id);
-    } else if (act === "style") {
-      if (styleOpen.has(id)) styleOpen.delete(id); else styleOpen.add(id);
-      refreshStylePanel(id);
-    } else if (act === "kind") {
-      toggleKind(id);
-    } else if (act === "split") {
-      openSplitDialog(id);
-    } else if (act === "join") {
-      joinWithNext(id);
-    } else if (act === "editSrc") {
-      openSrcDialog(id);
-    } else if (e.target.closest(".seg-src")) { // (also on a highlighted search match)
-      setActive(id, { scrollViewer: true, focus: true });
-    }
+    if (act) segAction(id, act);
+    else if (e.target.closest(".seg-src")) setActive(id, { scrollViewer: true, focus: true }); // (also on a highlighted search match)
   });
   list.addEventListener("keydown", (e) => {
     if (e.target.tagName !== "TEXTAREA") return;
@@ -17613,6 +17630,7 @@ function onBoxMove(e) {
     if (Math.hypot(dx, dy) * scale < 4) return;
     d.moved = true;
     document.body.classList.add("box-dragging");
+    segBarHide(); // (shown again where the box is let go)
   }
   e.preventDefault();
   let [x0, y0, x1, y1] = d.orig;
@@ -17632,6 +17650,7 @@ function onBoxUp() {
   boxDrag.cur = null;
   if (!d || !d.moved) return;
   document.body.classList.remove("box-dragging");
+  requestAnimationFrame(() => { if (d.box.isConnected) segBarShow(d.box); });
   boxDrag.justDragged = true; // the click that follows must not count as a click on the box
   setTimeout(() => { boxDrag.justDragged = false; }, 300);
   const s = segById(d.id);
@@ -19014,6 +19033,84 @@ function initLayout() {
   document.addEventListener("languagechange", () => { $("#railFold").title = t(rail.classList.contains("folded") ? "tool.unfold" : "tool.fold"); });
 }
 
+/* ------------------------------------------- the toolbar above a clicked segment on the page */
+// A click on a segment's box shows a small toolbar above it (below, near the top of the page)
+// with what can be done to that segment: formula or text, split, join, header/footer group,
+// style, correct the recognised text, keep or clear the translation, copy the original, write it
+// into the file. It moves with the page; Esc, a click beside the boxes or another segment closes
+// or moves it.
+const segBar = { id: null };
+function segBarButtons(s) {
+  const id = s.id, b = (act, icon, label, title, on = false) =>
+    `<button type="button" class="segbar-btn${on ? " on" : ""}" data-act="${act}" title="${escapeHtml(title)}">${icon}${label ? `<span>${escapeHtml(label)}</span>` : ""}</button>`;
+  const out = [];
+  if (kindsEditable() && !s.extra) out.push(s.skip ? b("kind", "Aa", t("card.asText"), t("card.asTextTitle")) : b("kind", "∑", t("card.asFormula"), t("card.asFormulaTitle")));
+  if (segEditable(s)) {
+    if (s.lines > 1) out.push(b("split", "✂", t("bar.split"), t("card.splitTitle")));
+    out.push(b("join", "⤵", t("bar.join"), t("card.joinTitle")));
+  }
+  if (repSupported() && !s.skip && !s.extra && !repGroup(id)) out.push(b("repMake", "⧉", "", t("rep.makeTitle")));
+  if (fieldsEditable() && !s.extra && !s.skip) out.push(b("style", "Aa", "", t("card.styleTitle"), Boolean(state.overrides[id])));
+  if (s.ocr && !isBook()) out.push(b("editSrc", "✎", "", t("card.editSrcTitle")));
+  out.push("<span class=\"segbar-sep\"></span>");
+  if (!s.skip) {
+    out.push(b("same", "=", "", t("card.keepTitle")));
+    if (hasTr(id)) out.push(b("clear", "✕", "", t("bar.clearTitle")));
+  }
+  out.push(b("copy", "⎘", "", t("card.copyTitle")));
+  if (state.hasOutput && isPending(id) && !s.skip) out.push(b("apply", "⟳", "", t("card.applyTitle")));
+  return `<span class="segbar-id" data-act="list" title="${escapeHtml(t("bar.listTitle"))}">#${id}</span>${out.join("")}`;
+}
+/** The toolbar for the segment of a clicked box. */
+function segBarShow(box) {
+  const id = Number(box.dataset.id), s = segById(id);
+  if (!s || mk.tool !== "select" || document.body.classList.contains("reading") || boxDrag.justDragged) return;
+  segBar.id = id;
+  let bar = $("#segBar");
+  if (!bar) {
+    bar = document.createElement("div");
+    bar.id = "segBar";
+    bar.className = "segbar";
+    bar.setAttribute("role", "toolbar");
+    bar.addEventListener("pointerdown", (e) => e.stopPropagation()); // (no box drag, no markup)
+    bar.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const btn = e.target.closest("[data-act]");
+      if (!btn || segBar.id === null) return;
+      if (btn.dataset.act === "list") { setActive(segBar.id, { scrollList: true, focus: true }); return; }
+      const act = btn.dataset.act, id = segBar.id;
+      if (act === "split" || act === "join" || act === "editSrc") segBarHide(); // (the segment changes or a dialog opens)
+      segAction(id, act);
+    });
+  }
+  bar.innerHTML = segBarButtons(s);
+  box.parentElement.appendChild(bar); // (in the page: it scrolls and zooms with it)
+  segBarPlace(box);
+}
+function segBarPlace(box) {
+  const bar = $("#segBar"), body = box.parentElement;
+  if (!bar || !body) return;
+  const W = body.clientWidth, top = box.offsetTop, h = bar.offsetHeight;
+  bar.classList.toggle("below", top - h - 8 < 0);
+  bar.style.top = `${top - h - 8 < 0 ? top + box.offsetHeight + 6 : top - h - 6}px`;
+  bar.style.left = `${Math.max(4, Math.min(box.offsetLeft, W - bar.offsetWidth - 4))}px`;
+}
+/** After an action: the toolbar shows the segment's new state (or goes, when the segment is gone). */
+function segBarRefresh() {
+  const bar = $("#segBar");
+  if (!bar || segBar.id === null) return;
+  const s = segById(segBar.id), box = document.querySelector(`.page .box[data-id="${segBar.id}"]`);
+  if (!s || !box) { segBarHide(); return; }
+  bar.innerHTML = segBarButtons(s);
+  if (bar.parentElement !== box.parentElement) box.parentElement.appendChild(bar);
+  segBarPlace(box);
+}
+function segBarHide() {
+  segBar.id = null;
+  $("#segBar")?.remove();
+}
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && segBar.id !== null && !document.querySelector("dialog[open]")) segBarHide(); });
+
 // ======================================================================
 // Picture tools. For an opened picture the left rail gets a button that opens a small panel:
 // brightness, contrast and greyscale (shown live in the preview), straightening (measured, or
@@ -19320,7 +19417,7 @@ function initPicture() {
 // from its own browser cache before the network, so language files are written into that cache.
 // ======================================================================
 
-const APP_VERSION = "2.36";
+const APP_VERSION = "2.37";
 // (a change of library version makes a stored set outdated: it is then ignored)
 const OFFLINE_VERSION = `${MUPDF_URL} ${OCR_LIB}`;
 const CORE_SIMD = "tesseract-core-simd-lstm.wasm.js", CORE_PLAIN = "tesseract-core-lstm.wasm.js";

@@ -238,6 +238,10 @@ const I18N = {
     "filter.empty": "Keine Segmente passen zum Filter.",
     "filter.noText": "In dieser Datei wurden keine Textsegmente gefunden.",
 
+    "bar.split": "Teilen",
+    "bar.join": "Verbinden",
+    "bar.clearTitle": "Übersetzung dieses Segments löschen",
+    "bar.listTitle": "Zum Segment in der Liste",
     "card.copy": "kopieren",
     "card.copyTitle": "Originaltext kopieren",
     "card.keep": "behalten",
@@ -1147,6 +1151,10 @@ const I18N = {
     "filter.empty": "No segments match the filter.",
     "filter.noText": "No text segments found in this file.",
 
+    "bar.split": "Split",
+    "bar.join": "Join",
+    "bar.clearTitle": "Delete this segment's translation",
+    "bar.listTitle": "Go to the segment in the list",
     "card.copy": "copy",
     "card.copyTitle": "Copy source text",
     "card.keep": "keep",

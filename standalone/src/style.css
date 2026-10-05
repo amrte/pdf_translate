@@ -1034,3 +1034,13 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
 /* ---------- v2.36: lost markers (links, formatting) in a translation ---------- */
 .seg-warn { flex-shrink: 0; color: #c0392b; font-weight: 600; white-space: nowrap; cursor: help; }
 .seg-warn[hidden] { display: none; }
+
+/* ---------- v2.37: the toolbar above a clicked segment on the page ---------- */
+.segbar { position: absolute; z-index: 30; display: flex; align-items: center; gap: 2px; padding: 3px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); box-shadow: 0 4px 16px rgba(0, 0, 0, .18); white-space: nowrap; font-size: 12.5px; color: var(--text); cursor: default; }
+.segbar-btn { display: inline-flex; align-items: center; gap: 4px; height: 28px; min-width: 28px; padding: 0 7px; border: 0; border-radius: 7px; background: transparent; color: inherit; font: inherit; font-weight: 600; cursor: pointer; justify-content: center; }
+.segbar-btn:hover { background: var(--accent-soft); color: var(--accent); }
+.segbar-btn.on { color: var(--accent); background: var(--accent-soft); }
+.segbar-btn span { font-weight: 500; }
+.segbar-id { font-weight: 700; color: var(--muted); padding: 0 6px; cursor: pointer; font-variant-numeric: tabular-nums; }
+.segbar-id:hover { color: var(--accent); }
+.segbar-sep { width: 1px; align-self: stretch; margin: 4px 3px; background: var(--border); }

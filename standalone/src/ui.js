@@ -1246,6 +1246,7 @@ function markDone(id) {
   vl.rendered.get(id)?.classList.toggle("done", done);
   vl.rendered.get(id)?.classList.toggle("pending", isPending(id));
   markWarn(vl.rendered.get(id), id);
+  if (segBar.id === id) segBarRefresh(); // (the toolbar on the page: clear, apply)
   document.querySelectorAll(`.box[data-id="${id}"]`).forEach((b) => b.classList.toggle("done", done));
 }
 
@@ -1287,6 +1288,35 @@ function applyFilter() {
   vl.setIds(listed);
 }
 
+/** What the buttons of a segment's card and of its toolbar on the page do. */
+function segAction(id, act) {
+  const s = segById(id);
+  if (!s) return;
+  const setTr = (value) => { // (the card, when shown, follows)
+    const before = state.translations[id] || "";
+    setTranslation(id, value);
+    const ta = vl.rendered.get(id)?.querySelector("textarea");
+    if (ta) { ta.value = value; ta.dataset.before = value; autoGrow(ta); }
+    recordTranslations({ [id]: before }, { [id]: value }, t("hist.translation"));
+  };
+  if (act === "copy") navigator.clipboard?.writeText(s.text).then(() => toast(t("msg.sourceCopied"))).catch(() => toast(t("msg.noClipboard"), "error"));
+  else if (act === "same") setTr(s.text);
+  else if (act === "clear") setTr("");
+  else if (act === "apply") { applyField(id); repApplyMembers(id); applyChain.then(segBarRefresh); }
+  else if (act === "repOpen") repToggleOpen(id);
+  else if (act === "repAll") repSetAll(id);
+  else if (act === "repDrop") repDrop(id);
+  else if (act === "repMake") repMakeGroup(id);
+  else if (act === "style") {
+    if (styleOpen.has(id)) styleOpen.delete(id); else styleOpen.add(id);
+    refreshStylePanel(id);
+  } else if (act === "kind") toggleKind(id);
+  else if (act === "split") openSplitDialog(id);
+  else if (act === "join") joinWithNext(id);
+  else if (act === "editSrc") openSrcDialog(id);
+  segBarRefresh();
+}
+
 function setActive(id, { scrollList = false, scrollViewer = false, focus = false } = {}) {
   if (state.activeId !== null) {
     vl.rendered.get(state.activeId)?.classList.remove("active");
@@ -1321,6 +1351,7 @@ function clearActive() {
   state.activeId = null;
   cmpMarkActive(null);
   showHandles(null);
+  segBarHide();
   const focused = document.activeElement;
   if (focused && focused.closest && focused.closest(".seg")) focused.blur();
 }
@@ -1768,8 +1799,9 @@ function init() {
   }, { passive: false });
   $("#showBoxes").addEventListener("change", (e) => $("#pages").classList.toggle("no-boxes", !e.target.checked));
   $("#pages").addEventListener("click", (e) => {
+    if (e.target.closest("#segBar")) return; // (the toolbar handles its own clicks)
     const box = e.target.closest(".box");
-    if (box) setActive(Number(box.dataset.id), { scrollList: true, focus: true });
+    if (box) { setActive(Number(box.dataset.id), { scrollList: true, focus: true }); segBarShow(box); }
     else if (mk.tool === "select" && !e.target.closest(".mk, .mk-editor")) clearActive(); // clicked beside the boxes
   });
 
@@ -1801,41 +1833,8 @@ function init() {
     if (!card) { clearActive(); return; } // clicked beside the cards
     const id = Number(card.dataset.id);
     const act = e.target.dataset.act;
-    if (act === "copy") {
-      navigator.clipboard?.writeText(segById(id).text).then(() => toast(t("msg.sourceCopied"))).catch(() => toast(t("msg.noClipboard"), "error"));
-    } else if (act === "same") {
-      const ta = card.querySelector("textarea");
-      const before = state.translations[id] || "";
-      ta.value = segById(id).text;
-      ta.dataset.before = ta.value;
-      setTranslation(id, ta.value);
-      autoGrow(ta);
-      recordTranslations({ [id]: before }, { [id]: ta.value }, t("hist.translation"));
-    } else if (act === "apply") {
-      applyField(id);
-      repApplyMembers(id);
-    } else if (act === "repOpen") {
-      repToggleOpen(id);
-    } else if (act === "repAll") {
-      repSetAll(id);
-    } else if (act === "repDrop") {
-      repDrop(id);
-    } else if (act === "repMake") {
-      repMakeGroup(id);
-    } else if (act === "style") {
-      if (styleOpen.has(id)) styleOpen.delete(id); else styleOpen.add(id);
-      refreshStylePanel(id);
-    } else if (act === "kind") {
-      toggleKind(id);
-    } else if (act === "split") {
-      openSplitDialog(id);
-    } else if (act === "join") {
-      joinWithNext(id);
-    } else if (act === "editSrc") {
-      openSrcDialog(id);
-    } else if (e.target.closest(".seg-src")) { // (also on a highlighted search match)
-      setActive(id, { scrollViewer: true, focus: true });
-    }
+    if (act) segAction(id, act);
+    else if (e.target.closest(".seg-src")) setActive(id, { scrollViewer: true, focus: true }); // (also on a highlighted search match)
   });
   list.addEventListener("keydown", (e) => {
     if (e.target.tagName !== "TEXTAREA") return;
