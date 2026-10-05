@@ -383,7 +383,7 @@ const OCR_LIB = "https://cdn.jsdelivr.net/npm/tesseract.js@6.0.1/dist/tesseract.
 const OCR_WORKER = "https://cdn.jsdelivr.net/npm/tesseract.js@6.0.1/dist/worker.min.js";
 const OCR_CORE = "https://cdn.jsdelivr.net/npm/tesseract.js-core@6.0.0";
 const OCR_LANG_PATH = ""; // "" = the language data on jsDelivr (@tesseract.js-data/<lang>)
-const OCR_LANGS = ["eng", "deu", "fra", "spa", "por", "nld", "swe", "pol", "ces", "slk", "hun", "bul", "ukr", "fin", "ell", "ara", "jpn", "chi_sim", "chi_tra"];
+const OCR_LANGS = ["eng", "deu", "fra", "spa", "por", "nld", "swe", "pol", "ces", "slk", "hun", "rus", "ukr", "bel", "bul", "srp", "mkd", "kaz", "fin", "ell", "ara", "jpn", "chi_sim", "chi_tra"];
 const LS_OCR = "pdftr:ocr-options";
 /**
  * The language of recognised text, told by its most common short words (written without accents,
@@ -477,11 +477,13 @@ function openOcrDialog() {
 let ocrNoteTurn = 0;
 async function ocrEngineNote() {
   const turn = ++ocrNoteTurn; // (an earlier call still waiting for the stored files does not write over a later one)
-  const paddle = $("#ocrEnginePaddle").checked, model = $("#ocrPaddleModel").value || "v5", m = PADDLE_MODELS[model];
+  const paddle = $("#ocrEnginePaddle").checked, chosen = $("#ocrPaddleModel").value || "v5";
   $("#ocrPaddleModel").hidden = !paddle;
   const langs = [...document.querySelectorAll("#ocrLangs input:checked")].map((i) => i.value);
-  const bad = paddle ? paddleUnsupported(langs, model) : [];
-  let note = paddle ? t("ocr.paddleNote") + " " + t("ocr.paddleAbout." + model) : "";
+  const model = paddleModelFor(langs, chosen), m = PADDLE_MODELS[model];
+  const bad = paddle ? paddleUnsupported(langs, chosen) : [];
+  // (a Cyrillic or Greek language chosen: that script's model reads, whatever model is chosen)
+  let note = paddle ? t("ocr.paddleNote") + " " + (m.script ? t("ocr.paddleScript", { name: paddleModelName(m), mb: m.mb }) : t("ocr.paddleAbout." + model)) : "";
   if (paddle) note += " " + ((await idbGet(`paddle:${m.files.rec[0]}`)) ? t("ocr.paddleReady") : t("ocr.paddleDownload", { mb: m.mb }));
   if (turn !== ocrNoteTurn) return;
   if (bad.length) note += " " + t("ocr.paddleNoScript", { langs: bad.map((l) => t("ocrlang." + l)).join(", ") });
@@ -549,47 +551,41 @@ async function startOcr({ area = null } = {}) {
   let pages = area ? [area.page] : ocrPageChoice() || [];
   if (!pages.length) { toast(t("ocr.none")); return; }
   ocrCancel = false;
-  if (!area && (deskew || dewarp || crop || orient || split || clean)) {
-    const prep = await ocrStraighten(pages, { deskew, dewarp, crop, orient, split, clean });
-    if (prep && prep.pages) pages = prep.pages; // (a book page split in two: both are recognised)
-  }
-  if (ocrCancel || !state.doc) return;
-  const doc = state.doc, results = {};
-  // Cancel stops the recognition at once (a running step fails, which is fine); the pages that
-  // are finished are kept.
+  // The recognition engine, loaded once: it also checks which way up a page is (see ocrCheckTurn).
   const workers = [];
   let fw = null; // (the formula models, when chosen)
   const cancel = () => { ocrCancel = true; for (const w of workers) w.terminate().catch(() => {}); if (fw) fw.terminate(); };
+  let makeP = null, prober = null;
+  const getMake = () => makeP || (makeP = ocrEngineMaker(engine, langs, paddleModel, cancel));
+  const probe = async (blob) => {
+    if (!prober) {
+      const make = await getMake();
+      if (!make) throw new Error("cancelled");
+      prober = await make();
+      workers.push(prober);
+      await prober.setParameters({ tessedit_pageseg_mode: "11" });
+    }
+    return (await prober.recognize(blob, {}, { blocks: true })).data;
+  };
+  if (!area && (deskew || dewarp || crop || orient || split || clean)) {
+    const prep = await ocrStraighten(pages, { deskew, dewarp, crop, orient, split, clean, probe });
+    if (prep && prep.pages) pages = prep.pages; // (a book page split in two: both are recognised)
+  }
+  if (ocrCancel || !state.doc) { cancel(); return; }
+  const doc = state.doc, results = {};
+  // Cancel stops the recognition at once (a running step fails, which is fine); the pages that
+  // are finished are kept.
   try {
     busy(t("ocr.loading"), cancel);
-    let make;
-    if (engine === "paddle") { // PaddleOCR: its files (fetched once, then kept), one worker per page read at once
-      const files = await paddleFiles(paddleModel, (name, got, total, whole) => { if (!whole) busy(t("ocr.paddleFetching", { name, mb: mbOf(got), total: mbOf(total) }), cancel); });
-      if (ocrCancel) return;
-      busy(t("ocr.loading"), cancel);
-      make = () => makePaddleWorker(files, langs, paddleModel);
-    } else {
-    const libs = await offlineLibs(), stored = libs && libs.ocr; // Tesseract saved for offline use, if any
-    const T = await import(stored ? stored.lib : OCR_LIB);
-    if (ocrCancel) return;
-    const createWorker = T.createWorker || (T.default && T.default.createWorker);
-    // (a language that cannot be fetched is reported; the worker itself would wait for ever)
-    make = () => {
-      let failLoad = null;
-      const failed = new Promise((_, reject) => { failLoad = reject; });
-      return Promise.race([
-        createWorker(langs.join("+"), 1, { ...ocrWorkerOptions(stored), errorHandler: (e) => failLoad(new Error(`OCR language data could not be loaded (${String((e && e.message) || e).slice(0, 120)})`)) }),
-        failed,
-      ]);
-    };
-    }
+    const make = await getMake();
+    if (!make || ocrCancel) { cancel(); return; }
     // Several pages are read at once: up to three workers, as many as the computer has cores to
     // spare (one on a device with little memory). The first loads the language data, the others
     // find it in the browser's cache.
     const cores = navigator.hardwareConcurrency || 2, memory = navigator.deviceMemory || 8;
     const count = Math.max(1, Math.min(engine === "paddle" ? 2 : 3, pages.length, Math.floor(cores / 2), memory < 4 ? 1 : 3));
-    workers.push(await make());
-    if (count > 1) for (const w of await Promise.all(Array.from({ length: count - 1 }, () => make().catch(() => null)))) if (w) workers.push(w);
+    if (!workers.length) workers.push(await make());
+    if (count > workers.length) for (const w of await Promise.all(Array.from({ length: count - workers.length }, () => make().catch(() => null)))) if (w) workers.push(w);
     if (ocrCancel) { cancel(); return; }
     for (const w of workers) await w.setParameters({ tessedit_pageseg_mode: "11" }); // sparse text: table cells and labels too
     if (fxFind || fxRead) { // the formula models (fetched once, then kept)
@@ -737,23 +733,113 @@ async function ocrFormulas(block, img, zoom, page, finder, reader, data) {
 }
 
 /**
+ * The quarter turn page `p` really needs, `turn` being what the ink of its lines suggests (none
+ * too, when that was unsure): the page (drawn small) is read turned so and turned the other way
+ * round, by the recognition `probe(blob) → data`; the other way is taken when it reads clearly
+ * more sure words.
+ */
+async function ocrCheckTurn(probe, p, turn) {
+  const page = state.doc.pages[p], zoom = Math.min(3, 2000 / Math.max(page.width, page.height));
+  const buf = await pool.leastBusy(null).call("render", { page: p, zoom, variant: "original" });
+  const bmp = await createImageBitmap(new Blob([buf], { type: "image/png" }));
+  // (on its side or not is measured reliably – the direction of the lines; which end is up is not.
+  // The engines read some sideways text too, so a page on its side is not compared with no turn.)
+  const base = turn % 180 ? turn : 0, cands = [base, (base + 180) % 360], score = {};
+  for (const c of cands) {
+    if (ocrCancel) return 0;
+    const sw = c % 180 ? bmp.height : bmp.width, sh = c % 180 ? bmp.width : bmp.height;
+    const cv = new OffscreenCanvas(sw, sh), cx = cv.getContext("2d");
+    cx.fillStyle = "#fff"; cx.fillRect(0, 0, sw, sh);
+    cx.translate(sw / 2, sh / 2); cx.rotate((c * Math.PI) / 180); cx.drawImage(bmp, -bmp.width / 2, -bmp.height / 2);
+    score[c] = ocrReadingScore(await probe(await cv.convertToBlob({ type: "image/png" })));
+  }
+  bmp.close && bmp.close();
+  const other = cands[1];
+  return score[other] >= 1.3 * score[base] + 8 ? other : base;
+}
+/** How well a reading went: the letters of its sure words (three letters or digits, two letters at least). */
+function ocrReadingScore(data) {
+  let n = 0;
+  for (const b of (data && data.blocks) || []) for (const pa of b.paragraphs || []) for (const l of pa.lines || []) for (const w of l.words || []) {
+    if (!(w.confidence >= 75)) continue;
+    const text = (w.text || "").trim(), letters = (text.match(/\p{L}/gu) || []).length, signs = (text.match(/[\p{L}\p{N}]/gu) || []).length;
+    if (signs >= 3 && letters >= 2) n += signs;
+  }
+  return n;
+}
+
+/**
  * Prepares `pages` before they are recognised: tilted pages are turned straight (`deskew`), the
  * paper is cut out of its background (`crop`) and curved text lines are bent straight (`dewarp`;
  * see deskew.js). A picture is edited and opened again (its original stays restorable), a PDF is
  * put together anew; text recognised earlier on the other pages and the translations are kept.
  */
-async function ocrStraighten(pages, { deskew = true, dewarp = false, crop = false, orient = false, split = false, clean = false, turned = 0 } = {}) {
+/**
+ * What makes a recognition worker of the chosen engine (its library or model files loaded first):
+ * `() => Promise<worker>`, or null when cancelled meanwhile.
+ */
+async function ocrEngineMaker(engine, langs, chosenModel, cancel) {
+  if (engine === "paddle") { // PaddleOCR: its files (fetched once, then kept), one worker per page read at once
+    const paddleModel = paddleModelFor(langs, chosenModel); // (Cyrillic, Greek: that script's model)
+    const files = await paddleFiles(paddleModel, (name, got, total, whole) => { if (!whole) busy(t("ocr.paddleFetching", { name, mb: mbOf(got), total: mbOf(total) }), cancel); });
+    if (ocrCancel) return null;
+    busy(t("ocr.loading"), cancel);
+    return () => makePaddleWorker(files, langs, paddleModel);
+  }
+  const libs = await offlineLibs(), stored = libs && libs.ocr; // Tesseract saved for offline use, if any
+  const T = await import(stored ? stored.lib : OCR_LIB);
+  if (ocrCancel) return null;
+  const createWorker = T.createWorker || (T.default && T.default.createWorker);
+  // (a language that cannot be fetched is reported; the worker itself would wait for ever)
+  return () => {
+    let failLoad = null;
+    const failed = new Promise((_, reject) => { failLoad = reject; });
+    return Promise.race([
+      createWorker(langs.join("+"), 1, { ...ocrWorkerOptions(stored), errorHandler: (e) => failLoad(new Error(`OCR language data could not be loaded (${String((e && e.message) || e).slice(0, 120)})`)) }),
+      failed,
+    ]);
+  };
+}
+
+async function ocrStraighten(pages, { deskew = true, dewarp = false, crop = false, orient = false, split = false, clean = false, turned = 0, probe = null } = {}) {
   const doc = state.doc, fixes = new Map();
   const cancel = () => { ocrCancel = true; };
+  // Which way up: measured on the ink of the text lines (see detectOrientation). That is fooled by
+  // pages with little text among many lines – a circuit diagram, a drawing – which it turned upside
+  // down; so a turn it asks for is tried first: the recognition reads the page both ways (small)
+  // and the page is only turned when it reads clearly better so (see ocrCheckTurn).
+  const turns = new Map(), doubtful = new Set();
+  if (orient) {
+    const queue = pages.slice();
+    busy(t("ocr.orienting", { i: 1, n: pages.length }), cancel);
+    await Promise.all(pool.workers.map(async (w) => {
+      while (queue.length && !ocrCancel && state.doc === doc) {
+        const p = queue.shift();
+        try {
+          const r = await w.call("orientDetect", { page: p });
+          turns.set(p, r.turn || 0);
+          // (unsure too: few text lines – a drawing –, or ink above and below the lines alike)
+          if (!(r.lines >= 50 && r.confidence >= 0.9)) doubtful.add(p);
+        } catch (err) { console.warn("orient", err); }
+      }
+    }));
+    const asked = pages.filter((p) => turns.get(p) || doubtful.has(p));
+    for (const [i, p] of asked.entries()) {
+      if (ocrCancel || state.doc !== doc || !probe) break;
+      busy(t("ocr.orientCheck", { i: i + 1, n: asked.length }), cancel);
+      try { turns.set(p, await ocrCheckTurn(probe, p, turns.get(p))); } catch (err) { console.warn("orient check", err); turns.set(p, 0); }
+    }
+    if (ocrCancel || state.doc !== doc) { busy(""); return null; }
+  }
   // The pages are measured by the engine's workers, several at once (see preparePage).
-  const opts = { deskew, dewarp, crop, orient, split, clean }, queue = pages.slice();
+  const opts = { deskew, dewarp, crop, orient: false, split, clean }, queue = pages.slice();
   let done = 0;
   busy(t("ocr.preparing", { i: 1, n: pages.length }), cancel);
   await Promise.all(pool.workers.map(async (w) => {
     while (queue.length && !ocrCancel && state.doc === doc) {
       const p = queue.shift();
       try {
-        const r = await w.call("preparePage", { page: p, opts });
+        const r = await w.call("preparePage", { page: p, opts: orient ? { ...opts, turn: turns.get(p) || 0 } : opts });
         if (r.rot || r.skew || r.quad || r.tracks || r.spread || r.clean) {
           fixes.set(p, { rot: r.rot, skew: r.skew, quad: r.quad, tracks: r.tracks, ...(r.spread ? { spread: r.spread } : {}), ...(r.clean ? { clean: true } : {}) });
         }
@@ -1772,16 +1858,19 @@ function segBarShow(box) {
     });
   }
   bar.innerHTML = segBarButtons(s);
-  box.parentElement.appendChild(bar); // (in the page: it scrolls and zooms with it)
+  // (in the page: it scrolls and zooms with it – but outside the page's body, which is turned with
+  // a turned page: the toolbar stays upright)
+  box.closest(".page").appendChild(bar);
   segBarPlace(box);
 }
 function segBarPlace(box) {
-  const bar = $("#segBar"), body = box.parentElement;
-  if (!bar || !body) return;
-  const W = body.clientWidth, top = box.offsetTop, h = bar.offsetHeight;
+  const bar = $("#segBar"), host = box.closest(".page");
+  if (!bar || !host) return;
+  const br = box.getBoundingClientRect(), hr = host.getBoundingClientRect();
+  const W = host.clientWidth, top = br.top - hr.top, bottom = br.bottom - hr.top, h = bar.offsetHeight;
   bar.classList.toggle("below", top - h - 8 < 0);
-  bar.style.top = `${top - h - 8 < 0 ? top + box.offsetHeight + 6 : top - h - 6}px`;
-  bar.style.left = `${Math.max(4, Math.min(box.offsetLeft, W - bar.offsetWidth - 4))}px`;
+  bar.style.top = `${top - h - 8 < 0 ? bottom + 6 : top - h - 6}px`;
+  bar.style.left = `${Math.max(4, Math.min(br.left - hr.left, W - bar.offsetWidth - 4))}px`;
 }
 /** After an action: the toolbar shows the segment's new state (or goes, when the segment is gone). */
 function segBarRefresh() {
@@ -1790,7 +1879,7 @@ function segBarRefresh() {
   const s = segById(segBar.id), box = document.querySelector(`.page .box[data-id="${segBar.id}"]`);
   if (!s || !box) { segBarHide(); return; }
   bar.innerHTML = segBarButtons(s);
-  if (bar.parentElement !== box.parentElement) box.parentElement.appendChild(bar);
+  if (bar.parentElement !== box.closest(".page")) box.closest(".page").appendChild(bar);
   segBarPlace(box);
 }
 function segBarHide() {

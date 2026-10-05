@@ -334,7 +334,7 @@ function renderOfflinePaddle() {
   let saved = {};
   try { saved = JSON.parse(localStorage.getItem(LS_OCR) || "{}"); } catch (_) { /* default */ }
   const sel = $("#offlinePaddle"), current = sel.options.length ? sel.value : (saved.engine === "paddle" ? saved.paddleModel || "v5" : "");
-  sel.innerHTML = paddleModelOptions(current, t("offline.paddleNone"));
+  sel.innerHTML = paddleModelOptions(current, t("offline.paddleNone"), true);
 }
 
 /** The formula models in the offline set: none, the one that finds them, or both. */

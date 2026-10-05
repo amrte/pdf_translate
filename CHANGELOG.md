@@ -4,6 +4,14 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.43
+
+- **Pages turned upright for OCR:** pages with little text among many lines – circuit diagrams, drawings – were often turned upside down, because the measurement on the text lines (ink above against below them) is fooled there. Now a turn the measurement asks for, and any page where it is unsure, is tried first: the recognition reads the page small both ways round, and the page is only turned when that reads clearly better. Real upside-down and sideways pages are still turned; this costs a few seconds for such pages only.
+- **Toolbars on turned pages:** after a page was turned (↻), the toolbar above a segment, the toolbar of a text note and the reading-mode bubble were shown turned with it (upside down). They now stay upright, above their box.
+- **PaddleOCR reads Cyrillic and Greek:** with Russian, Ukrainian, Belarusian, Bulgarian, Serbian, Macedonian or Kazakh chosen, PaddleOCR uses PP-OCRv5's Cyrillic model; with Greek, its Greek model (about 27 MB each, loaded once; also for "Working offline"). Both read Latin letters and digits too (the Cyrillic one also German, French, Swedish …; not Polish, Czech, Slovak or Hungarian – the dialog says so). In tests on scanned pages: no wrong words in Russian, Ukrainian and Bulgarian, one in Greek.
+- New OCR languages: Russian, Belarusian, Serbian (Cyrillic), Macedonian and Kazakh (also for Tesseract).
+- Greek text is no longer taken for a formula (in PDFs and in recognised text): Greek words are text, single Greek letters (α, φ, Δ) still mark formulas.
+
 ## 2.42
 
 - **Formulas on scanned pages:** OCR turned formulas into garbled text that was then "translated", and a fraction fell apart into several lines. Now a formula becomes one segment of its own: it is kept as it is (the scan stays, nothing is painted over) and not translated. It is recognised by its signs (a line without running text with =, ·, √, Σ, Greek letters …; the numerator and denominator of a fraction above each other are joined), and more reliably with the new option **"Find formulas with a layout model"** in the OCR dialog (about 7 MB, loaded once): it finds displayed formulas on the page, even when OCR could hardly read them; lists of symbols with their meaning stay translatable text.

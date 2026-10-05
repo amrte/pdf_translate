@@ -166,7 +166,7 @@ function splitPage(doc, pno, rot = 0, skew = 0) {
  * upright (`orient`), its tilt (`deskew`), the paper's corners (`crop`), curved lines (`dewarp`),
  * the two pages of an open book (`split`) and whether its paper wants making white (`clean`).
  */
-function preparePage(doc, pno, { deskew = true, dewarp = false, crop = false, orient = false, split = false, clean = false } = {}) {
+function preparePage(doc, pno, { deskew = true, dewarp = false, crop = false, orient = false, split = false, clean = false, turn = null } = {}) {
   const page = doc.loadPage(pno);
   let rgb, w, h;
   try {
@@ -180,9 +180,16 @@ function preparePage(doc, pno, { deskew = true, dewarp = false, crop = false, or
   // (the tilt is measured on the page in grey as MuPDF draws it, the rest on the colour picture
   // turned and greyed – as in detectSkew and the picture tools, so the results agree)
   let rot = 0, skew = 0;
-  if (orient || deskew) {
+  if (orient || deskew || turn) {
     const g = grayOfPage(doc, pno);
-    if (orient) {
+    if (Number.isInteger(turn)) { // (the quarter turn decided already – see ocrStraighten: the tilt measured that way up)
+      rot = ((turn % 360) + 360) % 360;
+      if (deskew) {
+        const t = rot % 180 ? warpPixels(g.px, g.w, g.h, 1, { turn: 90 }) : { data: g.px, width: g.w, height: g.h };
+        const s = skewOfGray(t.data, t.width, t.height);
+        if (s.confidence >= 0.15 && Math.abs(s.angle) >= 0.1) skew = s.angle;
+      }
+    } else if (orient) {
       const o = detectOrientation(g.px, g.w, g.h);
       rot = o.turn;
       if (deskew && Math.abs(o.tilt) >= 0.1) skew = o.tilt;

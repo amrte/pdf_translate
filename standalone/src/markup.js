@@ -486,7 +486,8 @@ function noteBarHtml(m) {
 function updateNoteBar() {
   const m = state.markups && state.markups.find((x) => x.id === mk.selected);
   if (!m || m.type !== "text" || mk.tool !== "select" || mk.editor || isBook()) { removeNoteBar(); return; }
-  const pageEl = document.querySelector(`.page[data-page="${m.page}"] .page-body`);
+  // (in the page, outside its body: a turned page turns its body, the toolbar stays upright)
+  const pageEl = document.querySelector(`.page[data-page="${m.page}"]`);
   if (!pageEl) { removeNoteBar(); return; }
   segBarHide(); // (one toolbar at a time: the segment's would cover the note's)
   let bar = pageEl.querySelector(".note-bar");
@@ -511,9 +512,12 @@ function updateNoteBar() {
     bar.dataset.sync = sync;
     if (focus) bar.querySelector(`[data-n="${focus}"]`)?.focus();
   }
-  const p = state.doc.pages[m.page];
-  const top = (m.y0 - p.y0) / p.height, bottom = (m.y0 + m.h - p.y0) / p.height;
-  bar.style.left = `${Math.max(0, ((m.x0 - p.x0) / p.width) * 100)}%`;
+  // The note's corners as shown (the page turned by its rotation), as parts of the page's size.
+  const p = state.doc.pages[m.page], rot = pageRotation(m.page);
+  const turnPt = ([x, y]) => (rot === 90 ? [1 - y, x] : rot === 180 ? [1 - x, 1 - y] : rot === 270 ? [y, 1 - x] : [x, y]);
+  const corners = [[m.x0, m.y0], [m.x0 + m.w, m.y0 + m.h]].map(([x, y]) => turnPt([(x - p.x0) / p.width, (y - p.y0) / p.height]));
+  const left = Math.min(corners[0][0], corners[1][0]), top = Math.min(corners[0][1], corners[1][1]), bottom = Math.max(corners[0][1], corners[1][1]);
+  bar.style.left = `${Math.max(0, left * 100)}%`;
   bar.classList.toggle("below", top * pageEl.clientHeight < 48);
   bar.style.top = bar.classList.contains("below") ? `${bottom * 100}%` : `${top * 100}%`;
   // Kept within the visible part of the page view: moved left when it would stick out on the

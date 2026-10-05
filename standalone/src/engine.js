@@ -1211,6 +1211,10 @@ function buildSegment(group, pageNo, bounds, id, marginsByRot, pageLines, shaped
 }
 
 const MATH_FONT_RE = /^(?:cm(?:mi|sy|ex|bsy|mib)\d|msam|msbm|eufm|eusm|rsfs|stmary|wasy|lmmath|latinmodern-?math|cambria-?math|stix\w*math|xits|asana|tx(?:mi|sy|ex)|px(?:mi|sy|ex)|mtmi|mtsy|mathematicalpi|mt-?extra|euler|esint|symbol)|math/i;
+// A word of Greek letters (three or more, nothing else): Greek text, not a formula's letters.
+const GREEK_WORD_RE = /(?<![\p{L}])[\u0370-\u03ff\u1f00-\u1fff]{3,}(?![\p{L}])/gu;
+/** Words of prose: three letters at least, no function of mathematics, not Latin and Greek mixed (ejωt). */
+const proseWords = (text, min = 3) => (text.match(new RegExp(`\\p{L}{${min},}`, "gu")) || []).filter((w) => !MATH_WORDS.has(w.toLowerCase()) && !(/[\u0370-\u03ff]/.test(w) && /[^\u0370-\u03ff\u1f00-\u1fff]/u.test(w)));
 const MATH_SIGN_RE = /[=≈≠≤≥±∓×÷·⋅√∑∏∫∂∞∝→⇒⇔∇∆ΔͰ-Ͽ]/;
 const MATH_SIGN_RE_G = /[=≈≠≤≥±∓×÷·⋅√∑∏∫∂∞∝→⇒⇔∇∆Δ^\u0370-\u03ff]|\p{L}(?=[₀-₉⁰-⁹])|(?<=[\p{L}\p{N})\]])\s*\+\s*(?=[\p{L}\p{N}(\[√∑∫])/gu;
 const MATH_SIGNS_G = /[=≈≠≤≥±∓×÷·⋅√∑∏∫∂∞∝→⇒⇔∇∆Δ^Ͱ-Ͽ]|(?<=[\p{L}\p{N})\]])\s*[+−-]\s*(?=[\p{L}\p{N}(\[√∑∫])|(?<=[\p{L}\p{N})])\s*\/\s*(?=[\p{L}\p{N}(])/gu;
@@ -1237,11 +1241,12 @@ function isFormula(text, spans) {
     sizeMin = Math.min(sizeMin, s.size); sizeMax = Math.max(sizeMax, s.size);
     if (s.font.italic) italicLetters += (s.text.match(/\p{L}/gu) || []).length;
   }
-  const words = (text.match(/\p{L}{3,}/gu) || []).filter((w) => !MATH_WORDS.has(w.toLowerCase()) && !/[Ͱ-Ͽ]/.test(w)).length; // tokens mixing Latin and Greek (ejωt) are never prose
-  const longWords = (text.match(/\p{L}{5,}/gu) || []).filter((w) => !MATH_WORDS.has(w.toLowerCase()) && !/[Ͱ-Ͽ]/.test(w)).length;
+  const words = proseWords(text).length; // (Greek words count: Greek text is prose; single Greek letters are variables)
+  const longWords = proseWords(text, 5).length;
   if (all && math >= 0.6 * all && !longWords) return true;
-  const strong = (text.match(MATH_SIGN_RE_G) || []).length; // =, ≤, √, ∑, Greek …
-  const ops = (text.match(MATH_SIGNS_G) || []).length; // those, and + − / between letters or digits
+  const signs = text.replace(GREEK_WORD_RE, " ");
+  const strong = (signs.match(MATH_SIGN_RE_G) || []).length; // =, ≤, √, ∑, Greek letters …
+  const ops = (signs.match(MATH_SIGNS_G) || []).length; // those, and + − / between letters or digits
   const unknown = (text.match(/[�\ue000-\uf8ff]/g) || []).length; // glyphs without Unicode, or in a font's private range
   const vars = (text.match(/(?<![\p{L}\p{N}])\p{L}(?![\p{L}])/gu) || []).length; // single letters: variables
   const scripts = sizeMin < Infinity && sizeMax >= 1.25 * sizeMin; // sub- or superscripts
@@ -3522,14 +3527,14 @@ function formulaRegions(lines, boxes = []) {
   const textOf = (l) => l.words.map((w) => w.text).join(" ");
   const prose = (l) => {
     const t = textOf(l);
-    const words = (t.match(/\p{L}{3,}/gu) || []).filter((w) => !MATH_WORDS.has(w.toLowerCase()) && !/[\u0370-\u03ff]/.test(w));
+    const words = proseWords(t);
     return words.length >= 3 || words.some((w) => w.length >= 6 && /^\p{Lu}?\p{Ll}+$/u.test(w)) && words.length >= 2;
   };
   const conf = (l) => l.words.reduce((a, w) => a + w.conf, 0) / l.words.length;
   const mathy = (l) => {
     if (prose(l)) return false;
     const t = textOf(l);
-    if (/[=≈≠≤≥±∓×÷·⋅√∑∏∫∂∞∝∇∆Δ\u0370-\u03ff]/u.test(t) && /\p{L}/u.test(t)) return true;
+    if (/[=≈≠≤≥±∓×÷·⋅√∑∏∫∂∞∝∇∆Δ\u0370-\u03ff]/u.test(t.replace(GREEK_WORD_RE, " ")) && /\p{L}/u.test(t)) return true;
     return conf(l) < 45 && t.replace(/\s/g, "").length >= 3 && !/\p{L}{4,}/u.test(t); // (a formula OCR could not read; not a faint word)
   };
   const inside = (b, r, tol) => { const cx = (b[0] + b[2]) / 2, cy = (b[1] + b[3]) / 2; return cx >= r[0] - tol && cx <= r[2] + tol && cy >= r[1] - tol && cy <= r[3] + tol; };

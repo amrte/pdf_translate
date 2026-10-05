@@ -42,7 +42,8 @@ function showBubble(box) {
   if (!s) return;
   if (rd.id === id && rd.el && rd.el.isConnected) { hideBubble(); return; } // the same text again: closes it
   hideBubble();
-  const body = box.closest(".page-body") || box.parentElement;
+  // (in the page, outside its body: a turned page turns its body, the bubble stays upright)
+  const body = box.closest(".page") || box.parentElement;
   const { text, kind } = bubbleContent(s);
   const el = document.createElement("div");
   el.className = `bubble ${kind}`;
@@ -53,7 +54,8 @@ function showBubble(box) {
   el.appendChild(inner);
   body.appendChild(el);
   const W = body.offsetWidth, H = body.offsetHeight;
-  const bx = box.offsetLeft, by = box.offsetTop, bw = box.offsetWidth, bh = box.offsetHeight;
+  const br = box.getBoundingClientRect(), hr = body.getBoundingClientRect();
+  const bx = br.left - hr.left, by = br.top - hr.top, bw = br.width, bh = br.height;
   const width = Math.min(W - 16, Math.max(Math.min(240, W - 16), bw * 1.15));
   el.style.width = `${Math.round(width)}px`;
   const left = Math.max(8, Math.min(W - width - 8, bx + bw / 2 - width / 2));

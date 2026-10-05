@@ -16,6 +16,25 @@ const PADDLE_RUNTIME = {
   "ort-wasm-simd-threaded.mjs": PADDLE_ORT + "ort-wasm-simd-threaded.mjs",
   "ort-wasm-simd-threaded.wasm": PADDLE_ORT + "ort-wasm-simd-threaded.wasm",
 };
+const PADDLE_SCRIPT_REC = "https://media.githubusercontent.com/media/PT-Perkasa-Pilar-Utama/ppu-paddle-ocr-models/main/recognition/multi/";
+const PADDLE_SCRIPT_DICT = "https://raw.githubusercontent.com/PT-Perkasa-Pilar-Utama/ppu-paddle-ocr-models/main/recognition/multi/";
+const PADDLE_SCRIPT_HF = "https://huggingface.co/snowfluke/ppu-paddle-ocr-models/resolve/main/recognition/multi/";
+// (the Latin languages whose letters the Cyrillic models know – all but ß; Polish, Czech, Slovak
+// and Hungarian letters they lack)
+const PADDLE_LATIN_OK = ["eng", "deu", "fra", "spa", "por", "nld", "swe", "fin"];
+/** A script family's model: PP-OCRv5's text finder and the family's recognition model. */
+function paddleScript(code, reads, latin) {
+  const rec = `${code}_PP-OCRv5_mobile_rec_infer.onnx`, dict = `ppocrv5_${code}_dict.txt`, at = `${code}/v5/`;
+  return {
+    name: `PP-OCRv5 ${code}`, label: `ocr.script.${code}`, mb: 27, script: true, reads: reads.concat(latin),
+    files: {
+      det: ["PP-OCRv5_mobile_det_infer.ort", PADDLE_V5 + "detection/PP-OCRv5_mobile_det_infer.ort"],
+      rec: [rec, [PADDLE_SCRIPT_REC + at + rec, PADDLE_SCRIPT_HF + at + rec]],
+      dict: [dict, [PADDLE_SCRIPT_DICT + at + dict, PADDLE_SCRIPT_HF + at + dict]],
+    },
+    dict: "lines", det: { thresh: 0.3, box: 0.6, unclip: 1.5 },
+  };
+}
 /**
  * The models: their files (stored under these names), the dictionary's format and the detection's
  * thresholds (from each model's own configuration). `mb`: the download, runtime included. On
@@ -37,6 +56,13 @@ const PADDLE_MODELS = {
     files: { det: ["PP-OCRv6_tiny_det.onnx", PADDLE_V6T + "det/inference.onnx"], rec: ["PP-OCRv6_tiny_rec.onnx", PADDLE_V6T + "rec/inference.onnx"], dict: ["ppocrv6_tiny_dict.json", PADDLE_V6T + "rec/dictionary.json"] },
     dict: "json", det: { thresh: 0.2, box: 0.45, unclip: 1.4 },
   },
+  // Other scripts: PP-OCRv5's recognition models for one script family (with Latin letters and
+  // digits too), with the v5 text finder. (The Cyrillic one read Russian as well as the East Slavic
+  // model did, and Ukrainian better: і, ї, є.) Taken instead of the chosen model when a language of
+  // theirs is chosen (see paddleModelFor). From the PaddleOCR models collected by ppu-paddle-ocr
+  // (GitHub, its LFS files; Hugging Face as the second source).
+  cyrillic: paddleScript("cyrillic", ["rus", "ukr", "bel", "bul", "srp", "mkd", "kaz"], PADDLE_LATIN_OK),
+  el: paddleScript("el", ["ell"], ["eng"]),
 };
 /** Every PaddleOCR file by its stored name (the offline set lists them). */
 const PADDLE_FILES = Object.assign({}, PADDLE_RUNTIME, ...Object.values(PADDLE_MODELS).map((m) => Object.fromEntries(Object.values(m.files))));
@@ -56,14 +82,26 @@ const PADDLE_ACCENTS = {
   por: "ãõáâàçéêíóôúÃÕÁÂÀÇÉÊÍÓÔÚ", nld: "ëïéèÉËÏ", pol: "ąćęłńóśźżĄĆĘŁŃÓŚŹŻ", ces: "áčďéěíňóřšťúůýžÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ",
   slk: "áäčďéíĺľňóôŕšťúýžÁÄČĎÉÍĹĽŇÓÔŔŠŤÚÝŽ", hun: "áéíóöőúüűÁÉÍÓÖŐÚÜŰ",
 };
-// Tesseract language codes whose script PP-OCRv5 does not read.
-const PADDLE_UNSUPPORTED = new Set(["ukr", "rus", "bel", "bul", "srp", "mkd", "kaz", "ell", "ara", "fas", "heb", "hin", "ben", "tha", "kor", "kat", "hye", "amh"]);
+// Tesseract language codes whose script no PaddleOCR model here reads.
+const PADDLE_UNSUPPORTED = new Set(["ara", "fas", "heb", "hin", "ben", "tha", "kor", "kat", "hye", "amh"]);
 
-/** The chosen languages a model does not read (their script is not in its dictionary). */
-const paddleUnsupported = (langs, model) => langs.filter((l) => PADDLE_UNSUPPORTED.has(l) || ((PADDLE_MODELS[model] || {}).missing || []).includes(l));
-/** The models as <option>s (with the size of their download), optionally after a "none" entry. */
-const paddleModelOptions = (selected, none = "") => (none ? `<option value="">${escapeHtml(none)}</option>` : "") + Object.entries(PADDLE_MODELS)
-  .map(([id, m]) => `<option value="${id}"${id === selected ? " selected" : ""}>${escapeHtml(t("ocr.paddleModel", { name: m.name, mb: m.mb }))}</option>`).join("");
+/** The model that reads `langs`: Greek's or the Cyrillic one when such a language is chosen, otherwise the `chosen` one. */
+function paddleModelFor(langs, chosen) {
+  if (langs.includes("ell")) return "el";
+  if (langs.some((l) => PADDLE_MODELS.cyrillic.reads.includes(l) && !PADDLE_LATIN_OK.includes(l))) return "cyrillic";
+  return PADDLE_MODELS[chosen] && !PADDLE_MODELS[chosen].script ? chosen : "v5";
+}
+/** The chosen languages the model taken for them does not read (their letters are not in its dictionary). */
+function paddleUnsupported(langs, chosen) {
+  const m = PADDLE_MODELS[paddleModelFor(langs, chosen)];
+  return langs.filter((l) => PADDLE_UNSUPPORTED.has(l) || (m.missing || []).includes(l) || (m.script && !m.reads.includes(l)));
+}
+/** The models as <option>s (with the size of their download), optionally after a "none" entry; `scripts`: the script families' too. */
+const paddleModelOptions = (selected, none = "", scripts = false) => (none ? `<option value="">${escapeHtml(none)}</option>` : "") + Object.entries(PADDLE_MODELS)
+  .filter(([, m]) => scripts || !m.script)
+  .map(([id, m]) => `<option value="${id}"${id === selected ? " selected" : ""}>${escapeHtml(t("ocr.paddleModel", { name: paddleModelName(m), mb: m.mb }))}</option>`).join("");
+/** A model's name as shown. */
+const paddleModelName = (m) => (m.label ? t(m.label) : m.name);
 
 /** A model's files (and the runtime): kept from an earlier download or the offline set, or fetched now (and kept). */
 const paddleFiles = (model, onProgress) => modelFiles(paddleNames(model), onProgress);
