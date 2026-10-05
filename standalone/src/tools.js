@@ -466,16 +466,21 @@ function openOcrDialog() {
   $("#ocrDewarp").checked = saved.dewarp !== false;
   $("#ocrCrop").checked = saved.crop !== false;
   (saved.engine === "paddle" ? $("#ocrEnginePaddle") : $("#ocrEngineTess")).checked = true;
+  $("#ocrPaddleModel").innerHTML = paddleModelOptions(PADDLE_MODELS[saved.paddleModel] ? saved.paddleModel : "v5");
   ocrEngineNote();
   openModal($("#ocrDialog"));
 }
-/** Under the engine choice: what PaddleOCR reads, and whether its files are here already. */
+/** Under the engine choice: what PaddleOCR reads, and whether the chosen model's files are here already. */
+let ocrNoteTurn = 0;
 async function ocrEngineNote() {
-  const paddle = $("#ocrEnginePaddle").checked;
+  const turn = ++ocrNoteTurn; // (an earlier call still waiting for the stored files does not write over a later one)
+  const paddle = $("#ocrEnginePaddle").checked, model = $("#ocrPaddleModel").value || "v5", m = PADDLE_MODELS[model];
+  $("#ocrPaddleModel").hidden = !paddle;
   const langs = [...document.querySelectorAll("#ocrLangs input:checked")].map((i) => i.value);
-  const bad = paddle ? langs.filter((l) => PADDLE_UNSUPPORTED.has(l)) : [];
-  let note = paddle ? t("ocr.paddleNote") : "";
-  if (paddle) note += " " + t((await idbGet("paddle:PP-OCRv5_mobile_rec_infer.onnx")) ? "ocr.paddleReady" : "ocr.paddleDownload");
+  const bad = paddle ? paddleUnsupported(langs, model) : [];
+  let note = paddle ? t("ocr.paddleNote") + " " + t("ocr.paddleAbout." + model) : "";
+  if (paddle) note += " " + ((await idbGet(`paddle:${m.files.rec[0]}`)) ? t("ocr.paddleReady") : t("ocr.paddleDownload", { mb: m.mb }));
+  if (turn !== ocrNoteTurn) return;
   if (bad.length) note += " " + t("ocr.paddleNoScript", { langs: bad.map((l) => t("ocrlang." + l)).join(", ") });
   $("#ocrEngineNote").textContent = note.trim();
   $("#ocrEngineNote").classList.toggle("warn", bad.length > 0);
@@ -522,10 +527,11 @@ function ocrWorkerOptions(stored) {
 async function startOcr({ area = null } = {}) {
   const langs = [...document.querySelectorAll("#ocrLangs input:checked")].map((i) => i.value);
   if (!langs.length) { toast(t("ocr.noLang"), "error"); return; }
-  const engine = $("#ocrEnginePaddle").checked ? "paddle" : "tesseract";
-  if (engine === "paddle" && langs.some((l) => PADDLE_UNSUPPORTED.has(l))) { toast(t("ocr.paddleNoScript", { langs: langs.filter((l) => PADDLE_UNSUPPORTED.has(l)).map((l) => t("ocrlang." + l)).join(", ") }), "error"); return; }
+  const engine = $("#ocrEnginePaddle").checked ? "paddle" : "tesseract", paddleModel = $("#ocrPaddleModel").value || "v5";
+  const unread = engine === "paddle" ? paddleUnsupported(langs, paddleModel) : [];
+  if (unread.length) { toast(t("ocr.paddleNoScript", { langs: unread.map((l) => t("ocrlang." + l)).join(", ") }), "error"); return; }
   const family = $("#ocrFamily").value, deskew = $("#ocrDeskew").checked, dewarp = $("#ocrDewarp").checked, crop = $("#ocrCrop").checked, orient = $("#ocrOrient").checked, split = $("#ocrSplit").checked, clean = $("#ocrClean").checked;
-  try { localStorage.setItem(LS_OCR, JSON.stringify({ langs, family, deskew, dewarp, crop, orient, split, clean, engine })); } catch (_) { /* fine */ }
+  try { localStorage.setItem(LS_OCR, JSON.stringify({ langs, family, deskew, dewarp, crop, orient, split, clean, engine, paddleModel })); } catch (_) { /* fine */ }
   let pages = area ? [area.page] : ocrPageChoice() || [];
   if (!pages.length) { toast(t("ocr.none")); return; }
   ocrCancel = false;
@@ -543,10 +549,10 @@ async function startOcr({ area = null } = {}) {
     busy(t("ocr.loading"), cancel);
     let make;
     if (engine === "paddle") { // PaddleOCR: its files (fetched once, then kept), one worker per page read at once
-      const files = await paddleFiles((name, got, total, whole) => { if (!whole) busy(t("ocr.paddleFetching", { name, mb: mbOf(got), total: mbOf(total) }), cancel); });
+      const files = await paddleFiles(paddleModel, (name, got, total, whole) => { if (!whole) busy(t("ocr.paddleFetching", { name, mb: mbOf(got), total: mbOf(total) }), cancel); });
       if (ocrCancel) return;
       busy(t("ocr.loading"), cancel);
-      make = () => makePaddleWorker(files, langs);
+      make = () => makePaddleWorker(files, langs, paddleModel);
     } else {
     const libs = await offlineLibs(), stored = libs && libs.ocr; // Tesseract saved for offline use, if any
     const T = await import(stored ? stored.lib : OCR_LIB);
@@ -1272,7 +1278,7 @@ function initTools() {
     }
   }, true);
   $("#btnOcr").addEventListener("click", openOcrDialog);
-  for (const id of ["#ocrEngineTess", "#ocrEnginePaddle"]) $(id).addEventListener("change", ocrEngineNote);
+  for (const id of ["#ocrEngineTess", "#ocrEnginePaddle", "#ocrPaddleModel"]) $(id).addEventListener("change", ocrEngineNote);
   $("#ocrLangs").addEventListener("change", ocrEngineNote);
   $("#ocrGo").addEventListener("click", (e) => {
     e.preventDefault();

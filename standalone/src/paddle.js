@@ -1,21 +1,47 @@
-/* ------------------------------------------------ PaddleOCR (PP-OCRv5) as a second OCR engine */
-// The PP-OCRv5 mobile models run with ONNX Runtime Web (WebAssembly) in a worker of their own:
-// a detection model finds the text lines, a recognition model reads each line. What they find is
-// handed on in the shape Tesseract gives (blocks → lines → words with boxes and confidence), so
-// straightening, the paragraph building, unsure words and the searchable PDF work as before.
-// PP-OCRv5 reads Latin script with accents (German, Swedish, French …), Chinese and Japanese;
-// Cyrillic, Greek and other scripts stay with Tesseract. The files (about 35 MB) are fetched once
-// and kept in the browser; "Offline use" can store them too.
+/* ------------------------------------------------ PaddleOCR (PP-OCRv5 / PP-OCRv6) as a second OCR engine */
+// The PP-OCR models run with ONNX Runtime Web (WebAssembly) in a worker of their own: a detection
+// model finds the text lines, a recognition model reads each line. What they find is handed on in
+// the shape Tesseract gives (blocks → lines → words with boxes and confidence), so straightening,
+// the paragraph building, unsure words and the searchable PDF work as before. The models read
+// Latin script with accents (German, Swedish, French …), Chinese and Japanese; Cyrillic, Greek and
+// other scripts stay with Tesseract. The files are fetched once and kept in the browser
+// (IndexedDB, "paddle:<name>"); "Offline use" can store them too.
 const PADDLE_ORT = "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.30.0/dist/";
-const PADDLE_MODELS = "https://cdn.jsdelivr.net/npm/pdfmarkdown-ppocrv5-models@1.0.0/";
-const PADDLE_FILES = {
+const PADDLE_V5 = "https://cdn.jsdelivr.net/npm/pdfmarkdown-ppocrv5-models@1.0.0/";
+const PADDLE_V6S = "https://cdn.jsdelivr.net/npm/@arcships/light-ocr-model-ppocrv6-small@0.3.4/bundle/";
+const PADDLE_V6T = "https://cdn.jsdelivr.net/npm/@arcships/light-ocr-model-ppocrv6-tiny@0.1.0/bundle/";
+/** The runtime every model needs. */
+const PADDLE_RUNTIME = {
   "ort.wasm.min.js": PADDLE_ORT + "ort.wasm.min.js",
   "ort-wasm-simd-threaded.mjs": PADDLE_ORT + "ort-wasm-simd-threaded.mjs",
   "ort-wasm-simd-threaded.wasm": PADDLE_ORT + "ort-wasm-simd-threaded.wasm",
-  "PP-OCRv5_mobile_det_infer.ort": PADDLE_MODELS + "detection/PP-OCRv5_mobile_det_infer.ort",
-  "PP-OCRv5_mobile_rec_infer.onnx": PADDLE_MODELS + "recognition/PP-OCRv5_mobile_rec_infer.onnx",
-  "ppocrv5_dict.txt": PADDLE_MODELS + "recognition/ppocrv5_dict.txt",
 };
+/**
+ * The models: their files (stored under these names), the dictionary's format and the detection's
+ * thresholds (from each model's own configuration). `mb`: the download, runtime included. On
+ * typewritten pages v6 small read best, v6 tiny about as well as v5 in less than half the time.
+ */
+const PADDLE_MODELS = {
+  v5: {
+    name: "PP-OCRv5 mobile", mb: 35,
+    files: { det: ["PP-OCRv5_mobile_det_infer.ort", PADDLE_V5 + "detection/PP-OCRv5_mobile_det_infer.ort"], rec: ["PP-OCRv5_mobile_rec_infer.onnx", PADDLE_V5 + "recognition/PP-OCRv5_mobile_rec_infer.onnx"], dict: ["ppocrv5_dict.txt", PADDLE_V5 + "recognition/ppocrv5_dict.txt"] },
+    dict: "lines", det: { thresh: 0.3, box: 0.6, unclip: 1.5 },
+  },
+  v6s: {
+    name: "PP-OCRv6 small", mb: 45,
+    files: { det: ["PP-OCRv6_small_det.onnx", PADDLE_V6S + "det/inference.onnx"], rec: ["PP-OCRv6_small_rec.onnx", PADDLE_V6S + "rec/inference.onnx"], dict: ["ppocrv6_small_dict.json", PADDLE_V6S + "rec/dictionary.json"] },
+    dict: "json", det: { thresh: 0.3, box: 0.6, unclip: 1.5 },
+  },
+  v6t: {
+    name: "PP-OCRv6 tiny", mb: 20, missing: ["jpn"], // (its dictionary has no kana)
+    files: { det: ["PP-OCRv6_tiny_det.onnx", PADDLE_V6T + "det/inference.onnx"], rec: ["PP-OCRv6_tiny_rec.onnx", PADDLE_V6T + "rec/inference.onnx"], dict: ["ppocrv6_tiny_dict.json", PADDLE_V6T + "rec/dictionary.json"] },
+    dict: "json", det: { thresh: 0.2, box: 0.45, unclip: 1.4 },
+  },
+};
+/** Every PaddleOCR file by its stored name (the offline set lists them). */
+const PADDLE_FILES = Object.assign({}, PADDLE_RUNTIME, ...Object.values(PADDLE_MODELS).map((m) => Object.fromEntries(Object.values(m.files))));
+/** The stored names a model needs, runtime included. */
+const paddleNames = (model) => Object.keys(PADDLE_RUNTIME).concat(Object.values((PADDLE_MODELS[model] || PADDLE_MODELS.v5).files).map(([name]) => name));
 // The accented letters of each language: PP-OCRv5 is unsure of small accents (ä read as a), and
 // gives accents a language does not have (à in Swedish): those are decided between the letters
 // the document's languages use.
@@ -27,14 +53,21 @@ const PADDLE_ACCENTS = {
 // Tesseract language codes whose script PP-OCRv5 does not read.
 const PADDLE_UNSUPPORTED = new Set(["ukr", "rus", "bel", "bul", "srp", "mkd", "kaz", "ell", "ara", "fas", "heb", "hin", "ben", "tha", "kor", "kat", "hye", "amh"]);
 
-/** The PaddleOCR files: kept from an earlier download or the offline set, or fetched now (and kept). */
-async function paddleFiles(onProgress) {
-  const out = {}, names = Object.keys(PADDLE_FILES);
+/** The chosen languages a model does not read (their script is not in its dictionary). */
+const paddleUnsupported = (langs, model) => langs.filter((l) => PADDLE_UNSUPPORTED.has(l) || ((PADDLE_MODELS[model] || {}).missing || []).includes(l));
+/** The models as <option>s (with the size of their download), optionally after a "none" entry. */
+const paddleModelOptions = (selected, none = "") => (none ? `<option value="">${escapeHtml(none)}</option>` : "") + Object.entries(PADDLE_MODELS)
+  .map(([id, m]) => `<option value="${id}"${id === selected ? " selected" : ""}>${escapeHtml(t("ocr.paddleModel", { name: m.name, mb: m.mb }))}</option>`).join("");
+
+/** A model's files (and the runtime): kept from an earlier download or the offline set, or fetched now (and kept). */
+async function paddleFiles(model, onProgress) {
+  const out = {}, names = paddleNames(model);
   let done = 0;
   for (const name of names) {
     let buf = await idbGet(`paddle:${name}`); // (from an earlier download, or from the offline set)
     if (!buf) {
-      const res = await fetch(PADDLE_FILES[name]);
+      let res = await fetch(PADDLE_FILES[name]).catch(() => null);
+      if (!res || !res.ok) res = await fetch(PADDLE_FILES[name].replace("https://cdn.jsdelivr.net/npm/", "https://unpkg.com/")); // (the same npm package from a second CDN)
       if (!res.ok) throw new Error(`PaddleOCR file not available (${name}: HTTP ${res.status})`);
       const total = Number(res.headers.get("content-length")) || 0, reader = res.body.getReader(), parts = [];
       let got = 0;
@@ -56,7 +89,7 @@ async function paddleFiles(onProgress) {
 
 /** The worker's program (run from a blob URL). */
 function paddleWorkerMain() {
-  let ort = null, det = null, rec = null, dict = null, classOf = null, accents = "";
+  let ort = null, det = null, rec = null, dict = null, classOf = null, accents = "", SPACE = 0, DET = { thresh: 0.3, box: 0.6, unclip: 1.5 };
   const baseOf = (c) => c.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   /** A Latin letter decided between the letters the languages use (see PADDLE_ACCENTS). */
   const settle = (ch, p, probs) => {
@@ -108,24 +141,24 @@ function paddleWorkerMain() {
     }
     const out = await det.run({ [det.inputNames[0]]: new ort.Tensor("float32", t, [1, 3, H, W]) });
     const prob = out[det.outputNames[0]].data;
-    // Regions of the probability map above 0.3; each a line (or a part of one) when sure enough.
+    // Regions of the probability map above the threshold; each a line (or a part of one) when sure enough.
     const label = new Int32Array(plane), queue = new Int32Array(plane), boxes = [];
     let comp = 0;
     for (let start = 0; start < plane; start++) {
-      if (label[start] || prob[start] <= 0.3) continue;
+      if (label[start] || prob[start] <= DET.thresh) continue;
       comp++;
       let head = 0, tail = 0, sum = 0, mx = 0, my = 0;
       queue[tail++] = start; label[start] = comp;
       while (head < tail) {
         const p = queue[head++], x = p % W, y = (p - x) / W;
         sum += prob[p]; mx += x; my += y;
-        if (x > 0 && !label[p - 1] && prob[p - 1] > 0.3) { label[p - 1] = comp; queue[tail++] = p - 1; }
-        if (x < W - 1 && !label[p + 1] && prob[p + 1] > 0.3) { label[p + 1] = comp; queue[tail++] = p + 1; }
-        if (y > 0 && !label[p - W] && prob[p - W] > 0.3) { label[p - W] = comp; queue[tail++] = p - W; }
-        if (y < H - 1 && !label[p + W] && prob[p + W] > 0.3) { label[p + W] = comp; queue[tail++] = p + W; }
+        if (x > 0 && !label[p - 1] && prob[p - 1] > DET.thresh) { label[p - 1] = comp; queue[tail++] = p - 1; }
+        if (x < W - 1 && !label[p + 1] && prob[p + 1] > DET.thresh) { label[p + 1] = comp; queue[tail++] = p + 1; }
+        if (y > 0 && !label[p - W] && prob[p - W] > DET.thresh) { label[p - W] = comp; queue[tail++] = p - W; }
+        if (y < H - 1 && !label[p + W] && prob[p + W] > DET.thresh) { label[p + W] = comp; queue[tail++] = p + W; }
       }
       const n = tail;
-      if (n < 6 || sum / n < 0.6) continue;
+      if (n < 6 || sum / n < DET.box) continue;
       mx /= n; my /= n;
       let cxx = 0, cyy = 0, cxy = 0;
       for (let q = 0; q < n; q++) { const p = queue[q], x = p % W - mx, y = (p - (p % W)) / W - my; cxx += x * x; cyy += y * y; cxy += x * y; }
@@ -140,7 +173,7 @@ function paddleWorkerMain() {
       }
       let bw = a1 - a0 + 1, bh = b1 - b0 + 1;
       if (Math.min(bw, bh) < 2) continue;
-      const dd = (bw * bh * 1.5) / (2 * (bw + bh)); // (the model marks a shrunk core of each line: grown back)
+      const dd = (bw * bh * DET.unclip) / (2 * (bw + bh)); // (the model marks a shrunk core of each line: grown back)
       const cu = (a0 + a1) / 2, cv = (b0 + b1) / 2;
       bw += 2 * dd; bh += 2 * dd;
       // (some room above and below: umlaut dots and accents sit above the letters' core)
@@ -215,8 +248,9 @@ function paddleWorkerMain() {
         // CTC: the best class per step; repeats and blanks (class 0) fall away. The steps cover
         // the padded width: positions are taken back to the line's own.
         const c = crops[i], steps = Math.min(T, Math.ceil((T * c.Tw) / W) + 1), chars = [];
-        let prev = 0;
+        let prev = 0, sp = 0; // (sp: the highest chance of a space since the last character)
         for (let st = 0; st < steps; st++) {
+          sp = Math.max(sp, d[(bi * T + st) * C + SPACE]);
           let best = 0, bp = -Infinity;
           const off = (bi * T + st) * C;
           for (let q = 0; q < C; q++) { const v = d[off + q]; if (v > bp) { bp = v; best = q; } }
@@ -224,7 +258,8 @@ function paddleWorkerMain() {
             let ch = best - 1 < dict.length ? dict[best - 1] : " ", p = bp;
             if (ch === "\u3000") ch = " ";
             [ch, p] = settle(ch, p, d.subarray(off, off + C));
-            chars.push({ ch, x: Math.min(1, ((st + 0.5) / T) * (W / c.Tw)), p: Math.min(1, p) });
+            chars.push({ ch, x: Math.min(1, ((st + 0.5) / T) * (W / c.Tw)), p: Math.min(1, p), sp });
+            sp = 0;
           }
           prev = best;
         }
@@ -244,6 +279,17 @@ function paddleWorkerMain() {
     const lineLen = (r) => r.chars.length, heightOf = (r) => (r.rows.base - r.rows.top) * Math.hypot(r.corners[3][0] - r.corners[0][0], r.corners[3][1] - r.corners[0][1]);
     const tall = read.filter((r) => lineLen(r) >= 12).map(heightOf).sort((a, b) => a - b), usual = tall.length ? tall[tall.length >> 1] : 0;
     for (const r of read) {
+      // A word space the model left out (PP-OCRv6 does so now and then on wide typewriter spacing):
+      // a gap of three usual character steps, or a little less when a space was half expected.
+      const inner = [];
+      for (let i = 1; i < r.chars.length; i++) if (r.chars[i].ch !== " " && r.chars[i - 1].ch !== " ") inner.push(r.chars[i].x - r.chars[i - 1].x);
+      if (inner.length >= 4) {
+        const usualStep = inner.slice().sort((a, b) => a - b)[inner.length >> 1];
+        for (let i = r.chars.length - 1; i > 0; i--) {
+          const a = r.chars[i - 1], b = r.chars[i], q = (b.x - a.x) / usualStep;
+          if (a.ch !== " " && b.ch !== " " && (q >= 3 || (q >= 2.2 && b.sp >= 0.1))) r.chars.splice(i, 0, { ch: " ", x: (a.x + b.x) / 2, p: 1, sp: 0 });
+        }
+      }
       const text = r.chars.map((c) => c.ch).join("");
       if (!text.trim()) continue;
       const [tl, tr, , bl] = r.corners;
@@ -290,12 +336,15 @@ function paddleWorkerMain() {
         ort.env.wasm.numThreads = 1; // (threads need a cross-origin isolated page)
         ort.env.wasm.wasmPaths = { mjs: url("ort-wasm-simd-threaded.mjs", "text/javascript"), wasm: url("ort-wasm-simd-threaded.wasm", "application/wasm") };
         const opts = { executionProviders: ["wasm"], graphOptimizationLevel: "all" };
-        det = await ort.InferenceSession.create(new Uint8Array(args.files["PP-OCRv5_mobile_det_infer.ort"]), opts);
-        rec = await ort.InferenceSession.create(new Uint8Array(args.files["PP-OCRv5_mobile_rec_infer.onnx"]), opts);
-        // (one character per line; empty lines are none – copies of the file differ in them; the
-        // space follows the last entry)
-        dict = new TextDecoder().decode(args.files["ppocrv5_dict.txt"]).replace(/\r/g, "").split("\n").filter((l) => l !== "");
+        det = await ort.InferenceSession.create(new Uint8Array(args.files.det), opts);
+        rec = await ort.InferenceSession.create(new Uint8Array(args.files.rec), opts);
+        if (args.det) DET = args.det;
+        // (PP-OCRv5: one character per line – empty lines are none, copies of the file differ in them;
+        // PP-OCRv6: a JSON list. The space follows the last entry, or is the last entry.)
+        const text = new TextDecoder().decode(args.files.dict);
+        dict = args.dictFormat === "json" ? JSON.parse(text).characters : text.replace(/\r/g, "").split("\n").filter((l) => l !== "");
         classOf = new Map(dict.map((c, i) => [c, i + 1]));
+        SPACE = classOf.has(" ") ? classOf.get(" ") : dict.length + 1; // (PP-OCRv5: the class after its dictionary)
         accents = args.accents || "";
         self.postMessage({ id, result: true });
       } else if (cmd === "read") {
@@ -308,7 +357,7 @@ function paddleWorkerMain() {
 }
 
 /** A PaddleOCR worker, ready to read pages: {recognize(blob), terminate()} like a Tesseract worker. */
-async function makePaddleWorker(files, langs = []) {
+async function makePaddleWorker(files, langs = [], model = "v5") {
   const src = `(${paddleWorkerMain.toString()})();`;
   const url = URL.createObjectURL(new Blob([src], { type: "text/javascript" }));
   const worker = new Worker(url);
@@ -318,10 +367,11 @@ async function makePaddleWorker(files, langs = []) {
   worker.onerror = (e) => { for (const w of waiting.values()) w.reject(new Error(e.message || "PaddleOCR worker failed")); waiting.clear(); };
   const call = (cmd, args, transfer = []) => new Promise((resolve, reject) => { const id = ++seq; waiting.set(id, { resolve, reject }); worker.postMessage({ id, cmd, args }, transfer); });
   // (each worker gets its own copies: the buffers are transferred)
-  const copy = {};
-  for (const [k, v] of Object.entries(files)) copy[k] = v.slice(0);
+  const m = PADDLE_MODELS[model] || PADDLE_MODELS.v5, copy = {};
+  for (const name of Object.keys(PADDLE_RUNTIME)) copy[name] = files[name].slice(0);
+  for (const [role, [name]] of Object.entries(m.files)) copy[role] = files[name].slice(0);
   const accents = [...new Set(langs.flatMap((l) => [...(PADDLE_ACCENTS[l] || "")]))].join("");
-  await call("init", { files: copy, accents }, Object.values(copy));
+  await call("init", { files: copy, accents, det: m.det, dictFormat: m.dict }, Object.values(copy));
   return {
     async recognize(blob) {
       const img = await imageDataOf(blob);

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="Kameleon 2.40">
+  <meta name="generator" content="Kameleon 2.41">
   <meta name="description" content="Kameleon – Wechselt die Sprache, behält die Form. Changes language, keeps its shape.">
   <title>Kameleon</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2216%22 fill=%22%23287130%22/%3E%3Cg transform=%22translate(2.5 1) scale(0.9)%22 fill=%22%23ffffff%22 stroke=%22%23ffffff%22%3E%3Cpath d=%22M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6%22 fill=%22none%22 stroke-width=%223.8%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M21 43l-1 10M30 44v9M38 43l1 10%22 stroke-width=%223.6%22 stroke-linecap=%22round%22/%3E%3Cellipse cx=%2221%22 cy=%2225%22 rx=%227%22 ry=%227.5%22 stroke=%22none%22/%3E%3Cellipse cx=%2233%22 cy=%2223.5%22 rx=%227.5%22 ry=%228%22 stroke=%22none%22/%3E%3Cpath d=%22M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z%22 stroke=%22none%22/%3E%3Cpath d=%22M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z%22 stroke=%22none%22/%3E%3Cpath d=%22M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z%22 stroke=%22none%22/%3E%3Cpath d=%22M16 37l4-3 4 3 4-3 4 3 4-3 4 3%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%222.1%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3Cpath d=%22M43.5 33.9L57 32.6%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%221.5%22 stroke-linecap=%22round%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%224.4%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%222.7%22 stroke=%22none%22/%3E%3Ccircle cx=%2246.2%22 cy=%2226.7%22 r=%221.3%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Cpath d=%22M4 55.5c15-3 39-3 54 0%22 fill=%22none%22 stroke-width=%222.4%22 stroke-linecap=%22round%22/%3E%3C/g%3E%3C/svg%3E">
@@ -1069,7 +1069,9 @@ body.seg-dragging, body.seg-dragging * { cursor: grabbing !important; user-selec
 .seg-drop[hidden] { display: none; }
 
 /* ---------- v2.40: the OCR engine choice ---------- */
-.ocr-engines { display: flex; gap: 18px; flex-wrap: wrap; }
+.ocr-engines { display: flex; gap: 18px; flex-wrap: wrap; align-items: center; }
+.ocr-engines select { max-width: 100%; }
+.offline-paddle select { margin-left: 6px; max-width: 100%; }
 #ocrEngineNote { margin: 4px 0 0; }
 #ocrEngineNote:empty { display: none; }
 #ocrEngineNote.warn { color: #c0392b; }
@@ -1081,7 +1083,7 @@ body.seg-dragging, body.seg-dragging * { cursor: grabbing !important; user-selec
   <div class="brand">
     <span class="logo"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#287130"/><g transform="translate(2.5 1) scale(0.9)" fill="#ffffff" stroke="#ffffff"><path d="M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6" fill="none" stroke-width="3.8" stroke-linecap="round"/><path d="M21 43l-1 10M30 44v9M38 43l1 10" stroke-width="3.6" stroke-linecap="round"/><ellipse cx="21" cy="25" rx="7" ry="7.5" stroke="none"/><ellipse cx="33" cy="23.5" rx="7.5" ry="8" stroke="none"/><path d="M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z" stroke="none"/><path d="M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z" stroke="none"/><path d="M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z" stroke="none"/><path d="M16 37l4-3 4 3 4-3 4 3 4-3 4 3" fill="none" stroke="#287130" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M43.5 33.9L57 32.6" fill="none" stroke="#287130" stroke-width="1.5" stroke-linecap="round"/><circle cx="45.5" cy="26.5" r="4.4" fill="#287130" stroke="none"/><circle cx="45.5" cy="26.5" r="2.7" stroke="none"/><circle cx="46.2" cy="26.7" r="1.3" fill="#287130" stroke="none"/><path d="M4 55.5c15-3 39-3 54 0" fill="none" stroke-width="2.4" stroke-linecap="round"/></g></svg></span>
     <span class="brand-name">Kameleon</span>
-    <span class="version" id="appVersion">v2.40</span>
+    <span class="version" id="appVersion">v2.41</span>
   </div>
   <div class="topbar-actions">
     <span class="doc-name" id="docName"></span>
@@ -1601,7 +1603,7 @@ body.seg-dragging, body.seg-dragging * { cursor: grabbing !important; user-selec
       <p class="muted small" data-i18n="offline.text"></p>
       <p class="small" id="offlineStatus"></p>
       <div class="field"><span data-i18n="offline.langsTitle"></span><div class="ocr-langs" id="offlineLangs"></div></div>
-      <label class="check" data-i18n-title="offline.paddleTitle"><input type="checkbox" id="offlinePaddle"> <span data-i18n="offline.paddle"></span></label>
+      <label class="field offline-paddle" data-i18n-title="offline.paddleTitle"><span data-i18n="offline.paddle"></span> <select id="offlinePaddle"></select></label>
       <div class="wf-row offline-actions">
         <button type="button" class="btn primary" id="offlineZipBtn" data-i18n="offline.zip"></button>
         <button type="button" class="btn" id="offlineLoadZip" data-i18n="offline.loadZip"></button>
@@ -1615,7 +1617,7 @@ body.seg-dragging, body.seg-dragging * { cursor: grabbing !important; user-selec
     </div>
     <input type="file" id="offlineZip" class="visually-hidden" accept=".zip,application/zip" multiple tabindex="-1">
     <input type="file" id="offlineFolder" class="visually-hidden" webkitdirectory multiple tabindex="-1">
-    <p class="muted small help-version help-part">Kameleon v2.40 · <span data-i18n="app.tagline"></span></p>
+    <p class="muted small help-version help-part">Kameleon v2.41 · <span data-i18n="app.tagline"></span></p>
     <div class="modal-actions">
       <button type="button" value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
     </div>
@@ -1866,6 +1868,7 @@ body.seg-dragging, body.seg-dragging * { cursor: grabbing !important; user-selec
       <div class="ocr-engines">
         <label class="check" data-i18n-title="ocr.engineTessTitle"><input type="radio" name="ocrEngine" id="ocrEngineTess" value="tesseract" checked> <span data-i18n="ocr.engineTess">Tesseract</span></label>
         <label class="check" data-i18n-title="ocr.enginePaddleTitle"><input type="radio" name="ocrEngine" id="ocrEnginePaddle" value="paddle"> <span data-i18n="ocr.enginePaddle">PaddleOCR</span></label>
+        <select id="ocrPaddleModel" data-i18n-title="ocr.paddleModelTitle"></select>
       </div>
       <p class="muted small" id="ocrEngineNote"></p></div>
     <div class="field"><span data-i18n="ocr.langs">Languages in the document</span><div class="ocr-langs" id="ocrLangs"></div></div>
@@ -2380,15 +2383,21 @@ const I18N = {
     "ocr.engineTess": "Tesseract",
     "ocr.engineTessTitle": "Bewährt, schnell, viele Sprachen und Schriften (auch Kyrillisch, Griechisch, Arabisch …)",
     "ocr.enginePaddle": "PaddleOCR",
-    "ocr.enginePaddleTitle": "PP-OCRv5: genauer bei Schreibmaschinentext, schwachen oder schiefen Scans, Fotos und Chinesisch; langsamer",
-    "ocr.paddleNote": "PaddleOCR liest lateinische Schrift (Deutsch, Schwedisch, Französisch …), Chinesisch und Japanisch. Es ist bei Schreibmaschinentext, schwachen Scans und Fotos meist genauer als Tesseract, aber langsamer; bei sauberem Druck sind beide etwa gleich gut. Die gewählten Sprachen bestimmen die Umlaute und Akzente.",
+    "ocr.enginePaddleTitle": "PP-OCRv5 / PP-OCRv6: genauer bei Schreibmaschinentext, schwachen oder schiefen Scans, Fotos und Chinesisch",
+    "ocr.paddleModel": "{name} (ca. {mb} MB)",
+    "ocr.paddleModelTitle": "Welches PaddleOCR-Modell liest den Text",
+    "ocr.paddleAbout.v5": "PP-OCRv5 mobile: der bewährte Mittelweg.",
+    "ocr.paddleAbout.v6s": "PP-OCRv6 small: das genaueste Modell (bei Schreibmaschinentext fehlerfrei im Test), etwas langsamer.",
+    "ocr.paddleAbout.v6t": "PP-OCRv6 tiny: klein und gut doppelt so schnell wie v5, dabei mindestens so genau; ohne Japanisch.",
+    "ocr.paddleNote": "PaddleOCR liest lateinische Schrift (Deutsch, Schwedisch, Französisch …), Chinesisch und Japanisch. Es ist bei Schreibmaschinentext, schwachen Scans und Fotos meist genauer als Tesseract; bei sauberem Druck sind beide etwa gleich gut. Die gewählten Sprachen bestimmen die Umlaute und Akzente.",
     "ocr.paddleReady": "Die Dateien sind im Browser gespeichert (auch offline).",
-    "ocr.paddleDownload": "Beim ersten Mal werden ca. 35 MB geladen und im Browser gespeichert.",
+    "ocr.paddleDownload": "Beim ersten Mal werden ca. {mb} MB geladen und im Browser gespeichert.",
     "ocr.paddleNoScript": "PaddleOCR liest {langs} nicht – dafür bitte Tesseract wählen.",
     "ocr.paddleFetching": "PaddleOCR wird geladen: {name} – {mb} von {total} MB …",
-    "offline.paddle": "PaddleOCR mitnehmen (ca. 35 MB)",
-    "offline.paddleTitle": "Die genauere Texterkennung PaddleOCR (ONNX Runtime und die PP-OCRv5-Modelle) gehört dann zum Offline-Satz",
-    "help.offPaddle": "<b>ort.wasm.min.js</b>, <b>ort-wasm-simd-threaded.mjs</b>, <b>ort-wasm-simd-threaded.wasm</b> (ca. 14 MB) – ONNX Runtime, führt die Modelle von PaddleOCR aus; <b>PP-OCRv5_mobile_det_infer.ort</b> (5 MB) findet die Textzeilen, <b>PP-OCRv5_mobile_rec_infer.onnx</b> (16 MB) liest sie, <b>ppocrv5_dict.txt</b> ihre Zeichen. <i>Nur für die Engine PaddleOCR.</i>",
+    "offline.paddle": "PaddleOCR mitnehmen:",
+    "offline.paddleNone": "nein",
+    "offline.paddleTitle": "Die Texterkennung PaddleOCR (ONNX Runtime und das gewählte Modell) gehört dann zum Offline-Satz",
+    "help.offPaddle": "<b>ort.wasm.min.js</b>, <b>ort-wasm-simd-threaded.mjs</b>, <b>ort-wasm-simd-threaded.wasm</b> (ca. 14 MB) – ONNX Runtime, führt die Modelle von PaddleOCR aus; <b>PP-OCRv5_mobile_det_infer.ort</b> (5 MB) findet die Textzeilen, <b>PP-OCRv5_mobile_rec_infer.onnx</b> (16 MB) liest sie, <b>ppocrv5_dict.txt</b> ihre Zeichen; für PP-OCRv6 small dasselbe als <b>PP-OCRv6_small_det.onnx</b> (10 MB), <b>PP-OCRv6_small_rec.onnx</b> (21 MB), <b>ppocrv6_small_dict.json</b>, für PP-OCRv6 tiny als <b>PP-OCRv6_tiny_det.onnx</b> (2 MB), <b>PP-OCRv6_tiny_rec.onnx</b> (4,5 MB), <b>ppocrv6_tiny_dict.json</b>. <i>Nur für die Engine PaddleOCR, und nur das gewählte Modell.</i>",
     "ocr.langs": "Sprachen im Dokument",
     "ocr.pages": "Seiten",
     "ocr.pagesEmpty": "Nur Seiten ohne Text",
@@ -3310,15 +3319,21 @@ const I18N = {
     "ocr.engineTess": "Tesseract",
     "ocr.engineTessTitle": "Proven, fast, many languages and scripts (also Cyrillic, Greek, Arabic …)",
     "ocr.enginePaddle": "PaddleOCR",
-    "ocr.enginePaddleTitle": "PP-OCRv5: more accurate on typewritten text, faint or skewed scans, photos and Chinese; slower",
-    "ocr.paddleNote": "PaddleOCR reads Latin script (German, Swedish, French …), Chinese and Japanese. On typewritten text, faint scans and photos it is mostly more accurate than Tesseract, but slower; on clean print both do about equally well. The chosen languages decide the umlauts and accents.",
+    "ocr.enginePaddleTitle": "PP-OCRv5 / PP-OCRv6: more accurate on typewritten text, faint or skewed scans, photos and Chinese",
+    "ocr.paddleModel": "{name} (about {mb} MB)",
+    "ocr.paddleModelTitle": "Which PaddleOCR model reads the text",
+    "ocr.paddleAbout.v5": "PP-OCRv5 mobile: the proven middle way.",
+    "ocr.paddleAbout.v6s": "PP-OCRv6 small: the most accurate model (no errors on typewritten text in our test), a little slower.",
+    "ocr.paddleAbout.v6t": "PP-OCRv6 tiny: small and more than twice as fast as v5, at least as accurate; no Japanese.",
+    "ocr.paddleNote": "PaddleOCR reads Latin script (German, Swedish, French …), Chinese and Japanese. On typewritten text, faint scans and photos it is mostly more accurate than Tesseract; on clean print both do about equally well. The chosen languages decide the umlauts and accents.",
     "ocr.paddleReady": "Its files are stored in the browser (offline too).",
-    "ocr.paddleDownload": "The first time, about 35 MB are loaded and stored in the browser.",
+    "ocr.paddleDownload": "The first time, about {mb} MB are loaded and stored in the browser.",
     "ocr.paddleNoScript": "PaddleOCR cannot read {langs} – please choose Tesseract for that.",
     "ocr.paddleFetching": "Loading PaddleOCR: {name} – {mb} of {total} MB …",
-    "offline.paddle": "Include PaddleOCR (about 35 MB)",
-    "offline.paddleTitle": "The more accurate recognition PaddleOCR (ONNX Runtime and the PP-OCRv5 models) becomes part of the offline set",
-    "help.offPaddle": "<b>ort.wasm.min.js</b>, <b>ort-wasm-simd-threaded.mjs</b>, <b>ort-wasm-simd-threaded.wasm</b> (about 14 MB) – ONNX Runtime, runs the PaddleOCR models; <b>PP-OCRv5_mobile_det_infer.ort</b> (5 MB) finds the text lines, <b>PP-OCRv5_mobile_rec_infer.onnx</b> (16 MB) reads them, <b>ppocrv5_dict.txt</b> holds their characters. <i>Only for the PaddleOCR engine.</i>",
+    "offline.paddle": "Include PaddleOCR:",
+    "offline.paddleNone": "no",
+    "offline.paddleTitle": "The recognition engine PaddleOCR (ONNX Runtime and the chosen model) becomes part of the offline set",
+    "help.offPaddle": "<b>ort.wasm.min.js</b>, <b>ort-wasm-simd-threaded.mjs</b>, <b>ort-wasm-simd-threaded.wasm</b> (about 14 MB) – ONNX Runtime, runs the PaddleOCR models; <b>PP-OCRv5_mobile_det_infer.ort</b> (5 MB) finds the text lines, <b>PP-OCRv5_mobile_rec_infer.onnx</b> (16 MB) reads them, <b>ppocrv5_dict.txt</b> holds their characters; for PP-OCRv6 small the same as <b>PP-OCRv6_small_det.onnx</b> (10 MB), <b>PP-OCRv6_small_rec.onnx</b> (21 MB), <b>ppocrv6_small_dict.json</b>, for PP-OCRv6 tiny as <b>PP-OCRv6_tiny_det.onnx</b> (2 MB), <b>PP-OCRv6_tiny_rec.onnx</b> (4.5 MB), <b>ppocrv6_tiny_dict.json</b>. <i>Only for the PaddleOCR engine, and only the chosen model.</i>",
     "ocr.langs": "Languages in the document",
     "ocr.pages": "Pages",
     "ocr.pagesEmpty": "Only pages without text",
@@ -18063,16 +18078,21 @@ function openOcrDialog() {
   $("#ocrDewarp").checked = saved.dewarp !== false;
   $("#ocrCrop").checked = saved.crop !== false;
   (saved.engine === "paddle" ? $("#ocrEnginePaddle") : $("#ocrEngineTess")).checked = true;
+  $("#ocrPaddleModel").innerHTML = paddleModelOptions(PADDLE_MODELS[saved.paddleModel] ? saved.paddleModel : "v5");
   ocrEngineNote();
   openModal($("#ocrDialog"));
 }
-/** Under the engine choice: what PaddleOCR reads, and whether its files are here already. */
+/** Under the engine choice: what PaddleOCR reads, and whether the chosen model's files are here already. */
+let ocrNoteTurn = 0;
 async function ocrEngineNote() {
-  const paddle = $("#ocrEnginePaddle").checked;
+  const turn = ++ocrNoteTurn; // (an earlier call still waiting for the stored files does not write over a later one)
+  const paddle = $("#ocrEnginePaddle").checked, model = $("#ocrPaddleModel").value || "v5", m = PADDLE_MODELS[model];
+  $("#ocrPaddleModel").hidden = !paddle;
   const langs = [...document.querySelectorAll("#ocrLangs input:checked")].map((i) => i.value);
-  const bad = paddle ? langs.filter((l) => PADDLE_UNSUPPORTED.has(l)) : [];
-  let note = paddle ? t("ocr.paddleNote") : "";
-  if (paddle) note += " " + t((await idbGet("paddle:PP-OCRv5_mobile_rec_infer.onnx")) ? "ocr.paddleReady" : "ocr.paddleDownload");
+  const bad = paddle ? paddleUnsupported(langs, model) : [];
+  let note = paddle ? t("ocr.paddleNote") + " " + t("ocr.paddleAbout." + model) : "";
+  if (paddle) note += " " + ((await idbGet(`paddle:${m.files.rec[0]}`)) ? t("ocr.paddleReady") : t("ocr.paddleDownload", { mb: m.mb }));
+  if (turn !== ocrNoteTurn) return;
   if (bad.length) note += " " + t("ocr.paddleNoScript", { langs: bad.map((l) => t("ocrlang." + l)).join(", ") });
   $("#ocrEngineNote").textContent = note.trim();
   $("#ocrEngineNote").classList.toggle("warn", bad.length > 0);
@@ -18119,10 +18139,11 @@ function ocrWorkerOptions(stored) {
 async function startOcr({ area = null } = {}) {
   const langs = [...document.querySelectorAll("#ocrLangs input:checked")].map((i) => i.value);
   if (!langs.length) { toast(t("ocr.noLang"), "error"); return; }
-  const engine = $("#ocrEnginePaddle").checked ? "paddle" : "tesseract";
-  if (engine === "paddle" && langs.some((l) => PADDLE_UNSUPPORTED.has(l))) { toast(t("ocr.paddleNoScript", { langs: langs.filter((l) => PADDLE_UNSUPPORTED.has(l)).map((l) => t("ocrlang." + l)).join(", ") }), "error"); return; }
+  const engine = $("#ocrEnginePaddle").checked ? "paddle" : "tesseract", paddleModel = $("#ocrPaddleModel").value || "v5";
+  const unread = engine === "paddle" ? paddleUnsupported(langs, paddleModel) : [];
+  if (unread.length) { toast(t("ocr.paddleNoScript", { langs: unread.map((l) => t("ocrlang." + l)).join(", ") }), "error"); return; }
   const family = $("#ocrFamily").value, deskew = $("#ocrDeskew").checked, dewarp = $("#ocrDewarp").checked, crop = $("#ocrCrop").checked, orient = $("#ocrOrient").checked, split = $("#ocrSplit").checked, clean = $("#ocrClean").checked;
-  try { localStorage.setItem(LS_OCR, JSON.stringify({ langs, family, deskew, dewarp, crop, orient, split, clean, engine })); } catch (_) { /* fine */ }
+  try { localStorage.setItem(LS_OCR, JSON.stringify({ langs, family, deskew, dewarp, crop, orient, split, clean, engine, paddleModel })); } catch (_) { /* fine */ }
   let pages = area ? [area.page] : ocrPageChoice() || [];
   if (!pages.length) { toast(t("ocr.none")); return; }
   ocrCancel = false;
@@ -18140,10 +18161,10 @@ async function startOcr({ area = null } = {}) {
     busy(t("ocr.loading"), cancel);
     let make;
     if (engine === "paddle") { // PaddleOCR: its files (fetched once, then kept), one worker per page read at once
-      const files = await paddleFiles((name, got, total, whole) => { if (!whole) busy(t("ocr.paddleFetching", { name, mb: mbOf(got), total: mbOf(total) }), cancel); });
+      const files = await paddleFiles(paddleModel, (name, got, total, whole) => { if (!whole) busy(t("ocr.paddleFetching", { name, mb: mbOf(got), total: mbOf(total) }), cancel); });
       if (ocrCancel) return;
       busy(t("ocr.loading"), cancel);
-      make = () => makePaddleWorker(files, langs);
+      make = () => makePaddleWorker(files, langs, paddleModel);
     } else {
     const libs = await offlineLibs(), stored = libs && libs.ocr; // Tesseract saved for offline use, if any
     const T = await import(stored ? stored.lib : OCR_LIB);
@@ -18869,7 +18890,7 @@ function initTools() {
     }
   }, true);
   $("#btnOcr").addEventListener("click", openOcrDialog);
-  for (const id of ["#ocrEngineTess", "#ocrEnginePaddle"]) $(id).addEventListener("change", ocrEngineNote);
+  for (const id of ["#ocrEngineTess", "#ocrEnginePaddle", "#ocrPaddleModel"]) $(id).addEventListener("change", ocrEngineNote);
   $("#ocrLangs").addEventListener("change", ocrEngineNote);
   $("#ocrGo").addEventListener("click", (e) => {
     e.preventDefault();
@@ -19626,7 +19647,7 @@ function initPicture() {
 // from its own browser cache before the network, so language files are written into that cache.
 // ======================================================================
 
-const APP_VERSION = "2.40";
+const APP_VERSION = "2.41";
 // (a change of library version makes a stored set outdated: it is then ignored)
 const OFFLINE_VERSION = `${MUPDF_URL} ${OCR_LIB}`;
 const CORE_SIMD = "tesseract-core-simd-lstm.wasm.js", CORE_PLAIN = "tesseract-core-lstm.wasm.js";
@@ -19708,10 +19729,10 @@ async function fetchWithProgress(url, onProgress) {
 }
 
 /** Fetch the library files (both Tesseract builds when `allCores`) and the language data. */
-async function fetchLibrarySet(langs, allCores, paddle = false) {
+async function fetchLibrarySet(langs, allCores, paddle = "") {
   const names = Object.keys(LIB_FILES).filter((n) => allCores || (n !== CORE_SIMD && n !== CORE_PLAIN) || n === OCR_CORE_FILE);
   const items = names.map((n) => [n, LIB_FILES[n]]).concat(langs.map((l) => [`${l}.traineddata.gz`, langUrl(l)]))
-    .concat(paddle ? Object.entries(PADDLE_FILES) : []); // (PaddleOCR, when ticked: about 35 MB)
+    .concat(paddle ? paddleNames(paddle).map((n) => [n, PADDLE_FILES[n]]) : []); // (PaddleOCR with the chosen model: 20–45 MB)
   const data = {}, langData = {}, paddleData = {};
   let total = 0;
   for (const [i, [name, url]] of items.entries()) {
@@ -19779,7 +19800,7 @@ async function activateLibs(data, langData, remember, source) {
 async function storePaddleFiles(paddleData) {
   for (const [name, buf] of Object.entries(paddleData || {})) await idbPut(buf, `paddle:${name}`, true);
 }
-async function downloadOfflineZip(langs, paddle = false) {
+async function downloadOfflineZip(langs, paddle = "") {
   try {
     const { data, langData, paddleData, total } = await fetchLibrarySet(langs, true, paddle);
     busy(t("offline.zipping"));
@@ -19816,9 +19837,11 @@ auf Ihrem Computer; die Dateinamen bitte nicht ändern.
   <sprache>.traineddata.gz           Sprachdaten der Texterkennung, eine je Sprache (deu, eng, fra …)
   libheif-bundle.mjs                 liest iPhone-Fotos (HEIC/HEIF)
   ort.wasm.min.js, ort-wasm-simd-threaded.mjs/.wasm   ONNX Runtime für PaddleOCR (wenn gewählt)
-  PP-OCRv5_mobile_det_infer.ort      PaddleOCR: findet die Textzeilen
-  PP-OCRv5_mobile_rec_infer.onnx     PaddleOCR: liest die Zeilen
-  ppocrv5_dict.txt                   PaddleOCR: die Zeichen, die es kennt
+  PP-OCRv5_mobile_det_infer.ort      PaddleOCR (PP-OCRv5): findet die Textzeilen
+  PP-OCRv5_mobile_rec_infer.onnx     PaddleOCR (PP-OCRv5): liest die Zeilen
+  ppocrv5_dict.txt                   PaddleOCR (PP-OCRv5): die Zeichen, die es kennt
+  PP-OCRv6_small_det/_rec.onnx, ppocrv6_small_dict.json   dasselbe für PP-OCRv6 small (wenn gewählt)
+  PP-OCRv6_tiny_det/_rec.onnx, ppocrv6_tiny_dict.json     dasselbe für PP-OCRv6 tiny (wenn gewählt)
 
 EN: This ZIP holds the document engine (MuPDF), text recognition (Tesseract), language data and the
 reader for iPhone photos (libheif). Without internet: open Kameleon, then choose this ZIP file (or
@@ -19835,13 +19858,15 @@ computer; please do not rename them.
   <language>.traineddata.gz          language data for text recognition, one per language (deu, eng, fra …)
   libheif-bundle.mjs                 reads iPhone photos (HEIC/HEIF)
   ort.wasm.min.js, ort-wasm-simd-threaded.mjs/.wasm   ONNX Runtime for PaddleOCR (when chosen)
-  PP-OCRv5_mobile_det_infer.ort      PaddleOCR: finds the text lines
-  PP-OCRv5_mobile_rec_infer.onnx     PaddleOCR: reads the lines
-  ppocrv5_dict.txt                   PaddleOCR: the characters it knows
+  PP-OCRv5_mobile_det_infer.ort      PaddleOCR (PP-OCRv5): finds the text lines
+  PP-OCRv5_mobile_rec_infer.onnx     PaddleOCR (PP-OCRv5): reads the lines
+  ppocrv5_dict.txt                   PaddleOCR (PP-OCRv5): the characters it knows
+  PP-OCRv6_small_det/_rec.onnx, ppocrv6_small_dict.json   the same for PP-OCRv6 small (when chosen)
+  PP-OCRv6_tiny_det/_rec.onnx, ppocrv6_tiny_dict.json     the same for PP-OCRv6 tiny (when chosen)
 `;
 
 /** Store the set in the browser directly (fetched from the internet). */
-async function storeOfflineLibs(langs, paddle = false) {
+async function storeOfflineLibs(langs, paddle = "") {
   try {
     const { data, langData, paddleData } = await fetchLibrarySet(langs, false, paddle);
     busy(t("offline.storing"));
@@ -19930,14 +19955,22 @@ function renderOfflineLangs() {
     `<label class="check"><input type="checkbox" value="${l}"${on.has(l) ? " checked" : ""}> ${escapeHtml(t("ocrlang." + l))}</label>`).join("");
 }
 
+/** The PaddleOCR choice of the offline set: none, or one model (the one OCR uses, at first). */
+function renderOfflinePaddle() {
+  let saved = {};
+  try { saved = JSON.parse(localStorage.getItem(LS_OCR) || "{}"); } catch (_) { /* default */ }
+  const sel = $("#offlinePaddle"), current = sel.options.length ? sel.value : (saved.engine === "paddle" ? saved.paddleModel || "v5" : "");
+  sel.innerHTML = paddleModelOptions(current, t("offline.paddleNone"));
+}
+
 const chosenOfflineLangs = () => [...document.querySelectorAll("#offlineLangs input:checked")].map((i) => i.value);
 
 function initOffline() {
-  renderOfflineLangs();
-  document.addEventListener("languagechange", () => { renderOfflineLangs(); if ($("#helpDialog").open) refreshOfflineStatus(); });
+  renderOfflineLangs(); renderOfflinePaddle();
+  document.addEventListener("languagechange", () => { renderOfflineLangs(); renderOfflinePaddle(); if ($("#helpDialog").open) refreshOfflineStatus(); });
   const closeHelp = () => { if ($("#helpDialog").open) $("#helpDialog").close("cancel"); }; // (the progress box would be hidden behind it)
-  $("#offlineZipBtn").addEventListener("click", () => { const langs = chosenOfflineLangs(), paddle = $("#offlinePaddle").checked; closeHelp(); downloadOfflineZip(langs, paddle); });
-  $("#offlineDownload").addEventListener("click", () => { const langs = chosenOfflineLangs(), paddle = $("#offlinePaddle").checked; closeHelp(); storeOfflineLibs(langs, paddle); });
+  $("#offlineZipBtn").addEventListener("click", () => { const langs = chosenOfflineLangs(), paddle = $("#offlinePaddle").value; closeHelp(); downloadOfflineZip(langs, paddle); });
+  $("#offlineDownload").addEventListener("click", () => { const langs = chosenOfflineLangs(), paddle = $("#offlinePaddle").value; closeHelp(); storeOfflineLibs(langs, paddle); });
   $("#offlineRemove").addEventListener("click", () => removeOfflineLibs());
   const pick = (input) => (e) => { e.preventDefault(); e.stopPropagation(); input.value = ""; input.click(); };
   $("#offlineLoadZip").addEventListener("click", pick($("#offlineZip")));
@@ -23877,24 +23910,50 @@ async function buildApkg(pair, rows) {
   return zipWrite([{ name: "collection.anki2", data: db }, { name: "media", data: enc8.encode(JSON.stringify(list)) }, ...media.map((m, i) => ({ name: String(i), data: m.data, store: true }))]);
 }
 
-/* ------------------------------------------------ PaddleOCR (PP-OCRv5) as a second OCR engine */
-// The PP-OCRv5 mobile models run with ONNX Runtime Web (WebAssembly) in a worker of their own:
-// a detection model finds the text lines, a recognition model reads each line. What they find is
-// handed on in the shape Tesseract gives (blocks → lines → words with boxes and confidence), so
-// straightening, the paragraph building, unsure words and the searchable PDF work as before.
-// PP-OCRv5 reads Latin script with accents (German, Swedish, French …), Chinese and Japanese;
-// Cyrillic, Greek and other scripts stay with Tesseract. The files (about 35 MB) are fetched once
-// and kept in the browser; "Offline use" can store them too.
+/* ------------------------------------------------ PaddleOCR (PP-OCRv5 / PP-OCRv6) as a second OCR engine */
+// The PP-OCR models run with ONNX Runtime Web (WebAssembly) in a worker of their own: a detection
+// model finds the text lines, a recognition model reads each line. What they find is handed on in
+// the shape Tesseract gives (blocks → lines → words with boxes and confidence), so straightening,
+// the paragraph building, unsure words and the searchable PDF work as before. The models read
+// Latin script with accents (German, Swedish, French …), Chinese and Japanese; Cyrillic, Greek and
+// other scripts stay with Tesseract. The files are fetched once and kept in the browser
+// (IndexedDB, "paddle:<name>"); "Offline use" can store them too.
 const PADDLE_ORT = "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.30.0/dist/";
-const PADDLE_MODELS = "https://cdn.jsdelivr.net/npm/pdfmarkdown-ppocrv5-models@1.0.0/";
-const PADDLE_FILES = {
+const PADDLE_V5 = "https://cdn.jsdelivr.net/npm/pdfmarkdown-ppocrv5-models@1.0.0/";
+const PADDLE_V6S = "https://cdn.jsdelivr.net/npm/@arcships/light-ocr-model-ppocrv6-small@0.3.4/bundle/";
+const PADDLE_V6T = "https://cdn.jsdelivr.net/npm/@arcships/light-ocr-model-ppocrv6-tiny@0.1.0/bundle/";
+/** The runtime every model needs. */
+const PADDLE_RUNTIME = {
   "ort.wasm.min.js": PADDLE_ORT + "ort.wasm.min.js",
   "ort-wasm-simd-threaded.mjs": PADDLE_ORT + "ort-wasm-simd-threaded.mjs",
   "ort-wasm-simd-threaded.wasm": PADDLE_ORT + "ort-wasm-simd-threaded.wasm",
-  "PP-OCRv5_mobile_det_infer.ort": PADDLE_MODELS + "detection/PP-OCRv5_mobile_det_infer.ort",
-  "PP-OCRv5_mobile_rec_infer.onnx": PADDLE_MODELS + "recognition/PP-OCRv5_mobile_rec_infer.onnx",
-  "ppocrv5_dict.txt": PADDLE_MODELS + "recognition/ppocrv5_dict.txt",
 };
+/**
+ * The models: their files (stored under these names), the dictionary's format and the detection's
+ * thresholds (from each model's own configuration). `mb`: the download, runtime included. On
+ * typewritten pages v6 small read best, v6 tiny about as well as v5 in less than half the time.
+ */
+const PADDLE_MODELS = {
+  v5: {
+    name: "PP-OCRv5 mobile", mb: 35,
+    files: { det: ["PP-OCRv5_mobile_det_infer.ort", PADDLE_V5 + "detection/PP-OCRv5_mobile_det_infer.ort"], rec: ["PP-OCRv5_mobile_rec_infer.onnx", PADDLE_V5 + "recognition/PP-OCRv5_mobile_rec_infer.onnx"], dict: ["ppocrv5_dict.txt", PADDLE_V5 + "recognition/ppocrv5_dict.txt"] },
+    dict: "lines", det: { thresh: 0.3, box: 0.6, unclip: 1.5 },
+  },
+  v6s: {
+    name: "PP-OCRv6 small", mb: 45,
+    files: { det: ["PP-OCRv6_small_det.onnx", PADDLE_V6S + "det/inference.onnx"], rec: ["PP-OCRv6_small_rec.onnx", PADDLE_V6S + "rec/inference.onnx"], dict: ["ppocrv6_small_dict.json", PADDLE_V6S + "rec/dictionary.json"] },
+    dict: "json", det: { thresh: 0.3, box: 0.6, unclip: 1.5 },
+  },
+  v6t: {
+    name: "PP-OCRv6 tiny", mb: 20, missing: ["jpn"], // (its dictionary has no kana)
+    files: { det: ["PP-OCRv6_tiny_det.onnx", PADDLE_V6T + "det/inference.onnx"], rec: ["PP-OCRv6_tiny_rec.onnx", PADDLE_V6T + "rec/inference.onnx"], dict: ["ppocrv6_tiny_dict.json", PADDLE_V6T + "rec/dictionary.json"] },
+    dict: "json", det: { thresh: 0.2, box: 0.45, unclip: 1.4 },
+  },
+};
+/** Every PaddleOCR file by its stored name (the offline set lists them). */
+const PADDLE_FILES = Object.assign({}, PADDLE_RUNTIME, ...Object.values(PADDLE_MODELS).map((m) => Object.fromEntries(Object.values(m.files))));
+/** The stored names a model needs, runtime included. */
+const paddleNames = (model) => Object.keys(PADDLE_RUNTIME).concat(Object.values((PADDLE_MODELS[model] || PADDLE_MODELS.v5).files).map(([name]) => name));
 // The accented letters of each language: PP-OCRv5 is unsure of small accents (ä read as a), and
 // gives accents a language does not have (à in Swedish): those are decided between the letters
 // the document's languages use.
@@ -23906,14 +23965,21 @@ const PADDLE_ACCENTS = {
 // Tesseract language codes whose script PP-OCRv5 does not read.
 const PADDLE_UNSUPPORTED = new Set(["ukr", "rus", "bel", "bul", "srp", "mkd", "kaz", "ell", "ara", "fas", "heb", "hin", "ben", "tha", "kor", "kat", "hye", "amh"]);
 
-/** The PaddleOCR files: kept from an earlier download or the offline set, or fetched now (and kept). */
-async function paddleFiles(onProgress) {
-  const out = {}, names = Object.keys(PADDLE_FILES);
+/** The chosen languages a model does not read (their script is not in its dictionary). */
+const paddleUnsupported = (langs, model) => langs.filter((l) => PADDLE_UNSUPPORTED.has(l) || ((PADDLE_MODELS[model] || {}).missing || []).includes(l));
+/** The models as <option>s (with the size of their download), optionally after a "none" entry. */
+const paddleModelOptions = (selected, none = "") => (none ? `<option value="">${escapeHtml(none)}</option>` : "") + Object.entries(PADDLE_MODELS)
+  .map(([id, m]) => `<option value="${id}"${id === selected ? " selected" : ""}>${escapeHtml(t("ocr.paddleModel", { name: m.name, mb: m.mb }))}</option>`).join("");
+
+/** A model's files (and the runtime): kept from an earlier download or the offline set, or fetched now (and kept). */
+async function paddleFiles(model, onProgress) {
+  const out = {}, names = paddleNames(model);
   let done = 0;
   for (const name of names) {
     let buf = await idbGet(`paddle:${name}`); // (from an earlier download, or from the offline set)
     if (!buf) {
-      const res = await fetch(PADDLE_FILES[name]);
+      let res = await fetch(PADDLE_FILES[name]).catch(() => null);
+      if (!res || !res.ok) res = await fetch(PADDLE_FILES[name].replace("https://cdn.jsdelivr.net/npm/", "https://unpkg.com/")); // (the same npm package from a second CDN)
       if (!res.ok) throw new Error(`PaddleOCR file not available (${name}: HTTP ${res.status})`);
       const total = Number(res.headers.get("content-length")) || 0, reader = res.body.getReader(), parts = [];
       let got = 0;
@@ -23935,7 +24001,7 @@ async function paddleFiles(onProgress) {
 
 /** The worker's program (run from a blob URL). */
 function paddleWorkerMain() {
-  let ort = null, det = null, rec = null, dict = null, classOf = null, accents = "";
+  let ort = null, det = null, rec = null, dict = null, classOf = null, accents = "", SPACE = 0, DET = { thresh: 0.3, box: 0.6, unclip: 1.5 };
   const baseOf = (c) => c.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   /** A Latin letter decided between the letters the languages use (see PADDLE_ACCENTS). */
   const settle = (ch, p, probs) => {
@@ -23987,24 +24053,24 @@ function paddleWorkerMain() {
     }
     const out = await det.run({ [det.inputNames[0]]: new ort.Tensor("float32", t, [1, 3, H, W]) });
     const prob = out[det.outputNames[0]].data;
-    // Regions of the probability map above 0.3; each a line (or a part of one) when sure enough.
+    // Regions of the probability map above the threshold; each a line (or a part of one) when sure enough.
     const label = new Int32Array(plane), queue = new Int32Array(plane), boxes = [];
     let comp = 0;
     for (let start = 0; start < plane; start++) {
-      if (label[start] || prob[start] <= 0.3) continue;
+      if (label[start] || prob[start] <= DET.thresh) continue;
       comp++;
       let head = 0, tail = 0, sum = 0, mx = 0, my = 0;
       queue[tail++] = start; label[start] = comp;
       while (head < tail) {
         const p = queue[head++], x = p % W, y = (p - x) / W;
         sum += prob[p]; mx += x; my += y;
-        if (x > 0 && !label[p - 1] && prob[p - 1] > 0.3) { label[p - 1] = comp; queue[tail++] = p - 1; }
-        if (x < W - 1 && !label[p + 1] && prob[p + 1] > 0.3) { label[p + 1] = comp; queue[tail++] = p + 1; }
-        if (y > 0 && !label[p - W] && prob[p - W] > 0.3) { label[p - W] = comp; queue[tail++] = p - W; }
-        if (y < H - 1 && !label[p + W] && prob[p + W] > 0.3) { label[p + W] = comp; queue[tail++] = p + W; }
+        if (x > 0 && !label[p - 1] && prob[p - 1] > DET.thresh) { label[p - 1] = comp; queue[tail++] = p - 1; }
+        if (x < W - 1 && !label[p + 1] && prob[p + 1] > DET.thresh) { label[p + 1] = comp; queue[tail++] = p + 1; }
+        if (y > 0 && !label[p - W] && prob[p - W] > DET.thresh) { label[p - W] = comp; queue[tail++] = p - W; }
+        if (y < H - 1 && !label[p + W] && prob[p + W] > DET.thresh) { label[p + W] = comp; queue[tail++] = p + W; }
       }
       const n = tail;
-      if (n < 6 || sum / n < 0.6) continue;
+      if (n < 6 || sum / n < DET.box) continue;
       mx /= n; my /= n;
       let cxx = 0, cyy = 0, cxy = 0;
       for (let q = 0; q < n; q++) { const p = queue[q], x = p % W - mx, y = (p - (p % W)) / W - my; cxx += x * x; cyy += y * y; cxy += x * y; }
@@ -24019,7 +24085,7 @@ function paddleWorkerMain() {
       }
       let bw = a1 - a0 + 1, bh = b1 - b0 + 1;
       if (Math.min(bw, bh) < 2) continue;
-      const dd = (bw * bh * 1.5) / (2 * (bw + bh)); // (the model marks a shrunk core of each line: grown back)
+      const dd = (bw * bh * DET.unclip) / (2 * (bw + bh)); // (the model marks a shrunk core of each line: grown back)
       const cu = (a0 + a1) / 2, cv = (b0 + b1) / 2;
       bw += 2 * dd; bh += 2 * dd;
       // (some room above and below: umlaut dots and accents sit above the letters' core)
@@ -24094,8 +24160,9 @@ function paddleWorkerMain() {
         // CTC: the best class per step; repeats and blanks (class 0) fall away. The steps cover
         // the padded width: positions are taken back to the line's own.
         const c = crops[i], steps = Math.min(T, Math.ceil((T * c.Tw) / W) + 1), chars = [];
-        let prev = 0;
+        let prev = 0, sp = 0; // (sp: the highest chance of a space since the last character)
         for (let st = 0; st < steps; st++) {
+          sp = Math.max(sp, d[(bi * T + st) * C + SPACE]);
           let best = 0, bp = -Infinity;
           const off = (bi * T + st) * C;
           for (let q = 0; q < C; q++) { const v = d[off + q]; if (v > bp) { bp = v; best = q; } }
@@ -24103,7 +24170,8 @@ function paddleWorkerMain() {
             let ch = best - 1 < dict.length ? dict[best - 1] : " ", p = bp;
             if (ch === "\u3000") ch = " ";
             [ch, p] = settle(ch, p, d.subarray(off, off + C));
-            chars.push({ ch, x: Math.min(1, ((st + 0.5) / T) * (W / c.Tw)), p: Math.min(1, p) });
+            chars.push({ ch, x: Math.min(1, ((st + 0.5) / T) * (W / c.Tw)), p: Math.min(1, p), sp });
+            sp = 0;
           }
           prev = best;
         }
@@ -24123,6 +24191,17 @@ function paddleWorkerMain() {
     const lineLen = (r) => r.chars.length, heightOf = (r) => (r.rows.base - r.rows.top) * Math.hypot(r.corners[3][0] - r.corners[0][0], r.corners[3][1] - r.corners[0][1]);
     const tall = read.filter((r) => lineLen(r) >= 12).map(heightOf).sort((a, b) => a - b), usual = tall.length ? tall[tall.length >> 1] : 0;
     for (const r of read) {
+      // A word space the model left out (PP-OCRv6 does so now and then on wide typewriter spacing):
+      // a gap of three usual character steps, or a little less when a space was half expected.
+      const inner = [];
+      for (let i = 1; i < r.chars.length; i++) if (r.chars[i].ch !== " " && r.chars[i - 1].ch !== " ") inner.push(r.chars[i].x - r.chars[i - 1].x);
+      if (inner.length >= 4) {
+        const usualStep = inner.slice().sort((a, b) => a - b)[inner.length >> 1];
+        for (let i = r.chars.length - 1; i > 0; i--) {
+          const a = r.chars[i - 1], b = r.chars[i], q = (b.x - a.x) / usualStep;
+          if (a.ch !== " " && b.ch !== " " && (q >= 3 || (q >= 2.2 && b.sp >= 0.1))) r.chars.splice(i, 0, { ch: " ", x: (a.x + b.x) / 2, p: 1, sp: 0 });
+        }
+      }
       const text = r.chars.map((c) => c.ch).join("");
       if (!text.trim()) continue;
       const [tl, tr, , bl] = r.corners;
@@ -24169,12 +24248,15 @@ function paddleWorkerMain() {
         ort.env.wasm.numThreads = 1; // (threads need a cross-origin isolated page)
         ort.env.wasm.wasmPaths = { mjs: url("ort-wasm-simd-threaded.mjs", "text/javascript"), wasm: url("ort-wasm-simd-threaded.wasm", "application/wasm") };
         const opts = { executionProviders: ["wasm"], graphOptimizationLevel: "all" };
-        det = await ort.InferenceSession.create(new Uint8Array(args.files["PP-OCRv5_mobile_det_infer.ort"]), opts);
-        rec = await ort.InferenceSession.create(new Uint8Array(args.files["PP-OCRv5_mobile_rec_infer.onnx"]), opts);
-        // (one character per line; empty lines are none – copies of the file differ in them; the
-        // space follows the last entry)
-        dict = new TextDecoder().decode(args.files["ppocrv5_dict.txt"]).replace(/\r/g, "").split("\n").filter((l) => l !== "");
+        det = await ort.InferenceSession.create(new Uint8Array(args.files.det), opts);
+        rec = await ort.InferenceSession.create(new Uint8Array(args.files.rec), opts);
+        if (args.det) DET = args.det;
+        // (PP-OCRv5: one character per line – empty lines are none, copies of the file differ in them;
+        // PP-OCRv6: a JSON list. The space follows the last entry, or is the last entry.)
+        const text = new TextDecoder().decode(args.files.dict);
+        dict = args.dictFormat === "json" ? JSON.parse(text).characters : text.replace(/\r/g, "").split("\n").filter((l) => l !== "");
         classOf = new Map(dict.map((c, i) => [c, i + 1]));
+        SPACE = classOf.has(" ") ? classOf.get(" ") : dict.length + 1; // (PP-OCRv5: the class after its dictionary)
         accents = args.accents || "";
         self.postMessage({ id, result: true });
       } else if (cmd === "read") {
@@ -24187,7 +24269,7 @@ function paddleWorkerMain() {
 }
 
 /** A PaddleOCR worker, ready to read pages: {recognize(blob), terminate()} like a Tesseract worker. */
-async function makePaddleWorker(files, langs = []) {
+async function makePaddleWorker(files, langs = [], model = "v5") {
   const src = `(${paddleWorkerMain.toString()})();`;
   const url = URL.createObjectURL(new Blob([src], { type: "text/javascript" }));
   const worker = new Worker(url);
@@ -24197,10 +24279,11 @@ async function makePaddleWorker(files, langs = []) {
   worker.onerror = (e) => { for (const w of waiting.values()) w.reject(new Error(e.message || "PaddleOCR worker failed")); waiting.clear(); };
   const call = (cmd, args, transfer = []) => new Promise((resolve, reject) => { const id = ++seq; waiting.set(id, { resolve, reject }); worker.postMessage({ id, cmd, args }, transfer); });
   // (each worker gets its own copies: the buffers are transferred)
-  const copy = {};
-  for (const [k, v] of Object.entries(files)) copy[k] = v.slice(0);
+  const m = PADDLE_MODELS[model] || PADDLE_MODELS.v5, copy = {};
+  for (const name of Object.keys(PADDLE_RUNTIME)) copy[name] = files[name].slice(0);
+  for (const [role, [name]] of Object.entries(m.files)) copy[role] = files[name].slice(0);
   const accents = [...new Set(langs.flatMap((l) => [...(PADDLE_ACCENTS[l] || "")]))].join("");
-  await call("init", { files: copy, accents }, Object.values(copy));
+  await call("init", { files: copy, accents, det: m.det, dictFormat: m.dict }, Object.values(copy));
   return {
     async recognize(blob) {
       const img = await imageDataOf(blob);

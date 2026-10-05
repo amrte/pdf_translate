@@ -536,7 +536,7 @@
       <p class="muted small" data-i18n="offline.text"></p>
       <p class="small" id="offlineStatus"></p>
       <div class="field"><span data-i18n="offline.langsTitle"></span><div class="ocr-langs" id="offlineLangs"></div></div>
-      <label class="check" data-i18n-title="offline.paddleTitle"><input type="checkbox" id="offlinePaddle"> <span data-i18n="offline.paddle"></span></label>
+      <label class="field offline-paddle" data-i18n-title="offline.paddleTitle"><span data-i18n="offline.paddle"></span> <select id="offlinePaddle"></select></label>
       <div class="wf-row offline-actions">
         <button type="button" class="btn primary" id="offlineZipBtn" data-i18n="offline.zip"></button>
         <button type="button" class="btn" id="offlineLoadZip" data-i18n="offline.loadZip"></button>
@@ -801,6 +801,7 @@
       <div class="ocr-engines">
         <label class="check" data-i18n-title="ocr.engineTessTitle"><input type="radio" name="ocrEngine" id="ocrEngineTess" value="tesseract" checked> <span data-i18n="ocr.engineTess">Tesseract</span></label>
         <label class="check" data-i18n-title="ocr.enginePaddleTitle"><input type="radio" name="ocrEngine" id="ocrEnginePaddle" value="paddle"> <span data-i18n="ocr.enginePaddle">PaddleOCR</span></label>
+        <select id="ocrPaddleModel" data-i18n-title="ocr.paddleModelTitle"></select>
       </div>
       <p class="muted small" id="ocrEngineNote"></p></div>
     <div class="field"><span data-i18n="ocr.langs">Languages in the document</span><div class="ocr-langs" id="ocrLangs"></div></div>

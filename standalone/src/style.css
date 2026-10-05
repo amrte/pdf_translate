@@ -1059,7 +1059,9 @@ body.seg-dragging, body.seg-dragging * { cursor: grabbing !important; user-selec
 .seg-drop[hidden] { display: none; }
 
 /* ---------- v2.40: the OCR engine choice ---------- */
-.ocr-engines { display: flex; gap: 18px; flex-wrap: wrap; }
+.ocr-engines { display: flex; gap: 18px; flex-wrap: wrap; align-items: center; }
+.ocr-engines select { max-width: 100%; }
+.offline-paddle select { margin-left: 6px; max-width: 100%; }
 #ocrEngineNote { margin: 4px 0 0; }
 #ocrEngineNote:empty { display: none; }
 #ocrEngineNote.warn { color: #c0392b; }

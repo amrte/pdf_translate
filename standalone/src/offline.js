@@ -93,10 +93,10 @@ async function fetchWithProgress(url, onProgress) {
 }
 
 /** Fetch the library files (both Tesseract builds when `allCores`) and the language data. */
-async function fetchLibrarySet(langs, allCores, paddle = false) {
+async function fetchLibrarySet(langs, allCores, paddle = "") {
   const names = Object.keys(LIB_FILES).filter((n) => allCores || (n !== CORE_SIMD && n !== CORE_PLAIN) || n === OCR_CORE_FILE);
   const items = names.map((n) => [n, LIB_FILES[n]]).concat(langs.map((l) => [`${l}.traineddata.gz`, langUrl(l)]))
-    .concat(paddle ? Object.entries(PADDLE_FILES) : []); // (PaddleOCR, when ticked: about 35 MB)
+    .concat(paddle ? paddleNames(paddle).map((n) => [n, PADDLE_FILES[n]]) : []); // (PaddleOCR with the chosen model: 20–45 MB)
   const data = {}, langData = {}, paddleData = {};
   let total = 0;
   for (const [i, [name, url]] of items.entries()) {
@@ -164,7 +164,7 @@ async function activateLibs(data, langData, remember, source) {
 async function storePaddleFiles(paddleData) {
   for (const [name, buf] of Object.entries(paddleData || {})) await idbPut(buf, `paddle:${name}`, true);
 }
-async function downloadOfflineZip(langs, paddle = false) {
+async function downloadOfflineZip(langs, paddle = "") {
   try {
     const { data, langData, paddleData, total } = await fetchLibrarySet(langs, true, paddle);
     busy(t("offline.zipping"));
@@ -201,9 +201,11 @@ auf Ihrem Computer; die Dateinamen bitte nicht ändern.
   <sprache>.traineddata.gz           Sprachdaten der Texterkennung, eine je Sprache (deu, eng, fra …)
   libheif-bundle.mjs                 liest iPhone-Fotos (HEIC/HEIF)
   ort.wasm.min.js, ort-wasm-simd-threaded.mjs/.wasm   ONNX Runtime für PaddleOCR (wenn gewählt)
-  PP-OCRv5_mobile_det_infer.ort      PaddleOCR: findet die Textzeilen
-  PP-OCRv5_mobile_rec_infer.onnx     PaddleOCR: liest die Zeilen
-  ppocrv5_dict.txt                   PaddleOCR: die Zeichen, die es kennt
+  PP-OCRv5_mobile_det_infer.ort      PaddleOCR (PP-OCRv5): findet die Textzeilen
+  PP-OCRv5_mobile_rec_infer.onnx     PaddleOCR (PP-OCRv5): liest die Zeilen
+  ppocrv5_dict.txt                   PaddleOCR (PP-OCRv5): die Zeichen, die es kennt
+  PP-OCRv6_small_det/_rec.onnx, ppocrv6_small_dict.json   dasselbe für PP-OCRv6 small (wenn gewählt)
+  PP-OCRv6_tiny_det/_rec.onnx, ppocrv6_tiny_dict.json     dasselbe für PP-OCRv6 tiny (wenn gewählt)
 
 EN: This ZIP holds the document engine (MuPDF), text recognition (Tesseract), language data and the
 reader for iPhone photos (libheif). Without internet: open Kameleon, then choose this ZIP file (or
@@ -220,13 +222,15 @@ computer; please do not rename them.
   <language>.traineddata.gz          language data for text recognition, one per language (deu, eng, fra …)
   libheif-bundle.mjs                 reads iPhone photos (HEIC/HEIF)
   ort.wasm.min.js, ort-wasm-simd-threaded.mjs/.wasm   ONNX Runtime for PaddleOCR (when chosen)
-  PP-OCRv5_mobile_det_infer.ort      PaddleOCR: finds the text lines
-  PP-OCRv5_mobile_rec_infer.onnx     PaddleOCR: reads the lines
-  ppocrv5_dict.txt                   PaddleOCR: the characters it knows
+  PP-OCRv5_mobile_det_infer.ort      PaddleOCR (PP-OCRv5): finds the text lines
+  PP-OCRv5_mobile_rec_infer.onnx     PaddleOCR (PP-OCRv5): reads the lines
+  ppocrv5_dict.txt                   PaddleOCR (PP-OCRv5): the characters it knows
+  PP-OCRv6_small_det/_rec.onnx, ppocrv6_small_dict.json   the same for PP-OCRv6 small (when chosen)
+  PP-OCRv6_tiny_det/_rec.onnx, ppocrv6_tiny_dict.json     the same for PP-OCRv6 tiny (when chosen)
 `;
 
 /** Store the set in the browser directly (fetched from the internet). */
-async function storeOfflineLibs(langs, paddle = false) {
+async function storeOfflineLibs(langs, paddle = "") {
   try {
     const { data, langData, paddleData } = await fetchLibrarySet(langs, false, paddle);
     busy(t("offline.storing"));
@@ -315,14 +319,22 @@ function renderOfflineLangs() {
     `<label class="check"><input type="checkbox" value="${l}"${on.has(l) ? " checked" : ""}> ${escapeHtml(t("ocrlang." + l))}</label>`).join("");
 }
 
+/** The PaddleOCR choice of the offline set: none, or one model (the one OCR uses, at first). */
+function renderOfflinePaddle() {
+  let saved = {};
+  try { saved = JSON.parse(localStorage.getItem(LS_OCR) || "{}"); } catch (_) { /* default */ }
+  const sel = $("#offlinePaddle"), current = sel.options.length ? sel.value : (saved.engine === "paddle" ? saved.paddleModel || "v5" : "");
+  sel.innerHTML = paddleModelOptions(current, t("offline.paddleNone"));
+}
+
 const chosenOfflineLangs = () => [...document.querySelectorAll("#offlineLangs input:checked")].map((i) => i.value);
 
 function initOffline() {
-  renderOfflineLangs();
-  document.addEventListener("languagechange", () => { renderOfflineLangs(); if ($("#helpDialog").open) refreshOfflineStatus(); });
+  renderOfflineLangs(); renderOfflinePaddle();
+  document.addEventListener("languagechange", () => { renderOfflineLangs(); renderOfflinePaddle(); if ($("#helpDialog").open) refreshOfflineStatus(); });
   const closeHelp = () => { if ($("#helpDialog").open) $("#helpDialog").close("cancel"); }; // (the progress box would be hidden behind it)
-  $("#offlineZipBtn").addEventListener("click", () => { const langs = chosenOfflineLangs(), paddle = $("#offlinePaddle").checked; closeHelp(); downloadOfflineZip(langs, paddle); });
-  $("#offlineDownload").addEventListener("click", () => { const langs = chosenOfflineLangs(), paddle = $("#offlinePaddle").checked; closeHelp(); storeOfflineLibs(langs, paddle); });
+  $("#offlineZipBtn").addEventListener("click", () => { const langs = chosenOfflineLangs(), paddle = $("#offlinePaddle").value; closeHelp(); downloadOfflineZip(langs, paddle); });
+  $("#offlineDownload").addEventListener("click", () => { const langs = chosenOfflineLangs(), paddle = $("#offlinePaddle").value; closeHelp(); storeOfflineLibs(langs, paddle); });
   $("#offlineRemove").addEventListener("click", () => removeOfflineLibs());
   const pick = (input) => (e) => { e.preventDefault(); e.stopPropagation(); input.value = ""; input.click(); };
   $("#offlineLoadZip").addEventListener("click", pick($("#offlineZip")));

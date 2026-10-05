@@ -4,6 +4,11 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.41
+
+- Text recognition: PaddleOCR now offers three models to choose in the OCR dialog – **PP-OCRv5 mobile** (as before, about 35 MB), **PP-OCRv6 small** (the most accurate: no wrong words on both typewritten test pages, and on Swedish print it keeps å, ä and ö where v5 lost them; about 45 MB, a little slower) and **PP-OCRv6 tiny** (about 20 MB and more than twice as fast as v5, as good on the typewritten pages and better on Swedish; it does not read Japanese). Each model is fetched the first time it is used and kept in the browser; the note under the choice says whether it is already there. "Offline use" includes the model you pick (or none). If jsDelivr cannot deliver a file, it is fetched from unpkg instead.
+- PaddleOCR: a word space the model left out on widely spaced typewriter text is put back (from the gap between the letters).
+
 ## 2.40
 
 - Text recognition: a second engine, **PaddleOCR** (PP-OCRv5), to choose in the OCR dialog next to Tesseract. It runs in the browser (ONNX Runtime, WebAssembly) and offline: its files (about 35 MB) are fetched once and kept in the browser, and "Offline use" can include them in the ZIP or the stored set ("Include PaddleOCR"). It reads Latin script (German, Swedish, French …), Chinese and Japanese – not Cyrillic, Greek or Arabic (the dialog says so). On typewritten pages it was clearly more accurate in tests (0–1 wrong words of 104, Tesseract 2–5); on clean print both are about equally good, and Tesseract stays the default. The chosen languages decide umlauts and accents (an unsure "a" becomes "ä" when the second reading says so; an accent a language does not have is replaced). Its results go through the same steps as Tesseract's: straightening, paragraphs, uncertain words, searchable PDF.
