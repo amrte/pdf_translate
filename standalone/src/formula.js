@@ -536,23 +536,36 @@ async function addFormulaFrame(page, box) {
   const el = document.querySelector(`.page .box[data-id="${frame.id}"]`);
   if (el) segBarShow(el);
   if (frameAutoTex()) await readLatexFor([frame.id], true); // (chosen in the bar below the page: every frame read at once)
+  frameHintCount();
   return true;
 }
 
 /* ---- the bar below the page while the frame tool is on: what to do, "read at once", Done */
 const LS_AUTOTEX = "pdftr:frame-autotex";
 const frameAutoTex = () => { try { return localStorage.getItem(LS_AUTOTEX) !== "0"; } catch (_) { return true; } }; // (on unless switched off)
+/** The frames without LaTeX yet. */
+const framesToRead = () => (state.doc ? state.doc.segments.filter((s) => s.frame && !state.latex[s.id]) : []);
 function frameHintShow(on) {
   const bar = $("#frameHint");
   if (!bar) return;
   bar.hidden = !on;
   if (on) $("#frameAutoTex").checked = frameAutoTex();
+  frameHintCount();
+}
+/** The "read all frames" button of the bar: how many frames still have no LaTeX (hidden when none). */
+function frameHintCount() {
+  const b = $("#frameTexAll"), bar = $("#frameHint");
+  if (!b || !bar || bar.hidden) return;
+  const n = framesToRead().length;
+  b.hidden = !n;
+  b.textContent = t("fx.texAll", { n });
 }
 (function initFrameHint() {
   const cb = $("#frameAutoTex");
   if (!cb) return;
   cb.addEventListener("change", () => { try { localStorage.setItem(LS_AUTOTEX, cb.checked ? "1" : "0"); } catch (_) { /* storage blocked */ } });
   $("#frameDone").addEventListener("click", () => setTool("select"));
+  $("#frameTexAll").addEventListener("click", () => readLatexFor(framesToRead().map((s) => s.id)).then(frameHintCount));
 })();
 /** The frame removed: the segments it covered come back in its place. */
 function removeFormulaFrame(id, quiet = false) {
@@ -767,10 +780,21 @@ function aiFrames() {
   const to = Math.min(n, Math.max(from + 1, Number($("#aiTo").value) || n)) - 1;
   return state.doc.segments.filter((s) => s.frame && s.page >= from && s.page <= to && (!$("#aiOnlyTodo").checked || !state.latex[s.id]));
 }
-function fxPromptText(frames, sheets) {
+/**
+ * The formula prompt: for one sheet (`k`), the numbers of that sheet only – the chat may get the
+ * pictures one at a time; for all, the numbers listed per picture, so the AI can match what it got.
+ */
+function fxPromptText(frames, sheets, k = -1) {
   const P = AI_PROMPT[LANG] || AI_PROMPT.en;
   const target = $("#aiTarget").value.trim() || P.target;
-  return [...P.formulas(target, frames.length, Math.max(1, sheets)), "", `${P.formulaList} ${frames.map((s) => `[[${s.id}]]`).join(" ")}`].join("\n");
+  const marks = (ids) => ids.map((id) => `[[${id}]]`).join(" ");
+  const total = aiFx.sheets.length;
+  if (k >= 0 && aiFx.sheets[k]) {
+    const ids = aiFx.sheets[k].ids;
+    return [...P.formulas(target, ids.length, 1), ...(total > 1 ? ["", P.formulaPart(k + 1, total)] : []), "", `${P.formulaList} ${marks(ids)}`].join("\n");
+  }
+  const list = total > 1 ? aiFx.sheets.map((sh, i) => `${P.picture(i + 1)} ${marks(sh.ids)}`).join("\n") : marks(frames.map((s) => s.id));
+  return [...P.formulas(target, frames.length, Math.max(1, sheets)), "", P.formulaList, list].join("\n");
 }
 /** The short form of the prompt written on top of every sheet. */
 function fxSheetNote() {
@@ -818,7 +842,7 @@ async function copySheet(i) {
   const blob = await sheetBlob(sh);
   try {
     if (!navigator.clipboard || !navigator.clipboard.write || typeof ClipboardItem === "undefined") throw new Error("no picture clipboard");
-    const text = new Blob([fxPromptText(aiFrames(), aiFx.sheets.length)], { type: "text/plain" });
+    const text = new Blob([fxPromptText(aiFrames(), aiFx.sheets.length, i)], { type: "text/plain" });
     try { await navigator.clipboard.write([new ClipboardItem({ "text/plain": text, "image/png": blob })]); }
     catch (_) { await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]); }
     toast(t("ai.fxCopied", { k: i + 1, total: aiFx.sheets.length }), "ok");

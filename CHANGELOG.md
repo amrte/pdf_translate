@@ -4,6 +4,11 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.54
+
+- **All frames read at once:** with "read as LaTeX at once" switched off, frames are drawn first and then read together – "Read n frames" in the bar below the page reads every frame that has no LaTeX yet.
+- **A prompt per picture:** a copied picture brings a prompt that lists only the numbers of the formulas on it (and says which picture of how many it is), so sending one picture at a time – when the chat takes only a few – no longer mismatches the numbers. "Copy formula prompt" lists the numbers per picture.
+
 ## 2.53
 
 - **Quieter frames:** drawing a formula frame no longer scrolls the page and shows no message; its toolbar above the frame is the confirmation ("Remove frame" undoes). Reading it as LaTeX at once reports only when a formula could not be read reliably.
