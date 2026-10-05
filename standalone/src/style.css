@@ -224,6 +224,8 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); ou
 .seg.rep-locked { opacity: .85; }
 .seg.rep-locked textarea { background: transparent; cursor: default; }
 .seg-src { padding: 5px 10px 7px; white-space: pre-wrap; word-break: break-word; cursor: pointer; }
+.seg-latex { display: flex; align-items: flex-start; gap: 6px; padding: 0 10px 7px; flex-wrap: wrap; }
+.seg-latex-code { flex: 1 1 200px; font: 12px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: var(--surface-2); border: 1px solid var(--border); border-radius: 4px; padding: 3px 6px; word-break: break-all; white-space: pre-wrap; user-select: all; }
 .seg textarea {
   display: block; width: 100%; resize: vertical; min-height: 38px; border: 0; border-top: 1px solid var(--border);
   border-radius: 0 0 var(--radius) var(--radius); background: var(--surface-2); padding: 8px 10px; line-height: 1.45;

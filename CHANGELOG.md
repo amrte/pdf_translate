@@ -4,6 +4,13 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.42
+
+- **Formulas on scanned pages:** OCR turned formulas into garbled text that was then "translated", and a fraction fell apart into several lines. Now a formula becomes one segment of its own: it is kept as it is (the scan stays, nothing is painted over) and not translated. It is recognised by its signs (a line without running text with =, ·, √, Σ, Greek letters …; the numerator and denominator of a fraction above each other are joined), and more reliably with the new option **"Find formulas with a layout model"** in the OCR dialog (about 7 MB, loaded once): it finds displayed formulas on the page, even when OCR could hardly read them; lists of symbols with their meaning stay translatable text.
+- **Formulas as LaTeX:** the new option **"Read formulas as LaTeX"** in the OCR dialog reads every formula found with pix2tex (about 100 MB, loaded once and kept in the browser; 1–3 s per formula). It works in PDFs with text too: a formula's card has **"Read as LaTeX"** and **"Read all … formulas"**, the bar above the segment a **TeX** button; the pieces a PDF sets a formula in are read together, as one formula. The LaTeX is shown in the card, **"Copy LaTeX"** puts it on the clipboard, and it is kept with the document. Readings the model is not sure of are left out.
+- "Working offline" can include the formula models (only finding, or finding and reading); they can also be downloaded by hand and chosen there.
+- The model files are stored in the repository's `models/` folder with their licences (layout model: RapidLayout/PaddleDetection, Apache-2.0; pix2tex: MIT).
+
 ## 2.41
 
 - Text recognition: PaddleOCR now offers three models to choose in the OCR dialog – **PP-OCRv5 mobile** (as before, about 35 MB), **PP-OCRv6 small** (the most accurate: no wrong words on both typewritten test pages, and on Swedish print it keeps å, ä and ö where v5 lost them; about 45 MB, a little slower) and **PP-OCRv6 tiny** (about 20 MB and more than twice as fast as v5, as good on the typewritten pages and better on Swedish; it does not read Japanese). Each model is fetched the first time it is used and kept in the browser; the note under the choice says whether it is already there. "Offline use" includes the model you pick (or none). If jsDelivr cannot deliver a file, it is fetched from unpkg instead.

@@ -93,19 +93,25 @@ async function fetchWithProgress(url, onProgress) {
 }
 
 /** Fetch the library files (both Tesseract builds when `allCores`) and the language data. */
-async function fetchLibrarySet(langs, allCores, paddle = "") {
+async function fetchLibrarySet(langs, allCores, paddle = "", fx = "") {
   const names = Object.keys(LIB_FILES).filter((n) => allCores || (n !== CORE_SIMD && n !== CORE_PLAIN) || n === OCR_CORE_FILE);
+  // (PaddleOCR with the chosen model: 20–45 MB; the formula models: 7 MB to find, 140 MB more to
+  // read – the ONNX runtime once for both)
+  const models = [...new Set((paddle ? paddleNames(paddle) : []).concat(fx ? Object.keys(PADDLE_RUNTIME).concat(FORMULA_FIND, fx === "all" ? FORMULA_READ : []) : []))];
   const items = names.map((n) => [n, LIB_FILES[n]]).concat(langs.map((l) => [`${l}.traineddata.gz`, langUrl(l)]))
-    .concat(paddle ? paddleNames(paddle).map((n) => [n, PADDLE_FILES[n]]) : []); // (PaddleOCR with the chosen model: 20–45 MB)
+    .concat(models.map((n) => [n, modelUrls(n)]));
   const data = {}, langData = {}, paddleData = {};
   let total = 0;
   for (const [i, [name, url]] of items.entries()) {
     const show = (got) => busy(t("offline.fetching", { i: i + 1, n: items.length, name, mb: mbOf(got) }));
     show(0);
-    const buf = await fetchWithProgress(url, show);
+    let buf = null;
+    for (const [k, u] of (Array.isArray(url) ? url : [url]).entries()) { // (the first source that delivers)
+      try { buf = await fetchWithProgress(u, show); break; } catch (err) { if (k === (Array.isArray(url) ? url.length : 1) - 1) throw err; }
+    }
     total += buf.byteLength;
     const m = /^([a-z_]+)\.traineddata\.gz$/.exec(name);
-    if (m) langData[m[1]] = buf; else if (PADDLE_FILES[name]) paddleData[name] = buf; else data[name] = buf;
+    if (m) langData[m[1]] = buf; else if (PADDLE_FILES[name] || FORMULA_FILES[name]) paddleData[name] = buf; else data[name] = buf;
   }
   return { data, langData, paddleData, total };
 }
@@ -164,9 +170,9 @@ async function activateLibs(data, langData, remember, source) {
 async function storePaddleFiles(paddleData) {
   for (const [name, buf] of Object.entries(paddleData || {})) await idbPut(buf, `paddle:${name}`, true);
 }
-async function downloadOfflineZip(langs, paddle = "") {
+async function downloadOfflineZip(langs, paddle = "", fx = "") {
   try {
-    const { data, langData, paddleData, total } = await fetchLibrarySet(langs, true, paddle);
+    const { data, langData, paddleData, total } = await fetchLibrarySet(langs, true, paddle, fx);
     busy(t("offline.zipping"));
     const entries = Object.entries(data).map(([name, buf]) => ({ name, data: new Uint8Array(buf) }))
       .concat(Object.entries(langData).map(([code, buf]) => ({ name: `${code}.traineddata.gz`, data: new Uint8Array(buf), store: true })))
@@ -206,6 +212,8 @@ auf Ihrem Computer; die Dateinamen bitte nicht ändern.
   ppocrv5_dict.txt                   PaddleOCR (PP-OCRv5): die Zeichen, die es kennt
   PP-OCRv6_small_det/_rec.onnx, ppocrv6_small_dict.json   dasselbe für PP-OCRv6 small (wenn gewählt)
   PP-OCRv6_tiny_det/_rec.onnx, ppocrv6_tiny_dict.json     dasselbe für PP-OCRv6 tiny (wenn gewählt)
+  layout_cdla.onnx                   findet Formeln auf gescannten Seiten (wenn gewählt)
+  encoder.onnx, decoder.onnx, tokenizer.json   pix2tex: liest Formeln als LaTeX (wenn gewählt)
 
 EN: This ZIP holds the document engine (MuPDF), text recognition (Tesseract), language data and the
 reader for iPhone photos (libheif). Without internet: open Kameleon, then choose this ZIP file (or
@@ -227,12 +235,14 @@ computer; please do not rename them.
   ppocrv5_dict.txt                   PaddleOCR (PP-OCRv5): the characters it knows
   PP-OCRv6_small_det/_rec.onnx, ppocrv6_small_dict.json   the same for PP-OCRv6 small (when chosen)
   PP-OCRv6_tiny_det/_rec.onnx, ppocrv6_tiny_dict.json     the same for PP-OCRv6 tiny (when chosen)
+  layout_cdla.onnx                   finds formulas on scanned pages (when chosen)
+  encoder.onnx, decoder.onnx, tokenizer.json   pix2tex: reads formulas as LaTeX (when chosen)
 `;
 
 /** Store the set in the browser directly (fetched from the internet). */
-async function storeOfflineLibs(langs, paddle = "") {
+async function storeOfflineLibs(langs, paddle = "", fx = "") {
   try {
-    const { data, langData, paddleData } = await fetchLibrarySet(langs, false, paddle);
+    const { data, langData, paddleData } = await fetchLibrarySet(langs, false, paddle, fx);
     busy(t("offline.storing"));
     await activateLibs(data, langData, true, "browser");
     await storePaddleFiles(paddleData);
@@ -254,7 +264,7 @@ async function useLibraryFiles(files, remember) {
     const buf = bytes instanceof ArrayBuffer ? bytes : bytes.slice().buffer;
     const base = name.split(/[\\/]/).pop().toLowerCase();
     if (LIB_FILES[base]) data[base] = buf;
-    const pk = Object.keys(PADDLE_FILES).find((k) => k.toLowerCase() === base); // (PaddleOCR, if the set has it)
+    const pk = Object.keys(PADDLE_FILES).concat(Object.keys(FORMULA_FILES)).find((k) => k.toLowerCase() === base); // (PaddleOCR and the formula models, if the set has them)
     if (pk) paddleData[pk] = buf;
     const m = /^([a-z_]+)\.traineddata(\.gz)?$/.exec(base);
     if (m) langData[m[1]] = buf;
@@ -285,7 +295,7 @@ async function useLibraryFiles(files, remember) {
 
 async function removeOfflineLibs() {
   for (const name of Object.keys(LIB_FILES)) await idbDel(libKey(name));
-  for (const name of Object.keys(PADDLE_FILES)) await idbDel(`paddle:${name}`);
+  for (const name of Object.keys(PADDLE_FILES).concat(Object.keys(FORMULA_FILES))) await idbDel(`paddle:${name}`);
   await idbDel(libKey("manifest"));
   if (!offlineSource) offlineLibsPromise = null;
   toast(t("offline.removed"), "ok");
@@ -327,14 +337,23 @@ function renderOfflinePaddle() {
   sel.innerHTML = paddleModelOptions(current, t("offline.paddleNone"));
 }
 
+/** The formula models in the offline set: none, the one that finds them, or both. */
+function renderOfflineFormulas() {
+  let saved = {};
+  try { saved = JSON.parse(localStorage.getItem(LS_OCR) || "{}"); } catch (_) { /* default */ }
+  const sel = $("#offlineFormulas"), current = sel.options.length ? sel.value : saved.fxRead ? "all" : saved.fxFind ? "find" : "";
+  sel.innerHTML = [["", t("offline.paddleNone")], ["find", t("offline.fxFind", { mb: FORMULA_MB.find })], ["all", t("offline.fxAll", { mb: FORMULA_MB.find + FORMULA_MB.read })]]
+    .map(([v, label]) => `<option value="${v}"${v === current ? " selected" : ""}>${escapeHtml(label)}</option>`).join("");
+}
+
 const chosenOfflineLangs = () => [...document.querySelectorAll("#offlineLangs input:checked")].map((i) => i.value);
 
 function initOffline() {
-  renderOfflineLangs(); renderOfflinePaddle();
-  document.addEventListener("languagechange", () => { renderOfflineLangs(); renderOfflinePaddle(); if ($("#helpDialog").open) refreshOfflineStatus(); });
+  renderOfflineLangs(); renderOfflinePaddle(); renderOfflineFormulas();
+  document.addEventListener("languagechange", () => { renderOfflineLangs(); renderOfflinePaddle(); renderOfflineFormulas(); if ($("#helpDialog").open) refreshOfflineStatus(); });
   const closeHelp = () => { if ($("#helpDialog").open) $("#helpDialog").close("cancel"); }; // (the progress box would be hidden behind it)
-  $("#offlineZipBtn").addEventListener("click", () => { const langs = chosenOfflineLangs(), paddle = $("#offlinePaddle").value; closeHelp(); downloadOfflineZip(langs, paddle); });
-  $("#offlineDownload").addEventListener("click", () => { const langs = chosenOfflineLangs(), paddle = $("#offlinePaddle").value; closeHelp(); storeOfflineLibs(langs, paddle); });
+  $("#offlineZipBtn").addEventListener("click", () => { const langs = chosenOfflineLangs(), paddle = $("#offlinePaddle").value, fx = $("#offlineFormulas").value; closeHelp(); downloadOfflineZip(langs, paddle, fx); });
+  $("#offlineDownload").addEventListener("click", () => { const langs = chosenOfflineLangs(), paddle = $("#offlinePaddle").value, fx = $("#offlineFormulas").value; closeHelp(); storeOfflineLibs(langs, paddle, fx); });
   $("#offlineRemove").addEventListener("click", () => removeOfflineLibs());
   const pick = (input) => (e) => { e.preventDefault(); e.stopPropagation(); input.value = ""; input.click(); };
   $("#offlineLoadZip").addEventListener("click", pick($("#offlineZip")));

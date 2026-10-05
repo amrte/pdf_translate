@@ -34,6 +34,7 @@ const state = {
   markups: [],        // drawings on the pages (see markup.js)
   outView: null,      // e-books: {pages, boxes} of the laid-out translated book
   overrides: {},      // id -> the user's box, size, font, colour for that field (see tools.js)
+  latex: {},          // id -> the LaTeX read for a formula segment (see formula.js)
   rotations: {},      // page -> degrees the user turned it (PDFs; applied when saving)
 };
 
@@ -621,6 +622,7 @@ function openDocument(doc, bytes) {
 
   loadOverrides();
   loadKinds();
+  loadLatex();
   loadRotations();
   kwLoad();
   fillPageFilter();
@@ -735,6 +737,7 @@ function closeDocument() {
   state.markups = [];
   state.overrides = {};
   state.kinds = {};
+  state.latex = {};
   state.segEdits = [];
   state.rotations = {};
   segIndex.clear();
@@ -1190,6 +1193,7 @@ function makeCard(id) {
     ${repCardHtml(id)}
     ${styleOpen.has(id) && !isBook() ? stylePanelHtml(s) : ""}
     <div class="seg-src">${srcHtml(s)}</div>
+    ${latexRowHtml(s)}
     <textarea rows="1" spellcheck="true" placeholder="${escapeHtml(t(repLocked(id) ? (repGroup(id).mode === "keep" ? "rep.keepPlaceholder" : "rep.oncePlaceholder") : "card.placeholder", { n: repGroup(id)?.lead }))}" aria-label="${escapeHtml(t("card.aria", { n: id }))}"${repLocked(id) ? " readonly" : ""}></textarea>`;
   if (repGroup(id)) el.classList.add(repLocked(id) ? "rep-locked" : "rep-lead");
   el.querySelector("textarea").value = state.translations[id] || "";
@@ -1315,6 +1319,9 @@ function segAction(id, act) {
   else if (act === "split") openSplitDialog(id);
   else if (act === "join") joinWithNext(id);
   else if (act === "editSrc") openSrcDialog(id);
+  else if (act === "latexRead") readLatexFor([id]);
+  else if (act === "latexAll") readLatexFor(formulasToRead());
+  else if (act === "latexCopy") navigator.clipboard?.writeText(latexOf(s)).then(() => toast(t("fx.copied"))).catch(() => toast(t("msg.noClipboard"), "error"));
   segBarRefresh();
 }
 

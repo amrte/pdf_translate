@@ -820,6 +820,7 @@ function groupShapeIsFree(group, line, pageLines) {
 /** Can `line` be appended to a group whose last line is `prev`? */
 function joins(prev, line, pageLines, seps, marginsByRot, blockLines) {
   if (line.rotation !== prev.rotation) return false;
+  if (prev.spans[0].fx || line.spans[0].fx) return false; // (a recognised formula stands alone)
   const axis = prev.rotation === 0 || prev.rotation === 180 ? 1 : 0;
   if (sameBaseline(line, prev)) {
     if (line.standalone || prev.standalone) return false;
@@ -1176,7 +1177,9 @@ function buildSegment(group, pageNo, bounds, id, marginsByRot, pageLines, shaped
     // (little padding at the sides, so that table borders next to the text are not painted over)
     cover: lines.map((l) => { const b = l.bbox, h = b[3] - b[1]; return [b[0] - 0.04 * h, b[1] - 0.12 * h, b[2] + 0.04 * h, b[3] + 0.12 * h].map(round2); }),
   } : null;
-  const formula = isFormula(text, spans);
+  const fx = spans[0].fx; // (a formula found among recognised lines, see formulaRegions)
+  if (fx) bbox = union(bbox, fx.box);
+  const formula = Boolean(fx) || isFormula(text, spans);
   const marks = inlineMarks(spans, info, color, size);
   const prefix = stylePrefix(spans, info, color);
   // Where each line starts, when that is not simply the paragraph's left edge (text flowing
@@ -1195,6 +1198,7 @@ function buildSegment(group, pageNo, bounds, id, marginsByRot, pageLines, shaped
     // formulas, whose layout (fractions, exponents) a reflowed line would destroy.
     skip: !/\p{L}/u.test(text) || formula,
     ...(formula ? { formula: true } : {}),
+    ...(fx && fx.latex ? { latex: fx.latex } : {}),
     bbox: bbox.map(round2),
     color,
     bold: info.bold, italic: info.italic, family: familyFor(info),
@@ -1354,12 +1358,14 @@ function pageLineSet(rawBlocks, seps, protect) {
           for (const sp of line.spans) protect.push(sp.bbox);
           continue;
         }
-        const chunks = chunksOf(line, rot, seps);
-        if (chunks.length) rows.push({ rot, typical: typicalGap(line), chunks });
+        // (a recognised formula stays whole: its pieces stand apart, see formulaRegions)
+        const fx = line.spans[0] && line.spans[0].fx;
+        const chunks = fx ? [line.spans.filter((s) => s.text.trim())].filter((c) => c.length) : chunksOf(line, rot, seps);
+        if (chunks.length) rows.push({ rot, typical: typicalGap(line), chunks, ...(fx ? { fx: true } : {}) });
       }
       rowBlocks.push(rows);
     }
-    const column = splitColumns(rowBlocks.flat());
+    const column = splitColumns(rowBlocks.flat().filter((r) => !r.fx));
     const blocks = [];
     for (const rows of rowBlocks) {
       const lines = [];
@@ -1422,7 +1428,7 @@ function rejoinRowPieces(groups, pageLines, seps) {
   const rot0 = (l) => l.rotation;
   for (let hi = groups.length - 1; hi >= 0; hi--) {
     const h = groups[hi];
-    if (h.length > 2 || !h.every((l) => l.spans[0].ocr)) continue;
+    if (h.length > 2 || !h.every((l) => l.spans[0].ocr && !l.spans[0].fx)) continue;
     const plan = [];
     for (const piece of h) {
       let best = null;
@@ -3255,7 +3261,7 @@ function cardsPdf(args) {
 
 const Engine = {
   init: initEngine, extract: extractDocument, extractPages, build: buildTranslated, renderPNG,
-  detectKind, imageKindOf, imageToPdf, warpPixels, quadMap, detectOrientation, cleanPixels, needsCleaning, findTextLines, findPaper, autoPrepare, keywordsPdf, cardsPdf, openBook, saveBook, extractBook, openLaidOut, mapTranslated, openOffice, officePreviewHtml, ocrToBlocks, sampleColors, refineOcr,
+  detectKind, imageKindOf, imageToPdf, warpPixels, quadMap, detectOrientation, cleanPixels, needsCleaning, findTextLines, findPaper, autoPrepare, keywordsPdf, cardsPdf, openBook, saveBook, extractBook, openLaidOut, mapTranslated, openOffice, officePreviewHtml, ocrToBlocks, formulaRegions, sampleColors, refineOcr,
   open: (bytes) => M.Document.openDocument(bytes, "application/pdf"),
   exportTxt, exportCsv, exportJson, exportXliff, exportDocx, parseImport, parseMarkedText,
 };
@@ -3301,7 +3307,7 @@ function ocrBlocks(blocks, family = "serif") {
         // (no spaces between Chinese / Japanese characters, which Tesseract returns one by one)
         const space = i && !(CJK_RE.test(prev.text.slice(-1)) && CJK_RE.test(w.text[0]));
         return { key: font.name, text: (space ? " " : "") + w.text, bbox: w.bbox, origin: [w.bbox[0], l.base], size: l.size, font,
-          color: l.color, bg: l.bg, ocr: true, gapBefore: gap > 0.4 * l.size ? gap : 0 };
+          color: l.color, bg: l.bg, ocr: true, gapBefore: gap > 0.4 * l.size ? gap : 0, ...(l.fx ? { fx: l.fx } : {}) };
       });
       return { dir: [1, 0], spans, gaps };
     }),
@@ -3498,6 +3504,100 @@ function ocrToBlocks(data, zoom, origin, colors) {
   lines.forEach((l, i) => { l.bold = heavy[i] && (l.words.length <= 6 || (near(i, i - 1) && heavy[i - 1]) || (near(i, i + 1) && heavy[i + 1])); });
   for (const l of lines) delete l.ink;
   return { blocks: lines.length ? [{ lines }] : [], seps };
+}
+
+/**
+ * Formulas among recognised lines (`lines` as ocrToBlocks gives them, page points): what OCR made
+ * of a formula is garbled, and a fraction falls apart into lines of its own. The lines of one
+ * formula become one line marked `fx` ({box}): it is kept as a segment of its own – a formula,
+ * not translated, the scan left as it is. Formulas are
+ * - the `boxes` the layout model found (page points), confirmed by their text: lines with prose
+ *   in them ("ρ  spezifischer Widerstand des Leiters …", a list of symbols) stay text;
+ * - without boxes as well: lines without prose but with math signs (or that OCR could hardly read)
+ *   standing one above the other (numerator, bar, denominator) or alone.
+ * Returns the lines with the formulas' lines replaced (in place of their first line).
+ */
+function formulaRegions(lines, boxes = []) {
+  const box = (l) => [Math.min(...l.words.map((w) => w.bbox[0])), Math.min(...l.words.map((w) => w.bbox[1])), Math.max(...l.words.map((w) => w.bbox[2])), Math.max(...l.words.map((w) => w.bbox[3]))];
+  const textOf = (l) => l.words.map((w) => w.text).join(" ");
+  const prose = (l) => {
+    const t = textOf(l);
+    const words = (t.match(/\p{L}{3,}/gu) || []).filter((w) => !MATH_WORDS.has(w.toLowerCase()) && !/[\u0370-\u03ff]/.test(w));
+    return words.length >= 3 || words.some((w) => w.length >= 6 && /^\p{Lu}?\p{Ll}+$/u.test(w)) && words.length >= 2;
+  };
+  const conf = (l) => l.words.reduce((a, w) => a + w.conf, 0) / l.words.length;
+  const mathy = (l) => {
+    if (prose(l)) return false;
+    const t = textOf(l);
+    if (/[=≈≠≤≥±∓×÷·⋅√∑∏∫∂∞∝∇∆Δ\u0370-\u03ff]/u.test(t) && /\p{L}/u.test(t)) return true;
+    return conf(l) < 45 && t.replace(/\s/g, "").length >= 3 && !/\p{L}{4,}/u.test(t); // (a formula OCR could not read; not a faint word)
+  };
+  const inside = (b, r, tol) => { const cx = (b[0] + b[2]) / 2, cy = (b[1] + b[3]) / 2; return cx >= r[0] - tol && cx <= r[2] + tol && cy >= r[1] - tol && cy <= r[3] + tol; };
+  const taken = new Set(), regions = [], boxSeeds = new Set();
+  const symbolic = (l) => !/\p{L}{3,}/u.test(textOf(l).replace(MATH_FUNC_RE_G, "")) && /\p{L}/u.test(textOf(l));
+  for (const r of boxes) {
+    const members = lines.filter((l) => !taken.has(l) && inside(box(l), r, 0.3 * l.size));
+    if (!members.length) continue;
+    const keep = members.filter((l) => !prose(l));
+    if (!keep.length) continue;
+    // (a box with prose in it – a list of symbols with their meaning: only its other lines that
+    // look like a formula count, and short ones made of symbols ("mm²Ω" over "m") as below)
+    if (keep.length < members.length) { for (const l of keep) if (mathy(l) || symbolic(l)) boxSeeds.add(l); continue; }
+    const group = keep;
+    let reg = r.slice();
+    for (const l of group) { const b = box(l); reg = reg ? [Math.min(reg[0], b[0]), Math.min(reg[1], b[1]), Math.max(reg[2], b[2]), Math.max(reg[3], b[3])] : b; taken.add(l); }
+    regions.push({ box: reg, lines: group });
+  }
+  // Without the model (or what it missed): lines that look like a formula, the ones stacked above
+  // each other joined (a fraction's parts overlap sideways and follow closely).
+  const cand = lines.filter((l) => !taken.has(l) && (mathy(l) || boxSeeds.has(l) || (l.words.length <= 2 && symbolic(l))));
+  const seeds = cand.filter((l) => mathy(l) || boxSeeds.has(l));
+  for (const seed of seeds) {
+    if (taken.has(seed)) continue;
+    const group = [seed];
+    taken.add(seed);
+    let reg = box(seed);
+    for (let grown = true; grown;) {
+      grown = false;
+      for (const l of cand) {
+        if (taken.has(l)) continue;
+        const b = box(l), h = Math.max(l.size, seed.size);
+        const overlapX = Math.min(b[2], reg[2]) - Math.max(b[0], reg[0]);
+        const gapY = Math.max(b[1] - reg[3], reg[1] - b[3]);
+        if (overlapX > 0.3 * Math.min(b[2] - b[0], reg[2] - reg[0]) && gapY < 1.3 * h) {
+          group.push(l); taken.add(l); grown = true;
+          reg = [Math.min(reg[0], b[0]), Math.min(reg[1], b[1]), Math.max(reg[2], b[2]), Math.max(reg[3], b[3])];
+        }
+      }
+    }
+    regions.push({ box: reg, lines: group });
+  }
+  if (!regions.length) return lines;
+  // (regions that overlap – a piece beside a fraction, a box the model drew around part of a
+  // formula found by its signs – are one formula)
+  const area = (b) => Math.max(0, b[2] - b[0]) * Math.max(0, b[3] - b[1]);
+  for (let merged = true; merged;) {
+    merged = false;
+    for (let i = 0; i < regions.length && !merged; i++) for (let j = i + 1; j < regions.length && !merged; j++) {
+      const a = regions[i].box, c = regions[j].box;
+      const cut = area([Math.max(a[0], c[0]), Math.max(a[1], c[1]), Math.min(a[2], c[2]), Math.min(a[3], c[3])]);
+      if (cut > 0.2 * Math.min(area(a), area(c))) {
+        regions[i] = { box: [Math.min(a[0], c[0]), Math.min(a[1], c[1]), Math.max(a[2], c[2]), Math.max(a[3], c[3])], lines: regions[i].lines.concat(regions[j].lines) };
+        regions.splice(j, 1);
+        merged = true;
+      }
+    }
+  }
+  const out = [];
+  const first = new Map(regions.map((g) => [g.lines.reduce((a, l) => (lines.indexOf(l) < lines.indexOf(a) ? l : a)), g]));
+  for (const l of lines) {
+    if (first.has(l)) {
+      const g = first.get(l), sizes = g.lines.map((x) => x.size).sort((a, b) => a - b);
+      const words = g.lines.flatMap((x) => x.words).sort((a, b) => a.bbox[0] - b.bbox[0] || a.bbox[1] - b.bbox[1]);
+      out.push({ ...l, size: sizes[sizes.length >> 1], base: g.box[3] - 0.2 * (g.box[3] - g.box[1]) / Math.max(1, g.lines.length), bold: false, words, fx: { box: g.box.map(round2) } });
+    } else if (!taken.has(l)) out.push(l);
+  }
+  return out;
 }
 
 /**

@@ -464,6 +464,7 @@
     </section>
     <p class="muted small" data-i18n="help.repeats"></p>
     <p class="muted small" data-i18n="help.deskew"></p>
+    <p class="muted small" data-i18n="help.formulas"></p>
     <p class="muted small" data-i18n="help.kept"></p>
     <section class="help-section" aria-labelledby="helpOfflineTitle">
       <h3 class="offline-title" id="helpOfflineTitle" data-i18n="help.offlineTitle"></h3>
@@ -479,6 +480,7 @@
         <li data-i18n="help.offLangs"></li>
         <li data-i18n="help.offHeif"></li>
         <li data-i18n="help.offPaddle"></li>
+        <li data-i18n="help.offFormulas"></li>
       </ul>
       <p class="muted small" data-i18n="help.offlineHow"></p>
     </section>
@@ -537,6 +539,7 @@
       <p class="small" id="offlineStatus"></p>
       <div class="field"><span data-i18n="offline.langsTitle"></span><div class="ocr-langs" id="offlineLangs"></div></div>
       <label class="field offline-paddle" data-i18n-title="offline.paddleTitle"><span data-i18n="offline.paddle"></span> <select id="offlinePaddle"></select></label>
+      <label class="field offline-paddle" data-i18n-title="offline.fxTitle"><span data-i18n="offline.fx"></span> <select id="offlineFormulas"></select></label>
       <div class="wf-row offline-actions">
         <button type="button" class="btn primary" id="offlineZipBtn" data-i18n="offline.zip"></button>
         <button type="button" class="btn" id="offlineLoadZip" data-i18n="offline.loadZip"></button>
@@ -819,6 +822,11 @@
       <label class="check" data-i18n-title="ocr.cropTitle"><input type="checkbox" id="ocrCrop" checked> <span data-i18n="ocr.crop"></span></label>
       <label class="check" data-i18n-title="ocr.splitTitle"><input type="checkbox" id="ocrSplit" checked> <span data-i18n="ocr.split"></span></label>
       <label class="check" data-i18n-title="ocr.cleanTitle"><input type="checkbox" id="ocrClean" checked> <span data-i18n="ocr.clean"></span></label>
+    </div>
+    <div class="field"><span data-i18n="ocr.formulas">Formulas</span>
+      <label class="check" data-i18n-title="ocr.fxFindTitle"><input type="checkbox" id="ocrFxFind"> <span data-i18n="ocr.fxFind"></span></label>
+      <label class="check" data-i18n-title="ocr.fxReadTitle"><input type="checkbox" id="ocrFxRead"> <span data-i18n="ocr.fxRead"></span></label>
+      <p class="muted small" id="ocrFxNote"></p>
     </div>
     <label class="field"><span data-i18n="ocr.family">Font of the translation</span>
       <select id="ocrFamily"><option value="serif" data-i18n="st.serif"></option><option value="sans-serif" data-i18n="st.sans"></option><option value="monospace" data-i18n="st.mono"></option></select>

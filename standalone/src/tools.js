@@ -467,7 +467,10 @@ function openOcrDialog() {
   $("#ocrCrop").checked = saved.crop !== false;
   (saved.engine === "paddle" ? $("#ocrEnginePaddle") : $("#ocrEngineTess")).checked = true;
   $("#ocrPaddleModel").innerHTML = paddleModelOptions(PADDLE_MODELS[saved.paddleModel] ? saved.paddleModel : "v5");
+  $("#ocrFxFind").checked = Boolean(saved.fxFind);
+  $("#ocrFxRead").checked = Boolean(saved.fxRead);
   ocrEngineNote();
+  ocrFormulaNote();
   openModal($("#ocrDialog"));
 }
 /** Under the engine choice: what PaddleOCR reads, and whether the chosen model's files are here already. */
@@ -484,6 +487,16 @@ async function ocrEngineNote() {
   if (bad.length) note += " " + t("ocr.paddleNoScript", { langs: bad.map((l) => t("ocrlang." + l)).join(", ") });
   $("#ocrEngineNote").textContent = note.trim();
   $("#ocrEngineNote").classList.toggle("warn", bad.length > 0);
+}
+
+/** Under the formula choices: the download each needs the first time, or that it is stored. */
+async function ocrFormulaNote() {
+  const parts = [];
+  for (const [id, part] of [["#ocrFxFind", "find"], ["#ocrFxRead", "read"]]) {
+    if (!$(id).checked) continue;
+    parts.push(t(await formulaReady(part) ? "ocr.fxStored" : "ocr.fxDownload", { what: t(part === "find" ? "ocr.fxFindShort" : "ocr.fxReadShort"), mb: FORMULA_MB[part] }));
+  }
+  $("#ocrFxNote").textContent = parts.join(" ");
 }
 
 /**
@@ -530,8 +543,9 @@ async function startOcr({ area = null } = {}) {
   const engine = $("#ocrEnginePaddle").checked ? "paddle" : "tesseract", paddleModel = $("#ocrPaddleModel").value || "v5";
   const unread = engine === "paddle" ? paddleUnsupported(langs, paddleModel) : [];
   if (unread.length) { toast(t("ocr.paddleNoScript", { langs: unread.map((l) => t("ocrlang." + l)).join(", ") }), "error"); return; }
+  const fxFind = $("#ocrFxFind").checked, fxRead = $("#ocrFxRead").checked;
   const family = $("#ocrFamily").value, deskew = $("#ocrDeskew").checked, dewarp = $("#ocrDewarp").checked, crop = $("#ocrCrop").checked, orient = $("#ocrOrient").checked, split = $("#ocrSplit").checked, clean = $("#ocrClean").checked;
-  try { localStorage.setItem(LS_OCR, JSON.stringify({ langs, family, deskew, dewarp, crop, orient, split, clean, engine, paddleModel })); } catch (_) { /* fine */ }
+  try { localStorage.setItem(LS_OCR, JSON.stringify({ langs, family, deskew, dewarp, crop, orient, split, clean, engine, paddleModel, fxFind, fxRead })); } catch (_) { /* fine */ }
   let pages = area ? [area.page] : ocrPageChoice() || [];
   if (!pages.length) { toast(t("ocr.none")); return; }
   ocrCancel = false;
@@ -544,7 +558,8 @@ async function startOcr({ area = null } = {}) {
   // Cancel stops the recognition at once (a running step fails, which is fine); the pages that
   // are finished are kept.
   const workers = [];
-  const cancel = () => { ocrCancel = true; for (const w of workers) w.terminate().catch(() => {}); };
+  let fw = null; // (the formula models, when chosen)
+  const cancel = () => { ocrCancel = true; for (const w of workers) w.terminate().catch(() => {}); if (fw) fw.terminate(); };
   try {
     busy(t("ocr.loading"), cancel);
     let make;
@@ -577,6 +592,16 @@ async function startOcr({ area = null } = {}) {
     if (count > 1) for (const w of await Promise.all(Array.from({ length: count - 1 }, () => make().catch(() => null)))) if (w) workers.push(w);
     if (ocrCancel) { cancel(); return; }
     for (const w of workers) await w.setParameters({ tessedit_pageseg_mode: "11" }); // sparse text: table cells and labels too
+    if (fxFind || fxRead) { // the formula models (fetched once, then kept)
+      try {
+        fw = await makeFormulaWorker({ find: fxFind, read: fxRead }, (name, got, total, whole) => { if (!whole) busy(t("ocr.fxFetching", { name, mb: mbOf(got), total: mbOf(total) }), cancel); });
+      } catch (err) {
+        if (ocrCancel) return;
+        console.error(err);
+        toast(t("ocr.fxFailed", { err: userError(err) }), "error");
+      }
+      if (ocrCancel) { cancel(); return; }
+    }
     const readPage = async (worker, p) => {
       const page = doc.pages[p];
       const zoom = Math.min(3, 3600 / Math.max(page.width, page.height));
@@ -608,6 +633,8 @@ async function startOcr({ area = null } = {}) {
       if (back) mapOcrData(data, back);
       const img = whole || await imageDataOf(blob);
       const { blocks, seps } = Engine.ocrToBlocks(data, zoom, [page.x0, page.y0], (box) => Engine.sampleColors(img, box));
+      if (blocks.length) await ocrFormulas(blocks[0], img, zoom, page, fw && fxFind ? fw : null, fw && fxRead ? fw : null, data);
+      if (ocrCancel || state.doc !== doc) return;
       let segs = blocks.length ? await pool.workers[0].call("ocrPage", { page: p, lines: blocks, seps, family }) : [];
       // On a page that has a text layer, only text that is not there yet (e.g. in pictures) is added.
       const text = doc.segments.filter((s) => s.page === p && !s.ocr && !s.extra).map((s) => s.bbox);
@@ -649,6 +676,7 @@ async function startOcr({ area = null } = {}) {
     }
   } finally {
     for (const w of workers) w.terminate().catch(() => {});
+    if (fw) fw.terminate();
     busy("");
   }
   if (state.doc !== doc) return;
@@ -666,6 +694,45 @@ async function startOcr({ area = null } = {}) {
       $("#ocrPagesRange").checked = true;
       $("#ocrRange").value = again.join(", ");
     } });
+  }
+}
+
+/**
+ * The formulas among a page's recognised lines (`block.lines`, changed in place): the layout model's
+ * boxes (`finder`), or what the lines look like, decide (see formulaRegions); each formula is then
+ * read as LaTeX (`reader`), kept when the model was sure of it. `img` is the page picture at `zoom`.
+ */
+async function ocrFormulas(block, img, zoom, page, finder, reader, data) {
+  const toPt = (b) => [b.x0 / zoom + page.x0, b.y0 / zoom + page.y0, b.x1 / zoom + page.x0, b.y1 / zoom + page.y0];
+  let found = [];
+  if (finder) try { found = await finder.find(img); } catch (err) { console.warn("formulas", err); }
+  const boxes = found.map(toPt), sizes0 = block.lines.map((l) => l.size).sort((a, b) => a - b), body0 = sizes0.length ? sizes0[sizes0.length >> 1] : 10;
+  // A formula OCR could hardly read has lost its words (unsure words are dropped): the box gets
+  // a line of its own from what OCR read there.
+  found.forEach((f, i) => {
+    const r = boxes[i], inBox = (b) => { const cx = (b[0] + b[2]) / 2, cy = (b[1] + b[3]) / 2; return cx >= r[0] && cx <= r[2] && cy >= r[1] && cy <= r[3]; };
+    if (block.lines.some((l) => l.words.some((w) => inBox(w.bbox)))) return;
+    const words = [];
+    for (const b of (data && data.blocks) || []) for (const p of b.paragraphs || []) for (const l of p.lines || []) for (const w of l.words || []) {
+      const wb = toPt(w.bbox);
+      if (w.text.trim() && inBox(wb)) words.push({ text: w.text.trim(), conf: Math.round(w.confidence || 0), bbox: wb.map((v) => Math.round(v * 100) / 100) });
+    }
+    if (!words.length || f.score < 0.5) return;
+    const { fg, bg } = Engine.sampleColors(img, [f.x0, f.y0, f.x1, f.y1]);
+    const line = { size: body0, base: r[3] - 0.25 * (r[3] - r[1]), color: fg, bg, bold: false, words }, at = block.lines.findIndex((l) => l.base > line.base);
+    block.lines.splice(at < 0 ? block.lines.length : at, 0, line); // (in reading order)
+  });
+  block.lines = Engine.formulaRegions(block.lines, boxes);
+  if (!reader) return;
+  const sizes = block.lines.filter((l) => !l.fx).map((l) => l.size).sort((a, b) => a - b);
+  const body = sizes.length ? sizes[sizes.length >> 1] : 10;
+  for (const l of block.lines) {
+    if (!l.fx || ocrCancel) continue;
+    const [x0, y0, x1, y1] = l.fx.box, px = { x0: (x0 - page.x0) * zoom, y0: (y0 - page.y0) * zoom, x1: (x1 - page.x0) * zoom, y1: (y1 - page.y0) * zoom };
+    try {
+      const r = await reader.read(formulaCrop(img, px, body * zoom));
+      if (r.latex && r.conf >= FORMULA_SURE) l.fx.latex = r.latex;
+    } catch (err) { console.warn("formula", err); }
   }
 }
 
@@ -804,6 +871,7 @@ function addOcrResults(results) {
   state.translations = move(state.translations);
   state.overrides = move(state.overrides);
   state.kinds = move(state.kinds);
+  state.latex = move(state.latex); saveLatex();
   doc.segments = merged;
   applyKinds();
   saveKinds();
@@ -1278,6 +1346,7 @@ function initTools() {
     }
   }, true);
   $("#btnOcr").addEventListener("click", openOcrDialog);
+  for (const id of ["#ocrFxFind", "#ocrFxRead"]) $(id).addEventListener("change", ocrFormulaNote);
   for (const id of ["#ocrEngineTess", "#ocrEnginePaddle", "#ocrPaddleModel"]) $(id).addEventListener("change", ocrEngineNote);
   $("#ocrLangs").addEventListener("change", ocrEngineNote);
   $("#ocrGo").addEventListener("click", (e) => {
@@ -1670,6 +1739,7 @@ function segBarButtons(s) {
   if (repSupported() && !s.skip && !s.extra && !repGroup(id)) out.push(b("repMake", SB_ICONS.repMake, "", t("rep.makeTitle")));
   if (fieldsEditable() && !s.extra && !s.skip) out.push(b("style", '<span class="segbar-glyph">Aa</span>', "", t("card.styleTitle"), Boolean(state.overrides[id])));
   if (s.ocr && !isBook()) out.push(b("editSrc", SB_ICONS.editSrc, "", t("card.editSrcTitle")));
+  if (s.skip && !isBook() && formulaGroups().byId.has(id)) out.push(latexOf(s) ? b("latexCopy", '<span class="segbar-glyph">TeX</span>', "", t("fx.copyTitle")) : b("latexRead", '<span class="segbar-glyph">TeX</span>', "", t("fx.readTitle")));
   out.push("<span class=\"segbar-sep\"></span>");
   if (!s.skip) {
     out.push(b("same", SB_ICONS.same, "", t("card.keepTitle")));

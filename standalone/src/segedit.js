@@ -176,6 +176,7 @@ async function runSegEdit(op) {
     state.translations = move(state.translations);
     state.overrides = move(state.overrides);
     state.kinds = move(state.kinds);
+    state.latex = move(state.latex); saveLatex();
     if (joined) state.translations[r.fresh[0].id] = joined; // a join keeps both translations, one after the other
     doc.segments = r.list;
     applyKinds(); saveKinds();

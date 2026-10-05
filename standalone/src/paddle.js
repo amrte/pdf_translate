@@ -40,6 +40,12 @@ const PADDLE_MODELS = {
 };
 /** Every PaddleOCR file by its stored name (the offline set lists them). */
 const PADDLE_FILES = Object.assign({}, PADDLE_RUNTIME, ...Object.values(PADDLE_MODELS).map((m) => Object.fromEntries(Object.values(m.files))));
+/** Where a model file can be fetched: its CDN address, then the same npm package from a second CDN. */
+function modelUrls(name) {
+  const url = PADDLE_FILES[name] || (typeof FORMULA_FILES !== "undefined" && FORMULA_FILES[name]);
+  if (!url) return [];
+  return Array.isArray(url) ? url : [url].concat(url.startsWith("https://cdn.jsdelivr.net/npm/") ? [url.replace("https://cdn.jsdelivr.net/npm/", "https://unpkg.com/")] : []);
+}
 /** The stored names a model needs, runtime included. */
 const paddleNames = (model) => Object.keys(PADDLE_RUNTIME).concat(Object.values((PADDLE_MODELS[model] || PADDLE_MODELS.v5).files).map(([name]) => name));
 // The accented letters of each language: PP-OCRv5 is unsure of small accents (ä read as a), and
@@ -60,15 +66,25 @@ const paddleModelOptions = (selected, none = "") => (none ? `<option value="">${
   .map(([id, m]) => `<option value="${id}"${id === selected ? " selected" : ""}>${escapeHtml(t("ocr.paddleModel", { name: m.name, mb: m.mb }))}</option>`).join("");
 
 /** A model's files (and the runtime): kept from an earlier download or the offline set, or fetched now (and kept). */
-async function paddleFiles(model, onProgress) {
-  const out = {}, names = paddleNames(model);
+const paddleFiles = (model, onProgress) => modelFiles(paddleNames(model), onProgress);
+
+/**
+ * Files run with ONNX Runtime (PaddleOCR, the formula models): kept from an earlier download or the
+ * offline set (IndexedDB, "paddle:<name>"), or fetched now from where `MODEL_URLS` says (and kept).
+ */
+async function modelFiles(names, onProgress) {
+  const out = {};
   let done = 0;
   for (const name of names) {
     let buf = await idbGet(`paddle:${name}`); // (from an earlier download, or from the offline set)
     if (!buf) {
-      let res = await fetch(PADDLE_FILES[name]).catch(() => null);
-      if (!res || !res.ok) res = await fetch(PADDLE_FILES[name].replace("https://cdn.jsdelivr.net/npm/", "https://unpkg.com/")); // (the same npm package from a second CDN)
-      if (!res.ok) throw new Error(`PaddleOCR file not available (${name}: HTTP ${res.status})`);
+      const urls = modelUrls(name);
+      let res = null;
+      for (const url of urls) { // (the first source that delivers)
+        res = await fetch(url).catch(() => null);
+        if (res && res.ok) break;
+      }
+      if (!res || !res.ok) throw new Error(`Model file not available (${name}${res ? ": HTTP " + res.status : ""})`);
       const total = Number(res.headers.get("content-length")) || 0, reader = res.body.getReader(), parts = [];
       let got = 0;
       for (;;) {
