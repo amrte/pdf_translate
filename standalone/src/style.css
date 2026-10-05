@@ -1016,6 +1016,8 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
 }
 .ocr-area-hint[hidden] { display: none; }
 .ocr-area-hint .btn { flex: none; }
+.frame-hint .check { color: inherit; white-space: nowrap; }
+.frame-hint .check input { accent-color: var(--accent); }
 .ocr-area { position: absolute; inset: 0; z-index: 8; pointer-events: none; }
 .ocr-area svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
 .ocr-area polygon { fill: color-mix(in srgb, var(--accent) 12%, transparent); stroke: var(--accent); stroke-width: 2px; stroke-dasharray: 6 4; vector-effect: non-scaling-stroke; }

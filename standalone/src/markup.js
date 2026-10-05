@@ -223,6 +223,7 @@ function setTool(tool) {
   pages.classList.toggle("erasing", tool === "eraser");
   pages.dataset.tool = tool;
   $("#btnFrame")?.classList.toggle("on", tool === "formula"); // (the Formula button beside AI)
+  frameHintShow(tool === "formula");
   if (tool !== "select") select(null);
   updateSwatches();
   updateNoteBar();

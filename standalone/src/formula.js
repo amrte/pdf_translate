@@ -537,8 +537,25 @@ async function addFormulaFrame(page, box) {
   ensureBoxes(frame.page);
   const el = document.querySelector(`.page .box[data-id="${frame.id}"]`);
   if (el) segBarShow(el);
+  if (frameAutoTex()) await readLatexFor([frame.id]); // (chosen in the bar below the page: every frame read at once)
   return true;
 }
+
+/* ---- the bar below the page while the frame tool is on: what to do, "read at once", Done */
+const LS_AUTOTEX = "pdftr:frame-autotex";
+const frameAutoTex = () => { try { return localStorage.getItem(LS_AUTOTEX) === "1"; } catch (_) { return false; } };
+function frameHintShow(on) {
+  const bar = $("#frameHint");
+  if (!bar) return;
+  bar.hidden = !on;
+  if (on) $("#frameAutoTex").checked = frameAutoTex();
+}
+(function initFrameHint() {
+  const cb = $("#frameAutoTex");
+  if (!cb) return;
+  cb.addEventListener("change", () => { try { localStorage.setItem(LS_AUTOTEX, cb.checked ? "1" : "0"); } catch (_) { /* storage blocked */ } });
+  $("#frameDone").addEventListener("click", () => setTool("select"));
+})();
 /** The frame removed: the segments it covered come back in its place. */
 function removeFormulaFrame(id, quiet = false) {
   const doc = state.doc, s = segById(id);
