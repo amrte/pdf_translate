@@ -616,32 +616,43 @@ async function frameThumb(img, s) {
  * The frames put together on sheets for the AI: each formula at 3 px per point (smaller when wide),
  * its number in blue at the left, as many under each other as fit a sheet. [{ids, canvas}]
  */
-async function formulaSheets(frames) {
+async function formulaSheets(frames, note = "") {
   const sheets = [];
   let cur = null;
   const probe = document.createElement("canvas").getContext("2d");
   probe.font = "bold 20px system-ui, sans-serif";
   const labelW = Math.ceil(Math.max(...frames.map((s) => probe.measureText(`[[${s.id}]]`).width), 40)) + 16;
   const maxW = SHEET_W - labelW - 2 * SHEET_PAD;
+  // (the instruction for the AI on top of every sheet, so a picture pasted alone is understood too)
+  const minW = note ? Math.min(SHEET_W, 900) : 0;
+  const noteLines = note ? wrapText(probe, note, "17px system-ui, sans-serif", Math.max(minW, labelW + 2 * SHEET_PAD + 400) - 2 * SHEET_PAD) : [];
+  const top = noteLines.length ? SHEET_PAD + noteLines.length * 23 + SHEET_PAD : 0;
   for (const s of frames) {
     const zoom = Math.max(1, Math.min(SHEET_ZOOM, maxW / Math.max(1, s.bbox[2] - s.bbox[0])));
     const c = await frameCanvas(s, zoom);
     const scale = Math.min(1, maxW / c.width, (SHEET_H - 2 * SHEET_PAD) / c.height);
     const w = Math.round(c.width * scale), h = Math.round(c.height * scale);
-    if (!cur || (cur.rows.length && cur.h + h + SHEET_PAD > SHEET_H)) { cur = { ids: [], rows: [], h: SHEET_PAD }; sheets.push(cur); }
+    if (!cur || (cur.rows.length && cur.h + h + SHEET_PAD > SHEET_H)) { cur = { ids: [], rows: [], h: top + SHEET_PAD }; sheets.push(cur); }
     cur.rows.push({ id: s.id, c, w, h, y: cur.h });
     cur.ids.push(s.id);
     cur.h += h + SHEET_PAD;
   }
   return sheets.map((sh) => {
     const canvas = document.createElement("canvas");
-    canvas.width = labelW + 2 * SHEET_PAD + Math.max(...sh.rows.map((r) => r.w));
+    canvas.width = Math.max(minW, labelW + 2 * SHEET_PAD + Math.max(...sh.rows.map((r) => r.w)));
     canvas.height = sh.h;
     const cx = canvas.getContext("2d");
     cx.fillStyle = "#fff";
     cx.fillRect(0, 0, canvas.width, canvas.height);
-    cx.font = probe.font;
     cx.textBaseline = "top";
+    if (noteLines.length) {
+      cx.font = "17px system-ui, sans-serif";
+      cx.fillStyle = "#333";
+      noteLines.forEach((l, i) => cx.fillText(l, SHEET_PAD, SHEET_PAD + i * 23));
+      cx.fillStyle = "#1a56db";
+      cx.fillRect(SHEET_PAD, top - 3, canvas.width - 2 * SHEET_PAD, 2);
+    }
+    cx.font = probe.font;
     sh.rows.forEach((r, i) => {
       if (i) { cx.fillStyle = "#d4d4d4"; cx.fillRect(SHEET_PAD, r.y - SHEET_PAD / 2 - 1, canvas.width - 2 * SHEET_PAD, 2); }
       cx.fillStyle = "#1a56db";
@@ -652,9 +663,24 @@ async function formulaSheets(frames) {
   });
 }
 
+/** A text broken into lines that fit `width` in `font`. */
+function wrapText(cx, text, font, width) {
+  cx.font = font;
+  const out = [];
+  for (const para of text.split("\n")) {
+    let line = "";
+    for (const word of para.split(/\s+/).filter(Boolean)) {
+      const next = line ? `${line} ${word}` : word;
+      if (cx.measureText(next).width > width && line) { out.push(line); line = word; } else line = next;
+    }
+    out.push(line);
+  }
+  return out;
+}
+
 /* ---- the AI window: the formula prompt, the sheets to copy or save, the answer */
 
-const aiFx = { key: "", sheets: [], copied: new Set(), gen: 0 };
+const aiFx = { key: "", sheets: [], copied: new Set(), promptCopied: false, gen: 0 };
 /** The frames the AI window offers: in its page range (and, if so chosen, without LaTeX yet). */
 function aiFrames() {
   if (!state.doc || isBook()) return [];
@@ -668,6 +694,11 @@ function fxPromptText(frames, sheets) {
   const target = $("#aiTarget").value.trim() || P.target;
   return [...P.formulas(target, frames.length, Math.max(1, sheets)), "", `${P.formulaList} ${frames.map((s) => `[[${s.id}]]`).join(" ")}`].join("\n");
 }
+/** The short form of the prompt written on top of every sheet. */
+function fxSheetNote() {
+  const P = AI_PROMPT[LANG] || AI_PROMPT.en;
+  return P.formulaSheet($("#aiTarget").value.trim() || P.target);
+}
 /** The formula part of the AI window: shown when the document has frames; the sheets are made once per selection. */
 function refreshAiFormulas() {
   const box = $("#aiFx");
@@ -675,20 +706,22 @@ function refreshAiFormulas() {
   const frames = aiFrames();
   box.hidden = !frames.length;
   if (!frames.length) { aiFx.key = ""; aiFx.sheets = []; aiFx.gen++; return; }
-  const key = JSON.stringify([state.doc.id, frames.map((s) => [s.id, s.bbox, pageRotation(s.page)])]);
+  const key = JSON.stringify([state.doc.id, LANG, $("#aiTarget").value.trim(), frames.map((s) => [s.id, s.bbox, pageRotation(s.page)])]);
   if (key === aiFx.key) { aiFxButtons(frames); return; }
   aiFx.key = key;
   aiFx.sheets = [];
   aiFx.copied.clear();
+  aiFx.promptCopied = false;
   const gen = ++aiFx.gen;
   $("#aiFxHint").textContent = t("ai.fxPreparing", { n: frames.length });
   $("#aiFxSheets").innerHTML = "";
-  formulaSheets(frames).then((sheets) => { if (gen !== aiFx.gen) return; aiFx.sheets = sheets; aiFxButtons(frames); })
+  formulaSheets(frames, fxSheetNote()).then((sheets) => { if (gen !== aiFx.gen) return; aiFx.sheets = sheets; aiFxButtons(frames); })
     .catch((err) => { console.error(err); if (gen === aiFx.gen) $("#aiFxHint").textContent = userError(err); });
 }
 function aiFxButtons(frames) {
   const total = aiFx.sheets.length;
   $("#aiFxHint").textContent = t("ai.fxHint", { n: frames.length, k: total });
+  $("#aiFxPrompt").classList.toggle("primary", !aiFx.promptCopied);
   $("#aiFxSheets").innerHTML = aiFx.sheets.map((sh, i) => {
     const done = sh.ids.every((id) => state.latex[id]);
     const cls = done ? " done" : aiFx.copied.has(i) ? " copied" : "";
@@ -696,14 +729,20 @@ function aiFxButtons(frames) {
   }).join("");
 }
 const sheetBlob = (sh) => new Promise((res) => sh.canvas.toBlob(res, "image/png"));
-/** A sheet to the clipboard as a picture (saved as a file where the browser cannot do that). */
+/**
+ * A sheet to the clipboard as a picture – together with the formula prompt as text, so a chat that
+ * takes both from one paste gets the instructions too (saved as a file where the browser cannot
+ * put pictures on the clipboard).
+ */
 async function copySheet(i) {
   const sh = aiFx.sheets[i];
   if (!sh) return;
   const blob = await sheetBlob(sh);
   try {
     if (!navigator.clipboard || !navigator.clipboard.write || typeof ClipboardItem === "undefined") throw new Error("no picture clipboard");
-    await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+    const text = new Blob([fxPromptText(aiFrames(), aiFx.sheets.length)], { type: "text/plain" });
+    try { await navigator.clipboard.write([new ClipboardItem({ "text/plain": text, "image/png": blob })]); }
+    catch (_) { await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]); }
     toast(t("ai.fxCopied", { k: i + 1, total: aiFx.sheets.length }), "ok");
   } catch (_) {
     saveBlob(blob, `Kameleon-${t("ai.fxFile")}-${i + 1}.png`);
@@ -730,6 +769,8 @@ async function saveSheets() {
     const frames = aiFrames();
     if (!frames.length) { toast(t("msg.noSelection"), "error"); return; }
     copyText(fxPromptText(frames, aiFx.sheets.length), t("ai.fxPromptCopied"));
+    aiFx.promptCopied = true;
+    aiFxButtons(frames);
   });
   $("#aiFxSave").addEventListener("click", saveSheets);
 })();

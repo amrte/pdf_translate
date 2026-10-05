@@ -500,6 +500,10 @@ body.box-dragging, body.box-dragging .box { cursor: grabbing !important; user-se
 .seg-style input[type="color"] { width: 30px; height: 24px; padding: 0 2px; border: 1px solid var(--border); border-radius: 5px; background: none; }
 .seg-style .st-hint { flex-basis: 100%; }
 .busy-box #busyCancel { margin-left: 12px; }
+.modal.ocr-dialog { width: min(920px, calc(100% - 32px)); }
+.ocr-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 32px; align-items: start; }
+.ocr-col { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+@media (max-width: 760px) { .ocr-cols { grid-template-columns: 1fr; } }
 .ocr-range { flex-wrap: wrap; }
 .ocr-range input[type=text] { width: 9em; height: 28px; padding: 0 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--text); font: inherit; margin-left: 4px; }
 .ocr-langs { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 2px 12px; margin-top: 4px; }

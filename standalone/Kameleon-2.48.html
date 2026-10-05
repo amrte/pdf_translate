@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="Kameleon 2.47">
+  <meta name="generator" content="Kameleon 2.48">
   <meta name="description" content="Kameleon – Wechselt die Sprache, behält die Form. Changes language, keeps its shape.">
   <title>Kameleon</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2216%22 fill=%22%23287130%22/%3E%3Cg transform=%22translate(2.5 1) scale(0.9)%22 fill=%22%23ffffff%22 stroke=%22%23ffffff%22%3E%3Cpath d=%22M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6%22 fill=%22none%22 stroke-width=%223.8%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M21 43l-1 10M30 44v9M38 43l1 10%22 stroke-width=%223.6%22 stroke-linecap=%22round%22/%3E%3Cellipse cx=%2221%22 cy=%2225%22 rx=%227%22 ry=%227.5%22 stroke=%22none%22/%3E%3Cellipse cx=%2233%22 cy=%2223.5%22 rx=%227.5%22 ry=%228%22 stroke=%22none%22/%3E%3Cpath d=%22M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z%22 stroke=%22none%22/%3E%3Cpath d=%22M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z%22 stroke=%22none%22/%3E%3Cpath d=%22M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z%22 stroke=%22none%22/%3E%3Cpath d=%22M16 37l4-3 4 3 4-3 4 3 4-3 4 3%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%222.1%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3Cpath d=%22M43.5 33.9L57 32.6%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%221.5%22 stroke-linecap=%22round%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%224.4%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%222.7%22 stroke=%22none%22/%3E%3Ccircle cx=%2246.2%22 cy=%2226.7%22 r=%221.3%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Cpath d=%22M4 55.5c15-3 39-3 54 0%22 fill=%22none%22 stroke-width=%222.4%22 stroke-linecap=%22round%22/%3E%3C/g%3E%3C/svg%3E">
@@ -510,6 +510,10 @@ body.box-dragging, body.box-dragging .box { cursor: grabbing !important; user-se
 .seg-style input[type="color"] { width: 30px; height: 24px; padding: 0 2px; border: 1px solid var(--border); border-radius: 5px; background: none; }
 .seg-style .st-hint { flex-basis: 100%; }
 .busy-box #busyCancel { margin-left: 12px; }
+.modal.ocr-dialog { width: min(920px, calc(100% - 32px)); }
+.ocr-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 32px; align-items: start; }
+.ocr-col { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+@media (max-width: 760px) { .ocr-cols { grid-template-columns: 1fr; } }
 .ocr-range { flex-wrap: wrap; }
 .ocr-range input[type=text] { width: 9em; height: 28px; padding: 0 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--text); font: inherit; margin-left: 4px; }
 .ocr-langs { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 2px 12px; margin-top: 4px; }
@@ -1093,7 +1097,7 @@ body.seg-dragging, body.seg-dragging * { cursor: grabbing !important; user-selec
   <div class="brand">
     <span class="logo"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#287130"/><g transform="translate(2.5 1) scale(0.9)" fill="#ffffff" stroke="#ffffff"><path d="M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6" fill="none" stroke-width="3.8" stroke-linecap="round"/><path d="M21 43l-1 10M30 44v9M38 43l1 10" stroke-width="3.6" stroke-linecap="round"/><ellipse cx="21" cy="25" rx="7" ry="7.5" stroke="none"/><ellipse cx="33" cy="23.5" rx="7.5" ry="8" stroke="none"/><path d="M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z" stroke="none"/><path d="M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z" stroke="none"/><path d="M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z" stroke="none"/><path d="M16 37l4-3 4 3 4-3 4 3 4-3 4 3" fill="none" stroke="#287130" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M43.5 33.9L57 32.6" fill="none" stroke="#287130" stroke-width="1.5" stroke-linecap="round"/><circle cx="45.5" cy="26.5" r="4.4" fill="#287130" stroke="none"/><circle cx="45.5" cy="26.5" r="2.7" stroke="none"/><circle cx="46.2" cy="26.7" r="1.3" fill="#287130" stroke="none"/><path d="M4 55.5c15-3 39-3 54 0" fill="none" stroke-width="2.4" stroke-linecap="round"/></g></svg></span>
     <span class="brand-name">Kameleon</span>
-    <span class="version" id="appVersion">v2.47</span>
+    <span class="version" id="appVersion">v2.48</span>
   </div>
   <div class="topbar-actions">
     <span class="doc-name" id="docName"></span>
@@ -1594,8 +1598,9 @@ body.seg-dragging, body.seg-dragging * { cursor: grabbing !important; user-selec
     <div class="ai-left-actions"><button type="button" class="btn" id="aiCopyPrompt" data-i18n="ai.copyPrompt">Copy prompt only</button></div>
     <div class="ai-fx" id="aiFx" hidden>
       <div class="ai-parts-head"><b data-i18n="ai.fxHead">Formulas as pictures</b> <span class="muted small" id="aiFxHint"></span></div>
+      <div class="ai-parts"><button type="button" class="btn primary" id="aiFxPrompt" data-i18n="ai.fxPrompt">Copy formula prompt</button></div>
       <div class="ai-parts" id="aiFxSheets"></div>
-      <div class="ai-left-actions"><button type="button" class="btn" id="aiFxPrompt" data-i18n="ai.fxPrompt">Copy formula prompt</button> <button type="button" class="btn" id="aiFxSave" data-i18n="ai.fxSave">Save pictures</button></div>
+      <div class="ai-left-actions"><button type="button" class="btn" id="aiFxSave" data-i18n="ai.fxSave">Save pictures</button></div>
     </div>
     </div>
     <div class="ai-right">
@@ -1636,7 +1641,7 @@ body.seg-dragging, body.seg-dragging * { cursor: grabbing !important; user-selec
     </div>
     <input type="file" id="offlineZip" class="visually-hidden" accept=".zip,application/zip,.js,.mjs,.wasm,.gz,.traineddata,.onnx,.ort,.txt,.json" multiple tabindex="-1">
     <input type="file" id="offlineFolder" class="visually-hidden" webkitdirectory multiple tabindex="-1">
-    <p class="muted small help-version help-part">Kameleon v2.47 · <span data-i18n="app.tagline"></span></p>
+    <p class="muted small help-version help-part">Kameleon v2.48 · <span data-i18n="app.tagline"></span></p>
     <div class="modal-actions">
       <button type="button" value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
     </div>
@@ -1879,10 +1884,11 @@ body.seg-dragging, body.seg-dragging * { cursor: grabbing !important; user-selec
   </form>
 </dialog>
 <input type="file" id="pagesFile" hidden multiple accept=".pdf,.pptx,.ppt,image/*,.dng,.heic,.heif,.hif">
-<dialog id="ocrDialog" class="modal" aria-labelledby="ocrTitle">
+<dialog id="ocrDialog" class="modal ocr-dialog" aria-labelledby="ocrTitle">
   <form method="dialog">
     <h2 id="ocrTitle" data-i18n="ocr.title">Text recognition (OCR)</h2>
     <p class="muted" data-i18n="ocr.text"></p>
+    <div class="ocr-cols"><div class="ocr-col">
     <div class="field"><span data-i18n="ocr.engine">Recognition engine</span>
       <div class="ocr-engines">
         <label class="check" data-i18n-title="ocr.engineTessTitle"><input type="radio" name="ocrEngine" id="ocrEngineTess" value="tesseract" checked> <span data-i18n="ocr.engineTess">Tesseract</span></label>
@@ -1891,6 +1897,7 @@ body.seg-dragging, body.seg-dragging * { cursor: grabbing !important; user-selec
       </div>
       <p class="muted small" id="ocrEngineNote"></p></div>
     <div class="field"><span data-i18n="ocr.langs">Languages in the document</span><div class="ocr-langs" id="ocrLangs"></div></div>
+    </div><div class="ocr-col">
     <div class="field"><span data-i18n="ocr.pages">Pages</span>
       <label class="check"><input type="radio" name="ocrPages" id="ocrPagesEmpty" checked> <span data-i18n="ocr.pagesEmpty"></span> <span class="muted" id="ocrScanCount"></span></label>
       <label class="check"><input type="radio" name="ocrPages" id="ocrPagesAll"> <span data-i18n="ocr.pagesAll"></span></label>
@@ -1914,6 +1921,7 @@ body.seg-dragging, body.seg-dragging * { cursor: grabbing !important; user-selec
     <label class="field"><span data-i18n="ocr.family">Font of the translation</span>
       <select id="ocrFamily"><option value="serif" data-i18n="st.serif"></option><option value="sans-serif" data-i18n="st.sans"></option><option value="monospace" data-i18n="st.mono"></option></select>
     </label>
+    </div></div>
     <p class="muted small" data-i18n="ocr.note"></p>
     <div class="modal-actions">
       <button type="button" value="cancel" class="btn ghost" data-i18n="common.cancel">Cancel</button>
@@ -2053,7 +2061,7 @@ const I18N = {
     "fx.frameThumbTitle": "Das Bild der Formel, wie es die KI bekommt",
     "ai.fxHead": "Formeln als Bilder",
     "ai.fxPreparing": "– {n} Formel(n), die Bilder werden vorbereitet…",
-    "ai.fxHint": "– {n} Formel(n) auf {k} Bild(ern). Formel-Prompt kopieren und in den KI-Chat einfügen, dann jedes Bild kopieren und mit Strg+V in denselben Chat einfügen (oder „Bilder speichern“ und die Dateien hineinziehen). Die Antwort rechts einfügen wie beim Text.",
+    "ai.fxHint": "– {n} Formel(n) auf {k} Bild(ern). 1. „Formel-Prompt kopieren“ und in den KI-Chat einfügen. 2. Jedes Bild anklicken und mit Strg+V in dieselbe Nachricht einfügen (oder „Bilder speichern“ und die Dateien hineinziehen). Jedes Bild trägt die Anweisung für die KI oben in Kurzform, und beim Kopieren liegt der Prompt als Text mit dabei. 3. Die Antwort rechts einfügen wie beim Text.",
     "ai.fxPrompt": "Formel-Prompt kopieren",
     "ai.fxPromptCopied": "Formel-Prompt kopiert. Dazu die Bilder in den Chat einfügen, dann die Antwort rechts einfügen.",
     "ai.fxSave": "Bilder speichern",
@@ -2061,7 +2069,7 @@ const I18N = {
     "ai.fxFile": "Formeln",
     "ai.fxSheet": "Bild {k} von {total}: [[{a}]] – [[{b}]] ({n} Formeln)",
     "ai.fxSheetTitle": "Das Bild in die Zwischenablage kopieren",
-    "ai.fxCopied": "Bild {k} von {total} kopiert – mit Strg+V in den KI-Chat einfügen.",
+    "ai.fxCopied": "Bild {k} von {total} kopiert – mit Strg+V in den KI-Chat einfügen (zum Formel-Prompt, falls der Chat nur das Bild übernimmt).",
     "ai.fxSavedInstead": "Der Browser kann keine Bilder in die Zwischenablage legen – das Bild wurde als Datei gespeichert.",
     "msg.importedFx": " {n} Formel(n) als LaTeX übernommen.",
     "ocr.formulas": "Formeln",
@@ -3054,7 +3062,7 @@ const I18N = {
     "fx.frameThumbTitle": "The picture of the formula as the AI gets it",
     "ai.fxHead": "Formulas as pictures",
     "ai.fxPreparing": "– {n} formula(s), preparing the pictures…",
-    "ai.fxHint": "– {n} formula(s) on {k} picture(s). Copy the formula prompt and paste it into the AI chat, then copy each picture and paste it into the same chat with Ctrl+V (or “Save pictures” and drag the files in). Paste the answer on the right, like the text.",
+    "ai.fxHint": "– {n} formula(s) on {k} picture(s). 1. “Copy formula prompt” and paste it into the AI chat. 2. Click each picture and paste it into the same message with Ctrl+V (or “Save pictures” and drag the files in). Every picture carries the instruction for the AI in short at its top, and copying it puts the prompt on the clipboard as text as well. 3. Paste the answer on the right, like the text.",
     "ai.fxPrompt": "Copy formula prompt",
     "ai.fxPromptCopied": "Formula prompt copied. Add the pictures to the chat, then paste the answer on the right.",
     "ai.fxSave": "Save pictures",
@@ -3062,7 +3070,7 @@ const I18N = {
     "ai.fxFile": "formulas",
     "ai.fxSheet": "Picture {k} of {total}: [[{a}]] – [[{b}]] ({n} formulas)",
     "ai.fxSheetTitle": "Copy the picture to the clipboard",
-    "ai.fxCopied": "Picture {k} of {total} copied – paste it into the AI chat with Ctrl+V.",
+    "ai.fxCopied": "Picture {k} of {total} copied – paste it into the AI chat with Ctrl+V (after the formula prompt, if the chat takes only the picture).",
     "ai.fxSavedInstead": "The browser cannot put pictures on the clipboard – the picture was saved as a file.",
     "msg.importedFx": " {n} formula(s) taken over as LaTeX.",
     "ocr.formulas": "Formulas",
@@ -3988,6 +3996,7 @@ const AI_PROMPT = {
       "4. Antworte nur mit den Markierungen und dem LaTeX, als reiner Text: keine Einleitung, keine Erklärungen, kein Markdown, kein Codeblock.",
     ],
     formulaList: "Formeln:",
+    formulaSheet: (tgt) => `Formeln aus einem Dokument, jede mit ihrer Nummer [[n]] links. Antworte zu jeder Formel mit der Zeile [[n]] und darunter der Formel als LaTeX (ohne $-Zeichen); Wörter in der Formel ins ${tgt} übersetzt in \\text{…}, Variablen, Zahlen und Einheiten unverändert. Nur Text, kein Codeblock, keine Erklärungen.`,
   },
   en: {
     intro: (tgt) => `Translate the text segments below into ${tgt}. Detect the source language yourself (it may change within the document).`,
@@ -4044,6 +4053,7 @@ const AI_PROMPT = {
       "4. Reply with the markers and the LaTeX only, as plain text: no introduction, no explanations, no Markdown, no code block.",
     ],
     formulaList: "Formulas:",
+    formulaSheet: (tgt) => `Formulas from a document, each with its number [[n]] at the left. For every formula answer with the line [[n]] and, under it, the formula as LaTeX (without $ signs); words in the formula translated into ${tgt} in \\text{…}; variables, numbers and units unchanged. Plain text only, no code block, no explanations.`,
   },
 };
 
@@ -20246,7 +20256,7 @@ function initPicture() {
 // from its own browser cache before the network, so language files are written into that cache.
 // ======================================================================
 
-const APP_VERSION = "2.47";
+const APP_VERSION = "2.48";
 // (a change of library version makes a stored set outdated: it is then ignored)
 const OFFLINE_VERSION = `${MUPDF_URL} ${OCR_LIB}`;
 const CORE_SIMD = "tesseract-core-simd-lstm.wasm.js", CORE_PLAIN = "tesseract-core-lstm.wasm.js";
@@ -25642,32 +25652,43 @@ async function frameThumb(img, s) {
  * The frames put together on sheets for the AI: each formula at 3 px per point (smaller when wide),
  * its number in blue at the left, as many under each other as fit a sheet. [{ids, canvas}]
  */
-async function formulaSheets(frames) {
+async function formulaSheets(frames, note = "") {
   const sheets = [];
   let cur = null;
   const probe = document.createElement("canvas").getContext("2d");
   probe.font = "bold 20px system-ui, sans-serif";
   const labelW = Math.ceil(Math.max(...frames.map((s) => probe.measureText(`[[${s.id}]]`).width), 40)) + 16;
   const maxW = SHEET_W - labelW - 2 * SHEET_PAD;
+  // (the instruction for the AI on top of every sheet, so a picture pasted alone is understood too)
+  const minW = note ? Math.min(SHEET_W, 900) : 0;
+  const noteLines = note ? wrapText(probe, note, "17px system-ui, sans-serif", Math.max(minW, labelW + 2 * SHEET_PAD + 400) - 2 * SHEET_PAD) : [];
+  const top = noteLines.length ? SHEET_PAD + noteLines.length * 23 + SHEET_PAD : 0;
   for (const s of frames) {
     const zoom = Math.max(1, Math.min(SHEET_ZOOM, maxW / Math.max(1, s.bbox[2] - s.bbox[0])));
     const c = await frameCanvas(s, zoom);
     const scale = Math.min(1, maxW / c.width, (SHEET_H - 2 * SHEET_PAD) / c.height);
     const w = Math.round(c.width * scale), h = Math.round(c.height * scale);
-    if (!cur || (cur.rows.length && cur.h + h + SHEET_PAD > SHEET_H)) { cur = { ids: [], rows: [], h: SHEET_PAD }; sheets.push(cur); }
+    if (!cur || (cur.rows.length && cur.h + h + SHEET_PAD > SHEET_H)) { cur = { ids: [], rows: [], h: top + SHEET_PAD }; sheets.push(cur); }
     cur.rows.push({ id: s.id, c, w, h, y: cur.h });
     cur.ids.push(s.id);
     cur.h += h + SHEET_PAD;
   }
   return sheets.map((sh) => {
     const canvas = document.createElement("canvas");
-    canvas.width = labelW + 2 * SHEET_PAD + Math.max(...sh.rows.map((r) => r.w));
+    canvas.width = Math.max(minW, labelW + 2 * SHEET_PAD + Math.max(...sh.rows.map((r) => r.w)));
     canvas.height = sh.h;
     const cx = canvas.getContext("2d");
     cx.fillStyle = "#fff";
     cx.fillRect(0, 0, canvas.width, canvas.height);
-    cx.font = probe.font;
     cx.textBaseline = "top";
+    if (noteLines.length) {
+      cx.font = "17px system-ui, sans-serif";
+      cx.fillStyle = "#333";
+      noteLines.forEach((l, i) => cx.fillText(l, SHEET_PAD, SHEET_PAD + i * 23));
+      cx.fillStyle = "#1a56db";
+      cx.fillRect(SHEET_PAD, top - 3, canvas.width - 2 * SHEET_PAD, 2);
+    }
+    cx.font = probe.font;
     sh.rows.forEach((r, i) => {
       if (i) { cx.fillStyle = "#d4d4d4"; cx.fillRect(SHEET_PAD, r.y - SHEET_PAD / 2 - 1, canvas.width - 2 * SHEET_PAD, 2); }
       cx.fillStyle = "#1a56db";
@@ -25678,9 +25699,24 @@ async function formulaSheets(frames) {
   });
 }
 
+/** A text broken into lines that fit `width` in `font`. */
+function wrapText(cx, text, font, width) {
+  cx.font = font;
+  const out = [];
+  for (const para of text.split("\n")) {
+    let line = "";
+    for (const word of para.split(/\s+/).filter(Boolean)) {
+      const next = line ? `${line} ${word}` : word;
+      if (cx.measureText(next).width > width && line) { out.push(line); line = word; } else line = next;
+    }
+    out.push(line);
+  }
+  return out;
+}
+
 /* ---- the AI window: the formula prompt, the sheets to copy or save, the answer */
 
-const aiFx = { key: "", sheets: [], copied: new Set(), gen: 0 };
+const aiFx = { key: "", sheets: [], copied: new Set(), promptCopied: false, gen: 0 };
 /** The frames the AI window offers: in its page range (and, if so chosen, without LaTeX yet). */
 function aiFrames() {
   if (!state.doc || isBook()) return [];
@@ -25694,6 +25730,11 @@ function fxPromptText(frames, sheets) {
   const target = $("#aiTarget").value.trim() || P.target;
   return [...P.formulas(target, frames.length, Math.max(1, sheets)), "", `${P.formulaList} ${frames.map((s) => `[[${s.id}]]`).join(" ")}`].join("\n");
 }
+/** The short form of the prompt written on top of every sheet. */
+function fxSheetNote() {
+  const P = AI_PROMPT[LANG] || AI_PROMPT.en;
+  return P.formulaSheet($("#aiTarget").value.trim() || P.target);
+}
 /** The formula part of the AI window: shown when the document has frames; the sheets are made once per selection. */
 function refreshAiFormulas() {
   const box = $("#aiFx");
@@ -25701,20 +25742,22 @@ function refreshAiFormulas() {
   const frames = aiFrames();
   box.hidden = !frames.length;
   if (!frames.length) { aiFx.key = ""; aiFx.sheets = []; aiFx.gen++; return; }
-  const key = JSON.stringify([state.doc.id, frames.map((s) => [s.id, s.bbox, pageRotation(s.page)])]);
+  const key = JSON.stringify([state.doc.id, LANG, $("#aiTarget").value.trim(), frames.map((s) => [s.id, s.bbox, pageRotation(s.page)])]);
   if (key === aiFx.key) { aiFxButtons(frames); return; }
   aiFx.key = key;
   aiFx.sheets = [];
   aiFx.copied.clear();
+  aiFx.promptCopied = false;
   const gen = ++aiFx.gen;
   $("#aiFxHint").textContent = t("ai.fxPreparing", { n: frames.length });
   $("#aiFxSheets").innerHTML = "";
-  formulaSheets(frames).then((sheets) => { if (gen !== aiFx.gen) return; aiFx.sheets = sheets; aiFxButtons(frames); })
+  formulaSheets(frames, fxSheetNote()).then((sheets) => { if (gen !== aiFx.gen) return; aiFx.sheets = sheets; aiFxButtons(frames); })
     .catch((err) => { console.error(err); if (gen === aiFx.gen) $("#aiFxHint").textContent = userError(err); });
 }
 function aiFxButtons(frames) {
   const total = aiFx.sheets.length;
   $("#aiFxHint").textContent = t("ai.fxHint", { n: frames.length, k: total });
+  $("#aiFxPrompt").classList.toggle("primary", !aiFx.promptCopied);
   $("#aiFxSheets").innerHTML = aiFx.sheets.map((sh, i) => {
     const done = sh.ids.every((id) => state.latex[id]);
     const cls = done ? " done" : aiFx.copied.has(i) ? " copied" : "";
@@ -25722,14 +25765,20 @@ function aiFxButtons(frames) {
   }).join("");
 }
 const sheetBlob = (sh) => new Promise((res) => sh.canvas.toBlob(res, "image/png"));
-/** A sheet to the clipboard as a picture (saved as a file where the browser cannot do that). */
+/**
+ * A sheet to the clipboard as a picture – together with the formula prompt as text, so a chat that
+ * takes both from one paste gets the instructions too (saved as a file where the browser cannot
+ * put pictures on the clipboard).
+ */
 async function copySheet(i) {
   const sh = aiFx.sheets[i];
   if (!sh) return;
   const blob = await sheetBlob(sh);
   try {
     if (!navigator.clipboard || !navigator.clipboard.write || typeof ClipboardItem === "undefined") throw new Error("no picture clipboard");
-    await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+    const text = new Blob([fxPromptText(aiFrames(), aiFx.sheets.length)], { type: "text/plain" });
+    try { await navigator.clipboard.write([new ClipboardItem({ "text/plain": text, "image/png": blob })]); }
+    catch (_) { await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]); }
     toast(t("ai.fxCopied", { k: i + 1, total: aiFx.sheets.length }), "ok");
   } catch (_) {
     saveBlob(blob, `Kameleon-${t("ai.fxFile")}-${i + 1}.png`);
@@ -25756,6 +25805,8 @@ async function saveSheets() {
     const frames = aiFrames();
     if (!frames.length) { toast(t("msg.noSelection"), "error"); return; }
     copyText(fxPromptText(frames, aiFx.sheets.length), t("ai.fxPromptCopied"));
+    aiFx.promptCopied = true;
+    aiFxButtons(frames);
   });
   $("#aiFxSave").addEventListener("click", saveSheets);
 })();

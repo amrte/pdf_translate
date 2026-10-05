@@ -4,6 +4,11 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.48
+
+- **Formula pictures carry their instructions.** Pasting only a picture into the AI chat left the AI without the prompt. Now every sheet has the instruction for the AI written at its top in short (formulas as LaTeX, words translated, answer as `[[n]]` lines), and a click on a picture button puts the formula prompt on the clipboard as text together with the picture, so chats that take both from one paste get both. The AI window names the order – 1. copy the formula prompt, 2. the pictures, 3. paste the answer – with the prompt button first and highlighted until it has been copied.
+- **OCR window wider:** engine and languages on the left, pages, preparation, formulas and font on the right, instead of one long column.
+
 ## 2.47
 
 - **Formula frames – formulas as pictures for the AI.** A new tool beside the page (∑, key <kbd>M</kbd>): drag a rectangle around a formula and it becomes a segment of its own, kept as it is in the translated document; the segments inside the rectangle – also what text recognition read as gibberish – belong to it from then on ("Remove frame" in its card or in the bar above it brings them back). Frames are remembered with the document (with the OCR result on recognised pages, as a segment edit elsewhere) and shown in the list with a picture of the formula.

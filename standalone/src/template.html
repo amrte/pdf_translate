@@ -517,8 +517,9 @@
     <div class="ai-left-actions"><button type="button" class="btn" id="aiCopyPrompt" data-i18n="ai.copyPrompt">Copy prompt only</button></div>
     <div class="ai-fx" id="aiFx" hidden>
       <div class="ai-parts-head"><b data-i18n="ai.fxHead">Formulas as pictures</b> <span class="muted small" id="aiFxHint"></span></div>
+      <div class="ai-parts"><button type="button" class="btn primary" id="aiFxPrompt" data-i18n="ai.fxPrompt">Copy formula prompt</button></div>
       <div class="ai-parts" id="aiFxSheets"></div>
-      <div class="ai-left-actions"><button type="button" class="btn" id="aiFxPrompt" data-i18n="ai.fxPrompt">Copy formula prompt</button> <button type="button" class="btn" id="aiFxSave" data-i18n="ai.fxSave">Save pictures</button></div>
+      <div class="ai-left-actions"><button type="button" class="btn" id="aiFxSave" data-i18n="ai.fxSave">Save pictures</button></div>
     </div>
     </div>
     <div class="ai-right">
@@ -802,10 +803,11 @@
   </form>
 </dialog>
 <input type="file" id="pagesFile" hidden multiple accept=".pdf,.pptx,.ppt,image/*,.dng,.heic,.heif,.hif">
-<dialog id="ocrDialog" class="modal" aria-labelledby="ocrTitle">
+<dialog id="ocrDialog" class="modal ocr-dialog" aria-labelledby="ocrTitle">
   <form method="dialog">
     <h2 id="ocrTitle" data-i18n="ocr.title">Text recognition (OCR)</h2>
     <p class="muted" data-i18n="ocr.text"></p>
+    <div class="ocr-cols"><div class="ocr-col">
     <div class="field"><span data-i18n="ocr.engine">Recognition engine</span>
       <div class="ocr-engines">
         <label class="check" data-i18n-title="ocr.engineTessTitle"><input type="radio" name="ocrEngine" id="ocrEngineTess" value="tesseract" checked> <span data-i18n="ocr.engineTess">Tesseract</span></label>
@@ -814,6 +816,7 @@
       </div>
       <p class="muted small" id="ocrEngineNote"></p></div>
     <div class="field"><span data-i18n="ocr.langs">Languages in the document</span><div class="ocr-langs" id="ocrLangs"></div></div>
+    </div><div class="ocr-col">
     <div class="field"><span data-i18n="ocr.pages">Pages</span>
       <label class="check"><input type="radio" name="ocrPages" id="ocrPagesEmpty" checked> <span data-i18n="ocr.pagesEmpty"></span> <span class="muted" id="ocrScanCount"></span></label>
       <label class="check"><input type="radio" name="ocrPages" id="ocrPagesAll"> <span data-i18n="ocr.pagesAll"></span></label>
@@ -837,6 +840,7 @@
     <label class="field"><span data-i18n="ocr.family">Font of the translation</span>
       <select id="ocrFamily"><option value="serif" data-i18n="st.serif"></option><option value="sans-serif" data-i18n="st.sans"></option><option value="monospace" data-i18n="st.mono"></option></select>
     </label>
+    </div></div>
     <p class="muted small" data-i18n="ocr.note"></p>
     <div class="modal-actions">
       <button type="button" value="cancel" class="btn ghost" data-i18n="common.cancel">Cancel</button>
