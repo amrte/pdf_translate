@@ -50,18 +50,24 @@ async function loadStoredLibs() {
   return buildLibs(data);
 }
 
-/** Blob URLs for the library files, with MuPDF's internal references rewritten; null if a file is missing or unexpected. */
+/**
+ * Blob URLs for the library files, with MuPDF's internal references rewritten; null if none can be
+ * used or MuPDF's files are not the expected build. A set without MuPDF (it could not be fetched)
+ * has `mupdfUrl` null: the engine then comes from the internet as usual.
+ */
 function buildLibs(data) {
-  if (LIB_REQUIRED.some((n) => !data[n])) return null;
   const dec = new TextDecoder();
   const blobUrl = (content, type) => URL.createObjectURL(new Blob([content], { type }));
-  const wasmUrl = blobUrl(data["mupdf-wasm.wasm"], "application/wasm");
-  const glue = dec.decode(data["mupdf-wasm.js"]).replace('new URL("mupdf-wasm.wasm",import.meta.url).href', JSON.stringify(wasmUrl));
-  if (!glue.includes(wasmUrl)) return null; // not the expected build of the library
-  const glueUrl = blobUrl(glue, "text/javascript");
-  const main = dec.decode(data["mupdf.js"]).replace(/from\s+"\.\/mupdf-wasm\.js"/, `from ${JSON.stringify(glueUrl)}`);
-  if (!main.includes(glueUrl)) return null;
-  const libs = { mupdfUrl: blobUrl(main, "text/javascript"), ocr: null };
+  const libs = { mupdfUrl: null, ocr: null };
+  if (LIB_REQUIRED.every((n) => data[n])) {
+    const wasmUrl = blobUrl(data["mupdf-wasm.wasm"], "application/wasm");
+    const glue = dec.decode(data["mupdf-wasm.js"]).replace('new URL("mupdf-wasm.wasm",import.meta.url).href', JSON.stringify(wasmUrl));
+    if (!glue.includes(wasmUrl)) return null; // not the expected build of the library
+    const glueUrl = blobUrl(glue, "text/javascript");
+    const main = dec.decode(data["mupdf.js"]).replace(/from\s+"\.\/mupdf-wasm\.js"/, `from ${JSON.stringify(glueUrl)}`);
+    if (!main.includes(glueUrl)) return null;
+    libs.mupdfUrl = blobUrl(main, "text/javascript");
+  }
   const core = data[OCR_CORE_FILE] || data[CORE_SIMD] || data[CORE_PLAIN];
   if (data["tesseract.esm.min.js"] && data["worker.min.js"] && core) {
     // The worker script loads its core with importScripts(corePath), which a worker cannot do from a
@@ -71,7 +77,7 @@ function buildLibs(data) {
     libs.ocr = { lib: blobUrl(data["tesseract.esm.min.js"], "text/javascript"), worker: blobUrl(worker, "text/javascript"), core: OCR_CORE };
   }
   if (data["libheif-bundle.mjs"]) libs.heif = blobUrl(data["libheif-bundle.mjs"], "text/javascript");
-  return libs;
+  return libs.mupdfUrl || libs.ocr || libs.heif ? libs : null;
 }
 
 async function fetchWithProgress(url, onProgress) {
@@ -92,7 +98,11 @@ async function fetchWithProgress(url, onProgress) {
   return out.buffer;
 }
 
-/** Fetch the library files (both Tesseract builds when `allCores`) and the language data. */
+/**
+ * Fetch the library files (both Tesseract builds when `allCores`) and the language data. A file
+ * that cannot be fetched (blocked on this computer, offline) is left out and listed in `failed`
+ * ({name, urls}): the rest is still used.
+ */
 async function fetchLibrarySet(langs, allCores, paddle = "", fx = "") {
   const names = Object.keys(LIB_FILES).filter((n) => allCores || (n !== CORE_SIMD && n !== CORE_PLAIN) || n === OCR_CORE_FILE);
   // (PaddleOCR with the chosen model: 20–45 MB; the formula models: 7 MB to find, 140 MB more to
@@ -100,21 +110,37 @@ async function fetchLibrarySet(langs, allCores, paddle = "", fx = "") {
   const models = [...new Set((paddle ? paddleNames(paddle) : []).concat(fx ? Object.keys(PADDLE_RUNTIME).concat(FORMULA_FIND, fx === "all" ? FORMULA_READ : []) : []))];
   const items = names.map((n) => [n, LIB_FILES[n]]).concat(langs.map((l) => [`${l}.traineddata.gz`, langUrl(l)]))
     .concat(models.map((n) => [n, modelUrls(n)]));
-  const data = {}, langData = {}, paddleData = {};
+  const data = {}, langData = {}, paddleData = {}, failed = [];
   let total = 0;
   for (const [i, [name, url]] of items.entries()) {
     const show = (got) => busy(t("offline.fetching", { i: i + 1, n: items.length, name, mb: mbOf(got) }));
     show(0);
+    const urls = Array.isArray(url) ? url : [url];
     let buf = null;
-    for (const [k, u] of (Array.isArray(url) ? url : [url]).entries()) { // (the first source that delivers)
-      try { buf = await fetchWithProgress(u, show); break; } catch (err) { if (k === (Array.isArray(url) ? url.length : 1) - 1) throw err; }
+    for (const u of urls) { // (the first source that delivers)
+      try { buf = await fetchWithProgress(u, show); break; } catch (err) { console.warn("offline:", name, err); }
     }
+    if (!buf) { failed.push({ name, urls }); continue; }
     total += buf.byteLength;
     const m = /^([a-z_]+)\.traineddata\.gz$/.exec(name);
     if (m) langData[m[1]] = buf; else if (PADDLE_FILES[name] || FORMULA_FILES[name]) paddleData[name] = buf; else data[name] = buf;
   }
-  return { data, langData, paddleData, total };
+  return { data, langData, paddleData, total, failed };
 }
+/** How many files were fetched. */
+const fetchedCount = (set) => Object.keys(set.data).length + Object.keys(set.langData).length + Object.keys(set.paddleData).length;
+/** The list of the files that could not be fetched, with their addresses (put into the ZIP). */
+const missingList = (failed) => `Kameleon ${APP_VERSION} – fehlende Dateien / missing files
+
+DE: Diese Dateien konnten nicht geladen werden (gesperrt oder keine Verbindung). Sie lassen sich an
+einem anderen Computer von den Adressen unten laden und dann zusammen mit dieser ZIP wählen
+(Hilfe → „Offline arbeiten“ → „Ordner laden…“ mit allen Dateien in einem Ordner, oder mehrere
+Dateien auf einmal).
+EN: These files could not be fetched (blocked or no connection). They can be downloaded on another
+computer from the addresses below and then chosen together with this ZIP (Help → "Working offline"
+→ "Load folder…" with all files in one folder, or several files at once).
+
+` + failed.map((f) => `${f.name}\n${f.urls.map((u) => `  ${u}`).join("\n")}`).join("\n\n") + "\n";
 
 /* ------------------------------------------------ Tesseract's language cache */
 
@@ -148,21 +174,28 @@ async function storeLangData(langData) {
 
 /* ------------------------------------------------------------- the actions */
 
-/** Use a set of library files now; `remember` also stores them in the browser. */
+/**
+ * Use a set of library files now; `remember` also stores them in the browser. A set that lacks some
+ * files (they could not be fetched) is completed from the files stored earlier for this version.
+ */
 async function activateLibs(data, langData, remember, source) {
+  const prev = remember ? await idbGet(libKey("manifest")) : null;
+  const keep = Boolean(prev && prev.version === OFFLINE_VERSION);
+  if (keep) for (const name of Object.keys(LIB_FILES)) if (!data[name]) { const v = await idbGet(libKey(name)); if (v) data[name] = v; }
   const libs = buildLibs(data);
-  if (!libs) throw new Error("The library files could not be used.");
+  if (!libs && Object.keys(data).length) throw new Error("The library files could not be used.");
   await storeLangData(langData);
-  offlineLibsPromise = Promise.resolve(libs);
-  const langs = Object.keys(langData);
-  offlineSource = source === "folder" ? { kind: "folder", langs } : null;
-  if (remember) {
-    for (const name of Object.keys(LIB_FILES)) await idbDel(libKey(name));
+  if (libs) offlineLibsPromise = Promise.resolve(libs);
+  const langs = [...new Set([...((keep && prev.langs) || []), ...Object.keys(langData)])];
+  offlineSource = source === "folder" ? { kind: "folder", langs: Object.keys(langData) } : null;
+  if (remember && (Object.keys(data).length || Object.keys(langData).length)) {
     let bytes = 0;
-    for (const [name, buf] of Object.entries(data)) { await idbPut(buf, libKey(name)); bytes += buf.byteLength; }
+    for (const name of Object.keys(LIB_FILES)) {
+      if (data[name]) { await idbPut(data[name], libKey(name)); bytes += data[name].byteLength; } else await idbDel(libKey(name));
+    }
     await idbPut({ version: OFFLINE_VERSION, date: Date.now(), bytes, langs }, libKey("manifest"));
   }
-  if (pool.ready === null) await startEngine(); // the engine could not come from the internet: start it from the files
+  if (pool.ready === null && libs && libs.mupdfUrl) await startEngine(); // the engine could not come from the internet: start it from the files
 }
 
 /** Download the whole set as a ZIP on the computer. */
@@ -172,16 +205,20 @@ async function storePaddleFiles(paddleData) {
 }
 async function downloadOfflineZip(langs, paddle = "", fx = "") {
   try {
-    const { data, langData, paddleData, total } = await fetchLibrarySet(langs, true, paddle, fx);
+    const set = await fetchLibrarySet(langs, true, paddle, fx), { data, langData, paddleData, total, failed } = set;
+    if (!fetchedCount(set)) throw new Error(t("offline.nothing", { names: failed.map((f) => f.name).join(", ") }));
     busy(t("offline.zipping"));
     const entries = Object.entries(data).map(([name, buf]) => ({ name, data: new Uint8Array(buf) }))
       .concat(Object.entries(langData).map(([code, buf]) => ({ name: `${code}.traineddata.gz`, data: new Uint8Array(buf), store: true })))
       .concat(Object.entries(paddleData).map(([name, buf]) => ({ name, data: new Uint8Array(buf) })));
     entries.push({ name: "README.txt", data: new TextEncoder().encode(OFFLINE_README) });
+    // (what could not be fetched is listed, with its addresses: the ZIP holds the rest)
+    if (failed.length) entries.push({ name: "MISSING-FEHLT.txt", data: new TextEncoder().encode(missingList(failed)) });
     const zip = await zipWrite(entries);
-    const name = `Kameleon-offline-${APP_VERSION}.zip`;
+    const name = `Kameleon-offline-${APP_VERSION}${failed.length ? "-partial" : ""}.zip`;
     saveBlob(new Blob([zip], { type: "application/zip" }), name);
-    toast(t("offline.zipDone", { name, mb: mbOf(zip.length), src: mbOf(total) }), "ok");
+    if (failed.length) toast(t("offline.zipPartial", { name, mb: mbOf(zip.length), n: fetchedCount(set), all: fetchedCount(set) + failed.length, names: failed.map((f) => f.name).join(", ") }), "error");
+    else toast(t("offline.zipDone", { name, mb: mbOf(zip.length), src: mbOf(total) }), "ok");
   } catch (err) {
     console.error(err);
     toast(t("offline.failed", { err: userError(err) }), "error");
@@ -242,11 +279,13 @@ computer; please do not rename them.
 /** Store the set in the browser directly (fetched from the internet). */
 async function storeOfflineLibs(langs, paddle = "", fx = "") {
   try {
-    const { data, langData, paddleData } = await fetchLibrarySet(langs, false, paddle, fx);
+    const set = await fetchLibrarySet(langs, false, paddle, fx), { data, langData, paddleData, failed } = set;
+    if (!fetchedCount(set)) throw new Error(t("offline.nothing", { names: failed.map((f) => f.name).join(", ") }));
     busy(t("offline.storing"));
     await activateLibs(data, langData, true, "browser");
     await storePaddleFiles(paddleData);
-    toast(t("offline.done"), "ok");
+    if (failed.length) toast(t("offline.donePartial", { n: fetchedCount(set), all: fetchedCount(set) + failed.length, names: failed.map((f) => f.name).join(", ") }), "error");
+    else toast(t("offline.done"), "ok");
   } catch (err) {
     console.error(err);
     toast(t("offline.failed", { err: userError(err) }), "error");
@@ -279,8 +318,10 @@ async function useLibraryFiles(files, remember) {
         take(f.name, await f.arrayBuffer());
       }
     }
+    // (MuPDF is needed unless the engine runs already – from the internet: a set without it,
+    // made where it could not be fetched, still brings the rest)
     const missing = LIB_REQUIRED.filter((n) => !data[n]);
-    if (missing.length) { toast(t("offline.missing", { names: missing.join(", ") }), "error"); return; }
+    if (missing.length && (!pool.ready || !(Object.keys(data).length + Object.keys(langData).length + Object.keys(paddleData).length))) { toast(t("offline.missing", { names: missing.join(", ") }), "error"); return; }
     await activateLibs(data, langData, remember, "folder");
     await storePaddleFiles(paddleData);
     toast(t("offline.loaded", { n: Object.keys(data).length + Object.keys(langData).length + Object.keys(paddleData).length }), "ok");

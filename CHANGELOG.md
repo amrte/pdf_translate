@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.45
+
+- **Offline libraries: what can be fetched is kept.** When some files could not be downloaded (blocked on the computer, no connection), "Download as ZIP" stopped and saved nothing. Now the ZIP is made from all files that came through (named `…-partial.zip`); the message names the missing ones, and the ZIP holds a list of them with their addresses (`MISSING-FEHLT.txt`), so they can be downloaded by hand (e.g. on another computer). Chosen together with the ZIP – "Load ZIP file…" now also accepts the loose files, or "Load folder…" – they complete the set. "Store directly in the browser" likewise stores what it got and keeps files stored earlier for this version. A set without the document engine (MuPDF) still brings the rest while the engine comes from the internet.
+
 ## 2.44
 
 - **No more freeze when clicking a formula in a large document:** since 2.42, a click on a formula (or a number) in a long PDF – several hundred pages with formulas in their text, or a scan with a text layer – blocked the app, for longer the more formulas the document had (11 s for 400 pages in a test, a freeze for bigger ones), and again after a restart. Finding which pieces belong to one formula was done over the whole document again for every formula shown; it is now done once and kept until segments change. The click takes a few hundredths of a second.
