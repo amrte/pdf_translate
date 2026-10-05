@@ -357,7 +357,7 @@ function formulaGroups() {
     const near = (a, b) => {
       const h = Math.max(a.size || 10, b.size || 10), A = a.bbox, B = b.bbox;
       const gx = Math.max(B[0] - A[2], A[0] - B[2]), gy = Math.max(B[1] - A[3], A[1] - B[3]);
-      return gx < 0.8 * h && gy < 0.5 * h;
+      return gx < 0.8 * h && gy < 0.8 * h; // (a fraction's parts, an integral's limits sit a little off)
     };
     for (let i = 0; i < list.length; i++) for (let j = i + 1; j < list.length; j++) {
       if (list[i].frame || list[j].frame) continue; // (a frame drawn by hand is a formula of its own)
@@ -540,6 +540,104 @@ async function addFormulaFrame(page, box) {
   return true;
 }
 
+/**
+ * Several frames at once ([{page, box}]): the segment list changed once for all of them (pages
+ * with an OCR result in their stored result). Returns the frames' ids.
+ */
+function addFormulaFrames(items) {
+  const doc = state.doc;
+  if (!doc || !items.length) return [];
+  const r2 = (v) => Math.round(v * 100) / 100;
+  const oldId = new Map(doc.segments.map((s) => [s, s.id]));
+  let list = doc.segments;
+  const recs = {}, ops = [], made = [];
+  for (const it of items) {
+    const box = it.box.map(r2), rec = ocrRecord(it.page);
+    if (rec) {
+      const cur = recs[it.page] ? recs[it.page].segs : rec.segs;
+      const r = applyFrameOp(cur, { op: "frame", page: it.page, box, ocr: true });
+      recs[it.page] = { segs: r.list, seps: rec.seps, raw: rec.raw, family: rec.family };
+      made.push(r.fresh[0]);
+    } else {
+      const r = applyFrameOp(list, { op: "frame", page: it.page, box });
+      list = r.list;
+      ops.push({ op: "frame", page: it.page, box });
+      made.push(r.fresh[0]);
+    }
+  }
+  if (ops.length) {
+    const remap = new Map();
+    list.forEach((s) => { if (oldId.has(s)) remap.set(oldId.get(s), s.id); });
+    state.segEdits = [...(state.segEdits || []), ...ops];
+    saveSegEdits();
+    relistSegments(doc, { list, remap });
+  }
+  if (Object.keys(recs).length) addOcrResults(recs);
+  frameHintCount();
+  return made.map((f) => doc.segments.find((s) => s.frame && s.page === f.page && sameBox(s.bbox, f.bbox))).filter(Boolean).map((s) => s.id);
+}
+
+/**
+ * Formulas found by the layout model on the given pages (the page drawn, not only scans) and
+ * framed: the pieces inside a found box – formula and number segments, and short words such as
+ * "bzw." – become one frame, a box with nothing inside (a formula drawn as lines) a frame of its
+ * own. Long text lines a loose box touches stay text. With "read at once" on, the frames are read.
+ */
+async function findFormulaFrames(pageIdx) {
+  const doc = state.doc;
+  if (!doc || isBook() || !pageIdx.length) return;
+  let cancelled = false, finder = null;
+  const cancel = () => { cancelled = true; if (finder) { finder.terminate(); finder = null; } };
+  const items = [];
+  try {
+    busy(t("fx.loading"), cancel);
+    finder = await makeFormulaWorker({ find: true }, (name, got, total, whole) => { if (!whole) busy(t("ocr.fxFetching", { name, mb: mbOf(got), total: mbOf(total) }), cancel); });
+    for (const [k, p] of pageIdx.entries()) {
+      if (cancelled || state.doc !== doc) break;
+      busy(t("fx.finding", { i: k + 1, n: pageIdx.length }), cancel);
+      const page = doc.pages[p], zoom = Math.min(2, 1000 / Math.max(page.width, page.height));
+      const buf = await pool.leastBusy(null).call("render", { page: p, zoom, variant: "original" });
+      if (cancelled) break;
+      const img = await imageDataOf(new Blob([buf], { type: "image/png" }));
+      const found = (await finder.find(img)).filter((f) => f.score >= 0.5);
+      const onPage = doc.segments.filter((s) => s.page === p && s.bbox && !s.extra);
+      const sizes = onPage.filter((s) => !s.skip && s.size).map((s) => s.size).sort((a, b) => a - b), em = sizes.length ? sizes[sizes.length >> 1] : 10;
+      for (const f of found) {
+        const loose = [f.x0 / zoom + page.x0, f.y0 / zoom + page.y0, f.x1 / zoom + page.x0, f.y1 / zoom + page.y0];
+        if (onPage.some((s) => s.frame && insideFrame(s, loose))) continue; // (framed already)
+        // (the pieces: formulas, numbers and short words inside the box – a long text line is not a formula's part)
+        let pieces = onPage.filter((s) => !s.frame && insideFrame(s, loose) && (s.skip || s.text.trim().split(/\s+/).length <= 3));
+        if (pieces.length > 1) { // (an equation number far to the right is not part of it)
+          const sorted = pieces.slice().sort((a, b) => a.bbox[0] - b.bbox[0]);
+          const last = sorted[sorted.length - 1], before = sorted[sorted.length - 2];
+          if (last.skip && !last.formula && last.bbox[0] - Math.max(...sorted.slice(0, -1).map((s) => s.bbox[2])) > 3 * em && before) pieces = pieces.filter((s) => s !== last);
+        }
+        let box;
+        if (pieces.length) {
+          box = pieces.reduce((b, s) => [Math.min(b[0], s.bbox[0]), Math.min(b[1], s.bbox[1]), Math.max(b[2], s.bbox[2]), Math.max(b[3], s.bbox[3])], [1e9, 1e9, -1e9, -1e9]);
+          const pad = 0.5 * em;
+          box = [Math.max(loose[0] - 0.3 * em, box[0] - pad), Math.max(loose[1] - 0.3 * em, box[1] - pad), Math.min(loose[2] + 0.3 * em, box[2] + pad), Math.min(loose[3] + 0.3 * em, box[3] + pad)];
+          if (!pieces.some((s) => s.skip)) continue; // (words only: a caption the model took for a formula)
+        } else box = loose;
+        if (box[2] - box[0] < 4 || box[3] - box[1] < 4) continue;
+        // (a line of running text inside the box: a definition list or a caption, not a displayed formula)
+        if (onPage.some((s) => !s.skip && !s.frame && s.text.trim().split(/\s+/).length > 3 && insideFrame(s, box))) continue;
+        items.push({ page: p, box });
+      }
+    }
+  } catch (err) {
+    if (!cancelled) { console.error(err); toast(t("fx.failed", { err: userError(err) }), "error"); }
+    return;
+  } finally {
+    busy("");
+    if (finder) { finder.terminate(); finder = null; }
+  }
+  if (cancelled || state.doc !== doc) return;
+  const ids = addFormulaFrames(items);
+  toast(t("fx.found", { n: ids.length, p: pageIdx.length }), ids.length ? "ok" : "");
+  if (ids.length && frameAutoTex()) await readLatexFor(ids, true);
+}
+
 /* ---- the bar below the page while the frame tool is on: what to do, "read at once", Done */
 const LS_AUTOTEX = "pdftr:frame-autotex";
 const frameAutoTex = () => { try { return localStorage.getItem(LS_AUTOTEX) !== "0"; } catch (_) { return true; } }; // (on unless switched off)
@@ -566,6 +664,8 @@ function frameHintCount() {
   cb.addEventListener("change", () => { try { localStorage.setItem(LS_AUTOTEX, cb.checked ? "1" : "0"); } catch (_) { /* storage blocked */ } });
   $("#frameDone").addEventListener("click", () => setTool("select"));
   $("#frameTexAll").addEventListener("click", () => readLatexFor(framesToRead().map((s) => s.id)).then(frameHintCount));
+  $("#frameFindPage").addEventListener("click", () => findFormulaFrames([currentPageIndex()]));
+  $("#frameFindAll").addEventListener("click", () => findFormulaFrames(state.doc ? state.doc.pages.map((_, i) => i) : []));
 })();
 /** The frame removed: the segments it covered come back in its place. */
 function removeFormulaFrame(id, quiet = false) {

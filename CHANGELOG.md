@@ -4,6 +4,11 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.55
+
+- **Formulas found and framed automatically.** In a PDF with text, a displayed formula comes in many pieces (every run in the math font, every index, the limits of an integral are text objects of their own), so its boxes look shattered. The bar of the frame tool now offers "Find: this page / all pages": the layout model (about 7 MB, loaded once; the same that finds formulas on scans) looks at the drawn page, and every displayed formula it finds becomes a frame – the pieces inside it, with short words such as "bzw.", become one segment; long text lines next to it stay text, an equation number at the right margin is left out. With "read as LaTeX at once" the frames are read straight away, so a document's formulas can be done without drawing a single frame; a frame the model got wrong is removed like any other. Formulas within running text are not touched.
+- The pieces of a PDF formula are grouped a little more generously for reading (an integral's limits, a fraction's parts).
+
 ## 2.54
 
 - **All frames read at once:** with "read as LaTeX at once" switched off, frames are drawn first and then read together – "Read n frames" in the bar below the page reads every frame that has no LaTeX yet.

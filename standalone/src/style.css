@@ -1016,8 +1016,12 @@ body:not(.is-pptx) .pptx-only { display: none !important; }
 }
 .ocr-area-hint[hidden] { display: none; }
 .ocr-area-hint .btn { flex: none; }
+.frame-hint { flex-wrap: wrap; justify-content: center; row-gap: 6px; }
+.frame-hint > span:first-child { white-space: nowrap; }
 .frame-hint .check { color: inherit; white-space: nowrap; }
 .frame-hint .check input { accent-color: var(--accent); }
+.frame-hint .frame-find { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; padding-left: 10px; border-left: 1px solid rgba(127, 127, 127, .5); }
+.frame-hint .frame-find .btn { padding: 0 8px; }
 .ocr-area { position: absolute; inset: 0; z-index: 8; pointer-events: none; }
 .ocr-area svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
 .ocr-area polygon { fill: color-mix(in srgb, var(--accent) 12%, transparent); stroke: var(--accent); stroke-width: 2px; stroke-dasharray: 6 4; vector-effect: non-scaling-stroke; }
