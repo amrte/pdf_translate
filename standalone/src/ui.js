@@ -803,10 +803,26 @@ function shownSize(i) {
  */
 const screenDpr = () => Math.min(3, window.devicePixelRatio || 1);
 const snapPx = (v) => Math.round(v * screenDpr()) / screenDpr();
-/** Width and height of a page's body on screen (CSS px, snapped to device pixels). */
-function pageCssSize(page) {
-  const w = snapPx(pageCssWidth(page));
-  return [w, snapPx((w * page.height) / page.width)];
+/** The width a page may take while the view fits the width: the narrower pane in the comparison view, less the margins. */
+function fitAvail() {
+  const box = $("#pages");
+  const a = cmp.on ? Math.min(box.clientWidth, $("#pagesCmp").clientWidth || box.clientWidth) : box.clientWidth;
+  return Math.max(60, a - PAGE_SIDE);
+}
+/**
+ * Width and height of a page's body on screen (CSS px, snapped to device pixels). While the view
+ * fits the width, no page is wider than the view: a landscape or A3 page among A4 pages is shown
+ * smaller instead of making the view scroll sideways.
+ */
+function pageCssSize(page, rot = 0) {
+  let w = pageCssWidth(page), clamped = false;
+  if (state.fitMode === true) {
+    const shown = rot % 180 ? (w * page.height) / page.width : w, avail = fitAvail();
+    if (shown > avail) { w = (w * avail) / shown; clamped = true; }
+  }
+  const snap = clamped ? (v) => Math.floor(v * screenDpr()) / screenDpr() : snapPx; // (a page shrunk to the view never a pixel over it)
+  w = snap(w);
+  return [w, snap((w * page.height) / page.width)];
 }
 /** Size a page element for the zoom, and turn its body for a rotated page (placed on whole pixels). */
 function sizePage(el) {
@@ -814,7 +830,7 @@ function sizePage(el) {
   placePageBody(el, page, rot);
 }
 function placePageBody(el, page, rot) {
-  const [w, h] = pageCssSize(page), W = rot % 180 ? h : w, H = rot % 180 ? w : h;
+  const [w, h] = pageCssSize(page, rot), W = rot % 180 ? h : w, H = rot % 180 ? w : h;
   el.style.width = `${W}px`;
   el.style.height = `${H}px`;
   const body = el.querySelector(".page-body");
@@ -826,14 +842,14 @@ function placePageBody(el, page, rot) {
 }
 
 /** The scale the page is rendered at: its width on screen in device pixels, exactly. */
-function renderZoom(page) {
-  const px = Math.round(pageCssSize(page)[0] * screenDpr());
+function renderZoom(page, rot = 0) {
+  const px = Math.round(pageCssSize(page, rot)[0] * screenDpr());
   return Math.min(6, Math.max(0.5, Math.round((px / page.width) * 10000) / 10000));
 }
 /** The page's picture size in device pixels (null where the zoom had to be capped: the picture is then scaled). */
-function renderSize(page) {
-  const [w, h] = pageCssSize(page), dpr = screenDpr(), px = Math.round(w * dpr);
-  if (Math.abs(renderZoom(page) * page.width - px) > 0.5) return null;
+function renderSize(page, rot = 0) {
+  const [w, h] = pageCssSize(page, rot), dpr = screenDpr(), px = Math.round(w * dpr);
+  if (Math.abs(renderZoom(page, rot) * page.width - px) > 0.5) return null;
   return [px, Math.round(h * dpr)];
 }
 
@@ -858,7 +874,7 @@ const observer = new IntersectionObserver((entries) => {
   }
 }, { root: $("#pages"), rootMargin: "800px 0px" });
 
-const imgKey = (i) => `${state.variant}:${state.variant === "translated" ? `${state.buildNo}.${state.pageVersion.get(i) || 0}` : 0}:${i}:${renderZoom(viewPages()[i])}`;
+const imgKey = (i) => `${state.variant}:${state.variant === "translated" ? `${state.buildNo}.${state.pageVersion.get(i) || 0}` : 0}:${i}:${renderZoom(viewPages()[i], pageRotation(i))}`;
 
 function queueRender(i) {
   const el = document.querySelector(`.page[data-page="${i}"]`);
@@ -890,7 +906,7 @@ function pump() {
     inflight++;
     // The editable translated PDF lives in worker 0; originals render on any idle worker.
     (state.variant === "translated" ? pool.workers[0] : pool.leastBusy(building ? pool.workers[0] : null))
-      .call("render", { page: i, zoom: renderZoom(page), variant: state.variant, size: renderSize(page) })
+      .call("render", { page: i, zoom: renderZoom(page, pageRotation(i)), variant: state.variant, size: renderSize(page, pageRotation(i)) })
       .then((buf) => {
         if (state.doc !== doc) return;
         const url = URL.createObjectURL(new Blob([buf], { type: "image/png" }));
@@ -1044,10 +1060,18 @@ function fitWidth(i) {
   const box = $("#pages"), pages = viewPages();
   if (typeof i !== "number") i = currentPageIndex();
   const [w] = shownSize(Math.max(0, Math.min(pages.length - 1, i || 0)));
-  // (in the comparison view the narrower of the two panes decides – they differ by a scrollbar)
-  const avail = cmp.on ? Math.min(box.clientWidth, $("#pagesCmp").clientWidth || box.clientWidth) : box.clientWidth;
-  setZoom((avail - PAGE_SIDE) / (w * 1.25));
-  state.fitMode = true; // (follows the width when the view is resized)
+  const was = state.zoom;
+  setZoom(fitAvail() / (w * 1.25));
+  state.fitMode = true; // (follows the width when the view is resized; wider pages shrink to the view, see pageCssSize)
+  if (state.zoom === was) relayoutPages(); // (the same zoom, but the view's width may have changed)
+}
+/** Pages sized anew for the view's width (and the comparison pages with them); pictures follow once the view rests. */
+function relayoutPages() {
+  if (!state.doc) return;
+  $("#pages").querySelectorAll(".page").forEach(sizePage);
+  if (cmp.on) { $("#pagesCmp").querySelectorAll(".cpage").forEach(sizeCmpPage); syncCmp("main"); }
+  clearTimeout(zoomRenderTimer);
+  zoomRenderTimer = setTimeout(refreshImages, 180);
 }
 
 /* ------------------------------------------------- virtualised segment list */

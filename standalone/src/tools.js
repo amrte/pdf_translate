@@ -1560,7 +1560,7 @@ const cmp = { on: false, observer: null, visible: new Set(), queue: [], busy: fa
 const CMP_CACHE_MAX = 30;
 
 const cmpPages = () => (isBook() && state.outView ? state.outView.pages : state.doc.pages);
-const cmpKey = (i) => `${state.buildNo}.${state.pageVersion.get(i) || 0}:${i}:${renderZoom(cmpPages()[i])}`;
+const cmpKey = (i) => `${state.buildNo}.${state.pageVersion.get(i) || 0}:${i}:${renderZoom(cmpPages()[i], isBook() ? 0 : pageRotation(i))}`;
 
 function setCompare(on) {
   if (on && (!state.doc || !state.hasOutput)) return;
@@ -1683,7 +1683,8 @@ async function cmpPump() {
       if (!cmp.queue.length) break;
       const i = cmp.queue.shift(), key = cmpKey(i), page = cmpPages()[i];
       // The translated document lives in worker 0.
-      const buf = await pool.workers[0].call("render", { page: i, zoom: renderZoom(page), variant: "translated", size: renderSize(page) });
+      const rot = isBook() ? 0 : pageRotation(i);
+      const buf = await pool.workers[0].call("render", { page: i, zoom: renderZoom(page, rot), variant: "translated", size: renderSize(page, rot) });
       if (!cmp.on || state.doc !== doc) break;
       const url = URL.createObjectURL(new Blob([buf], { type: "image/png" }));
       cmp.cache.set(key, url);
