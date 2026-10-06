@@ -22,7 +22,7 @@ def main() -> None:
         # The engine (PDF) and the e-book support run together in the workers.
         "ENGINE": "\n".join((SRC / f).read_text("utf-8") for f in ("engine.js", "ebook.js", "office.js", "text.js", "slides.js", "pages.js", "deskew.js", "legacy.js", "doc.js", "xls.js", "ppt.js")),
         # One module: interface, markup tools, field/OCR tools, then start-up.
-        "UI": "\n".join((SRC / f).read_text("utf-8") for f in ("ui.js", "markup.js", "tools.js", "picture.js", "offline.js", "pagesui.js", "straighten.js", "keywords.js", "words.js", "batch.js", "repeats.js", "theme.js", "reading.js", "segedit.js", "vocab.js", "anki.js", "paddle.js", "formula.js", "main.js")).replace("{{VERSION}}", version),
+        "UI": "\n".join((SRC / f).read_text("utf-8") for f in ("ui.js", "markup.js", "tools.js", "picture.js", "offline.js", "pagesui.js", "straighten.js", "keywords.js", "words.js", "batch.js", "repeats.js", "theme.js", "reading.js", "segedit.js", "vocab.js", "anki.js", "paddle.js", "formula.js", "outline.js", "main.js")).replace("{{VERSION}}", version),
     }
     # The easter egg picture (ten quick clicks on the chameleon in the top bar), embedded as a data URI.
     import base64

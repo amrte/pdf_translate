@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.64
+
+- **Bookmark panel for PDFs.** A PDF with bookmarks shows a new button in the view toolbar (a bookmark beside "reading mode"): it opens the bookmarks as a tree beside the page. A click goes to the place the bookmark points to – the page, and on it the heading's height where the PDF names it; branches fold and unfold; the chapter being read is marked while scrolling (and its branch opens). On the translated view the titles are the translations. Long outlines start with their chapters, the deeper levels folded. The panel stays open for the next document if left open.
+
 ## 2.63
 
 - **Fit to width: no page wider than the view.** With pages of different sizes – a landscape or A3 page among A4 pages – fitting the page in view left the wider page sticking out, with a horizontal scrollbar on the pane (in the comparison view too). While the view fits the width, a wider page is now shown smaller so that it fits as well; the view never scrolls sideways until you zoom in yourself.

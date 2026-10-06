@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="Kameleon 2.63">
+  <meta name="generator" content="Kameleon 2.64">
   <meta name="description" content="Kameleon – Wechselt die Sprache, behält die Form. Changes language, keeps its shape.">
   <title>Kameleon</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2216%22 fill=%22%23287130%22/%3E%3Cg transform=%22translate(2.5 1) scale(0.9)%22 fill=%22%23ffffff%22 stroke=%22%23ffffff%22%3E%3Cpath d=%22M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6%22 fill=%22none%22 stroke-width=%223.8%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M21 43l-1 10M30 44v9M38 43l1 10%22 stroke-width=%223.6%22 stroke-linecap=%22round%22/%3E%3Cellipse cx=%2221%22 cy=%2225%22 rx=%227%22 ry=%227.5%22 stroke=%22none%22/%3E%3Cellipse cx=%2233%22 cy=%2223.5%22 rx=%227.5%22 ry=%228%22 stroke=%22none%22/%3E%3Cpath d=%22M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z%22 stroke=%22none%22/%3E%3Cpath d=%22M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z%22 stroke=%22none%22/%3E%3Cpath d=%22M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z%22 stroke=%22none%22/%3E%3Cpath d=%22M16 37l4-3 4 3 4-3 4 3 4-3 4 3%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%222.1%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3Cpath d=%22M43.5 33.9L57 32.6%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%221.5%22 stroke-linecap=%22round%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%224.4%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%222.7%22 stroke=%22none%22/%3E%3Ccircle cx=%2246.2%22 cy=%2226.7%22 r=%221.3%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Cpath d=%22M4 55.5c15-3 39-3 54 0%22 fill=%22none%22 stroke-width=%222.4%22 stroke-linecap=%22round%22/%3E%3C/g%3E%3C/svg%3E">
@@ -392,6 +392,23 @@ p.help-part { display: block; }
 /* ---------- markup tools, page navigation (v1.02) ---------- */
 .viewer-body { flex: 1; min-height: 0; display: flex; }
 .viewer-body .pages { flex: 1; min-width: 0; }
+.outline-panel { width: 240px; flex: none; display: flex; flex-direction: column; min-height: 0; background: var(--surface); border-right: 1px solid var(--border); }
+.outline-panel[hidden] { display: none; }
+.outline-head { display: flex; align-items: center; justify-content: space-between; padding: 6px 8px 6px 12px; border-bottom: 1px solid var(--border); font-size: 13px; }
+.outline-head .modal-x { position: static; width: 24px; height: 24px; font-size: 16px; }
+.outline-tree { flex: 1; overflow: auto; padding: 4px 0 12px; font-size: 13px; }
+.ol-item { display: flex; align-items: baseline; gap: 4px; padding: 3px 8px 3px calc(6px + var(--depth) * 14px); cursor: pointer; line-height: 1.3; border-left: 3px solid transparent; }
+.ol-item:hover { background: var(--surface-2); }
+.ol-item.top { font-weight: 600; }
+.ol-item.current { background: var(--accent-soft); border-left-color: var(--accent); color: var(--text); }
+.ol-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ol-page { flex: none; color: var(--muted); font-size: 11.5px; font-weight: 400; font-variant-numeric: tabular-nums; }
+.ol-caret { flex: none; width: 14px; height: 14px; display: inline-grid; place-items: center; padding: 0; border: 0; background: none; color: var(--muted); cursor: pointer; align-self: center; }
+.ol-caret svg { transition: transform .12s; }
+.ol-caret.open svg { transform: rotate(90deg); }
+.ol-caret.none { cursor: default; }
+#btnOutline.on { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+body.viewer-only .outline-panel { max-width: 30vw; }
 .tool-rail {
   width: 40px; flex: none; display: flex; flex-direction: column; align-items: center; gap: 3px;
   padding: 6px 0; background: var(--surface); border-right: 1px solid var(--border); overflow-y: auto;
@@ -1108,7 +1125,7 @@ body.seg-dragging, body.seg-dragging * { cursor: grabbing !important; user-selec
   <div class="brand">
     <span class="logo"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#287130"/><g transform="translate(2.5 1) scale(0.9)" fill="#ffffff" stroke="#ffffff"><path d="M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6" fill="none" stroke-width="3.8" stroke-linecap="round"/><path d="M21 43l-1 10M30 44v9M38 43l1 10" stroke-width="3.6" stroke-linecap="round"/><ellipse cx="21" cy="25" rx="7" ry="7.5" stroke="none"/><ellipse cx="33" cy="23.5" rx="7.5" ry="8" stroke="none"/><path d="M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z" stroke="none"/><path d="M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z" stroke="none"/><path d="M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z" stroke="none"/><path d="M16 37l4-3 4 3 4-3 4 3 4-3 4 3" fill="none" stroke="#287130" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M43.5 33.9L57 32.6" fill="none" stroke="#287130" stroke-width="1.5" stroke-linecap="round"/><circle cx="45.5" cy="26.5" r="4.4" fill="#287130" stroke="none"/><circle cx="45.5" cy="26.5" r="2.7" stroke="none"/><circle cx="46.2" cy="26.7" r="1.3" fill="#287130" stroke="none"/><path d="M4 55.5c15-3 39-3 54 0" fill="none" stroke-width="2.4" stroke-linecap="round"/></g></svg></span>
     <span class="brand-name">Kameleon</span>
-    <span class="version" id="appVersion">v2.63</span>
+    <span class="version" id="appVersion">v2.64</span>
   </div>
   <div class="topbar-actions">
     <span class="doc-name" id="docName"></span>
@@ -1230,6 +1247,7 @@ body.seg-dragging, body.seg-dragging * { cursor: grabbing !important; user-selec
         <button id="viewCompare" disabled data-i18n="view.compare" data-i18n-title="view.compareTitle">Compare</button>
       </div>
       <label class="check boxes-check" data-i18n-title="view.boxes"><input type="checkbox" id="showBoxes" checked> <span data-i18n="view.boxes">Show segments</span></label>
+      <button class="icon-btn pdf-only" id="btnOutline" data-i18n-title="outline.button" aria-pressed="false" hidden><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-6-4-6 4z"/><path d="M9 8h6M9 12h4"/></svg></button>
       <button class="icon-btn" id="btnReading" data-i18n-title="view.reading" aria-pressed="false"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.5C10.5 5.2 8.6 4.5 6.5 4.5H3v14h3.5c2.1 0 4 .7 5.5 2 1.5-1.3 3.4-2 5.5-2H21v-14h-3.5c-2.1 0-4 .7-5.5 2z"/><path d="M12 6.5v14"/></svg></button>
       <div class="spacer"></div>
       <div class="page-nav">
@@ -1298,6 +1316,10 @@ body.seg-dragging, body.seg-dragging * { cursor: grabbing !important; user-selec
     </div>
     <div class="ocr-area-hint frame-hint" id="frameHint" role="status" hidden><span data-i18n="fx.frameHint"></span><label class="check" data-i18n-title="fx.autoTexTitle"><input type="checkbox" id="frameAutoTex" checked> <span data-i18n="fx.autoTex"></span></label><span class="frame-find"><span data-i18n="fx.find"></span> <button type="button" class="btn small" id="frameFindPage" data-i18n="fx.findPage" data-i18n-title="fx.findPageTitle">page</button><button type="button" class="btn small" id="frameFindAll" data-i18n="fx.findAll" data-i18n-title="fx.findAllTitle">all pages</button></span><button type="button" class="btn small primary" id="frameTexAll" data-i18n-title="fx.texAllTitle" hidden></button><button type="button" class="btn small" id="frameDone" data-i18n="fx.frameDone">Done</button></div>
     <div class="ocr-area-hint" id="ocrAreaHint" role="status" hidden><span id="ocrAreaText"></span><button type="button" class="btn small primary" id="ocrAreaGo" data-i18n="ocr.start" hidden>Recognise</button><button type="button" class="btn small" id="ocrAreaCancel" data-i18n="common.cancel">Cancel</button></div>
+    <aside class="outline-panel" id="outlinePanel" hidden aria-labelledby="outlineHead">
+      <div class="outline-head"><b id="outlineHead" data-i18n="outline.title">Bookmarks</b><button type="button" class="modal-x" id="outlineClose" data-i18n-title="common.close">×</button></div>
+      <div class="outline-tree" id="outlineTree" role="tree"></div>
+    </aside>
     <div class="pages" id="pages"></div>
     <div class="pages translated cmp-pages" id="pagesCmp" hidden></div>
     </div>
@@ -1656,7 +1678,7 @@ body.seg-dragging, body.seg-dragging * { cursor: grabbing !important; user-selec
     </div>
     <input type="file" id="offlineZip" class="visually-hidden" accept=".zip,application/zip,.js,.mjs,.wasm,.gz,.traineddata,.onnx,.ort,.txt,.json" multiple tabindex="-1">
     <input type="file" id="offlineFolder" class="visually-hidden" webkitdirectory multiple tabindex="-1">
-    <p class="muted small help-version help-part">Kameleon v2.63 · <span data-i18n="app.tagline"></span></p>
+    <p class="muted small help-version help-part">Kameleon v2.64 · <span data-i18n="app.tagline"></span></p>
     <div class="modal-actions">
       <button type="button" value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
     </div>
@@ -2067,6 +2089,10 @@ const I18N = {
     "fx.done": "{n} Formel(n) als LaTeX gelesen.",
     "fx.doneUnsure": "{n} Formel(n) als LaTeX gelesen; {u} konnte(n) nicht sicher gelesen werden.",
     "fx.failed": "Die Formeln konnten nicht gelesen werden: {err}",
+    "outline.button": "Lesezeichen der PDF: Inhaltsverzeichnis zum Springen",
+    "outline.title": "Lesezeichen",
+    "outline.expand": "Aufklappen",
+    "outline.collapse": "Zuklappen",
     "fx.autoTexOff": "Das Formel-Modell konnte nicht geladen werden – „gleich als LaTeX lesen“ ist ausgeschaltet. Mit „… Rahmen lesen“ lässt es sich später erneut versuchen; für Rechner ohne Zugriff: Hilfe → Offline arbeiten.",
     "fx.findNoModel": "Das Layout-Modell ist nicht erreichbar – die Formeln werden allein aus dem Text der Seite gefunden.",
     "fx.find": "Finden:",
@@ -3086,6 +3112,10 @@ const I18N = {
     "fx.done": "{n} formula(s) read as LaTeX.",
     "fx.doneUnsure": "{n} formula(s) read as LaTeX; {u} could not be read reliably.",
     "fx.failed": "The formulas could not be read: {err}",
+    "outline.button": "The PDF's bookmarks: a table of contents to jump",
+    "outline.title": "Bookmarks",
+    "outline.expand": "Expand",
+    "outline.collapse": "Collapse",
     "fx.autoTexOff": "The formula model could not be loaded – “read as LaTeX at once” is switched off. “Read … frames” tries again later; for computers without access: Help → Working offline.",
     "fx.findNoModel": "The layout model cannot be reached – the formulas are found from the page's text alone.",
     "fx.find": "Find:",
@@ -5506,6 +5536,37 @@ function docExtras(doc) {
       let page = 0;
       try { if (item.uri) { const n = doc.resolveLink(item.uri); if (n >= 0) page = n; } } catch (_) { /* an outside target */ }
       add("outline", item.title || "", page, i++);
+      if (depth < 32) walk(item.down, depth + 1);
+    }
+  };
+  walk(tree, 0);
+  return out;
+}
+
+/**
+ * The outline as a list in reading order, for the bookmark panel: [{i, title, depth, page, y}] –
+ * `i` the same number as the bookmark segment's `ref`, `y` the height on the page it points to
+ * (page space; null when the bookmark names only the page), page -1 for a target outside.
+ */
+function outlineItems(doc) {
+  let tree = null;
+  try { tree = doc.loadOutline(); } catch (_) { return []; }
+  const out = [];
+  let i = 0;
+  const walk = (items, depth) => {
+    for (const item of items || []) {
+      let page = -1, y = null;
+      try {
+        if (item.uri) {
+          const n = doc.resolveLink(item.uri);
+          if (n >= 0) page = n;
+          if (n >= 0 && doc.resolveLinkDestination) {
+            const d = doc.resolveLinkDestination(item.uri);
+            if (d && ["XYZ", "FitH", "FitBH", "FitR"].includes(d.type) && isFinite(d.y) && !Number.isNaN(d.y)) y = round2(d.y);
+          }
+        } else if (typeof item.page === "number" && item.page >= 0) page = item.page;
+      } catch (_) { /* an outside target */ }
+      out.push({ i: i++, title: (item.title || "").replace(/\s+/g, " ").trim(), depth, page, y });
       if (depth < 32) walk(item.down, depth + 1);
     }
   };
@@ -8278,6 +8339,7 @@ function createHandler() {
     }
     if (cmd === "extract") return { result: await extractPages(W.doc, args.pages, progress) };
     if (cmd === "pageLines") return { result: pageLinesFor(W.doc, args.page).lines };
+    if (cmd === "outline") return { result: outlineItems(W.doc) };
     if (cmd === "resegment") return { result: resegmentPage(W.doc, args.page, args.groups) };
     if (cmd === "unlock") return { result: unlockPdf(args.bytes, args.password) };
     if (cmd === "convert") return { result: await convertLegacy(args.bytes, args.kind) }; // .doc/.xls/.ppt → .docx/.xlsx/.pptx
@@ -15633,6 +15695,7 @@ function openDocument(doc, bytes) {
   state.zoom = fitZoom();
   state.fitMode = doc.image ? "page" : true; // (a picture stays whole when the view is resized)
   initMarkupsForDocument();
+  loadOutlinePanel(); // (the bookmark panel, see outline.js)
   renderPages();
   vl.reset();
   applyFilter();
@@ -16008,6 +16071,7 @@ function setVariant(variant) {
   $("#viewTranslated").classList.toggle("active", variant === "translated");
   $("#pages").classList.toggle("translated", variant === "translated");
   refreshImages();
+  renderOutline(); // (bookmark titles: original or translated)
 }
 
 const ZOOM_MIN = 0.25, ZOOM_MAX = 5;
@@ -16323,6 +16387,7 @@ function markWarn(el, id) {
 }
 
 function markDone(id) {
+  if (segById(id)?.extra === "outline" && state.variant === "translated") renderOutline();
   const done = segDone(id);
   vl.rendered.get(id)?.classList.toggle("done", done);
   vl.rendered.get(id)?.classList.toggle("pending", isPending(id));
@@ -20397,7 +20462,7 @@ function initPicture() {
 // from its own browser cache before the network, so language files are written into that cache.
 // ======================================================================
 
-const APP_VERSION = "2.63";
+const APP_VERSION = "2.64";
 // (a change of library version makes a stored set outdated: it is then ignored)
 const OFFLINE_VERSION = `${MUPDF_URL} ${OCR_LIB}`;
 const CORE_SIMD = "tesseract-core-simd-lstm.wasm.js", CORE_PLAIN = "tesseract-core-lstm.wasm.js";
@@ -26211,6 +26276,148 @@ async function saveSheets() {
     aiFxButtons(frames);
   });
   $("#aiFxSave").addEventListener("click", saveSheets);
+})();
+
+/* ---------------------------------------------------------------- the bookmark panel */
+// A PDF's bookmarks (its outline) as a tree beside the page: a click goes to the place the
+// bookmark points to, the chapter being read is marked while scrolling, branches fold. The titles
+// are the original ones, or – on the translated view – their translations (bookmarks are
+// segments of their own, `extra: "outline"`, `ref` their place in the outline).
+
+const LS_OUTLINE = "pdftr:outline-open";
+const ol = { items: [], doc: null, current: -1, folded: new Set(), jumped: null };
+
+/** The open document's outline, from the engine ([{i, title, depth, page, y}]); the button shows when there is one. */
+async function loadOutlinePanel() {
+  const doc = state.doc;
+  ol.items = []; ol.doc = doc; ol.current = -1; ol.folded = new Set();
+  $("#btnOutline").hidden = true;
+  $("#outlinePanel").hidden = true;
+  if (!doc || isBook()) return;
+  let items = [];
+  try { items = (await pool.workers[0].call("outline")) || []; } catch (err) { console.warn("outline", err); }
+  if (state.doc !== doc) return;
+  ol.items = items;
+  // (deeper levels start folded when the outline is long: the chapters first)
+  if (items.length > 40) items.forEach((it, k) => { if (it.depth >= 1 && items[k + 1] && items[k + 1].depth > it.depth) ol.folded.add(it.i); });
+  $("#btnOutline").hidden = !items.length;
+  let open = false;
+  try { open = localStorage.getItem(LS_OUTLINE) === "1"; } catch (_) { /* storage blocked */ }
+  showOutline(open && items.length > 0, false);
+}
+
+function showOutline(on, remember = true) {
+  if (on && !ol.items.length) on = false;
+  $("#outlinePanel").hidden = !on;
+  $("#btnOutline").classList.toggle("on", on);
+  $("#btnOutline").setAttribute("aria-pressed", String(on));
+  if (remember) { try { localStorage.setItem(LS_OUTLINE, on ? "1" : "0"); } catch (_) { /* storage blocked */ } }
+  if (on) { renderOutline(); syncOutline(true); }
+}
+
+/** A bookmark's title as shown: its translation on the translated view, when it has one. */
+function outlineTitle(it) {
+  if (state.variant === "translated") {
+    const s = state.doc.segments.find((x) => x.extra === "outline" && x.ref === it.i);
+    const tr = s && (state.translations[s.id] || "").trim();
+    if (tr) return tr;
+  }
+  return it.title || "–";
+}
+
+function renderOutline() {
+  const box = $("#outlineTree");
+  if (!box || $("#outlinePanel").hidden) return;
+  const items = ol.items, out = [];
+  // (a current bookmark inside a folded branch: the branch's visible entry is marked instead)
+  let mark = ol.current;
+  const ck = items.findIndex((it) => it.i === ol.current);
+  if (ck >= 0) {
+    let d = items[ck].depth;
+    for (let j = ck - 1; j >= 0 && d > 0; j--) if (items[j].depth < d) { d = items[j].depth; if (ol.folded.has(items[j].i)) mark = items[j].i; }
+  }
+  let hideBelow = Infinity; // (the children of a folded entry)
+  items.forEach((it, k) => {
+    if (it.depth > hideBelow) return;
+    hideBelow = Infinity;
+    const kids = items[k + 1] && items[k + 1].depth > it.depth, folded = ol.folded.has(it.i);
+    if (kids && folded) hideBelow = it.depth;
+    const caret = kids ? `<button type="button" class="ol-caret${folded ? "" : " open"}" data-fold="${it.i}" aria-label="${escapeHtml(t(folded ? "outline.expand" : "outline.collapse"))}"><svg viewBox="0 0 10 10" width="9" height="9"><path d="M3 1.5L7 5 3 8.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>` : `<span class="ol-caret none"></span>`;
+    const title = outlineTitle(it);
+    out.push(`<div class="ol-item${it.i === mark ? " current" : ""}${it.depth ? "" : " top"}" data-i="${it.i}" style="--depth:${it.depth}" role="treeitem"${kids ? ` aria-expanded="${!folded}"` : ""}>${caret}<span class="ol-title" title="${escapeHtml(title)}">${escapeHtml(title)}</span><span class="ol-page">${it.page >= 0 ? it.page + 1 : ""}</span></div>`);
+  });
+  box.innerHTML = out.join("");
+}
+
+/** Go to the place a bookmark points to: its page, and on it the height it names (when the page is upright). */
+function goToBookmark(it) {
+  if (!state.doc || it.page < 0) return;
+  const el = pageElements()[it.page], box = $("#pages");
+  if (!el) return;
+  const page = viewPages()[it.page];
+  let top = el.offsetTop - 22;
+  if (it.y != null && isFinite(it.y) && page && !pageRotation(it.page)) {
+    const f = Math.max(0, Math.min(1, (it.y - page.y0) / page.height));
+    top = el.offsetTop + f * el.offsetHeight - 12;
+  }
+  box.scrollTop = Math.max(0, top);
+  ol.current = it.i;
+  ol.jumped = box.scrollTop; // (the bookmark clicked stays marked until the view is scrolled on)
+  renderOutline();
+  updatePageNav();
+}
+
+/** The bookmark of the place being read: the last one whose target lies above a line near the top of the view. */
+function syncOutline(reveal = false) {
+  if ($("#outlinePanel").hidden || !ol.items.length || !state.doc) return;
+  const box = $("#pages");
+  if (ol.jumped !== null) { if (Math.abs(box.scrollTop - ol.jumped) < 2) return; ol.jumped = null; }
+  const yView = box.scrollTop + Math.min(120, box.clientHeight * 0.15), els = pageElements();
+  let i = 0;
+  for (let k = 0; k < els.length; k++) { if (els[k].offsetTop <= yView) i = k; else break; }
+  const el = els[i], page = viewPages()[i];
+  if (!el || !page) return;
+  const at = i + Math.max(0, Math.min(0.999, (yView - el.offsetTop) / el.offsetHeight));
+  let cur = -1;
+  for (const it of ol.items) {
+    if (it.page < 0) continue;
+    const p = viewPages()[it.page];
+    const pos = it.page + (it.y != null && isFinite(it.y) && p && !pageRotation(it.page) ? Math.max(0, Math.min(0.999, (it.y - p.y0) / p.height)) : 0);
+    if (pos <= at + 1e-6) cur = it.i;
+  }
+  if (cur === ol.current && !reveal) return;
+  ol.current = cur;
+  // (a folded branch opens to show where one is)
+  const k = ol.items.findIndex((it) => it.i === cur);
+  if (k >= 0) {
+    let d = ol.items[k].depth;
+    for (let j = k - 1; j >= 0 && d > 0; j--) if (ol.items[j].depth < d) { if (reveal) ol.folded.delete(ol.items[j].i); d = ol.items[j].depth; }
+  }
+  renderOutline();
+  const row = $("#outlineTree").querySelector(".ol-item.current");
+  if (row) {
+    const tree = $("#outlineTree"), r = row.offsetTop - tree.offsetTop;
+    if (r < tree.scrollTop || r + row.offsetHeight > tree.scrollTop + tree.clientHeight) tree.scrollTop = r - tree.clientHeight / 3;
+  }
+}
+
+(function initOutline() {
+  if (!$("#outlinePanel")) return;
+  $("#btnOutline").addEventListener("click", () => showOutline($("#outlinePanel").hidden));
+  $("#outlineClose").addEventListener("click", () => showOutline(false));
+  $("#outlineTree").addEventListener("click", (e) => {
+    const fold = e.target.closest("[data-fold]");
+    if (fold) {
+      const i = Number(fold.dataset.fold);
+      if (ol.folded.has(i)) ol.folded.delete(i); else ol.folded.add(i);
+      renderOutline();
+      return;
+    }
+    const row = e.target.closest(".ol-item");
+    if (row) goToBookmark(ol.items.find((it) => it.i === Number(row.dataset.i)));
+  });
+  let raf = 0;
+  $("#pages").addEventListener("scroll", () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; syncOutline(); }); }, { passive: true });
 })();
 
 // Start-up (runs after ui.js, markup.js and tools.js have defined everything).

@@ -138,6 +138,7 @@
         <button id="viewCompare" disabled data-i18n="view.compare" data-i18n-title="view.compareTitle">Compare</button>
       </div>
       <label class="check boxes-check" data-i18n-title="view.boxes"><input type="checkbox" id="showBoxes" checked> <span data-i18n="view.boxes">Show segments</span></label>
+      <button class="icon-btn pdf-only" id="btnOutline" data-i18n-title="outline.button" aria-pressed="false" hidden><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-6-4-6 4z"/><path d="M9 8h6M9 12h4"/></svg></button>
       <button class="icon-btn" id="btnReading" data-i18n-title="view.reading" aria-pressed="false"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.5C10.5 5.2 8.6 4.5 6.5 4.5H3v14h3.5c2.1 0 4 .7 5.5 2 1.5-1.3 3.4-2 5.5-2H21v-14h-3.5c-2.1 0-4 .7-5.5 2z"/><path d="M12 6.5v14"/></svg></button>
       <div class="spacer"></div>
       <div class="page-nav">
@@ -206,6 +207,10 @@
     </div>
     <div class="ocr-area-hint frame-hint" id="frameHint" role="status" hidden><span data-i18n="fx.frameHint"></span><label class="check" data-i18n-title="fx.autoTexTitle"><input type="checkbox" id="frameAutoTex" checked> <span data-i18n="fx.autoTex"></span></label><span class="frame-find"><span data-i18n="fx.find"></span> <button type="button" class="btn small" id="frameFindPage" data-i18n="fx.findPage" data-i18n-title="fx.findPageTitle">page</button><button type="button" class="btn small" id="frameFindAll" data-i18n="fx.findAll" data-i18n-title="fx.findAllTitle">all pages</button></span><button type="button" class="btn small primary" id="frameTexAll" data-i18n-title="fx.texAllTitle" hidden></button><button type="button" class="btn small" id="frameDone" data-i18n="fx.frameDone">Done</button></div>
     <div class="ocr-area-hint" id="ocrAreaHint" role="status" hidden><span id="ocrAreaText"></span><button type="button" class="btn small primary" id="ocrAreaGo" data-i18n="ocr.start" hidden>Recognise</button><button type="button" class="btn small" id="ocrAreaCancel" data-i18n="common.cancel">Cancel</button></div>
+    <aside class="outline-panel" id="outlinePanel" hidden aria-labelledby="outlineHead">
+      <div class="outline-head"><b id="outlineHead" data-i18n="outline.title">Bookmarks</b><button type="button" class="modal-x" id="outlineClose" data-i18n-title="common.close">×</button></div>
+      <div class="outline-tree" id="outlineTree" role="tree"></div>
+    </aside>
     <div class="pages" id="pages"></div>
     <div class="pages translated cmp-pages" id="pagesCmp" hidden></div>
     </div>

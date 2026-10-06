@@ -1351,6 +1351,37 @@ function docExtras(doc) {
   return out;
 }
 
+/**
+ * The outline as a list in reading order, for the bookmark panel: [{i, title, depth, page, y}] –
+ * `i` the same number as the bookmark segment's `ref`, `y` the height on the page it points to
+ * (page space; null when the bookmark names only the page), page -1 for a target outside.
+ */
+function outlineItems(doc) {
+  let tree = null;
+  try { tree = doc.loadOutline(); } catch (_) { return []; }
+  const out = [];
+  let i = 0;
+  const walk = (items, depth) => {
+    for (const item of items || []) {
+      let page = -1, y = null;
+      try {
+        if (item.uri) {
+          const n = doc.resolveLink(item.uri);
+          if (n >= 0) page = n;
+          if (n >= 0 && doc.resolveLinkDestination) {
+            const d = doc.resolveLinkDestination(item.uri);
+            if (d && ["XYZ", "FitH", "FitBH", "FitR"].includes(d.type) && isFinite(d.y) && !Number.isNaN(d.y)) y = round2(d.y);
+          }
+        } else if (typeof item.page === "number" && item.page >= 0) page = item.page;
+      } catch (_) { /* an outside target */ }
+      out.push({ i: i++, title: (item.title || "").replace(/\s+/g, " ").trim(), depth, page, y });
+      if (depth < 32) walk(item.down, depth + 1);
+    }
+  };
+  walk(tree, 0);
+  return out;
+}
+
 /** The lines of a page as the segmenter sees them: blocks of lines, the text margins per rotation, all lines. */
 function pageLineSet(rawBlocks, seps, protect) {
   {
@@ -4116,6 +4147,7 @@ function createHandler() {
     }
     if (cmd === "extract") return { result: await extractPages(W.doc, args.pages, progress) };
     if (cmd === "pageLines") return { result: pageLinesFor(W.doc, args.page).lines };
+    if (cmd === "outline") return { result: outlineItems(W.doc) };
     if (cmd === "resegment") return { result: resegmentPage(W.doc, args.page, args.groups) };
     if (cmd === "unlock") return { result: unlockPdf(args.bytes, args.password) };
     if (cmd === "convert") return { result: await convertLegacy(args.bytes, args.kind) }; // .doc/.xls/.ppt → .docx/.xlsx/.pptx

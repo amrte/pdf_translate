@@ -632,6 +632,7 @@ function openDocument(doc, bytes) {
   state.zoom = fitZoom();
   state.fitMode = doc.image ? "page" : true; // (a picture stays whole when the view is resized)
   initMarkupsForDocument();
+  loadOutlinePanel(); // (the bookmark panel, see outline.js)
   renderPages();
   vl.reset();
   applyFilter();
@@ -1007,6 +1008,7 @@ function setVariant(variant) {
   $("#viewTranslated").classList.toggle("active", variant === "translated");
   $("#pages").classList.toggle("translated", variant === "translated");
   refreshImages();
+  renderOutline(); // (bookmark titles: original or translated)
 }
 
 const ZOOM_MIN = 0.25, ZOOM_MAX = 5;
@@ -1322,6 +1324,7 @@ function markWarn(el, id) {
 }
 
 function markDone(id) {
+  if (segById(id)?.extra === "outline" && state.variant === "translated") renderOutline();
   const done = segDone(id);
   vl.rendered.get(id)?.classList.toggle("done", done);
   vl.rendered.get(id)?.classList.toggle("pending", isPending(id));
