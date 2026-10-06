@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.62
+
+- **No horizontal scrollbar in the comparison view.** The right pane is a scrollbar's width narrower than the left one, but both were fitted to the left pane's width, so the right one overflowed by a few pixels and showed a horizontal scrollbar. The fit now takes the narrower pane.
+
 ## 2.61
 
 - **Fit to width fits the page in view.** It fitted the widest page of the whole document, so one landscape or A3 page among A4 pages made every page small (43 % in a 195-page report, in the comparison view too). Now the page you are looking at fills the width – on opening, on "fit width", when the window is resized and in the comparison view; a wider page further on scrolls sideways.

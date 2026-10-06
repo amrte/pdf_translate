@@ -1044,7 +1044,9 @@ function fitWidth(i) {
   const box = $("#pages"), pages = viewPages();
   if (typeof i !== "number") i = currentPageIndex();
   const [w] = shownSize(Math.max(0, Math.min(pages.length - 1, i || 0)));
-  setZoom((box.clientWidth - (cmp.on ? 10 : PAGE_SIDE)) / (w * 1.25));
+  // (in the comparison view the narrower of the two panes decides – they differ by a scrollbar)
+  const avail = cmp.on ? Math.min(box.clientWidth, $("#pagesCmp").clientWidth || box.clientWidth) : box.clientWidth;
+  setZoom((avail - PAGE_SIDE) / (w * 1.25));
   state.fitMode = true; // (follows the width when the view is resized)
 }
 
