@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.60
+
+- **Sharper pages.** Text and thin lines often looked soft, at any zoom. Two causes: the page picture was rendered up to a quarter step larger than its size on screen and scaled down by the browser, and the page body was centred with a transform that could leave it half a pixel off. Now the page's size on screen is snapped to whole device pixels (also on screens scaled to 125 % or 150 %), the picture is rendered at exactly that size – one picture pixel per screen pixel, in the original, the translation and the comparison view, turned pages included – and the body is placed on whole pixels. A zoom beyond about 430 dpi is still capped and scaled.
+
 ## 2.59
 
 - **No repeated model loading.** When the formula model could not be fetched (a computer without access to the internet or to GitHub), every frame drawn by hand tried again, each time with a wait and an error. Now a failed load is remembered: "read as LaTeX at once" switches itself off with one message, frames are drawn without delay, and "Read … frames" in the bar tries again only when asked. The formula finder works without the layout model too, from the page's text alone, and says so once.

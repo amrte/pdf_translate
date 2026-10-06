@@ -3000,10 +3000,23 @@ function textAppearance(doc, fk, m, rgb) {
 }
 
 /** Render a page to PNG bytes (a copy, safe to transfer). */
-function renderPNG(doc, index, zoom) {
+/**
+ * The page drawn at `zoom` pixels per point; with `size` ([w, h] in pixels) exactly that big – the
+ * viewer asks for the page's size in device pixels, so the picture is shown pixel for pixel.
+ */
+function renderPNG(doc, index, zoom, size = null) {
   const page = doc.loadPage(index);
-  const pix = page.toPixmap(M.Matrix.scale(zoom, zoom), M.ColorSpace.DeviceRGB, false, true);
+  let pix, dev = null;
+  if (size && size[0] > 0 && size[1] > 0) {
+    const [x0, y0] = page.getBounds();
+    pix = new M.Pixmap(M.ColorSpace.DeviceRGB, [0, 0, Math.round(size[0]), Math.round(size[1])], false);
+    pix.clear(255);
+    dev = new M.DrawDevice(M.Matrix.identity, pix);
+    page.run(dev, [zoom, 0, 0, zoom, -x0 * zoom, -y0 * zoom]);
+    dev.close();
+  } else pix = page.toPixmap(M.Matrix.scale(zoom, zoom), M.ColorSpace.DeviceRGB, false, true);
   const png = pix.asPNG().slice();
+  free(dev);
   free(pix);
   free(page);
   return png;
@@ -4204,7 +4217,7 @@ function createHandler() {
     if (cmd === "render") {
       const doc = args.variant === "translated" ? W.edit : W.doc;
       if (!doc) throw new Error("No document is open.");
-      const png = renderPNG(doc, args.page, args.zoom);
+      const png = renderPNG(doc, args.page, args.zoom, args.size || null);
       return { result: png.buffer, transfer: [png.buffer] };
     }
     if (cmd === "build" && W.kind !== "pdf") {

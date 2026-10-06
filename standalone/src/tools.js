@@ -1590,14 +1590,7 @@ function setCompare(on) {
 function sizeCmpPage(el) {
   const i = Number(el.dataset.cpage), page = cmpPages()[i];
   if (!page) return;
-  const rot = isBook() ? 0 : pageRotation(i);
-  const w = pageCssWidth(page), h = Math.round((w * page.height) / page.width);
-  el.style.width = `${rot % 180 ? h : w}px`;
-  el.style.aspectRatio = rot % 180 ? `${page.height} / ${page.width}` : `${page.width} / ${page.height}`;
-  const body = el.querySelector(".page-body");
-  body.style.width = `${w}px`;
-  body.style.height = `${h}px`;
-  body.style.transform = `translate(-50%, -50%)${rot ? ` rotate(${rot}deg)` : ""}`;
+  placePageBody(el, page, isBook() ? 0 : pageRotation(i));
 }
 
 /** Where each segment is shown on the two sides: {id: [page, bbox]} (the first box). */
@@ -1690,7 +1683,7 @@ async function cmpPump() {
       if (!cmp.queue.length) break;
       const i = cmp.queue.shift(), key = cmpKey(i), page = cmpPages()[i];
       // The translated document lives in worker 0.
-      const buf = await pool.workers[0].call("render", { page: i, zoom: renderZoom(page), variant: "translated" });
+      const buf = await pool.workers[0].call("render", { page: i, zoom: renderZoom(page), variant: "translated", size: renderSize(page) });
       if (!cmp.on || state.doc !== doc) break;
       const url = URL.createObjectURL(new Blob([buf], { type: "image/png" }));
       cmp.cache.set(key, url);

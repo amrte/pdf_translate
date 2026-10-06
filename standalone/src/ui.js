@@ -795,21 +795,46 @@ function shownSize(i) {
   return pageRotation(i) % 180 ? [p.height, p.width] : [p.width, p.height];
 }
 
-/** Size a page element for the zoom, and turn its body for a rotated page. */
+/**
+ * The page's picture is drawn with exactly one picture pixel per device pixel: the page's size on
+ * screen is snapped to whole device pixels (fractions of a CSS pixel where the screen is scaled
+ * 125 % or 150 %), and the picture is rendered at that very size – a picture a few per cent
+ * larger, or one placed half a pixel off, is resampled by the browser and goes soft.
+ */
+const screenDpr = () => Math.min(3, window.devicePixelRatio || 1);
+const snapPx = (v) => Math.round(v * screenDpr()) / screenDpr();
+/** Width and height of a page's body on screen (CSS px, snapped to device pixels). */
+function pageCssSize(page) {
+  const w = snapPx(pageCssWidth(page));
+  return [w, snapPx((w * page.height) / page.width)];
+}
+/** Size a page element for the zoom, and turn its body for a rotated page (placed on whole pixels). */
 function sizePage(el) {
   const i = Number(el.dataset.page), page = viewPages()[i], rot = pageRotation(i);
-  const w = pageCssWidth(page), h = Math.round((w * page.height) / page.width);
-  el.style.width = `${rot % 180 ? h : w}px`;
-  el.style.aspectRatio = rot % 180 ? `${page.height} / ${page.width}` : `${page.width} / ${page.height}`;
+  placePageBody(el, page, rot);
+}
+function placePageBody(el, page, rot) {
+  const [w, h] = pageCssSize(page), W = rot % 180 ? h : w, H = rot % 180 ? w : h;
+  el.style.width = `${W}px`;
+  el.style.height = `${H}px`;
   const body = el.querySelector(".page-body");
   body.style.width = `${w}px`;
   body.style.height = `${h}px`;
-  body.style.transform = `translate(-50%, -50%)${rot ? ` rotate(${rot}deg)` : ""}`;
+  body.style.left = `${snapPx((W - w) / 2)}px`;
+  body.style.top = `${snapPx((H - h) / 2)}px`;
+  body.style.transform = rot ? `rotate(${rot}deg)` : "";
 }
 
+/** The scale the page is rendered at: its width on screen in device pixels, exactly. */
 function renderZoom(page) {
-  const px = pageCssWidth(page) * Math.min(2, window.devicePixelRatio || 1);
-  return Math.min(6, Math.max(0.5, Math.ceil((px / page.width) * 4) / 4));
+  const px = Math.round(pageCssSize(page)[0] * screenDpr());
+  return Math.min(6, Math.max(0.5, Math.round((px / page.width) * 10000) / 10000));
+}
+/** The page's picture size in device pixels (null where the zoom had to be capped: the picture is then scaled). */
+function renderSize(page) {
+  const [w, h] = pageCssSize(page), dpr = screenDpr(), px = Math.round(w * dpr);
+  if (Math.abs(renderZoom(page) * page.width - px) > 0.5) return null;
+  return [px, Math.round(h * dpr)];
 }
 
 // Page images are rendered by the workers, only for pages near the viewport, and kept in a
@@ -865,7 +890,7 @@ function pump() {
     inflight++;
     // The editable translated PDF lives in worker 0; originals render on any idle worker.
     (state.variant === "translated" ? pool.workers[0] : pool.leastBusy(building ? pool.workers[0] : null))
-      .call("render", { page: i, zoom: renderZoom(page), variant: state.variant })
+      .call("render", { page: i, zoom: renderZoom(page), variant: state.variant, size: renderSize(page) })
       .then((buf) => {
         if (state.doc !== doc) return;
         const url = URL.createObjectURL(new Blob([buf], { type: "image/png" }));
