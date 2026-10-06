@@ -1036,10 +1036,15 @@ function setZoom(z, anchor) {
   zoomRenderTimer = setTimeout(refreshImages, 180);
 }
 
-function fitWidth() {
-  const box = $("#pages");
-  const widest = Math.max(...viewPages().map((p, i) => shownSize(i)[0]));
-  setZoom((box.clientWidth - (cmp.on ? 10 : PAGE_SIDE)) / (widest * 1.25));
+/**
+ * The page in view fills the width (not the widest page of the document: one A3 drawing among
+ * A4 pages would make every page small – a wider page scrolls sideways instead).
+ */
+function fitWidth(i) {
+  const box = $("#pages"), pages = viewPages();
+  if (typeof i !== "number") i = currentPageIndex();
+  const [w] = shownSize(Math.max(0, Math.min(pages.length - 1, i || 0)));
+  setZoom((box.clientWidth - (cmp.on ? 10 : PAGE_SIDE)) / (w * 1.25));
   state.fitMode = true; // (follows the width when the view is resized)
 }
 

@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.61
+
+- **Fit to width fits the page in view.** It fitted the widest page of the whole document, so one landscape or A3 page among A4 pages made every page small (43 % in a 195-page report, in the comparison view too). Now the page you are looking at fills the width – on opening, on "fit width", when the window is resized and in the comparison view; a wider page further on scrolls sideways.
+
 ## 2.60
 
 - **Sharper pages.** Text and thin lines often looked soft, at any zoom. Two causes: the page picture was rendered up to a quarter step larger than its size on screen and scaled down by the browser, and the page body was centred with a transform that could leave it half a pixel off. Now the page's size on screen is snapped to whole device pixels (also on screens scaled to 125 % or 150 %), the picture is rendered at exactly that size – one picture pixel per screen pixel, in the original, the translation and the comparison view, turned pages included – and the body is placed on whole pixels. A zoom beyond about 430 dpi is still capped and scaled.
