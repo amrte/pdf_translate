@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.59
+
+- **No repeated model loading.** When the formula model could not be fetched (a computer without access to the internet or to GitHub), every frame drawn by hand tried again, each time with a wait and an error. Now a failed load is remembered: "read as LaTeX at once" switches itself off with one message, frames are drawn without delay, and "Read … frames" in the bar tries again only when asked. The formula finder works without the layout model too, from the page's text alone, and says so once.
+
 ## 2.58
 
 - **Formula finder: a formula after a lead-in on the same line.** "Dieser Strom wird in Gleich. (17.14) eingesetzt: H(r) = …" was left alone because text stood at the formula's height. A short lead-in to the left of the formula – one line ending with a colon, or of at most four words – no longer counts as running text: the formula is framed and the lead-in stays a text segment of its own, translated as usual. A sentence that merely ends in a formula ("… beträgt U = 5 V") is still left alone.

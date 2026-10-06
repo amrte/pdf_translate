@@ -408,6 +408,7 @@ function latexRowHtml(s) {
 }
 
 let fxReader = null, fxIdle = 0; // (the reading model stays loaded a minute after use)
+let fxModelFailed = false;       // (the model could not be fetched: not tried again on its own)
 /**
  * The formulas of the segments `ids` read as LaTeX: each formula's area of the original page drawn
  * at the scale pix2tex reads best (from the page's usual text size) and given to the model; kept
@@ -452,7 +453,11 @@ async function readLatexFor(ids, quiet = false) {
       if (r.latex && r.conf >= FORMULA_SURE) { state.latex[g.lead] = r.latex; read++; } else unsure++;
     }
   } catch (err) {
-    if (!cancelled) { console.error(err); toast(t("fx.failed", { err: userError(err) }), "error"); }
+    if (!cancelled) {
+      console.error(err);
+      toast(t("fx.failed", { err: userError(err) }), "error");
+      if (!fxReader) { fxModelFailed = true; if (quiet) autoTexOff(); } // (the model itself: no use trying after every frame)
+    }
     return;
   } finally {
     busy("");
@@ -535,9 +540,17 @@ async function addFormulaFrame(page, box) {
   ensureBoxes(frame.page);
   const el = document.querySelector(`.page .box[data-id="${frame.id}"]`);
   if (el) segBarShow(el);
-  if (frameAutoTex()) await readLatexFor([frame.id], true); // (chosen in the bar below the page: every frame read at once)
+  if (frameAutoTex() && !fxModelFailed) await readLatexFor([frame.id], true); // (chosen in the bar below the page: every frame read at once)
   frameHintCount();
   return true;
+}
+/** "Read at once" switched off after the model could not be fetched – said once; the button in the bar can still try. */
+function autoTexOff() {
+  if (!frameAutoTex()) return;
+  try { localStorage.setItem(LS_AUTOTEX, "0"); } catch (_) { /* storage blocked */ }
+  const cb = $("#frameAutoTex");
+  if (cb) cb.checked = false;
+  toast(t("fx.autoTexOff"));
 }
 
 /**
@@ -591,15 +604,19 @@ async function findFormulaFrames(pageIdx) {
   const items = [];
   try {
     busy(t("fx.loading"), cancel);
-    finder = await makeFormulaWorker({ find: true }, (name, got, total, whole) => { if (!whole) busy(t("ocr.fxFetching", { name, mb: mbOf(got), total: mbOf(total) }), cancel); });
+    if (!fxModelFailed) {
+      try { finder = await makeFormulaWorker({ find: true }, (name, got, total, whole) => { if (!whole) busy(t("ocr.fxFetching", { name, mb: mbOf(got), total: mbOf(total) }), cancel); }); }
+      catch (err) { if (cancelled) return; console.warn("formula model", err); fxModelFailed = true; }
+    }
+    if (!finder && !cancelled) toast(t("fx.findNoModel")); // (the text's own pieces still find the formulas)
     for (const [k, p] of pageIdx.entries()) {
       if (cancelled || state.doc !== doc) break;
       busy(t("fx.finding", { i: k + 1, n: pageIdx.length }), cancel);
       const page = doc.pages[p], zoom = Math.min(2, 1000 / Math.max(page.width, page.height));
-      const buf = await pool.leastBusy(null).call("render", { page: p, zoom, variant: "original" });
+      const buf = finder ? await pool.leastBusy(null).call("render", { page: p, zoom, variant: "original" }) : null;
       if (cancelled) break;
-      const img = await imageDataOf(new Blob([buf], { type: "image/png" }));
-      const found = (await finder.find(img)).filter((f) => f.score >= 0.5);
+      const img = buf ? await imageDataOf(new Blob([buf], { type: "image/png" })) : null;
+      const found = finder ? (await finder.find(img)).filter((f) => f.score >= 0.5) : [];
       const onPage = doc.segments.filter((s) => s.page === p && s.bbox && !s.extra);
       const sizes = onPage.filter((s) => !s.skip && s.size).map((s) => s.size).sort((a, b) => a - b), em = sizes.length ? sizes[sizes.length >> 1] : 10;
       // (words: with three letters or more – units such as kΩ, mA and variables are none; a bullet is no formula)
@@ -674,7 +691,7 @@ async function findFormulaFrames(pageIdx) {
   if (cancelled || state.doc !== doc) return;
   const ids = addFormulaFrames(items);
   toast(t("fx.found", { n: ids.length, p: pageIdx.length }), ids.length ? "ok" : "");
-  if (ids.length && frameAutoTex()) await readLatexFor(ids, true);
+  if (ids.length && frameAutoTex() && !fxModelFailed) await readLatexFor(ids, true);
 }
 
 /* ---- the bar below the page while the frame tool is on: what to do, "read at once", Done */
