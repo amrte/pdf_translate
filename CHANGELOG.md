@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.57
+
+- **Formula finder: fewer misses, no bullets.** A line of a worked example such as "I_K = (24 + 12 − 10) mA = 26 mA" was taken for running text because of its many tokens and so kept its formula neighbours from being framed; now only words of three letters or more count as text (units like kΩ, mA and variables do not). A bullet before a heading ("• Zahlenbeispiel:") is no longer framed as a formula: a cluster needs a sign (=, +, −, ∫ …) or two formula pieces of its own.
+
 ## 2.56
 
 - **Formula finder completed from the text itself.** The layout model alone passed over many displayed formulas on PDF pages (on one page of a textbook two of seven), and sometimes framed one twice. Now the formula pieces the PDF holds are clustered as well – pieces beside or above each other, a word such as "bzw." between them – and a cluster with no line of running text at its height is framed too; the model's and the text's finds are matched so that nothing is framed twice. In the test pages every displayed formula is found, text lines and lone letters are left alone.

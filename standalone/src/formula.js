@@ -602,7 +602,9 @@ async function findFormulaFrames(pageIdx) {
       const found = (await finder.find(img)).filter((f) => f.score >= 0.5);
       const onPage = doc.segments.filter((s) => s.page === p && s.bbox && !s.extra);
       const sizes = onPage.filter((s) => !s.skip && s.size).map((s) => s.size).sort((a, b) => a - b), em = sizes.length ? sizes[sizes.length >> 1] : 10;
-      const words = (s) => s.text.trim().split(/\s+/).length, isText = (s) => !s.skip && words(s) > 3;
+      // (words: with three letters or more – units such as kΩ, mA and variables are none; a bullet is no formula)
+      const words = (s) => (s.text.match(/\p{L}{3,}/gu) || []).length, isText = (s) => !s.skip && words(s) >= 3;
+      const bullet = (s) => /^[\s•·▪◦‣–—\-*○●■□►▸]+$/.test(s.text);
       const overlap = (a, b) => { const w = Math.min(a[2], b[2]) - Math.max(a[0], b[0]), h = Math.min(a[3], b[3]) - Math.max(a[1], b[1]); return w > 0 && h > 0 ? w * h : 0; };
       const mine = items.filter((it) => it.page === p);
       const taken = (box) => mine.some((it) => overlap(box, it.box) > 0.5 * Math.min((box[2] - box[0]) * (box[3] - box[1]), (it.box[2] - it.box[0]) * (it.box[3] - it.box[1])));
@@ -611,7 +613,7 @@ async function findFormulaFrames(pageIdx) {
         const loose = [f.x0 / zoom + page.x0, f.y0 / zoom + page.y0, f.x1 / zoom + page.x0, f.y1 / zoom + page.y0];
         if (onPage.some((s) => s.frame && insideFrame(s, loose))) continue; // (framed already)
         // (the pieces: formulas, numbers and short words inside the box – a long text line is not a formula's part)
-        let pieces = onPage.filter((s) => !s.frame && insideFrame(s, loose) && (s.skip || s.text.trim().split(/\s+/).length <= 3));
+        let pieces = onPage.filter((s) => !s.frame && insideFrame(s, loose) && (s.skip || words(s) <= 2));
         if (pieces.length > 1) { // (an equation number far to the right is not part of it)
           const sorted = pieces.slice().sort((a, b) => a.bbox[0] - b.bbox[0]);
           const last = sorted[sorted.length - 1], before = sorted[sorted.length - 2];
@@ -633,7 +635,7 @@ async function findFormulaFrames(pageIdx) {
       // and short words among them) clustered by nearness – pieces beside or above each other, a
       // word ("bzw.") only beside – and a cluster with no line of running text at its height, near
       // it, is a displayed formula; one letter on its own is not.
-      const bits = onPage.filter((s) => !s.frame && (s.skip || words(s) <= 3) && !mine.some((it) => insideFrame(s, it.box)));
+      const bits = onPage.filter((s) => !s.frame && (s.skip || words(s) <= 2) && !mine.some((it) => insideFrame(s, it.box)));
       const parent = new Map(bits.map((s) => [s, s]));
       const root = (s) => { while (parent.get(s) !== s) { parent.set(s, parent.get(parent.get(s))); s = parent.get(s); } return s; };
       const vOverlap = (a, b) => Math.min(a[3], b[3]) - Math.max(a[1], b[1]);
@@ -647,7 +649,10 @@ async function findFormulaFrames(pageIdx) {
       const clusters = new Map();
       for (const s of bits) { const r = root(s); (clusters.get(r) || clusters.set(r, []).get(r)).push(s); }
       for (const members of clusters.values()) {
-        if (!members.some((s) => s.formula)) continue; // (numbers, an equation number, words alone)
+        // (numbers, an equation number, words alone are none; nor is a bullet before a heading – a
+        // formula has two pieces of its own or a sign in it)
+        const fx = members.filter((s) => s.formula && !bullet(s));
+        if (!fx.length || (fx.length < 2 && !fx.some((s) => /[=+−×÷∑∫√≈≤≥<>∂∇]/.test(s.text)) && members.length < 3)) continue;
         const box = members.reduce((b, s) => [Math.min(b[0], s.bbox[0]), Math.min(b[1], s.bbox[1]), Math.max(b[2], s.bbox[2]), Math.max(b[3], s.bbox[3])], [1e9, 1e9, -1e9, -1e9]);
         if (members.length < 2 && box[2] - box[0] < 1.5 * em) continue;
         const inline = onPage.some((s) => isText(s) && vOverlap(s.bbox, box) > 0.5 * (s.bbox[3] - s.bbox[1]) && s.bbox[0] < box[2] + 3 * em && s.bbox[2] > box[0] - 3 * em);
