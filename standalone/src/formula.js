@@ -605,6 +605,9 @@ async function findFormulaFrames(pageIdx) {
       // (words: with three letters or more – units such as kΩ, mA and variables are none; a bullet is no formula)
       const words = (s) => (s.text.match(/\p{L}{3,}/gu) || []).length, isText = (s) => !s.skip && words(s) >= 3;
       const bullet = (s) => /^[\s•·▪◦‣–—\-*○●■□►▸]+$/.test(s.text);
+      // (a line of text at a formula's height makes it part of the text – unless it is a short lead-in
+      // on one line to the left of it, "Dieser Strom wird eingesetzt:", which stays text of its own)
+      const leadIn = (s, box) => s.bbox[2] <= box[0] + em && (s.lines || 1) <= 1 && (/:\s*$/.test(s.text) || words(s) <= 4);
       const overlap = (a, b) => { const w = Math.min(a[2], b[2]) - Math.max(a[0], b[0]), h = Math.min(a[3], b[3]) - Math.max(a[1], b[1]); return w > 0 && h > 0 ? w * h : 0; };
       const mine = items.filter((it) => it.page === p);
       const taken = (box) => mine.some((it) => overlap(box, it.box) > 0.5 * Math.min((box[2] - box[0]) * (box[3] - box[1]), (it.box[2] - it.box[0]) * (it.box[3] - it.box[1])));
@@ -655,7 +658,7 @@ async function findFormulaFrames(pageIdx) {
         if (!fx.length || (fx.length < 2 && !fx.some((s) => /[=+−×÷∑∫√≈≤≥<>∂∇]/.test(s.text)) && members.length < 3)) continue;
         const box = members.reduce((b, s) => [Math.min(b[0], s.bbox[0]), Math.min(b[1], s.bbox[1]), Math.max(b[2], s.bbox[2]), Math.max(b[3], s.bbox[3])], [1e9, 1e9, -1e9, -1e9]);
         if (members.length < 2 && box[2] - box[0] < 1.5 * em) continue;
-        const inline = onPage.some((s) => isText(s) && vOverlap(s.bbox, box) > 0.5 * (s.bbox[3] - s.bbox[1]) && s.bbox[0] < box[2] + 3 * em && s.bbox[2] > box[0] - 3 * em);
+        const inline = onPage.some((s) => isText(s) && vOverlap(s.bbox, box) > 0.5 * (s.bbox[3] - s.bbox[1]) && s.bbox[0] < box[2] + 3 * em && s.bbox[2] > box[0] - 3 * em && !leadIn(s, box));
         if (inline) continue;
         const pad = 0.4 * em;
         add([box[0] - pad, box[1] - pad, box[2] + pad, box[3] + pad]);

@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.58
+
+- **Formula finder: a formula after a lead-in on the same line.** "Dieser Strom wird in Gleich. (17.14) eingesetzt: H(r) = …" was left alone because text stood at the formula's height. A short lead-in to the left of the formula – one line ending with a colon, or of at most four words – no longer counts as running text: the formula is framed and the lead-in stays a text segment of its own, translated as usual. A sentence that merely ends in a formula ("… beträgt U = 5 V") is still left alone.
+
 ## 2.57
 
 - **Formula finder: fewer misses, no bullets.** A line of a worked example such as "I_K = (24 + 12 − 10) mA = 26 mA" was taken for running text because of its many tokens and so kept its formula neighbours from being framed; now only words of three letters or more count as text (units like kΩ, mA and variables do not). A bullet before a heading ("• Zahlenbeispiel:") is no longer framed as a formula: a cluster needs a sign (=, +, −, ∫ …) or two formula pieces of its own.
