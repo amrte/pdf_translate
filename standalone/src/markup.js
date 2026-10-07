@@ -201,7 +201,9 @@ function renderMarkups(i, extra) {
 
 function renderAllMarkups() {
   const pages = new Set(state.markups.map((m) => m.page));
-  document.querySelectorAll(".page svg.mk-layer").forEach((s) => pages.add(Number(s.parentElement.dataset.page)));
+  // (pages that still show markups – their last one may just have been undone or deleted; the
+  // layer sits in the page's body, the page number on the page)
+  document.querySelectorAll("#pages .page svg.mk-layer").forEach((s) => { if (s.childElementCount) pages.add(Number(s.closest(".page").dataset.page)); });
   for (const i of pages) if (document.querySelector(`.page[data-page="${i}"]`)?.dataset.boxes) renderMarkups(i);
 }
 
