@@ -688,9 +688,27 @@ function currentPageIndex() {
   return lo;
 }
 
+/**
+ * The page last gone to with the page buttons or keys, while the view still stands where that
+ * left it: near the end of a document the view cannot scroll a short last page to the top, so the
+ * page "in view" would stay behind and the next press would go nowhere.
+ */
+const nav = { page: null, scroll: 0 };
+function navPage() {
+  const box = $("#pages");
+  if (nav.page !== null && Math.abs(box.scrollTop - nav.scroll) < 2 && nav.page < pageElements().length) return nav.page;
+  nav.page = null;
+  return currentPageIndex();
+}
+/** One page on or back (page buttons, Page Up/Down). */
+function stepPage(dir) {
+  if (!state.doc) return;
+  if (wholePages()) { turnPage(dir); return; }
+  goToPage(navPage() + dir);
+}
 function updatePageNav() {
   if (!state.doc) return;
-  const n = viewPages().length, i = currentPageIndex();
+  const n = viewPages().length, i = navPage();
   if (document.activeElement !== $("#pageInput")) $("#pageInput").value = i + 1;
   $("#pageInput").max = n;
   $("#pageCount").textContent = `/ ${n}`;
@@ -702,8 +720,9 @@ function goToPage(i) {
   if (!state.doc) return;
   i = Math.max(0, Math.min(viewPages().length - 1, i));
   if (wholePages()) { centerPage(i); return; }
-  const el = pageElements()[i];
-  if (el) $("#pages").scrollTop = el.offsetTop - 22;
+  const el = pageElements()[i], box = $("#pages");
+  if (el) box.scrollTop = el.offsetTop - 22;
+  nav.page = i; nav.scroll = box.scrollTop;
   updatePageNav();
 }
 
@@ -729,8 +748,16 @@ function isTyping(e) {
 }
 
 function onKeyDown(e) {
-  if (!state.doc || isTyping(e)) return;
+  if (!state.doc) return;
   const k = e.key.toLowerCase();
+  // Page Up/Down turn the PDF's pages also from a translation box or the page number (not in a dialog).
+  if ((k === "pageup" || k === "pagedown") && !e.ctrlKey && !e.metaKey && !e.altKey && !document.querySelector("dialog[open]") && $("#busy").hidden
+    && (!isTyping(e) || e.target.closest("#segments, .page-nav"))) {
+    e.preventDefault();
+    stepPage(k === "pagedown" ? 1 : -1);
+    return;
+  }
+  if (isTyping(e)) return;
   if ((e.ctrlKey || e.metaKey) && !e.altKey) {
     if (k === "z" && !e.shiftKey) { e.preventDefault(); undo(); }
     else if (k === "y" || (k === "z" && e.shiftKey)) { e.preventDefault(); redo(); }
@@ -758,8 +785,8 @@ function onKeyDown(e) {
     return;
   }
   if (e.altKey) return;
-  if (k === "pagedown") { e.preventDefault(); goToPage(currentPageIndex() + 1); }
-  else if (k === "pageup") { e.preventDefault(); goToPage(currentPageIndex() - 1); }
+  if (k === "pagedown") { e.preventDefault(); stepPage(1); }
+  else if (k === "pageup") { e.preventDefault(); stepPage(-1); }
   else if (k === "home") { e.preventDefault(); goToPage(0); }
   else if (k === "end") { e.preventDefault(); goToPage(viewPages().length - 1); }
   else if ((k === "delete" || k === "backspace") && mk.selected !== null) { e.preventDefault(); deleteMarkup(mk.selected); }
@@ -833,8 +860,8 @@ function initMarkup() {
     mk.selected = null;
   });
 
-  $("#pagePrev").addEventListener("click", () => goToPage(currentPageIndex() - 1));
-  $("#pageNext").addEventListener("click", () => goToPage(currentPageIndex() + 1));
+  $("#pagePrev").addEventListener("click", () => stepPage(-1));
+  $("#pageNext").addEventListener("click", () => stepPage(1));
   $("#pageInput").addEventListener("change", (e) => goToPage(Number(e.target.value) - 1));
   $("#pageInput").addEventListener("keydown", (e) => { if (e.key === "Enter") { goToPage(Number(e.target.value) - 1); e.target.blur(); } });
   let raf = 0;

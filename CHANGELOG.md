@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.67
+
+- **Page Up / Page Down and the page buttons work every time.** Near the end of a document the view cannot scroll a short last page to the top, so the page counted as "in view" stayed behind and the next press went nowhere (or back); the page last gone to is now remembered while the view stays there. The keys also work while the cursor is in a translation box of the segment list or in the page number field (not in dialogs), where they did nothing before.
+
 ## 2.66
 
 - **Fixed: undoing a markup left it on the page.** When the markup undone (or removed with "Clear", or by redo of a removal) was the last one on its page, the message said it was undone but the page still showed it until it was drawn anew. Pages are now redrawn whenever they still show a markup, in the comparison view too.
