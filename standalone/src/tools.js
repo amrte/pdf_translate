@@ -328,13 +328,68 @@ function toggleAppFullscreen() {
   else document.documentElement.requestFullscreen().catch(() => toast(t("msg.noFullscreen"), "error"));
 }
 
-/** Zoom so that the whole current page is visible. */
-function fitPage() {
+/**
+ * Zoom so that the whole current page is visible – and stay so: every page is shown whole (a
+ * bigger one smaller), the view is resized with the window, and it turns page by page (wheel,
+ * arrow keys, a scroll that ends between two pages settles on the nearer one). Any other zoom ends it.
+ */
+function fitPage(i) {
   if (!state.doc) return;
-  const box = $("#pages"), i = currentPageIndex(), [w, h] = shownSize(i);
-  const zw = (box.clientWidth - PAGE_SIDE) / (w * 1.25), zh = (box.clientHeight - 44) / (h * 1.25);
+  if (typeof i !== "number") i = currentPageIndex();
+  const box = $("#pages"), [w, h] = shownSize(i);
+  const zw = fitAvail() / (w * 1.25), zh = (box.clientHeight - 44) / (h * 1.25);
   setZoom(Math.min(zw, zh));
-  requestAnimationFrame(() => goToPage(i));
+  state.fitMode = "whole";
+  relayoutPages();
+  centerPage(i);
+}
+const wholePages = () => state.fitMode === "whole" && state.doc && !state.doc.image;
+/** Page i in the middle of the view (whole-page view), or at the top. */
+function centerPage(i, smooth = false) {
+  const box = $("#pages"), el = pageElements()[i];
+  if (!el) return;
+  const top = el.offsetTop - Math.max(0, (box.clientHeight - el.offsetHeight) / 2);
+  pageTurn.turning = Date.now();
+  box.scrollTo({ top: Math.max(0, top), behavior: smooth ? "smooth" : "auto" });
+  updatePageNav();
+}
+const pageTurn = { acc: 0, last: 0, turning: 0, target: null };
+/** One page on or back in the whole-page view. */
+function turnPage(dir) {
+  const n = pageElements().length;
+  const from = pageTurn.target !== null && Date.now() - pageTurn.turning < 400 ? pageTurn.target : nearestPage();
+  const to = Math.max(0, Math.min(n - 1, from + dir));
+  pageTurn.target = to;
+  centerPage(to, true);
+}
+/** The page whose middle is nearest the middle of the view. */
+function nearestPage() {
+  const box = $("#pages"), mid = box.scrollTop + box.clientHeight / 2, els = pageElements();
+  let best = 0, d = Infinity;
+  els.forEach((el, k) => { const dd = Math.abs(el.offsetTop + el.offsetHeight / 2 - mid); if (dd < d) { d = dd; best = k; } });
+  return best;
+}
+function initWholePages() {
+  // A wheel turns one page (a touchpad's many small steps add up first; one turn per gesture).
+  for (const id of ["#pages", "#pagesCmp"]) {
+    $(id).addEventListener("wheel", (e) => {
+      if (!wholePages() || e.ctrlKey || e.metaKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+      e.preventDefault();
+      const now = Date.now();
+      if (now - pageTurn.last > 250) pageTurn.acc = 0;
+      pageTurn.last = now;
+      pageTurn.acc += e.deltaMode === 1 ? e.deltaY * 30 : e.deltaY;
+      if (Math.abs(pageTurn.acc) < 40 || now - pageTurn.turning < 280) return;
+      turnPage(pageTurn.acc > 0 ? 1 : -1);
+      pageTurn.acc = 0;
+    }, { passive: false });
+  }
+  // A scroll by other means (the scrollbar, a touch) settles on the nearer page.
+  $("#pages").addEventListener("scrollend", () => {
+    if (!wholePages() || Date.now() - pageTurn.turning < 600) return;
+    pageTurn.target = null;
+    centerPage(nearestPage(), true);
+  });
 }
 
 /* ------------------------------------------------------------ turning pages */
@@ -1473,6 +1528,7 @@ function onFindKey(e) {
 
 function initTools() {
   initCompare();
+  initWholePages();
   initLayout();
   const pages = $("#pages");
   pages.addEventListener("pointerdown", onBoxDown);
@@ -1787,6 +1843,7 @@ function initCompare() {
     clearTimeout(fitTimer);
     fitTimer = setTimeout(() => {
       if (!cmp.on && state.fitMode === "page" && state.doc && state.doc.image) { setZoom(fitPictureZoom()); state.fitMode = "page"; return; }
+      if (state.fitMode === "whole") { fitPage(nearestPage()); syncCmp("main"); return; }
       if (cmp.on || state.fitMode || splitDrag) { fitWidth(); syncCmp("main"); }
     }, splitDrag ? 0 : 100);
   }).observe($("#pages"));

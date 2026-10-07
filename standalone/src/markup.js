@@ -699,6 +699,7 @@ function updatePageNav() {
 function goToPage(i) {
   if (!state.doc) return;
   i = Math.max(0, Math.min(viewPages().length - 1, i));
+  if (wholePages()) { centerPage(i); return; }
   const el = pageElements()[i];
   if (el) $("#pages").scrollTop = el.offsetTop - 22;
   updatePageNav();
@@ -736,6 +737,11 @@ function onKeyDown(e) {
       const m = state.markups.find((x) => x.id === mk.selected);
       if (m) { const [bx, by] = boxOfMarkup(m); pasteMarkups([m], { page: m.page, pt: [bx + 12, by + 12] }); }
     }
+    return;
+  }
+  if (wholePages() && mk.selected === null && ["arrowup", "arrowdown", "pageup", "pagedown", " "].includes(k)) { // (the whole-page view turns page by page)
+    e.preventDefault();
+    turnPage(k === "arrowup" || k === "pageup" || (k === " " && e.shiftKey) ? -1 : 1);
     return;
   }
   if (mk.selected !== null && ["arrowleft", "arrowright", "arrowup", "arrowdown"].includes(k)) { // nudge it

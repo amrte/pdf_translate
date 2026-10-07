@@ -817,9 +817,13 @@ function fitAvail() {
  */
 function pageCssSize(page, rot = 0) {
   let w = pageCssWidth(page), clamped = false;
-  if (state.fitMode === true) {
+  if (state.fitMode === true || state.fitMode === "whole") {
     const shown = rot % 180 ? (w * page.height) / page.width : w, avail = fitAvail();
     if (shown > avail) { w = (w * avail) / shown; clamped = true; }
+  }
+  if (state.fitMode === "whole") { // (the whole page in view: a taller page is shown smaller too)
+    const tall = rot % 180 ? w : (w * page.height) / page.width, availH = Math.max(60, $("#pages").clientHeight - 44);
+    if (tall > availH) { w = (w * availH) / tall; clamped = true; }
   }
   const snap = clamped ? (v) => Math.floor(v * screenDpr()) / screenDpr() : snapPx; // (a page shrunk to the view never a pixel over it)
   w = snap(w);
@@ -834,6 +838,9 @@ function placePageBody(el, page, rot) {
   const [w, h] = pageCssSize(page, rot), W = rot % 180 ? h : w, H = rot % 180 ? w : h;
   el.style.width = `${W}px`;
   el.style.height = `${H}px`;
+  // (the whole-page view: each page in a slot as high as the view, so no neighbour peeks in)
+  const slot = state.fitMode === "whole" && !(state.doc && state.doc.image) ? Math.max(0, ($("#pages").clientHeight - H) / 2 - 22) : 0;
+  el.style.marginTop = el.style.marginBottom = slot ? `${slot}px` : "";
   const body = el.querySelector(".page-body");
   body.style.width = `${w}px`;
   body.style.height = `${h}px`;
