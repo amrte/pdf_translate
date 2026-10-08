@@ -4,6 +4,11 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.68
+
+- **The segment panel folds away.** A small button at the top of the divider between page view and segment list folds the list away: the page view takes the whole width (and refits), while the menu bar stays – unlike full screen. A click on the narrow strip left behind, or on its button, brings the list back; the choice is remembered.
+- **Full screen without page labels.** In full screen the "Page n" labels above the pages are hidden: with the label of the next page showing at the bottom, two page numbers were in view at once; the page number is in the toolbar.
+
 ## 2.67
 
 - **Page Up / Page Down and the page buttons work every time.** Near the end of a document the view cannot scroll a short last page to the top, so the page counted as "in view" stayed behind and the next press went nowhere (or back); the page last gone to is now remembered while the view stays there. The keys also work while the cursor is in a translation box of the segment list or in the page number field (not in dialogs), where they did nothing before.

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="Kameleon 2.67">
+  <meta name="generator" content="Kameleon 2.68">
   <meta name="description" content="Kameleon – Wechselt die Sprache, behält die Form. Changes language, keeps its shape.">
   <title>Kameleon</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2216%22 fill=%22%23287130%22/%3E%3Cg transform=%22translate(2.5 1) scale(0.9)%22 fill=%22%23ffffff%22 stroke=%22%23ffffff%22%3E%3Cpath d=%22M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6%22 fill=%22none%22 stroke-width=%223.8%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M21 43l-1 10M30 44v9M38 43l1 10%22 stroke-width=%223.6%22 stroke-linecap=%22round%22/%3E%3Cellipse cx=%2221%22 cy=%2225%22 rx=%227%22 ry=%227.5%22 stroke=%22none%22/%3E%3Cellipse cx=%2233%22 cy=%2223.5%22 rx=%227.5%22 ry=%228%22 stroke=%22none%22/%3E%3Cpath d=%22M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z%22 stroke=%22none%22/%3E%3Cpath d=%22M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z%22 stroke=%22none%22/%3E%3Cpath d=%22M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z%22 stroke=%22none%22/%3E%3Cpath d=%22M16 37l4-3 4 3 4-3 4 3 4-3 4 3%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%222.1%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3Cpath d=%22M43.5 33.9L57 32.6%22 fill=%22none%22 stroke=%22%23287130%22 stroke-width=%221.5%22 stroke-linecap=%22round%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%224.4%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Ccircle cx=%2245.5%22 cy=%2226.5%22 r=%222.7%22 stroke=%22none%22/%3E%3Ccircle cx=%2246.2%22 cy=%2226.7%22 r=%221.3%22 fill=%22%23287130%22 stroke=%22none%22/%3E%3Cpath d=%22M4 55.5c15-3 39-3 54 0%22 fill=%22none%22 stroke-width=%222.4%22 stroke-linecap=%22round%22/%3E%3C/g%3E%3C/svg%3E">
@@ -587,6 +587,16 @@ body.comparing #pages::-webkit-scrollbar { display: none; }
 .splitter:hover, body.splitting .splitter { background: var(--accent); }
 .splitter:hover::after, body.splitting .splitter::after { background: #fff; opacity: .9; }
 .splitter:focus-visible { outline: 2px solid var(--accent); outline-offset: -1px; }
+/* the button on the divider that folds the segment panel away (and back) */
+.split-fold { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); width: 18px; height: 26px; padding: 0; display: grid; place-items: center; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--muted); cursor: pointer; z-index: 2; box-shadow: 0 1px 3px rgba(0, 0, 0, .12); }
+.split-fold:hover { color: var(--accent); border-color: var(--accent); }
+body.editor-collapsed .work-view { grid-template-columns: minmax(0, 1fr) 14px !important; }
+body.editor-collapsed .editor-pane { display: none; }
+body.editor-collapsed .splitter { cursor: pointer; background: var(--surface); border-left: 1px solid var(--border); }
+body.editor-collapsed .splitter::after { display: none; }
+body.editor-collapsed .split-fold svg { transform: rotate(180deg); }
+/* full screen: the page number is in the toolbar; labels over the pages would show two numbers at once */
+body.viewer-only .page-label { display: none; }
 /* phones: the top bar actions wrap instead of running off the screen */
 @media (max-width: 480px) {
   .topbar-actions { flex-wrap: wrap; justify-content: flex-end; row-gap: 6px; min-width: 0; }
@@ -1125,7 +1135,7 @@ body.seg-dragging, body.seg-dragging * { cursor: grabbing !important; user-selec
   <div class="brand">
     <span class="logo"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#287130"/><g transform="translate(2.5 1) scale(0.9)" fill="#ffffff" stroke="#ffffff"><path d="M15 40c-5.5-.8-9 3.6-7.4 7.6 1.3 3 5 3.6 6.8 1.2 1.2-1.7.4-3.7-1.6-3.6" fill="none" stroke-width="3.8" stroke-linecap="round"/><path d="M21 43l-1 10M30 44v9M38 43l1 10" stroke-width="3.6" stroke-linecap="round"/><ellipse cx="21" cy="25" rx="7" ry="7.5" stroke="none"/><ellipse cx="33" cy="23.5" rx="7.5" ry="8" stroke="none"/><path d="M13 38c0-9 7-16 17-16h10c5.5 0 9.5 2.6 11 6l-1 6c-1.5 6-6 10-12 10H23c-6.5 0-10-1.5-10-5z" stroke="none"/><path d="M41 34.2L59 32.4c-.3 3.2-3.8 5.4-9.5 5.4-4 0-7.5-1.6-8.5-5.6z" stroke="none"/><path d="M38 24c6.5-3 15-1.5 20 5.5 1.2 1.7.6 3.2-1.5 3.3L41 34c-2 .2-3.2-1-3-3z" stroke="none"/><path d="M16 37l4-3 4 3 4-3 4 3 4-3 4 3" fill="none" stroke="#287130" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M43.5 33.9L57 32.6" fill="none" stroke="#287130" stroke-width="1.5" stroke-linecap="round"/><circle cx="45.5" cy="26.5" r="4.4" fill="#287130" stroke="none"/><circle cx="45.5" cy="26.5" r="2.7" stroke="none"/><circle cx="46.2" cy="26.7" r="1.3" fill="#287130" stroke="none"/><path d="M4 55.5c15-3 39-3 54 0" fill="none" stroke-width="2.4" stroke-linecap="round"/></g></svg></span>
     <span class="brand-name">Kameleon</span>
-    <span class="version" id="appVersion">v2.67</span>
+    <span class="version" id="appVersion">v2.68</span>
   </div>
   <div class="topbar-actions">
     <span class="doc-name" id="docName"></span>
@@ -1324,7 +1334,7 @@ body.seg-dragging, body.seg-dragging * { cursor: grabbing !important; user-selec
     <div class="pages translated cmp-pages" id="pagesCmp" hidden></div>
     </div>
   </section>
-  <div class="splitter" id="splitter" tabindex="0" role="separator" aria-orientation="vertical" data-i18n-title="layout.splitter" data-i18n-aria="layout.splitter"></div>
+  <div class="splitter" id="splitter" tabindex="0" role="separator" aria-orientation="vertical" data-i18n-title="layout.splitter" data-i18n-aria="layout.splitter"><button type="button" class="split-fold" id="splitFold" data-i18n-title="layout.collapse" aria-expanded="true"><svg viewBox="0 0 10 10" width="10" height="10" aria-hidden="true"><path d="M3.5 1.5L7 5 3.5 8.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
 
   <section class="editor-pane">
     <div class="pane-toolbar wrap">
@@ -1678,7 +1688,7 @@ body.seg-dragging, body.seg-dragging * { cursor: grabbing !important; user-selec
     </div>
     <input type="file" id="offlineZip" class="visually-hidden" accept=".zip,application/zip,.js,.mjs,.wasm,.gz,.traineddata,.onnx,.ort,.txt,.json" multiple tabindex="-1">
     <input type="file" id="offlineFolder" class="visually-hidden" webkitdirectory multiple tabindex="-1">
-    <p class="muted small help-version help-part">Kameleon v2.67 · <span data-i18n="app.tagline"></span></p>
+    <p class="muted small help-version help-part">Kameleon v2.68 · <span data-i18n="app.tagline"></span></p>
     <div class="modal-actions">
       <button type="button" value="cancel" class="btn ghost" data-i18n="common.close">Close</button>
     </div>
@@ -2089,6 +2099,8 @@ const I18N = {
     "fx.done": "{n} Formel(n) als LaTeX gelesen.",
     "fx.doneUnsure": "{n} Formel(n) als LaTeX gelesen; {u} konnte(n) nicht sicher gelesen werden.",
     "fx.failed": "Die Formeln konnten nicht gelesen werden: {err}",
+    "layout.collapse": "Segmentliste einklappen – die Seitenansicht nimmt die ganze Breite",
+    "layout.expand": "Segmentliste wieder ausklappen",
     "outline.button": "Lesezeichen der PDF: Inhaltsverzeichnis zum Springen",
     "outline.title": "Lesezeichen",
     "outline.expand": "Aufklappen",
@@ -3112,6 +3124,8 @@ const I18N = {
     "fx.done": "{n} formula(s) read as LaTeX.",
     "fx.doneUnsure": "{n} formula(s) read as LaTeX; {u} could not be read reliably.",
     "fx.failed": "The formulas could not be read: {err}",
+    "layout.collapse": "Fold the segment list away – the page view takes the whole width",
+    "layout.expand": "Unfold the segment list",
     "outline.button": "The PDF's bookmarks: a table of contents to jump",
     "outline.title": "Bookmarks",
     "outline.expand": "Expand",
@@ -20093,7 +20107,7 @@ function initCompare() {
 
 /* ------------------------------------------- page view / fields border, tool rail */
 
-const SPLIT_KEY = "pdftr:split", RAIL_KEY = "pdftr:rail-folded";
+const SPLIT_KEY = "pdftr:split", RAIL_KEY = "pdftr:rail-folded", EDITOR_KEY = "pdftr:editor-collapsed";
 let splitDrag = null;
 
 /** Width of the page view as a share of the workspace (null: the default layout). */
@@ -20109,7 +20123,7 @@ function initLayout() {
   const split = $("#splitter"), wv = $("#workView");
   try { const v = Number(localStorage.getItem(SPLIT_KEY)); if (v > 0 && v < 1) setSplit(v); } catch (_) { /* storage blocked */ }
   split.addEventListener("pointerdown", (e) => {
-    if (e.button !== 0) return;
+    if (e.button !== 0 || e.target.closest(".split-fold") || document.body.classList.contains("editor-collapsed")) return;
     e.preventDefault();
     split.setPointerCapture(e.pointerId);
     splitDrag = { left: wv.getBoundingClientRect().left, width: wv.getBoundingClientRect().width };
@@ -20145,6 +20159,20 @@ function initLayout() {
     try { localStorage.removeItem(SPLIT_KEY); } catch (_) { /* storage blocked */ }
     if (state.doc) requestAnimationFrame(fitWidth);
   });
+
+  // The segment panel folded away: the page view takes the whole width (a click on the strip or its button brings it back).
+  const collapse = (on) => {
+    document.body.classList.toggle("editor-collapsed", on);
+    $("#splitFold").setAttribute("aria-expanded", String(!on));
+    $("#splitFold").title = t(on ? "layout.expand" : "layout.collapse");
+    try { localStorage.setItem(EDITOR_KEY, on ? "1" : ""); } catch (_) { /* storage blocked */ }
+  };
+  let collapsed = false;
+  try { collapsed = localStorage.getItem(EDITOR_KEY) === "1"; } catch (_) { /* storage blocked */ }
+  collapse(collapsed);
+  $("#splitFold").addEventListener("click", (e) => { e.stopPropagation(); collapse(!document.body.classList.contains("editor-collapsed")); });
+  split.addEventListener("click", () => { if (document.body.classList.contains("editor-collapsed")) collapse(false); });
+  document.addEventListener("languagechange", () => { $("#splitFold").title = t(document.body.classList.contains("editor-collapsed") ? "layout.expand" : "layout.collapse"); });
 
   const rail = $("#toolRail");
   const fold = (on) => {
@@ -20561,7 +20589,7 @@ function initPicture() {
 // from its own browser cache before the network, so language files are written into that cache.
 // ======================================================================
 
-const APP_VERSION = "2.67";
+const APP_VERSION = "2.68";
 // (a change of library version makes a stored set outdated: it is then ignored)
 const OFFLINE_VERSION = `${MUPDF_URL} ${OCR_LIB}`;
 const CORE_SIMD = "tesseract-core-simd-lstm.wasm.js", CORE_PLAIN = "tesseract-core-lstm.wasm.js";

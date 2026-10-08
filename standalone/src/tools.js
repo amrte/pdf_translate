@@ -1869,7 +1869,7 @@ function initCompare() {
 
 /* ------------------------------------------- page view / fields border, tool rail */
 
-const SPLIT_KEY = "pdftr:split", RAIL_KEY = "pdftr:rail-folded";
+const SPLIT_KEY = "pdftr:split", RAIL_KEY = "pdftr:rail-folded", EDITOR_KEY = "pdftr:editor-collapsed";
 let splitDrag = null;
 
 /** Width of the page view as a share of the workspace (null: the default layout). */
@@ -1885,7 +1885,7 @@ function initLayout() {
   const split = $("#splitter"), wv = $("#workView");
   try { const v = Number(localStorage.getItem(SPLIT_KEY)); if (v > 0 && v < 1) setSplit(v); } catch (_) { /* storage blocked */ }
   split.addEventListener("pointerdown", (e) => {
-    if (e.button !== 0) return;
+    if (e.button !== 0 || e.target.closest(".split-fold") || document.body.classList.contains("editor-collapsed")) return;
     e.preventDefault();
     split.setPointerCapture(e.pointerId);
     splitDrag = { left: wv.getBoundingClientRect().left, width: wv.getBoundingClientRect().width };
@@ -1921,6 +1921,20 @@ function initLayout() {
     try { localStorage.removeItem(SPLIT_KEY); } catch (_) { /* storage blocked */ }
     if (state.doc) requestAnimationFrame(fitWidth);
   });
+
+  // The segment panel folded away: the page view takes the whole width (a click on the strip or its button brings it back).
+  const collapse = (on) => {
+    document.body.classList.toggle("editor-collapsed", on);
+    $("#splitFold").setAttribute("aria-expanded", String(!on));
+    $("#splitFold").title = t(on ? "layout.expand" : "layout.collapse");
+    try { localStorage.setItem(EDITOR_KEY, on ? "1" : ""); } catch (_) { /* storage blocked */ }
+  };
+  let collapsed = false;
+  try { collapsed = localStorage.getItem(EDITOR_KEY) === "1"; } catch (_) { /* storage blocked */ }
+  collapse(collapsed);
+  $("#splitFold").addEventListener("click", (e) => { e.stopPropagation(); collapse(!document.body.classList.contains("editor-collapsed")); });
+  split.addEventListener("click", () => { if (document.body.classList.contains("editor-collapsed")) collapse(false); });
+  document.addEventListener("languagechange", () => { $("#splitFold").title = t(document.body.classList.contains("editor-collapsed") ? "layout.expand" : "layout.collapse"); });
 
   const rail = $("#toolRail");
   const fold = (on) => {
