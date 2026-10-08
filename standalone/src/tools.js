@@ -337,9 +337,11 @@ function fitPage(i) {
   if (!state.doc) return;
   if (typeof i !== "number") i = currentPageIndex();
   const box = $("#pages"), [w, h] = shownSize(i);
-  const zw = fitAvail() / (w * 1.25), zh = (box.clientHeight - 44) / (h * 1.25);
+  $("#pages").classList.add("bare"); // (bare pages: the room of the labels goes to the page)
+  const zw = fitAvail() / (w * 1.25), zh = (box.clientHeight - 2 * vPad()) / (h * 1.25);
   setZoom(Math.min(zw, zh));
   state.fitMode = "whole";
+  syncBare();
   relayoutPages();
   centerPage(i);
 }

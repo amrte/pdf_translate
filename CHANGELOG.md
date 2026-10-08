@@ -4,6 +4,10 @@ PDF Translate uses simple version numbers: the first versioned release is **1.00
 update adds **0.01** (1.00 → 1.01 → 1.02 …). The current version is in [`VERSION`](VERSION) and is
 shown in the app's top bar and help dialog.
 
+## 2.69
+
+- **Bare pages in full screen and in the whole-page view.** The "Page n" labels are gone there too in the whole-page view (with the next page's label at the bottom, two numbers were in view), and their room goes to the page: the margin above and below the page is a few pixels instead of more than twenty, so in the whole-page view the page is shown larger – in full screen larger still. The page number stays in the toolbar.
+
 ## 2.68
 
 - **The segment panel folds away.** A small button at the top of the divider between page view and segment list folds the list away: the page view takes the whole width (and refits), while the menu bar stays – unlike full screen. A click on the narrow strip left behind, or on its button, brings the list back; the choice is remembered.

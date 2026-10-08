@@ -585,8 +585,10 @@ body.editor-collapsed .editor-pane { display: none; }
 body.editor-collapsed .splitter { cursor: pointer; background: var(--surface); border-left: 1px solid var(--border); }
 body.editor-collapsed .splitter::after { display: none; }
 body.editor-collapsed .split-fold svg { transform: rotate(180deg); }
-/* full screen: the page number is in the toolbar; labels over the pages would show two numbers at once */
-body.viewer-only .page-label { display: none; }
+/* full screen and the whole-page view: bare pages – the page number is in the toolbar (labels over the
+   pages showed two numbers at once), the margins thin, the room goes to the page */
+.pages.bare { padding-top: 6px; padding-bottom: 6px; }
+.pages.bare .page-label { display: none; }
 /* phones: the top bar actions wrap instead of running off the screen */
 @media (max-width: 480px) {
   .topbar-actions { flex-wrap: wrap; justify-content: flex-end; row-gap: 6px; min-width: 0; }

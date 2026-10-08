@@ -631,6 +631,7 @@ function openDocument(doc, bytes) {
 
   state.zoom = fitZoom();
   state.fitMode = doc.image ? "page" : true; // (a picture stays whole when the view is resized)
+  syncBare();
   initMarkupsForDocument();
   loadOutlinePanel(); // (the bookmark panel, see outline.js)
   renderPages();
@@ -765,6 +766,18 @@ function closeDocument() {
 
 /** Horizontal room the page view keeps beside a page (its 6 px padding on each side). */
 const PAGE_SIDE = 12;
+/**
+ * Full screen and the whole-page view show the pages bare: no "Page n" labels over them (the
+ * page number is in the toolbar – with the next page's label at the bottom, two numbers were in
+ * view) and only a thin margin, so the page gets the room. The space kept above and below.
+ */
+const barePages = () => document.body.classList.contains("viewer-only") || state.fitMode === "whole";
+const vPad = () => ($("#pages").classList.contains("bare") ? 6 : 22);
+function syncBare() {
+  const on = Boolean(barePages());
+  $("#pages").classList.toggle("bare", on);
+  $("#pagesCmp").classList.toggle("bare", on);
+}
 
 function fitZoom() {
   if (state.doc.image) return fitPictureZoom();
@@ -781,7 +794,7 @@ function fitZoom() {
 function fitPictureZoom() {
   const box = $("#pages"), p = state.doc.pages[0];
   const [w, h] = state.rotations[0] % 180 ? [p.height, p.width] : [p.width, p.height];
-  const z = Math.min((box.clientWidth - PAGE_SIDE) / (w * 1.25), (box.clientHeight - 44) / (h * 1.25));
+  const z = Math.min((box.clientWidth - PAGE_SIDE) / (w * 1.25), (box.clientHeight - 2 * vPad()) / (h * 1.25));
   return z > 0 ? Math.max(0.02, Math.min(2, Math.floor(z * 1000) / 1000)) : 1;
 }
 
@@ -822,7 +835,7 @@ function pageCssSize(page, rot = 0) {
     if (shown > avail) { w = (w * avail) / shown; clamped = true; }
   }
   if (state.fitMode === "whole") { // (the whole page in view: a taller page is shown smaller too)
-    const tall = rot % 180 ? w : (w * page.height) / page.width, availH = Math.max(60, $("#pages").clientHeight - 44);
+    const tall = rot % 180 ? w : (w * page.height) / page.width, availH = Math.max(60, $("#pages").clientHeight - 2 * vPad());
     if (tall > availH) { w = (w * availH) / tall; clamped = true; }
   }
   const snap = clamped ? (v) => Math.floor(v * screenDpr()) / screenDpr() : snapPx; // (a page shrunk to the view never a pixel over it)
@@ -1031,7 +1044,7 @@ function zoomMin() {
   let fit = ZOOM_MIN;
   viewPages().forEach((_, i) => {
     const [w, h] = shownSize(i);
-    fit = Math.min(fit, (box.clientWidth - PAGE_SIDE) / (w * 1.25), (box.clientHeight - 44) / (h * 1.25));
+    fit = Math.min(fit, (box.clientWidth - PAGE_SIDE) / (w * 1.25), (box.clientHeight - 2 * vPad()) / (h * 1.25));
   });
   return Math.max(0.02, Math.min(ZOOM_MIN, Math.floor(fit * 1000) / 1000));
 }
@@ -1044,6 +1057,7 @@ let zoomRenderTimer = null;
 function setZoom(z, anchor) {
   const box = $("#pages");
   state.fitMode = false;
+  syncBare();
   z = Math.min(ZOOM_MAX, Math.max(zoomMin(), Math.round(z * 1000) / 1000)); // (tenths of a percent: on a huge page a whole percent is dozens of pixels)
   if (!state.doc || z === state.zoom) return;
   const ax = anchor ? anchor[0] : box.clientWidth / 2, ay = anchor ? anchor[1] : box.clientHeight / 2;

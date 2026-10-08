@@ -75,7 +75,7 @@ function goToBookmark(it) {
   const el = pageElements()[it.page], box = $("#pages");
   if (!el) return;
   const page = viewPages()[it.page];
-  let top = el.offsetTop - 22;
+  let top = el.offsetTop - vPad();
   if (it.y != null && isFinite(it.y) && page && !pageRotation(it.page)) {
     const f = Math.max(0, Math.min(1, (it.y - page.y0) / page.height));
     top = el.offsetTop + f * el.offsetHeight - 12;

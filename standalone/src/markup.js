@@ -721,7 +721,7 @@ function goToPage(i) {
   i = Math.max(0, Math.min(viewPages().length - 1, i));
   if (wholePages()) { centerPage(i); return; }
   const el = pageElements()[i], box = $("#pages");
-  if (el) box.scrollTop = el.offsetTop - 22;
+  if (el) box.scrollTop = el.offsetTop - vPad();
   nav.page = i; nav.scroll = box.scrollTop;
   updatePageNav();
 }
@@ -732,6 +732,7 @@ function goToPage(i) {
 async function toggleFullscreen(force) {
   const on = force !== undefined ? force : !document.body.classList.contains("viewer-only");
   document.body.classList.toggle("viewer-only", on);
+  syncBare(); // (bare pages: no labels, thin margins)
   $("#btnFullscreen").title = t(on ? "view.exitFullscreen" : "view.fullscreen");
   try {
     if (on && !document.fullscreenElement) await document.documentElement.requestFullscreen();
